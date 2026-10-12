@@ -14,6 +14,8 @@ const nav = [
 
 const registrationsNav = { label: 'Inscrições', route: 'panel.registrations.index', match: 'panel.registrations.*', icon: 'M9 12l2 2 4-4M7 4h10a2 2 0 012 2v14l-3-2-2 2-2-2-2 2-2-2-3 2V6a2 2 0 012-2z' };
 
+const reportsNav = { label: 'Relatórios', route: 'panel.reports.index', match: 'panel.reports.*', icon: 'M9 17v-6M13 17V7M17 17v-4M4 4v16h16' };
+
 const adminNav = [
     { label: 'Portal público', route: 'panel.organization.edit', match: 'panel.organization.*', icon: 'M12 21a9 9 0 100-18 9 9 0 000 18zM3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 010 18M12 3a14 14 0 000 18' },
 ];
@@ -33,7 +35,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const [open, setOpen] = useState(false);
     const canManageUsers = useCan('manage-users');
     const canManageCompetitions = useCan('manage-competitions');
-    const base = canManageCompetitions ? [...nav.slice(0, 2), registrationsNav, ...nav.slice(2)] : nav;
+    const base = canManageCompetitions ? [...nav.slice(0, 2), registrationsNav, ...nav.slice(2), reportsNav] : nav;
     const items = canManageUsers ? [...base, ...adminNav, usersNav] : base;
 
     const menu = (
@@ -59,8 +61,8 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-gray-200 bg-white py-5 lg:flex">
+        <div className="min-h-screen bg-gray-50 print:bg-[#ffffff]">
+            <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-gray-200 bg-white py-5 lg:flex print:hidden">
                 <div className="mb-6 px-6 text-lg font-bold text-emerald-700">Plataforma</div>
                 {menu}
                 <div className="mt-auto border-t border-gray-100 px-6 pt-4 text-sm">
@@ -80,8 +82,8 @@ export default function PanelLayout({ children }: PropsWithChildren) {
                 </div>
             </aside>
 
-            <div className="lg:pl-60">
-                <header className="sticky top-0 z-30 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 lg:hidden">
+            <div className="lg:pl-60 print:pl-0">
+                <header className="sticky top-0 z-30 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 lg:hidden print:hidden">
                     <span className="font-bold text-emerald-700">Plataforma</span>
                     <ThemeToggle />
                     <button type="button" onClick={() => setOpen(!open)} className="rounded-md p-2 text-gray-600 hover:bg-gray-100" aria-label="Menu">

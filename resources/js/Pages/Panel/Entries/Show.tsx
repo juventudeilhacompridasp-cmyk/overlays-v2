@@ -1,6 +1,6 @@
 import Modal from '@/Components/Modal';
 import { maskCpf } from '@/Components/Panel/cpf';
-import { Badge, Button, Card, DeleteButton, Empty, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
+import { Badge, Button, Card, DeleteButton, Empty, Field, Input, LinkButton, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Option } from '@/types/panel';
 import { Head, Link, useForm } from '@inertiajs/react';
@@ -201,7 +201,14 @@ export default function Show({ competition, season, division, entry, team, roste
                     { label: division.name, href: route('panel.divisions.show', division.id) },
                     { label: team.name },
                 ]}
-                actions={<Button onClick={() => setAdding(true)}>Adicionar ao elenco</Button>}
+                actions={
+                    <>
+                        <LinkButton href={route('panel.entries.cards', entry.id)} variant="secondary">
+                            Carteirinhas
+                        </LinkButton>
+                        <Button onClick={() => setAdding(true)}>Adicionar ao elenco</Button>
+                    </>
+                }
             />
 
             <Card>
@@ -237,6 +244,11 @@ export default function Show({ competition, season, division, entry, team, roste
                                         </td>
                                         <td className="px-5 py-3">
                                             <div className="flex justify-end gap-2">
+                                                {item.status === 'active' && (
+                                                    <LinkButton small variant="secondary" href={route('panel.roster.card', item.id)}>
+                                                        Carteirinha
+                                                    </LinkButton>
+                                                )}
                                                 <Button small variant="secondary" onClick={() => setEditing(item)}>
                                                     Editar
                                                 </Button>

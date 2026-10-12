@@ -28,7 +28,9 @@
         "@laravel/multiplex": "^0.4.1"
     },
     "dependencies": {
+        "@types/qrcode": "^1.5.5",
         "laravel-echo": "^2.6.1",
-        "pusher-js": "^8.6.0"
+        "pusher-js": "^8.6.0",
+        "qrcode": "^1.5.4"
     }
 }

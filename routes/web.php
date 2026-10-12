@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Middleware\PrivateNoIndex;
 use App\Modules\Broadcast\Http\Controllers\OverlayController;
 use App\Modules\Matches\Http\Controllers\PublicGameController;
+use App\Modules\Portal\Http\Controllers\CardVerifyController;
 use App\Modules\Portal\Http\Controllers\PortalController;
 use App\Modules\Registration\Http\Controllers\ApplyController;
 use App\Modules\Registration\Http\Controllers\ManageController;
@@ -13,6 +15,8 @@ Route::get('/', [PortalController::class, 'home'])->name('portal.home');
 Route::get('/competicoes/{competition:slug}', [PortalController::class, 'competition'])->name('portal.competition');
 Route::get('/competicoes/{competition:slug}/edicoes/{season}', [PortalController::class, 'season'])->name('portal.season');
 Route::get('/equipes/{team}', [PortalController::class, 'team'])->name('portal.team');
+// Verificação da carteirinha (QR): sem cache e fora dos buscadores (cabeçalho e robots).
+Route::get('/carteirinha/{code}', CardVerifyController::class)->name('portal.card')->middleware(['throttle:30,1', PrivateNoIndex::class]);
 Route::get('/sitemap.xml', [PortalController::class, 'sitemap'])->name('portal.sitemap');
 Route::get('/robots.txt', [PortalController::class, 'robots'])->name('portal.robots');
 

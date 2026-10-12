@@ -5,6 +5,7 @@ use App\Modules\Broadcast\Http\Controllers\ChannelController;
 use App\Modules\Competitions\Http\Controllers\CompetitionController;
 use App\Modules\Competitions\Http\Controllers\DivisionController;
 use App\Modules\Competitions\Http\Controllers\EntryController;
+use App\Modules\Competitions\Http\Controllers\ReportController;
 use App\Modules\Competitions\Http\Controllers\SeasonController;
 use App\Modules\Competitions\Http\Controllers\StageController;
 use App\Modules\Matches\Http\Controllers\FixtureController;
@@ -13,6 +14,7 @@ use App\Modules\Matches\Http\Controllers\SheetController;
 use App\Modules\Matches\Http\Controllers\VenueController;
 use App\Modules\Registration\Http\Controllers\ReviewController;
 use App\Modules\Registration\Http\Controllers\SeasonSettingsController;
+use App\Modules\Teams\Http\Controllers\CardController;
 use App\Modules\Teams\Http\Controllers\PersonController;
 use App\Modules\Teams\Http\Controllers\PersonPhotoController;
 use App\Modules\Teams\Http\Controllers\RosterController;
@@ -63,6 +65,11 @@ Route::middleware(['auth', 'verified', 'panel.member'])->prefix('painel')->name(
     // Inscrições online: análise dos pedidos. Tem dados pessoais e documentos (de menores, inclusive): só quem gerencia
     // competições, até para consultar (`can:`, e não `panel.can:`, que libera a leitura a qualquer membro).
     Route::middleware('can:manage-competitions')->group(function () {
+        Route::get('entries/{entry}/cards', [CardController::class, 'entry'])->name('entries.cards');
+        Route::get('roster/{rosterEntry}/card', [CardController::class, 'show'])->name('roster.card');
+        Route::post('roster/{rosterEntry}/card/regenerate', [CardController::class, 'regenerate'])->name('roster.card.regenerate');
+        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/{season}/{type}.csv', [ReportController::class, 'csv'])->name('reports.csv');
         Route::get('registrations', [ReviewController::class, 'index'])->name('registrations.index');
         Route::get('registrations/{registration}', [ReviewController::class, 'show'])->name('registrations.show');
         Route::patch('registrations/{registration}/people/{person}', [ReviewController::class, 'reviewPerson'])->name('registrations.people.review');
