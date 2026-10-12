@@ -15,7 +15,7 @@ use InvalidArgumentException;
 final class RoundRobin
 {
     /**
-     * @param  list<string>  $teamIds  Na ordem de cabeça de chave.
+     * @param  array<int, string>  $teamIds  Na ordem de cabeça de chave (as chaves são ignoradas).
      * @return list<list<array{0: string, 1: string}>> Rodadas, cada uma com pares [mandante, visitante].
      */
     public static function rounds(array $teamIds, bool $doubleRound = false): array

@@ -11,7 +11,7 @@ use InvalidArgumentException;
 final class SnakeDistributor
 {
     /**
-     * @param  list<string>  $teamIds  Na ordem de cabeça de chave.
+     * @param  array<int, string>  $teamIds  Na ordem de cabeça de chave (as chaves são ignoradas).
      * @return list<list<string>> Um array por grupo (os grupos nunca ficam vazios).
      */
     public static function distribute(array $teamIds, int $groups): array
