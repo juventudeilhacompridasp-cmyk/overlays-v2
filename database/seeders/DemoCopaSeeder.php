@@ -218,7 +218,7 @@ class DemoCopaSeeder extends Seeder
                 'game_id' => $live->id,
                 'layers' => ['lineup' => false, 'standings' => false],
             ]);
-            $this->command?->info('Overlays (OBS): '.$channel->overlayUrl('placar'));
+            $this->command->info('Overlays (OBS): '.$channel->overlayUrl('placar'));
         }
     }
 
