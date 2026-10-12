@@ -270,7 +270,7 @@ export function Logo({ src, name, size = 28, round = false, color }: { src?: str
         .toUpperCase();
 
     if (src) {
-        return <img src={src} alt="" width={size} height={size} loading="lazy" className={`shrink-0 bg-white object-contain ${shape}`} style={{ width: size, height: size }} />;
+        return <img src={src} alt="" width={size} height={size} loading="lazy" className={`shrink-0 bg-[#ffffff] object-contain ${shape}`} style={{ width: size, height: size }} />;
     }
 
     return (

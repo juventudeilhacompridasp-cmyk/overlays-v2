@@ -55,7 +55,7 @@ export function GameRow({ game }: { game: PortalGame }) {
                     {game.home ? <Link href={game.home.url} className="hover:underline">{game.home.name}</Link> : 'A definir'}
                     <Crest team={game.home} />
                 </div>
-                <Link href={game.url} className="min-w-16 rounded bg-gray-900 px-2 py-1 text-center font-bold tabular-nums text-white hover:bg-gray-700" aria-label="Ver o jogo">
+                <Link href={game.url} className="min-w-16 rounded bg-neutral-900 px-2 py-1 text-center font-bold tabular-nums text-white hover:bg-neutral-700" aria-label="Ver o jogo">
                     {score}
                 </Link>
                 <div className="flex flex-1 items-center gap-2 font-medium">

@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import ThemeToggle from '@/Components/ThemeToggle';
 import { useCan } from '@/lib/can';
 import { PropsWithChildren, useState } from 'react';
 
@@ -59,6 +60,9 @@ export default function PanelLayout({ children }: PropsWithChildren) {
                 <div className="mb-6 px-6 text-lg font-bold text-emerald-700">Plataforma</div>
                 {menu}
                 <div className="mt-auto border-t border-gray-100 px-6 pt-4 text-sm">
+                    <div className="mb-3">
+                        <ThemeToggle />
+                    </div>
                     <div className="truncate font-medium text-gray-800">{auth.user.name}</div>
                     {auth.role_label && <div className="text-xs text-gray-500">{auth.role_label}</div>}
                     <div className="mt-1 flex gap-3 text-gray-500">
@@ -75,6 +79,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
             <div className="lg:pl-60">
                 <header className="sticky top-0 z-30 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 lg:hidden">
                     <span className="font-bold text-emerald-700">Plataforma</span>
+                    <ThemeToggle />
                     <button type="button" onClick={() => setOpen(!open)} className="rounded-md p-2 text-gray-600 hover:bg-gray-100" aria-label="Menu">
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />

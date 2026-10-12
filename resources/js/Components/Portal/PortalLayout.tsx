@@ -1,3 +1,4 @@
+import ThemeToggle from '@/Components/ThemeToggle';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren } from 'react';
 
@@ -46,6 +47,7 @@ export default function PortalLayout({ theme, seo, children }: PropsWithChildren
                         <Link href={route('portal.home')} className="hover:underline">
                             Competições
                         </Link>
+                        <ThemeToggle onDark />
                         {auth.user ? (
                             <Link href={route('panel.dashboard')} className="rounded bg-white/20 px-3 py-1 hover:bg-white/30">
                                 Painel
