@@ -9,13 +9,31 @@ x-app: &app
       UID: ${UID:-1000}
       GID: ${GID:-1000}
   image: overlays-app-dev
+  environment:
+    COMPOSER_PROCESS_TIMEOUT: "0"
+    COMPOSER_MEMORY_LIMIT: "-1"
   volumes:
     - .:/var/www/html
+    # vendor fica em volume do Docker (rápido, principalmente no Windows/Mac); não aparece na pasta do projeto.
+    - vendor:/var/www/html/vendor
   depends_on:
+    init: { condition: service_completed_successfully }
     postgres: { condition: service_healthy }
     redis: { condition: service_healthy }
 
 services:
+  # Ajusta a dono dos volumes de dependências para o seu usuário (executa e termina).
+  init:
+    image: alpine:3.21
+    user: root
+    restart: "no"
+    command: >
+      sh -c "for d in /mnt/vendor /mnt/node_modules; do
+      [ \"$$(stat -c %u $$d)\" = \"${UID:-1000}\" ] || chown -R ${UID:-1000}:${GID:-1000} $$d; done"
+    volumes:
+      - vendor:/mnt/vendor
+      - node_modules:/mnt/node_modules
+
   app:
     <<: *app
     command: php-fpm
@@ -50,8 +68,11 @@ services:
     image: node:22-alpine
     user: "${UID:-1000}:${GID:-1000}"
     working_dir: /var/www/html
+    depends_on:
+      init: { condition: service_completed_successfully }
     volumes:
       - .:/var/www/html
+      - node_modules:/var/www/html/node_modules
     ports:
       - "5173:5173"
     command: sh -c "npm install && npm run dev"
@@ -103,6 +124,8 @@ services:
       - "1025:1025"
 
 volumes:
+  vendor:
+  node_modules:
   pgdata:
   redisdata:
   s3data:
