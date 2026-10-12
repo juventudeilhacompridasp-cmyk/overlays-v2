@@ -39,7 +39,7 @@ ARM (Hetzner CAX) é mais barato, mas exige build multi-arch no CI; x86 evita at
 - Domínio próprio de cliente: cadastrar manualmente no NPM no início (automatizar depois, via API do NPM ou Caddy on-demand TLS).
 
 ## 4. Ambiente local
-Compose com os mesmos serviços + `vite` (HMR), `minio`, `mailpit`. Comandos: `make up`, `make test`, `make fresh` (seed de competição demonstrativa
+Compose com os mesmos serviços + `vite` (HMR), `s3`, `mailpit`. Comandos: `make up`, `make test`, `make fresh` (seed de competição demonstrativa
 com 12 equipes, jogos e eventos para testar overlays). `.env.example` completo, Dev Container para pessoas e IAs.
 
 ## 5. CI/CD (GitHub Actions)

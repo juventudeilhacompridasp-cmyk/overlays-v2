@@ -6,7 +6,7 @@ Decisões em `docs/adr/`, arquitetura em `docs/02-arquitetura.md`, plano em `doc
 Idioma: código em inglês (nomes de classes, colunas, rotas internas); textos de interface, commits, PRs e docs em português do Brasil.
 
 ## Stack
-Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) · PostgreSQL · Redis · Horizon · Reverb · S3 compatível (MinIO local, R2 em produção).
+Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) · PostgreSQL · Redis · Horizon · Reverb · S3 compatível (S3Mock local, R2 em produção).
 
 ## Comandos (sempre via Docker: `make ...`)
 `make test` · `make lint` (Pint) · `make stan` (Larastan) · `make types` (tsc) · `make fresh` (banco com seed). Antes de abrir o PR todos devem passar.

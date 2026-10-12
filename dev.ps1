@@ -28,7 +28,7 @@ switch ($Command) {
         Dc exec app php artisan migrate --seed --force
         Write-Host ""
         Write-Host "Pronto! App: http://localhost:8080  |  Login: admin@plataforma.test / password"
-        Write-Host "Mailpit: http://localhost:8025  |  MinIO: http://localhost:9001 (minio / minio-secret)"
+        Write-Host "Mailpit: http://localhost:8025  |  S3 local: http://localhost:9000"
     }
     "up"      { Ensure-Env; Dc up -d --build }
     "down"    { Dc down }

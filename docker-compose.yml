@@ -1,5 +1,5 @@
 # Ambiente LOCAL. Uso: `make setup` na primeira vez e `make up` depois.
-# Portas: app 8080 | Reverb 8081 | Vite 5173 | Mailpit 8025 | MinIO 9001 | Postgres 5433
+# Portas: app 8080 | Reverb 8081 | Vite 5173 | Mailpit 8025 | S3 local 9000 | Postgres 5433
 
 x-app: &app
   build:
@@ -84,28 +84,17 @@ services:
       timeout: 3s
       retries: 10
 
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
+  # S3 local (Adobe S3Mock): compatível com a API do S3, cria os buckets sozinho. Sem painel web.
+  s3:
+    image: adobe/s3mock:5
     environment:
-      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-minio}
-      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-minio-secret}
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: overlays-public,overlays-private
+      COM_ADOBE_TESTING_S3MOCK_STORE_ROOT: /s3data
+      COM_ADOBE_TESTING_S3MOCK_STORE_RETAIN_FILES_ON_EXIT: "true"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9000:9090"
     volumes:
-      - miniodata:/data
-
-  minio-init:
-    image: minio/mc:latest
-    depends_on: [minio]
-    restart: "no"
-    entrypoint: >
-      /bin/sh -c "
-      until mc alias set local http://minio:9000 ${AWS_ACCESS_KEY_ID:-minio} ${AWS_SECRET_ACCESS_KEY:-minio-secret}; do sleep 1; done;
-      mc mb --ignore-existing local/overlays-public local/overlays-private;
-      mc anonymous set download local/overlays-public;
-      "
+      - s3data:/s3data
 
   mailpit:
     image: axllent/mailpit:latest
@@ -116,4 +105,4 @@ services:
 volumes:
   pgdata:
   redisdata:
-  miniodata:
+  s3data:

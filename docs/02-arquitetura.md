@@ -12,7 +12,7 @@ Referência funcional: `01-mapeamento-plataforma.md` (painel do organizador aind
 | Tempo real | Laravel Reverb + Echo | WebSocket nativo; escala via Redis |
 | Banco | PostgreSQL 17 | JSONB para regras/eventos; integridade |
 | Cache/filas | Redis 7 + Horizon | |
-| Arquivos | S3-compatível (R2 em prod, MinIO local) | Ver §5 |
+| Arquivos | S3-compatível (R2 em prod, S3Mock local) | Ver §5 |
 | UI | Tailwind + shadcn/ui, TanStack Query onde houver SPA | |
 
 API: rotas `/api/v1` (Sanctum, OpenAPI via Scramble) ficam no mesmo projeto; só são publicadas quando houver app móvel ou integração.

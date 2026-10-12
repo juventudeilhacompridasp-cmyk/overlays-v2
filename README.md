@@ -3,7 +3,7 @@
 SaaS multi-organizador para gestão de campeonatos (futebol primeiro) com placar/overlays em tempo real para transmissões.
 Documentação de produto e arquitetura em [`docs/`](docs/) — comece por [`docs/04-plano-de-acao.md`](docs/04-plano-de-acao.md).
 
-**Stack:** Laravel 13 (PHP 8.4) · Inertia + React + TypeScript (SSR) · PostgreSQL 17 · Redis · Reverb (WebSocket) · Horizon · MinIO/S3 · Docker.
+**Stack:** Laravel 13 (PHP 8.4) · Inertia + React + TypeScript (SSR) · PostgreSQL 17 · Redis · Reverb (WebSocket) · Horizon · S3 (S3Mock local, R2 em produção) · Docker.
 
 ## Rodar localmente
 
@@ -21,7 +21,7 @@ make setup      # primeira vez: sobe tudo, instala dependências, gera chave, mi
 | Vite (HMR) | http://localhost:5173 |
 | Reverb (WebSocket) | `ws://localhost:8081` |
 | Mailpit (e-mails de teste) | http://localhost:8025 |
-| MinIO (arquivos) | http://localhost:9001 — `minio` / `minio-secret` (buckets `overlays-public` e `overlays-private`) |
+| S3 local (arquivos) | http://localhost:9000 — buckets `overlays-public` e `overlays-private` (sem painel; credenciais ignoradas) |
 | Postgres | `localhost:5433` — usuário/senha/banco em `.env` |
 
 **Windows (PowerShell):** o `make` não existe no Windows; use o script equivalente: `.\dev.ps1 setup`, `.\dev.ps1 up`, `.\dev.ps1 test`…

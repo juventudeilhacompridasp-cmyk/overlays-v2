@@ -19,7 +19,7 @@ setup: ## Primeira execução: .env, containers, dependências, chave, banco
 	$(APP) php artisan migrate --seed --force
 	@echo ""
 	@echo "Pronto! App: http://localhost:8080  |  Login: admin@plataforma.test / password"
-	@echo "Mailpit: http://localhost:8025  |  MinIO: http://localhost:9001 (minio / minio-secret)"
+	@echo "Mailpit: http://localhost:8025  |  S3 local: http://localhost:9000"
 
 up: ## Sobe os containers
 	@[ -f .env ] || cp .env.example .env
