@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Panel\DashboardController;
+use App\Modules\Broadcast\Http\Controllers\ChannelController;
 use App\Modules\Competitions\Http\Controllers\CompetitionController;
 use App\Modules\Competitions\Http\Controllers\DivisionController;
 use App\Modules\Competitions\Http\Controllers\EntryController;
@@ -66,6 +67,16 @@ Route::middleware(['auth', 'verified', 'panel.member'])->prefix('painel')->name(
         Route::post('games/{game}/shootout', [SheetController::class, 'shootout'])->name('games.shootout');
         Route::post('games/{game}/finish', [SheetController::class, 'finish'])->name('games.finish');
     });
+
+    // Transmissão (OBS): ver a lista é para qualquer membro; criar/excluir canal é do organizador; o operador
+    // escolhe o jogo no ar e liga camadas durante o jogo.
+    Route::get('broadcast', [ChannelController::class, 'index'])->name('broadcast.index');
+    Route::middleware('panel.can:manage-competitions')->group(function () {
+        Route::post('broadcast', [ChannelController::class, 'store'])->name('broadcast.store');
+        Route::post('broadcast/{channel}/regenerate', [ChannelController::class, 'regenerate'])->name('broadcast.regenerate');
+        Route::delete('broadcast/{channel}', [ChannelController::class, 'destroy'])->name('broadcast.destroy');
+    });
+    Route::patch('broadcast/{channel}', [ChannelController::class, 'update'])->middleware('panel.can:operate-games')->name('broadcast.update');
 
     // Usuários e papéis (só administradores; nem consultar a lista).
     Route::middleware('panel.can:manage-users')->group(function () {

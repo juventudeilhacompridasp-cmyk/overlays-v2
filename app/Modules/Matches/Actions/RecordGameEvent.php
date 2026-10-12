@@ -4,6 +4,7 @@ namespace App\Modules\Matches\Actions;
 
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\GameStatus;
+use App\Modules\Matches\Events\GameEventRecorded;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Rules\Sheet\SheetEvent;
@@ -44,7 +45,7 @@ final class RecordGameEvent
             throw new InvalidArgumentException('O jogo não está aberto para lançamentos.');
         }
 
-        return DB::transaction(function () use ($game, $type, $entryId, $personId, $secondaryPersonId, $period, $minute, $recordedBy): GameEvent {
+        $event = DB::transaction(function () use ($game, $type, $entryId, $personId, $secondaryPersonId, $period, $minute, $recordedBy): GameEvent {
             $error = $this->sheet->handle($game)->check(new SheetEvent($type, $entryId, $personId, $secondaryPersonId, $period, $minute));
 
             if ($error !== null) {
@@ -71,5 +72,9 @@ final class RecordGameEvent
 
             return $event;
         });
+
+        GameEventRecorded::dispatch((string) $game->getKey(), (string) $event->getKey());
+
+        return $event;
     }
 }
