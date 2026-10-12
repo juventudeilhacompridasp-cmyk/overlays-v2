@@ -446,7 +446,7 @@ export default function Sheet({ game: serverGame, home, away, events: serverEven
                     {home?.name}
                     {home && <Logo src={home.logo} name={home.name} size={40} />}
                 </span>
-                <span className="rounded bg-gray-900 px-4 py-2 text-3xl font-bold tabular-nums text-white" data-testid="scoreboard">
+                <span className="rounded bg-neutral-900 px-4 py-2 text-3xl font-bold tabular-nums text-white" data-testid="scoreboard">
                     {game.home_score} x {game.away_score}
                 </span>
                 <span className="flex flex-1 items-center gap-3 text-lg font-semibold">

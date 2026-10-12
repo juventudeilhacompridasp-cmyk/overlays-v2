@@ -1,3 +1,143 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+| Tema claro/escuro. A escala de cinzas do Tailwind é lida destas variáveis (ver tailwind.config.js); no tema escuro
+| ela se inverte (texto claro, fundos escuros). Cores de status e de marca (verde/vermelho/âmbar/azul) são
+| ajustadas nas regras `.dark` abaixo. Telas feitas para vídeo/OBS (Overlay/*, Public/*) NÃO recebem a classe `dark`.
+*/
+:root {
+    --gray-50: 249 250 251;
+    --gray-100: 243 244 246;
+    --gray-200: 229 231 235;
+    --gray-300: 209 213 219;
+    --gray-400: 156 163 175;
+    --gray-500: 107 114 128;
+    --gray-600: 75 85 99;
+    --gray-700: 55 65 81;
+    --gray-800: 31 41 55;
+    --gray-900: 17 24 39;
+    --surface: 255 255 255;
+}
+
+.dark {
+    color-scheme: dark;
+    --gray-50: 11 15 25;
+    --gray-100: 31 41 55;
+    --gray-200: 55 65 81;
+    --gray-300: 75 85 99;
+    --gray-400: 107 114 128;
+    --gray-500: 156 163 175;
+    --gray-600: 209 213 219;
+    --gray-700: 229 231 235;
+    --gray-800: 243 244 246;
+    --gray-900: 249 250 251;
+    --surface: 17 24 39;
+}
+
+@layer base {
+    /* Fundo da página inteira (áreas fora do layout, rolagem elástica). Só no tema escuro: o claro e as telas de OBS ficam como estão. */
+    .dark body {
+        background-color: rgb(var(--gray-50));
+    }
+
+    /* Cartões, menus, modais e botões secundários usam `bg-white`: viram a cor de superfície. */
+    .dark .bg-white {
+        background-color: rgb(var(--surface));
+    }
+
+    /* Campos de formulário (o plugin @tailwindcss/forms fixa fundo e borda claros). */
+    .dark input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='file']):not([type='range']),
+    .dark select,
+    .dark textarea {
+        background-color: rgb(var(--gray-100));
+        border-color: rgb(var(--gray-300));
+        color: rgb(var(--gray-900));
+    }
+
+    .dark input::placeholder,
+    .dark textarea::placeholder {
+        color: rgb(var(--gray-400));
+    }
+
+    .dark input[type='checkbox'],
+    .dark input[type='radio'] {
+        background-color: rgb(var(--gray-100));
+        border-color: rgb(var(--gray-300));
+    }
+
+    /* Textos coloridos: tons mais claros para manter o contraste sobre fundo escuro. */
+    .dark .text-emerald-600,
+    .dark .text-emerald-700,
+    .dark .hover\:text-emerald-700:hover {
+        color: rgb(52 211 153);
+    }
+
+    .dark .text-emerald-800 {
+        color: rgb(110 231 183);
+    }
+
+    .dark .text-red-600,
+    .dark .text-red-700 {
+        color: rgb(248 113 113);
+    }
+
+    .dark .text-red-800 {
+        color: rgb(252 165 165);
+    }
+
+    .dark .text-amber-600,
+    .dark .text-amber-700 {
+        color: rgb(251 191 36);
+    }
+
+    .dark .text-amber-800 {
+        color: rgb(252 211 77);
+    }
+
+    .dark .text-blue-800 {
+        color: rgb(147 197 253);
+    }
+
+    /* Fundos de status (avisos, selos, item ativo do menu). */
+    .dark .bg-emerald-50 {
+        background-color: rgb(6 40 31);
+    }
+
+    .dark .bg-emerald-100 {
+        background-color: rgb(6 78 59);
+    }
+
+    .dark .bg-red-50 {
+        background-color: rgb(69 10 10);
+    }
+
+    .dark .bg-red-100 {
+        background-color: rgb(127 29 29);
+    }
+
+    .dark .bg-amber-50 {
+        background-color: rgb(69 26 3);
+    }
+
+    .dark .bg-amber-100 {
+        background-color: rgb(120 53 15);
+    }
+
+    .dark .bg-blue-100 {
+        background-color: rgb(30 58 138);
+    }
+
+    .dark .hover\:bg-red-50:hover {
+        background-color: rgb(69 10 10);
+    }
+
+    .dark .ring-emerald-200 {
+        --tw-ring-color: rgb(6 95 70);
+    }
+
+    .dark .ring-red-200 {
+        --tw-ring-color: rgb(153 27 27);
+    }
+}
