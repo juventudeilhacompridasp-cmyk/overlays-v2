@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Modules\Matches\Models\Venue;
+use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Models\Organization;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,7 +20,7 @@ class VenueFactory extends Factory
     public function definition(): array
     {
         return [
-            'organization_id' => Organization::factory(),
+            'organization_id' => fn () => CurrentOrganization::id() ?? Organization::factory()->create()->id,
             'name' => 'Estádio '.fake()->unique()->lastName(),
             'city' => fake()->city(),
             'address' => null,

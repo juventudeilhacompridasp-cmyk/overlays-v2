@@ -57,8 +57,11 @@ it('resolves the default organization on web requests', function () {
     expect(CurrentOrganization::id())->toBe($organization->id);
 });
 
-it('does not fail when the default organization does not exist yet', function () {
+it('creates the default organization on the first web request when it does not exist yet', function () {
+    expect(Organization::query()->where('slug', config('platform.default_organization_slug'))->exists())->toBeFalse();
+
     $this->get('/')->assertOk();
 
-    expect(CurrentOrganization::id())->toBeNull();
+    expect(CurrentOrganization::id())->not->toBeNull()
+        ->and(Organization::query()->where('slug', config('platform.default_organization_slug'))->count())->toBe(1);
 });
