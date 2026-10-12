@@ -14,4 +14,20 @@ enum GameEventType: string
     case PeriodEnd = 'period_end';
     case PenaltyKick = 'penalty_kick';
     case Warning = 'warning';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Goal => 'Gol',
+            self::OwnGoal => 'Gol contra',
+            self::YellowCard => 'Cartão amarelo',
+            self::RedCard => 'Cartão vermelho',
+            self::BlueCard => 'Cartão azul',
+            self::Substitution => 'Substituição',
+            self::PeriodStart => 'Início de período',
+            self::PeriodEnd => 'Fim de período',
+            self::PenaltyKick => 'Cobrança de pênalti',
+            self::Warning => 'Advertência',
+        };
+    }
 }
