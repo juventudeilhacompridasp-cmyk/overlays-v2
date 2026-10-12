@@ -50,9 +50,9 @@ final class GameSheetState
      */
     public function setLineup(string $teamId, array $starters, array $bench = [], array $staff = []): void
     {
-        $this->onField[$teamId] = array_values($starters);
-        $this->bench[$teamId] = array_values($bench);
-        $this->staff[$teamId] = array_values($staff);
+        $this->onField[$teamId] = $starters;
+        $this->bench[$teamId] = $bench;
+        $this->staff[$teamId] = $staff;
         $this->yellows[$teamId] ??= [];
         $this->expelled[$teamId] ??= [];
         $this->substitutions[$teamId] ??= 0;
