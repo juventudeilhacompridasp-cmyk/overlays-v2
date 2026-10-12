@@ -35,6 +35,8 @@ ARM (Hetzner CAX) é mais barato, mas exige build multi-arch no CI; x86 evita at
 ## 3. Nginx Proxy Manager — pontos de atenção
 - **Wildcard** `*.dominio.com.br` para os subdomínios dos tenants: certificado via DNS challenge (Cloudflare) no NPM; um Proxy Host com domínio `*.dominio`.
 - Ativar **Websockets Support** no host do Reverb. Header `X-Forwarded-*` e `TRUSTED_PROXIES` no Laravel.
+- **Upload de imagens** (escudos até 3 MB, fotos até 5 MB): o nginx do app e o PHP aceitam 25 MB; se os envios falharem com erro 413 atrás do NPM, coloque `client_max_body_size 25m;` na aba *Advanced* do Proxy Host.
+- **Escudos no bucket público**: no R2, habilite o domínio público do bucket (ex.: `cdn.dominio`) e use-o em `AWS_URL`; o bucket privado (fotos, documentos) nunca recebe acesso público.
 - Limitação: a configuração do NPM fica no banco/GUI (não versionada). Exportar backup do volume `npm`. Alternativa futura: Traefik (labels versionadas).
 - Domínio próprio de cliente: cadastrar manualmente no NPM no início (automatizar depois, via API do NPM ou Caddy on-demand TLS).
 

@@ -3,6 +3,7 @@
 namespace App\Modules\Teams\Models;
 
 use App\Modules\Tenancy\Concerns\BelongsToOrganization;
+use App\Support\Images\ImageStore;
 use Database\Factories\PersonFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
@@ -40,5 +41,11 @@ class Person extends Model
     public function rosterEntries(): HasMany
     {
         return $this->hasMany(RosterEntry::class);
+    }
+
+    /** URL temporária assinada da foto (disco privado); `$size` = 400 (completa) ou 96 (miniatura). */
+    public function photoUrl(int $size = 96): ?string
+    {
+        return ImageStore::privateUrl($this->photo_path, $size);
     }
 }

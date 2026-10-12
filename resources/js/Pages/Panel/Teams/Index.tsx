@@ -1,4 +1,4 @@
-import { Badge, Card, DeleteButton, Empty, LinkButton, PageHeader, Pagination, SearchBox } from '@/Components/Panel/ui';
+import { Badge, Card, DeleteButton, Empty, LinkButton, Logo, PageHeader, Pagination, SearchBox } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Paginated } from '@/types/panel';
 import { Head, Link, router } from '@inertiajs/react';
@@ -10,6 +10,7 @@ interface Team {
     short_name: string | null;
     city: string | null;
     primary_color: string | null;
+    logo_url: string | null;
     entries_count: number;
 }
 
@@ -55,10 +56,7 @@ export default function Index({ teams, filters }: { teams: Paginated<Team>; filt
                                     <tr key={team.id}>
                                         <td className="px-5 py-3">
                                             <div className="flex items-center gap-3">
-                                                <span
-                                                    className="h-4 w-4 rounded-full ring-1 ring-gray-200"
-                                                    style={{ backgroundColor: team.primary_color ?? '#e5e7eb' }}
-                                                />
+                                                <Logo src={team.logo_url} name={team.name} color={team.primary_color} />
                                                 <Link href={route('panel.teams.edit', team.id)} className="font-medium text-gray-900 hover:text-emerald-700">
                                                     {team.name}
                                                 </Link>

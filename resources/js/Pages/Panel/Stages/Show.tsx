@@ -1,5 +1,5 @@
 import Modal from '@/Components/Modal';
-import { Badge, Button, Card, Empty, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
+import { Badge, Button, Card, Empty, Field, Input, Logo, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Option } from '@/types/panel';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
@@ -8,6 +8,7 @@ import { FormEvent, useState } from 'react';
 interface Team {
     id: string;
     name: string;
+    logo: string | null;
 }
 
 interface Game {
@@ -34,6 +35,7 @@ interface Game {
 interface Row {
     position: number;
     team: string;
+    logo: string | null;
     points: number;
     played: number;
     wins: number;
@@ -253,7 +255,10 @@ function GameRow({ game, onSchedule, onResult }: { game: Game; onSchedule: () =>
                     <Badge tone={statusTone(game.status)}>{game.status_label}</Badge>
                 </div>
                 <div className="mt-1 flex items-center gap-3 font-medium text-gray-900">
-                    <span className="flex-1 text-right">{game.home?.name ?? 'A definir'}</span>
+                    <span className="flex flex-1 items-center justify-end gap-2">
+                        {game.home?.name ?? 'A definir'}
+                        {game.home && <Logo src={game.home.logo} name={game.home.name} size={24} />}
+                    </span>
                     <span className="min-w-14 rounded bg-gray-100 px-2 py-0.5 text-center tabular-nums">
                         {game.decided ? `${game.home_score} x ${game.away_score}` : 'x'}
                     </span>
@@ -262,7 +267,10 @@ function GameRow({ game, onSchedule, onResult }: { game: Game; onSchedule: () =>
                             ({game.home_penalties} x {game.away_penalties} nos pênaltis)
                         </span>
                     )}
-                    <span className="flex-1">{game.away?.name ?? 'A definir'}</span>
+                    <span className="flex flex-1 items-center gap-2">
+                        {game.away && <Logo src={game.away.logo} name={game.away.name} size={24} />}
+                        {game.away?.name ?? 'A definir'}
+                    </span>
                 </div>
                 <div className="mt-1 text-center text-xs text-gray-500">
                     {formatDateTime(game.scheduled_at)}
@@ -371,8 +379,11 @@ export default function Show({ competition, season, division, stage, tables, gam
                                             <tr key={row.team}>
                                                 <td className="px-3 py-2 text-gray-500">{row.position}</td>
                                                 <td className="px-3 py-2 font-medium text-gray-900">
-                                                    {row.team}
-                                                    {row.tied && row.played > 0 && <span className="ml-1 text-amber-600" title="Empate que só o sorteio resolve">*</span>}
+                                                    <span className="flex items-center gap-2">
+                                                        <Logo src={row.logo} name={row.team} size={20} />
+                                                        {row.team}
+                                                        {row.tied && row.played > 0 && <span className="text-amber-600" title="Empate que só o sorteio resolve">*</span>}
+                                                    </span>
                                                 </td>
                                                 <td className="px-3 py-2 text-center font-semibold">{row.points}</td>
                                                 <td className="px-3 py-2 text-center">{row.played}</td>

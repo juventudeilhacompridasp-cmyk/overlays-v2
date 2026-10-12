@@ -3,6 +3,7 @@
 namespace App\Modules\Teams\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Teams\Actions\ChangeTeamLogo;
 use App\Modules\Teams\Http\Requests\TeamRequest;
 use App\Modules\Teams\Models\Team;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +22,11 @@ class TeamController extends Controller
             ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
             ->orderBy('name')
             ->paginate(15)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (Team $team) => [
+                ...$team->only(['id', 'name', 'short_name', 'city', 'primary_color', 'entries_count']),
+                'logo_url' => $team->logoUrl(128),
+            ]);
 
         return Inertia::render('Panel/Teams/Index', [
             'teams' => $teams,
@@ -43,7 +48,7 @@ class TeamController extends Controller
 
     public function edit(Team $team): Response
     {
-        return Inertia::render('Panel/Teams/Form', ['team' => $team->only(['id', 'name', 'short_name', 'city', 'primary_color'])]);
+        return Inertia::render('Panel/Teams/Form', ['team' => [...$team->only(['id', 'name', 'short_name', 'city', 'primary_color']), 'logo_url' => $team->logoUrl(512)]]);
     }
 
     public function update(TeamRequest $request, Team $team): RedirectResponse
@@ -59,6 +64,7 @@ class TeamController extends Controller
             return back()->with('error', 'Esta equipe está inscrita em campeonatos. Remova as inscrições antes de excluí-la.');
         }
 
+        app(ChangeTeamLogo::class)->handle($team, null);
         $team->delete();
 
         return to_route('panel.teams.index')->with('success', 'Equipe excluída.');

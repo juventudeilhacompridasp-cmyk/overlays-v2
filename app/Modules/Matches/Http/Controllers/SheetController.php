@@ -70,6 +70,7 @@ class SheetController extends Controller
             return [
                 'id' => $entry->getKey(),
                 'name' => $entry->team->name,
+                'logo' => $entry->team->logoUrl(128),
                 'roster' => $roster->map($person)->all(),
                 'lineup' => [
                     'starters' => $ids(LineupSlot::Starter),

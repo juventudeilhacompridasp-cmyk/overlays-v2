@@ -1,4 +1,4 @@
-import { Button, Card, Field, Input, LinkButton, PageHeader } from '@/Components/Panel/ui';
+import { Button, Card, Field, ImageUpload, Input, LinkButton, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
@@ -9,6 +9,7 @@ interface Team {
     short_name: string | null;
     city: string | null;
     primary_color: string | null;
+    logo_url: string | null;
 }
 
 export default function Form({ team }: { team: Team | null }) {
@@ -36,6 +37,22 @@ export default function Form({ team }: { team: Team | null }) {
                 title={team ? 'Editar equipe' : 'Nova equipe'}
                 breadcrumbs={[{ label: 'Equipes', href: route('panel.teams.index') }, { label: team ? team.name : 'Nova' }]}
             />
+
+            {team ? (
+                <Card title="Escudo" className="mb-6 max-w-2xl">
+                    <ImageUpload
+                        label="Escudo da equipe"
+                        field="logo"
+                        name={team.name}
+                        currentUrl={team.logo_url}
+                        uploadUrl={route('panel.teams.logo.store', team.id)}
+                        removeUrl={route('panel.teams.logo.destroy', team.id)}
+                        hint="JPG, PNG ou WebP, até 3 MB. PNG com fundo transparente é o ideal para o placar e os overlays."
+                    />
+                </Card>
+            ) : (
+                <p className="mb-4 max-w-2xl text-sm text-gray-500">Salve a equipe para poder enviar o escudo.</p>
+            )}
 
             <Card className="max-w-2xl">
                 <form onSubmit={submit} className="space-y-4">

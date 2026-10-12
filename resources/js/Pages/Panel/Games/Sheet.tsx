@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
+import { Badge, Button, Card, Field, Input, Logo, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { GameClock, formatClock, periodLabel, useGameClock } from '@/lib/clock';
 import { Option } from '@/types/panel';
@@ -18,6 +18,7 @@ interface Person {
 interface Team {
     id: string;
     name: string;
+    logo: string | null;
     roster: Person[];
     lineup: { starters: string[]; bench: string[]; staff: string[] };
     has_lineup: boolean;
@@ -436,11 +437,17 @@ export default function Sheet({ game, home, away, events, limits, event_types, c
             />
 
             <div className="mb-6 flex items-center justify-center gap-6 rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
-                <span className="flex-1 text-right text-lg font-semibold">{home?.name}</span>
+                <span className="flex flex-1 items-center justify-end gap-3 text-lg font-semibold">
+                    {home?.name}
+                    {home && <Logo src={home.logo} name={home.name} size={40} />}
+                </span>
                 <span className="rounded bg-gray-900 px-4 py-2 text-3xl font-bold tabular-nums text-white" data-testid="scoreboard">
                     {game.home_score} x {game.away_score}
                 </span>
-                <span className="flex-1 text-lg font-semibold">{away?.name}</span>
+                <span className="flex flex-1 items-center gap-3 text-lg font-semibold">
+                    {away && <Logo src={away.logo} name={away.name} size={40} />}
+                    {away?.name}
+                </span>
             </div>
             <div className="-mt-4 mb-6 text-center">
                 <Badge tone={game.open ? 'amber' : 'green'}>{game.status_label}</Badge>
