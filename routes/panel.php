@@ -9,6 +9,8 @@ use App\Modules\Competitions\Http\Controllers\StageController;
 use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
 use App\Modules\Matches\Http\Controllers\VenueController;
+use App\Modules\Teams\Http\Controllers\PersonController;
+use App\Modules\Teams\Http\Controllers\RosterController;
 use App\Modules\Teams\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,12 +23,16 @@ Route::middleware(['auth', 'verified'])->prefix('painel')->name('panel.')->group
 
     Route::resource('teams', TeamController::class)->except('show');
     Route::resource('venues', VenueController::class)->except('show');
+    Route::resource('people', PersonController::class)->except('show');
 
     Route::resource('competitions', CompetitionController::class);
     Route::resource('competitions.seasons', SeasonController::class)->shallow()->except('index');
     Route::resource('seasons.divisions', DivisionController::class)->shallow()->only(['store', 'show', 'update', 'destroy']);
     Route::resource('divisions.stages', StageController::class)->shallow()->only(['store', 'show', 'update', 'destroy']);
-    Route::resource('divisions.entries', EntryController::class)->shallow()->only(['store', 'update', 'destroy']);
+    Route::resource('divisions.entries', EntryController::class)->shallow()->only(['store', 'show', 'update', 'destroy']);
+    Route::post('entries/{entry}/roster', [RosterController::class, 'store'])->name('entries.roster.store');
+    Route::patch('roster/{rosterEntry}', [RosterController::class, 'update'])->name('roster.update');
+    Route::delete('roster/{rosterEntry}', [RosterController::class, 'destroy'])->name('roster.destroy');
 
     Route::post('stages/{stage}/fixtures', [FixtureController::class, 'store'])->name('stages.fixtures.store');
     Route::delete('stages/{stage}/fixtures', [FixtureController::class, 'destroy'])->name('stages.fixtures.destroy');

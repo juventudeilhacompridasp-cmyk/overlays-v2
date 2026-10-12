@@ -5,6 +5,7 @@ const nav = [
     { label: 'Painel', route: 'panel.dashboard', match: 'panel.dashboard', icon: 'M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10' },
     { label: 'Competições', route: 'panel.competitions.index', match: 'panel.competitions.*', icon: 'M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4zM5 4H3v2a3 3 0 003 3M19 4h2v2a3 3 0 01-3 3' },
     { label: 'Equipes', route: 'panel.teams.index', match: 'panel.teams.*', icon: 'M17 20h5v-2a4 4 0 00-5-3.9M9 11a4 4 0 100-8 4 4 0 000 8zM2 20v-2a4 4 0 014-4h6a4 4 0 014 4v2' },
+    { label: 'Atletas e comissão', route: 'panel.people.index', match: 'panel.people.*', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1' },
     { label: 'Estádios', route: 'panel.venues.index', match: 'panel.venues.*', icon: 'M12 21s-7-6.2-7-11a7 7 0 1114 0c0 4.8-7 11-7 11zM12 12a2 2 0 100-4 2 2 0 000 4z' },
 ];
 

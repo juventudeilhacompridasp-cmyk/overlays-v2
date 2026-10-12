@@ -8,6 +8,7 @@ use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Competitions\Http\Requests\DivisionRequest;
 use App\Modules\Competitions\Models\Division;
 use App\Modules\Competitions\Models\Season;
+use App\Modules\Teams\Enums\RosterStatus;
 use App\Modules\Teams\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -34,7 +35,7 @@ class DivisionController extends Controller
             'type_label' => $stage->type->label(),
         ]);
 
-        $entries = $division->entries()->with('team')->get()
+        $entries = $division->entries()->with(['team', 'rosterEntries'])->get()
             ->sortBy(fn ($entry) => [$entry->seed ?? PHP_INT_MAX, $entry->team->name])
             ->values()
             ->map(fn ($entry) => [
@@ -42,6 +43,7 @@ class DivisionController extends Controller
                 'seed' => $entry->seed,
                 'status' => $entry->status->value,
                 'status_label' => $entry->status->label(),
+                'roster_count' => $entry->rosterEntries->where('status', RosterStatus::Active)->count(),
                 'team' => ['id' => $entry->team->id, 'name' => $entry->team->name, 'city' => $entry->team->city],
             ]);
 

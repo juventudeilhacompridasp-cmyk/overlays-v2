@@ -17,7 +17,8 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 - **IDs:** ULID em tabelas de domínio (nunca sequenciais expostos publicamente).
 - **Eventos de jogo somente de acréscimo** (`game_events`, modelo `GameEvent`, que lança exceção em update/delete); placar e classificação são projeções. Desfazer = evento compensatório (`compensates_event_id`). O modelo de partida se chama `Game` (`Match` é palavra reservada do PHP).
 - **Regras de competição são parâmetros** (pontos, desempates, cartões/suspensão), nunca valores fixos no código.
-- **LGPD:** documentos pessoais só no disco `s3-private` com URL assinada; dados de menores e disciplina não são públicos por padrão.
+- **LGPD:** documentos pessoais só no disco `s3-private` com URL assinada; dados de menores e disciplina não são públicos por padrão. **O CPF nunca é gravado nem devolvido em claro**: só o HMAC (`Cpf::hash`, chave `platform.document_hash_key` ou APP_KEY) em `people.document_hash`, usado para busca e para evitar cadastro duplicado. Não exponha `document_hash` nas respostas.
+- **Elenco** (`RosterEntry`, ações `AddToRoster`/`RemoveFromRoster`): camisa única entre atletas ativos da inscrição; mesma função uma vez por pessoa; atleta ativo em apenas uma equipe por divisão (comissão pode estar em várias); quem tem histórico de jogos é marcado como removido, não apagado.
 - Arquivos públicos no disco `s3` (CDN); variantes WebP geradas por job.
 - Tempo real: broadcast via Reverb; overlays carregam snapshot e recebem deltas; cronômetro calculado no cliente.
 - Cobrança automática está **fora do MVP** (recursos liberados por organização).
