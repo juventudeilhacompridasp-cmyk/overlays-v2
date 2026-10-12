@@ -14,4 +14,15 @@ return [
     */
     'document_hash_key' => env('DOCUMENT_HASH_KEY'),
 
+    /*
+    | Endereço PÚBLICO do Reverb, usado pelo navegador (o servidor Laravel fala com o container "reverb" pelas
+    | variáveis REVERB_*). Lido em tempo de execução, então não exige rebuild do front. Sem host, usa o do site.
+    */
+    'realtime' => [
+        'key' => env('REVERB_APP_KEY'),
+        'host' => env('REVERB_PUBLIC_HOST'),
+        'port' => (int) env('REVERB_PUBLIC_PORT', 8081),
+        'scheme' => env('REVERB_PUBLIC_SCHEME', 'http'),
+    ],
+
 ];

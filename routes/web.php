@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Modules\Matches\Http\Controllers\PublicGameController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -13,6 +14,10 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 });
+
+// Portal público: placar ao vivo (sem login).
+Route::get('/jogos/{game}', [PublicGameController::class, 'show'])->name('public.games.show');
+Route::get('/jogos/{game}/estado', [PublicGameController::class, 'state'])->name('public.games.state');
 
 Route::get('/dashboard', fn () => redirect()->route('panel.dashboard'))
     ->middleware(['auth', 'verified'])

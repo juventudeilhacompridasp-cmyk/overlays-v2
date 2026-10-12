@@ -47,5 +47,6 @@ Route::middleware(['auth', 'verified'])->prefix('painel')->name('panel.')->group
     Route::put('games/{game}/lineups/{entry}', [SheetController::class, 'lineup'])->name('games.lineup');
     Route::post('games/{game}/events', [SheetController::class, 'storeEvent'])->name('games.events.store');
     Route::post('games/{game}/events/{event}/void', [SheetController::class, 'voidEvent'])->name('games.events.void');
+    Route::post('games/{game}/periods', [SheetController::class, 'period'])->name('games.periods.store');
     Route::post('games/{game}/finish', [SheetController::class, 'finish'])->name('games.finish');
 });

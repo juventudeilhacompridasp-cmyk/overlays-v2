@@ -2,6 +2,8 @@
 
 namespace App\Modules\Matches\Actions;
 
+use App\Modules\Matches\Enums\GameEventType;
+use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +34,17 @@ final class VoidGameEvent
             throw new InvalidArgumentException('Este gol faz parte de um resultado rápido; reabra o jogo para corrigir.');
         }
 
-        return DB::transaction(function () use ($game, $event, $recordedBy): GameEvent {
+        $isMark = in_array($event->type, [GameEventType::PeriodStart, GameEventType::PeriodEnd], true);
+
+        return DB::transaction(function () use ($game, $event, $recordedBy, $isMark): GameEvent {
+            if ($isMark) {
+                $last = $game->events()->effective()->whereIn('type', [GameEventType::PeriodStart, GameEventType::PeriodEnd])->orderByDesc('id')->first();
+
+                if ($last?->getKey() !== $event->getKey()) {
+                    throw new InvalidArgumentException('Só o último marco de período pode ser desfeito.');
+                }
+            }
+
             $alreadyVoided = $game->events()->where('compensates_event_id', $event->getKey())->exists();
 
             if ($alreadyVoided) {
@@ -59,6 +71,10 @@ final class VoidGameEvent
             ]);
 
             $this->projectScore->handle($game);
+
+            if ($isMark) {
+                event(GameUpdated::for($game));
+            }
 
             return $voided;
         });
