@@ -24,6 +24,10 @@ make setup      # primeira vez: sobe tudo, instala dependências, gera chave, mi
 | MinIO (arquivos) | http://localhost:9001 — `minio` / `minio-secret` (buckets `overlays-public` e `overlays-private`) |
 | Postgres | `localhost:5433` — usuário/senha/banco em `.env` |
 
+**Windows (PowerShell):** o `make` não existe no Windows; use o script equivalente: `.\dev.ps1 setup`, `.\dev.ps1 up`, `.\dev.ps1 test`…
+(se o PowerShell bloquear: `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`). Para melhor desempenho, clone o projeto dentro do WSL2
+(ex.: `\\wsl$\Ubuntu\home\<usuario>`) e use o `make` de lá, com o Docker Desktop integrado ao WSL.
+
 Subdomínios de organizações funcionam em `*.localhost` (ex.: `http://liga.localhost:8080`).
 
 ### Comandos do dia a dia
