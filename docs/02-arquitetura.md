@@ -1,58 +1,51 @@
-# Arquitetura proposta (rascunho v0)
+# 02 — Arquitetura (v2, decisões em `adr/0001-decisoes-iniciais.md`)
 
-> Status: baseada nas decisões do projeto (SaaS multi-organizador, foco inicial em futebol,
-> overlays para OBS, WebSocket, Docker). O mapeamento do site de referência
-> (gerenciadordecompeticoes.com.br) ainda está pendente e vai refinar o domínio.
+Contexto: SaaS multi-organizador, futebol primeiro, overlays para OBS como diferencial, custo de infra mínimo, desenvolvimento com várias IAs.
+Referência funcional: `01-mapeamento-plataforma.md` (painel do organizador ainda não mapeado).
 
 ## 1. Stack
-
 | Camada | Escolha | Motivo |
 |---|---|---|
-| Back-end | Laravel 12 (PHP 8.4) | Domínio do time; ecossistema completo (filas, policies, Cashier, Horizon) |
-| Tempo real | Laravel Reverb (protocolo Pusher) + Laravel Echo | WebSocket nativo, escala horizontal via Redis, sem serviço externo |
-| Front-end painel | React + TypeScript + Inertia.js + Vite | Um só deploy, sem API duplicada, SSR opcional |
-| Overlays OBS | App React separado e leve (Vite) em rota `/overlay/{token}/{tipo}` | Fundo transparente, sem login, assina canal WebSocket público por token |
-| Banco | PostgreSQL 17 | Integridade, JSONB (configs de regras por esporte), índices parciais, RLS opcional |
-| Cache/filas/pub-sub | Redis 7 | Cache, Horizon, broadcast do Reverb |
-| Arquivos | S3 compatível (MinIO local, Cloudflare R2/Backblaze em prod) | Escudos, fotos, súmulas PDF |
-| Proxy | Traefik (ou Caddy) | TLS automático, roteamento por subdomínio (multi-tenant) |
+| Back-end | Laravel 13, PHP 8.4, monolito modular | Domínio do time; filas, policies, scheduler, testes |
+| Front (painel + portal) | React + TypeScript + Inertia.js (Vite), **SSR no portal público** | Um deploy, sem API duplicada, SEO no portal |
+| Overlays | Bundle React separado (`resources/js/overlays`), estático, sem login | Leve, fundo transparente, URL com token |
+| Tempo real | Laravel Reverb + Echo | WebSocket nativo; escala via Redis |
+| Banco | PostgreSQL 17 | JSONB para regras/eventos; integridade |
+| Cache/filas | Redis 7 + Horizon | |
+| Arquivos | S3-compatível (R2 em prod, S3Mock local) | Ver §5 |
+| UI | Tailwind + shadcn/ui, TanStack Query onde houver SPA | |
 
-Alternativa descartada: Node/NestJS. Não compensa trocar a linguagem do time; Reverb resolve o WebSocket.
+API: rotas `/api/v1` (Sanctum, OpenAPI via Scramble) ficam no mesmo projeto; só são publicadas quando houver app móvel ou integração.
+Se a API virar produto próprio, extrai-se depois (monolito modular facilita).
 
-## 2. Multi-tenancy (SaaS)
+## 2. Multi-tenancy
+Tenant = Organização. Banco único, `organization_id` em todas as tabelas de domínio, global scope + policies. Subdomínio por organização
+(`liga.dominio.com.br`) e domínio próprio opcional. **Recursos liberados por organização** (feature flags/pacote) em vez de cobrança no MVP.
 
-- Tenant = **Organização** (federação/liga/produtor). Banco único, coluna `organization_id` em todas as tabelas de domínio, com global scope + policies.
-- Subdomínio por organização (`liga.plataforma.com.br`) e domínio próprio opcional.
-- Planos/assinatura: Laravel Cashier (Stripe) e/ou Asaas/Pagar.me (PIX/boleto no Brasil).
+## 3. Domínio (futebol)
+Organização → Competição → Edição → **Especificação** (categoria × sexo × fase) → Grupos → Partidas → Eventos.
+Pessoa única (papéis atleta/dirigente/árbitro, histórico por equipe/edição). Regulamento parametrizável (pontos, desempates em ordem, cartões/suspensão,
+substituições, W.O.). `SportRuleset` por esporte. IDs ULID. Documentos e dados de menores não públicos por padrão (LGPD).
 
-## 3. Domínio inicial (futebol) — a validar com o mapeamento
+## 4. Partidas e tempo real (núcleo do diferencial)
+- `match_events` **somente de acréscimo** (gol, cartão, substituição, início/fim de período); placar e classificação são projeções. Desfazer = evento compensatório (auditável).
+- Estado ao vivo da partida em Redis; overlay carrega o snapshot ao conectar e recebe deltas; reconecta e pede snapshot de novo.
+- Cronômetro calculado no cliente a partir de timestamp do servidor (sem tick por segundo).
+- Canais públicos por token de overlay (`overlay.{token}`), canal privado para o painel do operador.
+- Overlays: placar, cronômetro, escalação, lower-thirds (gol/cartão/substituição), tabela, artilharia, próximo jogo; temas por organização (JSON).
+- Futuro: controle de cenas via OBS WebSocket / Bitfocus Companion / Stream Deck.
 
-Organização → Competição → Edição/Temporada → Fases (pontos corridos, grupos, mata-mata, misto)
-→ Rodadas → Partidas. Clubes, Atletas, Comissão, Árbitros, Estádios, Súmula
-(gols, cartões, substituições, escalação), Classificação, Artilharia, Disciplina/suspensões,
-Regulamento (critérios de desempate configuráveis), Portal público, Inscrição online.
+## 5. Arquivos
+- **Dois buckets:** público (imagens, via CDN `cdn.dominio.com.br`) e privado (RG, CPF, atestados, ficha de saúde — somente URLs assinadas temporárias).
+- Laravel Flysystem (driver `s3`). **R2 é compatível com S3**: o código é idêntico; muda `AWS_ENDPOINT`, chaves e `AWS_USE_PATH_STYLE_ENDPOINT`.
+  Escolha do R2 vs AWS S3: R2 não cobra saída de dados (egress); o S3 cobra. Se o time preferir S3, funciona sem alterar código (custo maior).
+- Variantes WebP (64/256/1024 px) geradas por job no upload; caminho `org/{id}/{tipo}/{ulid}/{variante}.webp`; cache imutável.
+- Retenção/LGPD: apagar documentos privados após o prazo definido; exclusão de conta remove arquivos.
 
-**Preparado para outros esportes:** interface `SportRuleset` (futebol, futsal, vôlei, basquete)
-define eventos de partida, pontuação, desempates e formato do placar. Eventos de partida
-armazenados como `match_events` (tipo + payload JSONB) para servir todos os esportes.
+## 6. Módulos
+`Identity` · `Tenancy` (+ pacotes/flags) · `Competitions` · `Teams/People` · `Matches` (eventos, súmula, disciplina) · `Rules` ·
+`Standings` · `Registration` · `Portal` (público) · `Broadcast/Overlays` · `Media` · `Reports`. Cobrança (`Billing`) entra depois.
 
-## 4. Overlays para OBS
-
-- Cada overlay é uma URL com token (Browser Source no OBS, 1920x1080, fundo transparente).
-- Tipos iniciais: placar, escalação, lower-third de gol/cartão/substituição, tabela, artilharia, próximo jogo, cronômetro.
-- Operação: **painel de controle da transmissão** (operador dispara/oculta cada elemento) → evento no Reverb → overlay atualiza em tempo real.
-- Cronômetro calculado no cliente a partir de timestamp do servidor (evita enviar ticks).
-- Temas por organização (cores, logos, fontes) em JSON.
-
-## 5. Módulos do monolito (Laravel modular)
-
-`Identity` · `Tenancy/Billing` · `Competitions` · `Teams/Athletes` · `Matches/Scoresheet` ·
-`Standings` · `Registration` · `Public Portal` · `Broadcast/Overlays` · `Media` · `Reports`.
-Monolito modular primeiro; extrair serviços só se houver necessidade comprovada.
-
-## 6. Qualidade e trabalho com múltiplas IAs
-
-- Contratos primeiro: OpenAPI/ADRs em `docs/adr/`, migrations e policies revisadas por humano.
-- Um módulo = uma branch/PR; cada IA recebe um escopo de pasta (sem editar fora dele).
-- Pest + PHPStan(level 8) + Pint + ESLint/tsc + Vitest + Playwright (e2e/overlays) obrigatórios no CI.
-- `CLAUDE.md`/`AGENTS.md` na raiz com convenções, comandos e regras de domínio.
+## 7. Qualidade e trabalho com várias IAs
+Contratos antes do código (ADRs, migrations, OpenAPI); um módulo = uma pasta = uma branch/PR; Pest, PHPStan 8, Pint, ESLint/tsc, Vitest, Playwright no CI;
+`AGENTS.md` na raiz com convenções, comandos e regras de domínio; humano revisa migrations, policies e LGPD.

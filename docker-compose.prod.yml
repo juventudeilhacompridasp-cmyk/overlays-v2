@@ -1,0 +1,165 @@
+# Stack de PRODUÇÃO (Portainer / docker compose). Imagens vêm do GHCR (CI).
+# Pré-requisito: rede externa usada pelo Nginx Proxy Manager:  docker network create proxy
+# Variáveis obrigatórias: veja .env.production.example
+# No Nginx Proxy Manager:  dominio -> nginx:80  |  ws.dominio -> reverb:8080 (ativar "Websockets Support")
+
+x-env: &env
+  APP_NAME: ${APP_NAME:-Plataforma}
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_KEY: ${APP_KEY:?}
+  APP_URL: ${APP_URL:?}
+  LOG_CHANNEL: stderr
+  DB_CONNECTION: pgsql
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_DATABASE: ${DB_DATABASE:-overlays}
+  DB_USERNAME: ${DB_USERNAME:-overlays}
+  DB_PASSWORD: ${DB_PASSWORD:?}
+  REDIS_CLIENT: phpredis
+  REDIS_HOST: redis
+  CACHE_STORE: redis
+  SESSION_DRIVER: redis
+  QUEUE_CONNECTION: redis
+  BROADCAST_CONNECTION: reverb
+  REVERB_APP_ID: ${REVERB_APP_ID:?}
+  REVERB_APP_KEY: ${REVERB_APP_KEY:?}
+  REVERB_APP_SECRET: ${REVERB_APP_SECRET:?}
+  REVERB_HOST: reverb
+  REVERB_PORT: "8080"
+  REVERB_SCHEME: http
+  REVERB_SCALING_ENABLED: "true"
+  FILESYSTEM_DISK: s3
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:?}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?}
+  AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-auto}
+  AWS_BUCKET: ${AWS_BUCKET:?}
+  AWS_ENDPOINT: ${AWS_ENDPOINT:-}
+  AWS_URL: ${AWS_URL:-}
+  AWS_USE_PATH_STYLE_ENDPOINT: ${AWS_USE_PATH_STYLE_ENDPOINT:-true}
+  MAIL_MAILER: ${MAIL_MAILER:-log}
+  MAIL_HOST: ${MAIL_HOST:-}
+  MAIL_PORT: ${MAIL_PORT:-587}
+  MAIL_USERNAME: ${MAIL_USERNAME:-}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@example.com}
+  INERTIA_SSR_ENABLED: "true"
+  INERTIA_SSR_URL: http://ssr:13714
+
+x-app: &app
+  image: ${IMAGE_APP:?}
+  restart: unless-stopped
+  environment: *env
+  volumes:
+    - storage:/var/www/html/storage
+  networks: [internal]
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_healthy }
+  logging: &logging
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+services:
+  nginx:
+    image: ${IMAGE_NGINX:?}
+    restart: unless-stopped
+    networks: [internal, proxy]
+    depends_on: [app]
+    logging: *logging
+
+  app:
+    <<: *app
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm -t >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  migrate:
+    <<: *app
+    restart: "no"
+    command: php artisan migrate --force
+
+  horizon:
+    <<: *app
+    command: php artisan horizon
+    stop_grace_period: 60s
+
+  scheduler:
+    <<: *app
+    command: php artisan schedule:work
+
+  reverb:
+    <<: *app
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    networks: [internal, proxy]
+
+  ssr:
+    <<: *app
+    command: node bootstrap/ssr/ssr.js
+    environment:
+      <<: *env
+      PORT: "13714"
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-overlays}
+      POSTGRES_USER: ${DB_USERNAME:-overlays}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?}
+    volumes:
+      - ${PGDATA_PATH:-/srv/data/postgres}:/var/lib/postgresql/data
+    networks: [internal]
+    shm_size: 256mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-overlays} -d ${DB_DATABASE:-overlays}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redisdata:/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  backup:
+    image: ${IMAGE_BACKUP:?}
+    restart: unless-stopped
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      PGHOST: postgres
+      PGUSER: ${DB_USERNAME:-overlays}
+      PGPASSWORD: ${DB_PASSWORD:?}
+      PGDATABASE: ${DB_DATABASE:-overlays}
+      BACKUP_REMOTE: ${BACKUP_REMOTE:?}
+      RCLONE_CONFIG_R2_TYPE: s3
+      RCLONE_CONFIG_R2_PROVIDER: ${BACKUP_S3_PROVIDER:-Cloudflare}
+      RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${BACKUP_ACCESS_KEY_ID:?}
+      RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${BACKUP_SECRET_ACCESS_KEY:?}
+      RCLONE_CONFIG_R2_ENDPOINT: ${BACKUP_ENDPOINT:?}
+      BACKUP_HOUR: ${BACKUP_HOUR:-3}
+      RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    networks: [internal]
+
+networks:
+  internal:
+  proxy:
+    external: true
+
+volumes:
+  storage:
+  redisdata:

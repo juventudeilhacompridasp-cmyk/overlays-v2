@@ -1,0 +1,10 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - routes
+        - database
+    # Começa em 5 e sobe gradualmente até 8 conforme o código de domínio cresce.
+    level: 5
