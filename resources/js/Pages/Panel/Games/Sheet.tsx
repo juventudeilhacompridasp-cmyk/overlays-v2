@@ -1,5 +1,6 @@
 import { Badge, Button, Card, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
+import { GameClock, formatClock, periodLabel, useGameClock } from '@/lib/clock';
 import { Option } from '@/types/panel';
 import { Head, router } from '@inertiajs/react';
 import { FormEvent, useMemo, useState } from 'react';
@@ -31,7 +32,7 @@ interface Team {
 interface SheetEvent {
     id: string;
     type: string;
-    entry_id: string;
+    entry_id: string | null;
     person: string | null;
     secondary_person: string | null;
     period: number;
@@ -62,6 +63,8 @@ interface Props {
     events: SheetEvent[];
     limits: { starters: number; bench: number; staff: number; substitutions: number; windows: number };
     event_types: Option[];
+    clock: GameClock & { server_time_ms: number; max_period: number };
+    public_url: string;
 }
 
 type Slot = '' | 'starter' | 'bench' | 'staff';
@@ -73,6 +76,8 @@ const typeIcon: Record<string, string> = {
     red_card: '🟥',
     blue_card: '🟦',
     substitution: '🔁',
+    period_start: '▶️',
+    period_end: '⏸️',
 };
 
 function personName(team: Team, id: string): string {
@@ -169,6 +174,50 @@ function LineupEditor({ game, team, limits, locked, onSaved }: { game: Props['ga
                 </Button>
             )}
         </form>
+    );
+}
+
+function ClockCard({ game, clock, publicUrl }: { game: Props['game']; clock: Props['clock']; publicUrl: string }) {
+    const skew = useMemo(() => Date.now() - clock.server_time_ms, [clock.server_time_ms]);
+    const seconds = useGameClock(clock, skew);
+    const post = (action: 'start' | 'end', period: number) =>
+        router.post(route('panel.games.periods.store', game.id), { action, period }, { preserveScroll: true });
+
+    const next = clock.period === null ? 1 : clock.period + 1;
+
+    return (
+        <Card title="Cronômetro">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <div className="text-3xl font-bold tabular-nums" data-testid="panel-clock">
+                        {formatClock(seconds)}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                        {clock.state === 'not_started' && 'Não iniciado'}
+                        {clock.state === 'running' && `${periodLabel(clock.period)} em andamento`}
+                        {clock.state === 'stopped' && `${periodLabel(clock.period)} encerrado`}
+                    </div>
+                </div>
+                {game.open && (
+                    <div className="flex flex-wrap gap-2">
+                        {clock.state === 'running' && clock.period !== null && (
+                            <Button variant="secondary" onClick={() => post('end', clock.period as number)}>
+                                Encerrar {periodLabel(clock.period)}
+                            </Button>
+                        )}
+                        {clock.state !== 'running' && next <= clock.max_period && (
+                            <Button onClick={() => post('start', next)}>Iniciar {periodLabel(next)}</Button>
+                        )}
+                    </div>
+                )}
+            </div>
+            <p className="mt-3 text-xs text-gray-500">
+                Placar público:{' '}
+                <a href={publicUrl} target="_blank" rel="noreferrer" className="text-emerald-700 underline">
+                    {publicUrl}
+                </a>
+            </p>
+        </Card>
     );
 }
 
@@ -326,8 +375,8 @@ function TeamCard({ game, team, limits }: { game: Props['game']; team: Team; lim
     );
 }
 
-export default function Sheet({ game, home, away, events, limits, event_types }: Props) {
-    const teamOf = (entryId: string) => (home && entryId === home.id ? home : away);
+export default function Sheet({ game, home, away, events, limits, event_types, clock, public_url }: Props) {
+    const teamOf = (entryId: string | null) => (entryId === null ? null : home && entryId === home.id ? home : away);
 
     return (
         <PanelLayout>
@@ -375,6 +424,8 @@ export default function Sheet({ game, home, away, events, limits, event_types }:
                 </Card>
             ) : (
                 <div className="space-y-6">
+                    <ClockCard game={game} clock={clock} publicUrl={public_url} />
+
                     <div className="grid gap-6 lg:grid-cols-2">
                         <TeamCard game={game} team={home} limits={limits} />
                         <TeamCard game={game} team={away} limits={limits} />
@@ -403,9 +454,9 @@ export default function Sheet({ game, home, away, events, limits, event_types }:
                                                     {event.minute !== null ? `${event.minute}'` : '—'} · {event.period}T
                                                 </span>
                                                 <span className="mr-2">{typeIcon[event.type] ?? event.type}</span>
-                                                <strong>{event.person ?? 'Anônimo'}</strong>
+                                                <strong>{event.type === 'period_start' || event.type === 'period_end' ? `${event.type === 'period_start' ? 'Início do' : 'Fim do'} ${periodLabel(event.period)}` : (event.person ?? 'Anônimo')}</strong>
                                                 {event.secondary_person && <span> ⇄ {event.secondary_person}</span>}
-                                                <span className="ml-2 text-gray-500">({team?.name})</span>
+                                                {team && <span className="ml-2 text-gray-500">({team.name})</span>}
                                                 {event.quick && <span className="ml-2"><Badge>Resultado rápido</Badge></span>}
                                             </div>
                                             {event.voidable && (

@@ -31,6 +31,13 @@ class Game extends Model
     /** @use HasFactory<GameFactory> */
     use BelongsToOrganization, HasFactory, HasUlids;
 
+    /** Mesmos padrões do banco, para o modelo recém-criado já refletir a situação inicial. */
+    protected $attributes = [
+        'status' => 'scheduled',
+        'home_score' => 0,
+        'away_score' => 0,
+    ];
+
     /**
      * @return array<string, mixed>
      */

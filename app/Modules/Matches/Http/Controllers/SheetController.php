@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Competitions\Actions\CalculateDiscipline;
 use App\Modules\Competitions\Models\Entry;
 use App\Modules\Matches\Actions\BuildGameSheet;
+use App\Modules\Matches\Actions\ChangeGamePeriod;
 use App\Modules\Matches\Actions\FinishGame;
 use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Actions\SaveGameLineup;
@@ -14,8 +15,11 @@ use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Http\Requests\GameEventRequest;
 use App\Modules\Matches\Http\Requests\GameLineupRequest;
+use App\Modules\Matches\Http\Requests\GamePeriodRequest;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
+use App\Modules\Matches\Support\PublicGameSnapshot;
+use App\Modules\Rules\Sheet\GameClock;
 use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Enums\RosterStatus;
 use App\Modules\Teams\Models\RosterEntry;
@@ -85,6 +89,9 @@ class SheetController extends Controller
             ->mapWithKeys(fn (RosterEntry $row) => [$row->person_id => $row->person->nickname ?: $row->person->name]);
 
         $effectiveIds = $game->events()->effective()->pluck('id')->all();
+        $lastMarkId = $game->events()->effective()
+            ->whereIn('type', [GameEventType::PeriodStart, GameEventType::PeriodEnd])
+            ->orderByDesc('id')->value('id');
 
         $events = $game->events()->effective()->orderBy('id')->get()->map(fn (GameEvent $event) => [
             'id' => $event->id,
@@ -95,7 +102,8 @@ class SheetController extends Controller
             'period' => $event->period,
             'minute' => $event->minute,
             'quick' => ($event->payload['quick'] ?? false) === true,
-            'voidable' => $open && in_array($event->id, $effectiveIds, true) && ($event->payload['quick'] ?? false) !== true,
+            'voidable' => $open && in_array($event->id, $effectiveIds, true) && ($event->payload['quick'] ?? false) !== true
+                && (! in_array($event->type, [GameEventType::PeriodStart, GameEventType::PeriodEnd], true) || $event->id === $lastMarkId),
         ]);
 
         $division = $game->division;
@@ -121,6 +129,8 @@ class SheetController extends Controller
             'home' => $team($game->homeEntry),
             'away' => $team($game->awayEntry),
             'events' => $events,
+            'clock' => PublicGameSnapshot::for($game)['clock'] + ['server_time_ms' => (int) (microtime(true) * 1000), 'max_period' => (new GameClock)->maxPeriod()],
+            'public_url' => route('public.games.show', $game->id),
             'limits' => [
                 'starters' => $rules->maxStarters,
                 'bench' => $rules->maxBench,
@@ -175,6 +185,17 @@ class SheetController extends Controller
         }
 
         return back()->with('success', 'Lançamento anulado.');
+    }
+
+    public function period(GamePeriodRequest $request, Game $game, ChangeGamePeriod $change): RedirectResponse
+    {
+        try {
+            $change->handle($game, $request->string('action')->toString() === 'start', $request->integer('period'), $request->user()?->getAuthIdentifier());
+        } catch (InvalidArgumentException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return back()->with('success', 'Cronômetro atualizado.');
     }
 
     public function finish(Game $game, FinishGame $finish): RedirectResponse
