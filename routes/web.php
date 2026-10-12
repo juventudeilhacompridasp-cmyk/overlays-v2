@@ -4,6 +4,8 @@ use App\Http\Controllers\ProfileController;
 use App\Modules\Broadcast\Http\Controllers\OverlayController;
 use App\Modules\Matches\Http\Controllers\PublicGameController;
 use App\Modules\Portal\Http\Controllers\PortalController;
+use App\Modules\Registration\Http\Controllers\ApplyController;
+use App\Modules\Registration\Http\Controllers\ManageController;
 use Illuminate\Support\Facades\Route;
 
 // Portal público (sem login): só edições publicadas.
@@ -13,6 +15,23 @@ Route::get('/competicoes/{competition:slug}/edicoes/{season}', [PortalController
 Route::get('/equipes/{team}', [PortalController::class, 'team'])->name('portal.team');
 Route::get('/sitemap.xml', [PortalController::class, 'sitemap'])->name('portal.sitemap');
 Route::get('/robots.txt', [PortalController::class, 'robots'])->name('portal.robots');
+
+// Inscrição online de equipes (sem login). O link pessoal da equipe (`/minha-inscricao/{token}`) é o acesso ao pedido.
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/inscricoes/{competition:slug}/{season}', [ApplyController::class, 'show'])->name('registration.apply');
+    Route::post('/inscricoes/{competition:slug}/{season}', [ApplyController::class, 'store'])->middleware('throttle:10,1')->name('registration.store');
+
+    Route::prefix('/minha-inscricao/{registration:token}')->name('registration.')->group(function () {
+        Route::get('/', [ManageController::class, 'show'])->name('manage');
+        Route::patch('/equipe', [ManageController::class, 'updateTeam'])->name('team');
+        Route::post('/pessoas', [ManageController::class, 'storePerson'])->name('people.store');
+        Route::patch('/pessoas/{person}', [ManageController::class, 'updatePerson'])->name('people.update');
+        Route::delete('/pessoas/{person}', [ManageController::class, 'destroyPerson'])->name('people.destroy');
+        Route::post('/pessoas/{person}/documentos', [ManageController::class, 'storeDocument'])->name('documents.store');
+        Route::delete('/pessoas/{person}/documentos/{document}', [ManageController::class, 'destroyDocument'])->name('documents.destroy');
+        Route::post('/enviar', [ManageController::class, 'submit'])->name('submit');
+    });
+});
 
 // Overlays do OBS (sem login; o token da URL é o acesso). A tela "estado" é a contingência sem WebSocket.
 Route::get('/overlay/{channel:token}/estado', [OverlayController::class, 'state'])->name('overlay.state')->middleware('throttle:120,1');

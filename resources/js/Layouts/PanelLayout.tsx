@@ -12,6 +12,8 @@ const nav = [
     { label: 'Transmissão', route: 'panel.broadcast.index', match: 'panel.broadcast.*', icon: 'M3 7a2 2 0 012-2h9a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7zM15 10l6-3v10l-6-3' },
 ];
 
+const registrationsNav = { label: 'Inscrições', route: 'panel.registrations.index', match: 'panel.registrations.*', icon: 'M9 12l2 2 4-4M7 4h10a2 2 0 012 2v14l-3-2-2 2-2-2-2 2-2-2-3 2V6a2 2 0 012-2z' };
+
 const adminNav = [
     { label: 'Portal público', route: 'panel.organization.edit', match: 'panel.organization.*', icon: 'M12 21a9 9 0 100-18 9 9 0 000 18zM3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 010 18M12 3a14 14 0 000 18' },
 ];
@@ -30,7 +32,9 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const { auth, flash } = usePage().props;
     const [open, setOpen] = useState(false);
     const canManageUsers = useCan('manage-users');
-    const items = canManageUsers ? [...nav, ...adminNav, usersNav] : nav;
+    const canManageCompetitions = useCan('manage-competitions');
+    const base = canManageCompetitions ? [...nav.slice(0, 2), registrationsNav, ...nav.slice(2)] : nav;
+    const items = canManageUsers ? [...base, ...adminNav, usersNav] : base;
 
     const menu = (
         <nav className="flex flex-col gap-1 px-3">

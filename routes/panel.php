@@ -11,6 +11,8 @@ use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
 use App\Modules\Matches\Http\Controllers\SheetController;
 use App\Modules\Matches\Http\Controllers\VenueController;
+use App\Modules\Registration\Http\Controllers\ReviewController;
+use App\Modules\Registration\Http\Controllers\SeasonSettingsController;
 use App\Modules\Teams\Http\Controllers\PersonController;
 use App\Modules\Teams\Http\Controllers\PersonPhotoController;
 use App\Modules\Teams\Http\Controllers\RosterController;
@@ -56,6 +58,20 @@ Route::middleware(['auth', 'verified', 'panel.member'])->prefix('painel')->name(
         Route::post('games/{game}/result', [GameController::class, 'result'])->name('games.result');
         Route::post('games/{game}/walkover', [GameController::class, 'walkover'])->name('games.walkover');
         Route::post('games/{game}/reopen', [GameController::class, 'reopen'])->name('games.reopen');
+    });
+
+    // Inscrições online: análise dos pedidos. Tem dados pessoais e documentos (de menores, inclusive): só quem gerencia
+    // competições, até para consultar (`can:`, e não `panel.can:`, que libera a leitura a qualquer membro).
+    Route::middleware('can:manage-competitions')->group(function () {
+        Route::get('registrations', [ReviewController::class, 'index'])->name('registrations.index');
+        Route::get('registrations/{registration}', [ReviewController::class, 'show'])->name('registrations.show');
+        Route::patch('registrations/{registration}/people/{person}', [ReviewController::class, 'reviewPerson'])->name('registrations.people.review');
+        Route::post('registrations/{registration}/approve', [ReviewController::class, 'approve'])->name('registrations.approve');
+        Route::post('registrations/{registration}/return', [ReviewController::class, 'returnForChanges'])->name('registrations.return');
+        Route::post('registrations/{registration}/reject', [ReviewController::class, 'reject'])->name('registrations.reject');
+        Route::delete('registrations/{registration}', [ReviewController::class, 'destroy'])->name('registrations.destroy');
+        Route::get('registration-documents/{document}', [ReviewController::class, 'document'])->name('registrations.documents.show');
+        Route::patch('seasons/{season}/registration', [SeasonSettingsController::class, 'update'])->name('seasons.registration.update');
     });
 
     // Operação do jogo: escalação, súmula, cronômetro, pênaltis e encerramento.

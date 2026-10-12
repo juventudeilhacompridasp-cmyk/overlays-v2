@@ -83,6 +83,7 @@ class PortalController extends Controller
             'theme' => $theme,
             'seo' => $this->seo("{$title} · {$theme['name']}", "Classificação, jogos, resultados e artilharia — {$title}.", route('portal.season', [$competition->slug, $season->getKey()])),
             ...$data,
+            'registration_url' => $season->registrationOpen() ? route('registration.apply', [$competition->slug, $season->getKey()]) : null,
             'other_seasons' => $competition->seasons()->published()->orderByDesc('year')->orderByDesc('name')->get()
                 ->map(fn (Season $other) => ['id' => $other->getKey(), 'name' => $other->name, 'url' => route('portal.season', [$competition->slug, $other->getKey()]), 'current' => $other->is($season)])->values(),
         ]);
@@ -146,7 +147,7 @@ class PortalController extends Controller
 
     public function robots(): HttpResponse
     {
-        $body = "User-agent: *\nDisallow: /painel\nDisallow: /overlay\nDisallow: /api\nDisallow: /login\nDisallow: /register\n\nSitemap: ".route('portal.sitemap')."\n";
+        $body = "User-agent: *\nDisallow: /painel\nDisallow: /overlay\nDisallow: /minha-inscricao\nDisallow: /api\nDisallow: /login\nDisallow: /register\n\nSitemap: ".route('portal.sitemap')."\n";
 
         return response($body, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }

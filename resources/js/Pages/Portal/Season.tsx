@@ -39,6 +39,7 @@ interface Props {
     competition: { id: string; name: string; slug: string };
     season: { id: string; name: string; year: number; status_label: string; starts_on: string | null; ends_on: string | null };
     divisions: Division[];
+    registration_url: string | null;
     other_seasons: { id: string; name: string; url: string; current: boolean }[];
 }
 
@@ -124,11 +125,19 @@ function DivisionView({ division }: { division: Division }) {
     );
 }
 
-export default function Season({ theme, seo, competition, season, divisions, other_seasons }: Props) {
+export default function Season({ theme, seo, competition, season, divisions, registration_url, other_seasons }: Props) {
     const [active, setActive] = useState(divisions[0]?.id);
 
     return (
         <PortalLayout theme={theme} seo={seo}>
+            {registration_url && (
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-emerald-50 px-4 py-3 text-emerald-900 print:hidden">
+                    <span className="font-medium">Inscrições abertas para esta edição.</span>
+                    <a href={registration_url} className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+                        Inscrever minha equipe
+                    </a>
+                </div>
+            )}
             <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-extrabold">{competition.name}</h1>
