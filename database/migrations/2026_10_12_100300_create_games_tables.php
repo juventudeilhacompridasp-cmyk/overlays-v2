@@ -71,11 +71,16 @@ return new class extends Migration
             // Substituição: person_id = quem sai, secondary_person_id = quem entra.
             $table->foreignUlid('secondary_person_id')->nullable()->constrained('people')->nullOnDelete();
             $table->json('payload')->nullable();
-            $table->foreignUlid('compensates_event_id')->nullable()->constrained('game_events')->nullOnDelete();
+            $table->ulid('compensates_event_id')->nullable();
             $table->foreignId('recorded_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('created_at')->useCurrent();
 
             $table->index(['game_id', 'id']);
+        });
+
+        // Autorreferência: no PostgreSQL a FK só pode ser criada depois da chave primária.
+        Schema::table('game_events', function (Blueprint $table) {
+            $table->foreign('compensates_event_id')->references('id')->on('game_events')->nullOnDelete();
         });
     }
 
