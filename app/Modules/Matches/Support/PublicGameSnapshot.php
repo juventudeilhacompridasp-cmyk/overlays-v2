@@ -33,7 +33,7 @@ final class PublicGameSnapshot
         $marks = ChangeGamePeriod::marks($game);
 
         $side = fn (?string $entryId): ?string => $entryId === null ? null : ($entryId === $game->home_entry_id ? 'home' : ($entryId === $game->away_entry_id ? 'away' : null));
-        $team = fn ($entry): ?array => $entry === null ? null : ['name' => $entry->team->name, 'short_name' => $entry->team->short_name, 'logo_url' => $entry->team->logoUrl(512)];
+        $team = fn ($entry): ?array => $entry === null ? null : ['name' => $entry->team->name, 'short_name' => $entry->team->short_name, 'logo_url' => $entry->team->logoUrl(512), 'color' => $entry->team->primary_color];
 
         return [
             'id' => $game->getKey(),

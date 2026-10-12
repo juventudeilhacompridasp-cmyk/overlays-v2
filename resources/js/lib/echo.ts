@@ -10,13 +10,13 @@ export interface Realtime {
 export type ConnectionState = 'connecting' | 'connected' | 'disconnected';
 
 /**
- * Assina o canal público de um jogo no Reverb. O endereço vem do servidor (config/platform.php), então o mesmo
- * build do front serve em qualquer ambiente. Retorna a função que cancela a assinatura.
+ * Assina um canal público do Reverb e liga cada evento ao seu tratador (`'.nome.do.evento': fn`). O endereço vem do
+ * servidor (config/platform.php), então o mesmo build do front serve em qualquer ambiente. Retorna a função que cancela.
  */
-export async function subscribeToGame<T>(
+export async function subscribeToChannel(
     realtime: Realtime,
-    gameId: string,
-    onUpdate: (snapshot: T) => void,
+    channelName: string,
+    listeners: Record<string, (payload: never) => void>,
     onState: (state: ConnectionState) => void,
 ): Promise<() => void> {
     if (!realtime.key) {
@@ -44,10 +44,16 @@ export async function subscribeToGame<T>(
     connection.bind('state_change', sync);
     sync();
 
-    echo.channel(`games.${gameId}`).listen('.game.updated', (payload: { snapshot: T }) => onUpdate(payload.snapshot));
+    const channel = echo.channel(channelName);
+    Object.entries(listeners).forEach(([event, handler]) => channel.listen(event, handler));
 
     return () => {
-        echo.leave(`games.${gameId}`);
+        echo.leave(channelName);
         echo.disconnect();
     };
+}
+
+/** Assina o canal público de um jogo (`games.{id}`): cada atualização traz o retrato completo. */
+export function subscribeToGame<T>(realtime: Realtime, gameId: string, onUpdate: (snapshot: T) => void, onState: (state: ConnectionState) => void): Promise<() => void> {
+    return subscribeToChannel(realtime, `games.${gameId}`, { '.game.updated': (payload: { snapshot: T }) => onUpdate(payload.snapshot) }, onState);
 }

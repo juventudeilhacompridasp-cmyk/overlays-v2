@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\ProfileController;
+use App\Modules\Broadcast\Http\Controllers\OverlayController;
 use App\Modules\Matches\Http\Controllers\PublicGameController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,10 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 });
+
+// Overlays do OBS (sem login; o token da URL é o acesso). A tela "estado" é a contingência sem WebSocket.
+Route::get('/overlay/{channel:token}/estado', [OverlayController::class, 'state'])->name('overlay.state')->middleware('throttle:120,1');
+Route::get('/overlay/{channel:token}/{overlay}', [OverlayController::class, 'show'])->name('overlay.show');
 
 // Portal público: placar ao vivo (sem login).
 Route::get('/jogos/{game}', [PublicGameController::class, 'show'])->name('public.games.show');

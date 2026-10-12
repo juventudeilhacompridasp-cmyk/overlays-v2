@@ -8,6 +8,7 @@ const nav = [
     { label: 'Equipes', route: 'panel.teams.index', match: 'panel.teams.*', icon: 'M17 20h5v-2a4 4 0 00-5-3.9M9 11a4 4 0 100-8 4 4 0 000 8zM2 20v-2a4 4 0 014-4h6a4 4 0 014 4v2' },
     { label: 'Atletas e comissão', route: 'panel.people.index', match: 'panel.people.*', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1' },
     { label: 'Estádios', route: 'panel.venues.index', match: 'panel.venues.*', icon: 'M12 21s-7-6.2-7-11a7 7 0 1114 0c0 4.8-7 11-7 11zM12 12a2 2 0 100-4 2 2 0 000 4z' },
+    { label: 'Transmissão', route: 'panel.broadcast.index', match: 'panel.broadcast.*', icon: 'M3 7a2 2 0 012-2h9a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7zM15 10l6-3v10l-6-3' },
 ];
 
 const usersNav = { label: 'Usuários', route: 'panel.users.index', match: 'panel.users.*', icon: 'M16 11a3 3 0 100-6 3 3 0 000 6zM8 11a3 3 0 100-6 3 3 0 000 6zM2 20v-1a4 4 0 014-4h4a4 4 0 014 4v1M15 15h3a4 4 0 014 4v1' };
