@@ -68,12 +68,16 @@ class Division extends Model
     /** Regulamento efetivo: regras da edição com as sobrescritas desta divisão. */
     public function ruleSet(): RuleSet
     {
-        $rules = array_replace_recursive($this->season->rules ?? [], $this->rules ?? []);
+        /** @var array<string, mixed> $seasonRules */
+        $seasonRules = $this->season->rules ?? [];
+        /** @var array<string, mixed> $overrides */
+        $overrides = $this->rules ?? [];
 
-        foreach (['tiebreakers'] as $listKey) {
-            if (isset($this->rules[$listKey])) {
-                $rules[$listKey] = $this->rules[$listKey];
-            }
+        $rules = array_replace_recursive($seasonRules, $overrides);
+
+        // A lista de desempates substitui a da edição por inteiro (não se mescla por posição).
+        if (array_key_exists('tiebreakers', $overrides)) {
+            $rules['tiebreakers'] = $overrides['tiebreakers'];
         }
 
         return RuleSet::fromArray($rules);

@@ -53,6 +53,9 @@ class Season extends Model
     /** Regulamento da edição (padrões do regulamento de referência para o que não foi configurado). */
     public function ruleSet(): RuleSet
     {
-        return RuleSet::fromArray($this->rules ?? []);
+        /** @var array<string, mixed> $rules */
+        $rules = $this->rules ?? [];
+
+        return RuleSet::fromArray($rules);
     }
 }
