@@ -1,8 +1,8 @@
 # Arquitetura proposta (rascunho v0)
 
-> Status: baseada nas decisões do projeto (SaaS multi-organizador, foco inicial em futebol,
-> overlays para OBS, WebSocket, Docker). O mapeamento do site de referência
-> (gerenciadordecompeticoes.com.br) ainda está pendente e vai refinar o domínio.
+> Status: v1. Baseada nas decisões do projeto (SaaS multi-organizador, futebol primeiro, overlays OBS,
+> WebSocket, Docker) e no mapeamento do portal público de referência (`01-mapeamento-plataforma.md`).
+> O painel do organizador ainda não foi mapeado.
 
 ## 1. Stack
 
@@ -56,3 +56,12 @@ Monolito modular primeiro; extrair serviços só se houver necessidade comprovad
 - Um módulo = uma branch/PR; cada IA recebe um escopo de pasta (sem editar fora dele).
 - Pest + PHPStan(level 8) + Pint + ESLint/tsc + Vitest + Playwright (e2e/overlays) obrigatórios no CI.
 - `CLAUDE.md`/`AGENTS.md` na raiz com convenções, comandos e regras de domínio.
+
+## 7. Decisões derivadas do mapeamento
+- Hierarquia: Organização → Competição → Edição → **Especificação** (categoria × sexo × fase) → Grupos → Partidas → Eventos.
+- **Pessoa única** (CPF, criptografado/hash para busca) com papéis atleta/dirigente/árbitro e histórico por equipe/edição.
+- Regulamento **parametrizável** (pontos, desempates em ordem, cartões/suspensão, substituições, W.O.), não código fixo.
+- Menus/áreas do portal por **flags por organização**, aplicadas também no servidor.
+- Portal com URLs reais e SSR (SEO/Open Graph), IDs não sequenciais (ULID), LGPD: dados de menores e disciplina não públicos por padrão.
+- Tempo real por WebSocket (Reverb) com fallback de polling; o ticker "ao vivo" do portal usa o mesmo canal dos overlays.
+- API pública versionada, documentada, com cache (60 s) e rate-limit.
