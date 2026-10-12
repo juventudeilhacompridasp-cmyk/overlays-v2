@@ -19,8 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // O nginx do app só é alcançável pelo Nginx Proxy Manager / Cloudflare.
         $middleware->trustProxies(at: '*');
 
-        $middleware->web(append: [
+        // A organização ativa precisa estar definida ANTES da resolução de {team}, {season}...
+        // pelas rotas (route model binding), senão o escopo da organização não vale nelas.
+        $middleware->web(prepend: [
             ResolveDefaultOrganization::class,
+        ], append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);

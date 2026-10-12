@@ -8,4 +8,14 @@ enum SeasonStatus: string
     case Registration = 'registration';
     case Active = 'active';
     case Finished = 'finished';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Draft => 'Rascunho',
+            self::Registration => 'Inscrições abertas',
+            self::Active => 'Em andamento',
+            self::Finished => 'Encerrada',
+        };
+    }
 }

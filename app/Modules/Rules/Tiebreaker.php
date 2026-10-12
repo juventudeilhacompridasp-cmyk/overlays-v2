@@ -19,4 +19,19 @@ enum Tiebreaker: string
     case FewestBlueCards = 'fewest_blue_cards';
     /** Sorteio: não é calculável; o empate é sinalizado como não resolvido. */
     case Draw = 'draw';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Wins => 'Mais vitórias',
+            self::GoalDifference => 'Maior saldo de gols',
+            self::GoalsFor => 'Mais gols marcados',
+            self::GoalsAgainst => 'Menos gols sofridos',
+            self::HeadToHead => 'Confronto direto (só entre duas equipes)',
+            self::FewestRedCards => 'Menos cartões vermelhos',
+            self::FewestYellowCards => 'Menos cartões amarelos',
+            self::FewestBlueCards => 'Menos cartões azuis',
+            self::Draw => 'Sorteio',
+        };
+    }
 }

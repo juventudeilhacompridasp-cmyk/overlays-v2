@@ -12,13 +12,12 @@ class ResolveDefaultOrganization
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $organization = Organization::query()
-            ->where('slug', config('platform.default_organization_slug'))
-            ->first();
+        $organization = Organization::query()->firstOrCreate(
+            ['slug' => config('platform.default_organization_slug')],
+            ['name' => 'Organização padrão'],
+        );
 
-        if ($organization !== null) {
-            CurrentOrganization::set($organization);
-        }
+        CurrentOrganization::set($organization);
 
         return $next($request);
     }

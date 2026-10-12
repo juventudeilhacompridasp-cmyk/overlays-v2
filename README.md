@@ -34,7 +34,12 @@ Subdomínios de organizações funcionam em `*.localhost` (ex.: `http://liga.loc
 `make up` · `make down` · `make logs s=app` · `make shell` · `make fresh` (recria o banco com dados de demonstração) ·
 `make test` · `make lint` / `make fix` (Pint) · `make stan` (Larastan) · `make types` (tsc) · `make help`.
 
-### O que já dá para testar (ainda sem telas de campeonato)
+### O que já dá para testar
+**Painel do organizador:** entre em http://localhost:8080/login (`admin@plataforma.test` / `password`) e use o menu lateral:
+cadastre **equipes** e **estádios**, crie uma **competição**, uma **edição** (com o regulamento: pontuação, ordem dos desempates, cartões, W.O., substituições),
+as **divisões**, as **fases** e **inscreva as equipes**. Ainda não há telas de jogos e classificação (próximo passo).
+
+**Pelo terminal** (dados de demonstração e testes):
 ```bash
 make fresh      # (Windows: .\dev.ps1 fresh) recria o banco com as migrations atuais
 make demo       # (Windows: .\dev.ps1 demo)  cria um campeonato de demonstração e imprime a classificação e os suspensos

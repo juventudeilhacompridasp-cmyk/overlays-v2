@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Modules\Competitions\Http\Requests;
+
+use App\Modules\Competitions\Enums\SeasonStatus;
+use App\Modules\Competitions\Models\Competition;
+use App\Modules\Competitions\Models\Season;
+use App\Modules\Rules\RuleSet;
+use App\Modules\Rules\Tiebreaker;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class SeasonRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        /** @var Season|null $season */
+        $season = $this->route('season');
+        /** @var Competition|null $competition */
+        $competition = $this->route('competition') ?? $season?->competition;
+
+        return [
+            'name' => [
+                'required', 'string', 'max:100',
+                Rule::unique('seasons', 'name')->where('competition_id', $competition?->getKey())->ignore($season?->getKey()),
+            ],
+            'year' => ['required', 'integer', 'between:1950,2100'],
+            'starts_on' => ['nullable', 'date'],
+            'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
+            'status' => ['required', Rule::enum(SeasonStatus::class)],
+
+            'rules' => ['required', 'array'],
+            'rules.points.win' => ['required', 'integer', 'between:0,10'],
+            'rules.points.draw' => ['required', 'integer', 'between:0,10'],
+            'rules.points.loss' => ['required', 'integer', 'between:0,10'],
+            'rules.tiebreakers' => ['required', 'array', 'min:1'],
+            'rules.tiebreakers.*' => ['distinct', Rule::enum(Tiebreaker::class)],
+            'rules.cards.yellow_for_suspension' => ['required', 'integer', 'between:1,10'],
+            'rules.cards.yellow_suspension_games' => ['required', 'integer', 'between:0,10'],
+            'rules.cards.red_suspension_games' => ['required', 'integer', 'between:0,10'],
+            'rules.cards.reset_yellows_between_stages' => ['required', 'boolean'],
+            'rules.cards.second_yellow_counts_for_series' => ['required', 'boolean'],
+            'rules.walkover.winner_goals' => ['required', 'integer', 'between:0,20'],
+            'rules.walkover.loser_goals' => ['required', 'integer', 'between:0,20'],
+            'rules.substitutions.max' => ['required', 'integer', 'between:0,30'],
+            'rules.substitutions.max_windows' => ['required', 'integer', 'between:0,30'],
+        ];
+    }
+
+    /**
+     * Dados prontos para gravar: as regras passam pelo RuleSet (valida e normaliza).
+     *
+     * @return array<string, mixed>
+     */
+    public function seasonData(): array
+    {
+        /** @var array<string, mixed> $validated */
+        $validated = $this->validated();
+
+        /** @var array<string, mixed> $rules */
+        $rules = $validated['rules'];
+        $validated['rules'] = RuleSet::fromArray($rules)->toArray();
+
+        return $validated;
+    }
+}

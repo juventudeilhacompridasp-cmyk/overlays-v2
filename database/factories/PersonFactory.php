@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Modules\Teams\Models\Person;
+use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Models\Organization;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,7 +20,7 @@ class PersonFactory extends Factory
     public function definition(): array
     {
         return [
-            'organization_id' => Organization::factory(),
+            'organization_id' => fn () => CurrentOrganization::id() ?? Organization::factory()->create()->id,
             'name' => fake()->name(),
             'nickname' => null,
             'birth_date' => fake()->dateTimeBetween('-40 years', '-10 years')->format('Y-m-d'),

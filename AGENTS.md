@@ -22,5 +22,12 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 - Tempo real: broadcast via Reverb; overlays carregam snapshot e recebem deltas; cronômetro calculado no cliente.
 - Cobrança automática está **fora do MVP** (recursos liberados por organização).
 
+## Painel do organizador (front)
+- Rotas em `routes/panel.php` (prefixo `/painel`, nome `panel.*`), controladores nos módulos (`app/Modules/*/Http/Controllers`), validações em `FormRequest` com mensagens em `lang/pt_BR`.
+- Telas Inertia em `resources/js/Pages/Panel/*`, layout `PanelLayout` e componentes comuns em `resources/js/Components/Panel/ui.tsx` (use-os antes de criar novos). Textos da interface em português.
+- Por enquanto qualquer usuário autenticado e verificado administra a organização padrão (papéis virão com a multi-tenancy completa).
+- `ResolveDefaultOrganization` roda ANTES do route model binding (`prepend` no grupo `web`): não mude essa ordem, ela garante que `{team}`, `{season}`... só resolvam registros da organização.
+- Fábricas criam dados na organização atual (`CurrentOrganization`) quando houver uma; nos testes do painel defina-a no `beforeEach`.
+
 ## Qualidade
 Testes Pest para toda regra de negócio (as regras de campeonato têm testes baseados em exemplos reais). PHPStan/Larastan (nível sobe gradualmente até 8). PRs pequenos, descrição em português, sem segredos no repositório.

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Modules\Teams\Models\Team;
+use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Models\Organization;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,7 +20,7 @@ class TeamFactory extends Factory
     public function definition(): array
     {
         return [
-            'organization_id' => Organization::factory(),
+            'organization_id' => fn () => CurrentOrganization::id() ?? Organization::factory()->create()->id,
             'name' => fake()->unique()->city().' FC',
             'short_name' => null,
             'city' => fake()->city(),
