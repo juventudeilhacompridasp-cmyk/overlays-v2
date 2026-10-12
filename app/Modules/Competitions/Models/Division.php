@@ -15,6 +15,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property Gender $gender
+ * @property array<string, mixed>|null $rules
+ */
 #[Unguarded]
 #[UseFactory(DivisionFactory::class)]
 class Division extends Model

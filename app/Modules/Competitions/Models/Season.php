@@ -13,7 +13,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property SeasonStatus $status
+ * @property array<string, mixed>|null $rules
+ * @property Carbon|null $starts_on
+ * @property Carbon|null $ends_on
+ */
 #[Unguarded]
 #[UseFactory(SeasonFactory::class)]
 class Season extends Model

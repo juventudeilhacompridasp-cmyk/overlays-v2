@@ -14,6 +14,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property StageType $type
+ * @property array<string, mixed>|null $settings
+ */
 #[Unguarded]
 #[UseFactory(StageFactory::class)]
 class Stage extends Model

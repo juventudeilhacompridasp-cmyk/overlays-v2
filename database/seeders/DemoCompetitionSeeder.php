@@ -43,8 +43,6 @@ class DemoCompetitionSeeder extends Seeder
 
         CurrentOrganization::using($organization, function (): void {
             if (Competition::query()->where('slug', 'campeonato-demo')->exists()) {
-                $this->command?->info('Campeonato de demonstração já existe.');
-
                 return;
             }
 

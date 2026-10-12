@@ -62,7 +62,7 @@ class ShowStandings extends Command
             $tracker = $discipline->forEntry($entry);
 
             foreach ($tracker->suspended() as $personId => $games) {
-                $suspended[] = [Person::query()->find($personId)?->name ?? $personId, $entry->team->name, $games];
+                $suspended[] = [Person::query()->whereKey($personId)->value('name') ?? $personId, $entry->team->name, $games];
             }
         }
 
