@@ -23,6 +23,14 @@ Tenant = Organização. Banco único, `organization_id` em todas as tabelas de d
 (`liga.dominio.com.br`) e domínio próprio opcional. **Recursos liberados por organização** (feature flags/pacote) em vez de cobrança no MVP.
 
 ## 3. Domínio (futebol)
+Implementado em `app/Modules/*` (ver `database/migrations`): `Organization` → `Competition` → `Season` (edição, com regras em JSON) → `Division` (categoria × sexo)
+→ `Stage` (liga, grupos ou mata-mata) → `Group`; `Team` → `Entry` (inscrição em uma divisão) → `RosterEntry` (elenco: `Person` + função + camisa);
+`Venue`, `Game` (partida), `GameOfficial` e `GameEvent` (somente de acréscimo).
+
+**Motor de regras** (`app/Modules/Rules`, código puro e testado): `RuleSet` lê o regulamento do JSON da edição/divisão (`Season::ruleSet()`, `Division::ruleSet()`);
+`StandingsCalculator` gera a classificação (pontos, desempates configuráveis na ordem do regulamento, confronto direto só entre duas equipes, W.O.);
+`DisciplineTracker` aplica a suspensão automática por cartões (3 amarelos, vermelho, 3º amarelo + vermelho, zerar por fase, W.O. cumpre pena).
+
 Organização → Competição → Edição → **Especificação** (categoria × sexo × fase) → Grupos → Partidas → Eventos.
 Pessoa única (papéis atleta/dirigente/árbitro, histórico por equipe/edição). Regulamento parametrizável (pontos, desempates em ordem, cartões/suspensão,
 substituições, W.O.). `SportRuleset` por esporte. IDs ULID. Documentos e dados de menores não públicos por padrão (LGPD).
