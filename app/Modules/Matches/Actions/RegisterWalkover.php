@@ -12,6 +12,8 @@ use InvalidArgumentException;
  */
 final class RegisterWalkover
 {
+    public function __construct(private readonly KnockoutProgress $knockout = new KnockoutProgress) {}
+
     public function handle(Game $game, Entry $winner): Game
     {
         if (! in_array($winner->getKey(), [$game->home_entry_id, $game->away_entry_id], true)) {
@@ -33,6 +35,8 @@ final class RegisterWalkover
             'away_penalties' => null,
             'finished_at' => now(),
         ])->save();
+
+        $this->knockout->sync($game);
 
         return $game;
     }

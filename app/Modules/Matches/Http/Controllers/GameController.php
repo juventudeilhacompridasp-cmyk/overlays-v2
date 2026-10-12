@@ -29,7 +29,14 @@ class GameController extends Controller
     public function result(GameResultRequest $request, Game $game, RecordQuickResult $record): RedirectResponse
     {
         try {
-            $record->handle($game, $request->integer('home_score'), $request->integer('away_score'), $request->user()?->getAuthIdentifier());
+            $record->handle(
+                $game,
+                $request->integer('home_score'),
+                $request->integer('away_score'),
+                $request->user()?->getAuthIdentifier(),
+                $request->filled('home_penalties') ? $request->integer('home_penalties') : null,
+                $request->filled('away_penalties') ? $request->integer('away_penalties') : null,
+            );
         } catch (InvalidArgumentException $exception) {
             return back()->with('error', $exception->getMessage());
         }

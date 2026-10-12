@@ -19,6 +19,8 @@ class GameResultRequest extends FormRequest
         return [
             'home_score' => ['required', 'integer', 'between:0,99'],
             'away_score' => ['required', 'integer', 'between:0,99'],
+            'home_penalties' => ['nullable', 'integer', 'between:0,30', 'required_with:away_penalties'],
+            'away_penalties' => ['nullable', 'integer', 'between:0,30', 'required_with:home_penalties'],
         ];
     }
 
@@ -27,6 +29,6 @@ class GameResultRequest extends FormRequest
      */
     public function attributes(): array
     {
-        return ['home_score' => 'gols do mandante', 'away_score' => 'gols do visitante'];
+        return ['home_score' => 'gols do mandante', 'away_score' => 'gols do visitante', 'home_penalties' => 'pênaltis do mandante', 'away_penalties' => 'pênaltis do visitante'];
     }
 }

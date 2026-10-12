@@ -4,11 +4,13 @@ namespace App\Modules\Matches\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Competitions\Actions\CalculateDiscipline;
+use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Competitions\Models\Entry;
 use App\Modules\Matches\Actions\BuildGameSheet;
 use App\Modules\Matches\Actions\ChangeGamePeriod;
 use App\Modules\Matches\Actions\FinishGame;
 use App\Modules\Matches\Actions\RecordGameEvent;
+use App\Modules\Matches\Actions\RecordShootout;
 use App\Modules\Matches\Actions\SaveGameLineup;
 use App\Modules\Matches\Actions\VoidGameEvent;
 use App\Modules\Matches\Enums\GameEventType;
@@ -24,6 +26,7 @@ use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Enums\RosterStatus;
 use App\Modules\Teams\Models\RosterEntry;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use InvalidArgumentException;
@@ -93,7 +96,8 @@ class SheetController extends Controller
             ->whereIn('type', [GameEventType::PeriodStart, GameEventType::PeriodEnd])
             ->orderByDesc('id')->value('id');
 
-        $events = $game->events()->effective()->orderBy('id')->get()->map(fn (GameEvent $event) => [
+        // A disputa de pênaltis aparece como placar (home/away_penalties), não como uma linha por cobrança.
+        $events = $game->events()->effective()->where('type', '!=', GameEventType::PenaltyKick)->orderBy('id')->get()->map(fn (GameEvent $event) => [
             'id' => $event->id,
             'type' => $event->type->value,
             'entry_id' => $event->entry_id,
@@ -117,6 +121,9 @@ class SheetController extends Controller
                 'open' => $open,
                 'home_score' => $game->home_score,
                 'away_score' => $game->away_score,
+                'knockout' => $game->stage->type === StageType::Knockout,
+                'home_penalties' => $game->home_penalties,
+                'away_penalties' => $game->away_penalties,
                 'stage_id' => $game->stage_id,
                 'stage' => $game->stage->name,
                 'division' => $division->name,
@@ -196,6 +203,22 @@ class SheetController extends Controller
         }
 
         return back()->with('success', 'Cronômetro atualizado.');
+    }
+
+    public function shootout(Request $request, Game $game, RecordShootout $record): RedirectResponse
+    {
+        $validated = $request->validate([
+            'home_penalties' => ['nullable', 'integer', 'between:0,30', 'required_with:away_penalties'],
+            'away_penalties' => ['nullable', 'integer', 'between:0,30', 'required_with:home_penalties'],
+        ]);
+
+        try {
+            $record->handle($game, $validated['home_penalties'] ?? null, $validated['away_penalties'] ?? null, $request->user()?->getAuthIdentifier());
+        } catch (InvalidArgumentException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return back()->with('success', 'Pênaltis registrados.');
     }
 
     public function finish(Game $game, FinishGame $finish): RedirectResponse

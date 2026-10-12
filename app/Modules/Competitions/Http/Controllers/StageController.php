@@ -14,6 +14,7 @@ use App\Modules\Competitions\Models\Stage;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\Venue;
+use App\Modules\Matches\Scheduling\KnockoutBracket;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,6 +38,8 @@ class StageController extends Controller
             ->orderBy('round')
             ->orderBy('number')
             ->get();
+
+        $knockoutRounds = (int) $games->max('round');
 
         $payloadStanding = fn (array $entries) => array_map(fn (StandingEntry $item) => [
             'position' => $item->row->position,
@@ -87,12 +90,17 @@ class StageController extends Controller
                 'status' => $game->status->value,
                 'status_label' => $game->status->label(),
                 'decided' => $game->status->isDecided(),
+                'round_label' => $stage->type === StageType::Knockout ? KnockoutBracket::roundLabel($knockoutRounds, (int) $game->round) : null,
+                'leg' => $game->leg,
+                'legs' => $game->tie_id === null ? 1 : $games->where('tie_id', $game->tie_id)->count(),
+                'home_penalties' => $game->home_penalties,
+                'away_penalties' => $game->away_penalties,
                 'scheduled_at' => $game->scheduled_at?->format('Y-m-d\TH:i'),
                 'venue' => $game->venue?->only(['id', 'name']),
             ])->values(),
             'venues' => Venue::query()->orderBy('name')->get(['id', 'name']),
             'generation' => [
-                'can_generate' => $games->isEmpty() && $stage->type !== StageType::Knockout,
+                'can_generate' => $games->isEmpty(),
                 'confirmed_entries' => Entry::query()->where('division_id', $stage->division_id)->where('status', EntryStatus::Confirmed)->count(),
                 'can_clear' => $games->isNotEmpty() && ! $games->contains(fn (Game $game) => in_array($game->status, [GameStatus::Finished, GameStatus::Walkover, GameStatus::InProgress], true)),
             ],

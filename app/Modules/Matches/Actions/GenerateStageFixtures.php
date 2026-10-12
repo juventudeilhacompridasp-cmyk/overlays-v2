@@ -8,9 +8,11 @@ use App\Modules\Competitions\Models\Entry;
 use App\Modules\Competitions\Models\Group;
 use App\Modules\Competitions\Models\Stage;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Matches\Scheduling\KnockoutBracket;
 use App\Modules\Matches\Scheduling\RoundRobin;
 use App\Modules\Matches\Scheduling\SnakeDistributor;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 /**
@@ -25,7 +27,7 @@ final class GenerateStageFixtures
     /**
      * @return int Quantidade de jogos criados.
      */
-    public function handle(Stage $stage, bool $doubleRound = false, ?int $groups = null): int
+    public function handle(Stage $stage, bool $doubleRound = false, ?int $groups = null, int $legs = 1): int
     {
         if ($stage->games()->exists()) {
             throw new InvalidArgumentException('Esta fase já tem jogos. Limpe a tabela antes de gerar de novo.');
@@ -41,7 +43,7 @@ final class GenerateStageFixtures
         return match ($stage->type) {
             StageType::League => $this->league($stage, $entryIds, $doubleRound),
             StageType::Groups => $this->groups($stage, $entryIds, $doubleRound, $groups),
-            StageType::Knockout => throw new InvalidArgumentException('A geração do mata-mata chega em uma próxima etapa.'),
+            StageType::Knockout => $this->knockout($stage, $entryIds, $legs),
         };
     }
 
@@ -106,6 +108,66 @@ final class GenerateStageFixtures
                     foreach ($rounds[$round] ?? [] as [$home, $away]) {
                         $this->createGame($stage, $groupId, $round + 1, $number++, $home, $away);
                     }
+                }
+            }
+
+            return $number - 1;
+        });
+    }
+
+    /**
+     * Chaveamento do mata-mata: um jogo (ou ida e volta) por confronto, na ordem das rodadas. Quem folga
+     * na 1ª rodada já nasce na 2ª; os demais lados ficam em aberto até o vencedor da rodada anterior ser conhecido.
+     *
+     * @param  list<string>  $entryIds
+     */
+    private function knockout(Stage $stage, array $entryIds, int $legs): int
+    {
+        if (! in_array($legs, [1, 2], true)) {
+            throw new InvalidArgumentException('O confronto pode ter um jogo ou ida e volta.');
+        }
+
+        if (count($entryIds) < 2) {
+            throw new InvalidArgumentException('Confirme pelo menos duas equipes na divisão para gerar o mata-mata.');
+        }
+
+        $ties = KnockoutBracket::build($entryIds);
+
+        return DB::transaction(function () use ($stage, $ties, $legs): int {
+            $tieIds = [];
+
+            foreach ($ties as $tie) {
+                if (! $tie->bye) {
+                    $tieIds[$tie->round][$tie->position] = (string) Str::ulid();
+                }
+            }
+
+            $number = 1;
+
+            foreach ($ties as $tie) {
+                if ($tie->bye) {
+                    continue;
+                }
+
+                $nextTieId = $tie->nextPosition === null ? null : $tieIds[$tie->round + 1][$tie->nextPosition];
+
+                for ($leg = 1; $leg <= $legs; $leg++) {
+                    // Ida e volta: na ida o mandante é o lado b; na volta, o lado a.
+                    [$home, $away] = $legs === 1 || $leg === 2 ? [$tie->a, $tie->b] : [$tie->b, $tie->a];
+
+                    Game::query()->create([
+                        'organization_id' => $stage->organization_id,
+                        'division_id' => $stage->division_id,
+                        'stage_id' => $stage->getKey(),
+                        'round' => $tie->round,
+                        'number' => $number++,
+                        'home_entry_id' => $home,
+                        'away_entry_id' => $away,
+                        'tie_id' => $tieIds[$tie->round][$tie->position],
+                        'leg' => $leg,
+                        'next_tie_id' => $nextTieId,
+                        'next_slot' => $tie->nextSlot,
+                    ]);
                 }
             }
 

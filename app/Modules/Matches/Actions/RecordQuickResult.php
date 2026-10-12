@@ -15,9 +15,12 @@ use InvalidArgumentException;
  */
 final class RecordQuickResult
 {
-    public function __construct(private readonly FinishGame $finish = new FinishGame) {}
+    public function __construct(
+        private readonly FinishGame $finish = new FinishGame,
+        private readonly RecordShootout $shootout = new RecordShootout,
+    ) {}
 
-    public function handle(Game $game, int $homeGoals, int $awayGoals, ?int $recordedBy = null): Game
+    public function handle(Game $game, int $homeGoals, int $awayGoals, ?int $recordedBy = null, ?int $homePenalties = null, ?int $awayPenalties = null): Game
     {
         if ($game->home_entry_id === null || $game->away_entry_id === null) {
             throw new InvalidArgumentException('O jogo ainda não tem os dois confrontantes definidos.');
@@ -31,7 +34,7 @@ final class RecordQuickResult
             throw new InvalidArgumentException('O placar não pode ser negativo.');
         }
 
-        return DB::transaction(function () use ($game, $homeGoals, $awayGoals, $recordedBy): Game {
+        return DB::transaction(function () use ($game, $homeGoals, $awayGoals, $recordedBy, $homePenalties, $awayPenalties): Game {
             $goalTypes = [GameEventType::Goal, GameEventType::OwnGoal];
 
             $effective = $game->events()->effective()->whereIn('type', $goalTypes)->get();
@@ -48,6 +51,11 @@ final class RecordQuickResult
                 for ($i = 0; $i < $goals; $i++) {
                     $this->event($game, GameEventType::Goal, $entryId, $recordedBy, ['quick' => true]);
                 }
+            }
+
+            // Disputa de pênaltis (só mata-mata); sem pênaltis informados, remove os de um lançamento anterior.
+            if ($homePenalties !== null || $awayPenalties !== null || $game->events()->effective()->where('type', GameEventType::PenaltyKick)->exists()) {
+                $this->shootout->handle($game, $homePenalties, $awayPenalties, $recordedBy);
             }
 
             return $this->finish->handle($game);

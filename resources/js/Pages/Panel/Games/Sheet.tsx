@@ -49,6 +49,9 @@ interface Props {
         open: boolean;
         home_score: number;
         away_score: number;
+        knockout: boolean;
+        home_penalties: number | null;
+        away_penalties: number | null;
         stage_id: string;
         stage: string;
         division: string;
@@ -217,6 +220,31 @@ function ClockCard({ game, clock, publicUrl }: { game: Props['game']; clock: Pro
                     {publicUrl}
                 </a>
             </p>
+        </Card>
+    );
+}
+
+function ShootoutCard({ game, home, away }: { game: Props['game']; home: Team; away: Team }) {
+    const [homePens, setHomePens] = useState(game.home_penalties?.toString() ?? '');
+    const [awayPens, setAwayPens] = useState(game.away_penalties?.toString() ?? '');
+
+    const submit = (event: FormEvent) => {
+        event.preventDefault();
+        router.post(route('panel.games.shootout', game.id), { home_penalties: homePens === '' ? null : homePens, away_penalties: awayPens === '' ? null : awayPens }, { preserveScroll: true });
+    };
+
+    return (
+        <Card title="Disputa de pênaltis">
+            <form onSubmit={submit} className="flex flex-wrap items-end gap-3" aria-label="Disputa de pênaltis">
+                <Field label={`${home.name} (convertidos)`}>
+                    <Input type="number" min={0} max={30} value={homePens} onChange={(event) => setHomePens(event.target.value)} />
+                </Field>
+                <Field label={`${away.name} (convertidos)`}>
+                    <Input type="number" min={0} max={30} value={awayPens} onChange={(event) => setAwayPens(event.target.value)} />
+                </Field>
+                <Button type="submit">Salvar pênaltis</Button>
+                <p className="w-full text-xs text-gray-500">Só no jogo que decide o confronto empatado. Deixe em branco e salve para remover a disputa.</p>
+            </form>
         </Card>
     );
 }
@@ -430,6 +458,8 @@ export default function Sheet({ game, home, away, events, limits, event_types, c
                         <TeamCard game={game} team={home} limits={limits} />
                         <TeamCard game={game} team={away} limits={limits} />
                     </div>
+
+                    {game.open && game.knockout && <ShootoutCard game={game} home={home} away={away} />}
 
                     {game.open && home.has_lineup && away.has_lineup && (
                         <Card title="Novo lançamento">

@@ -23,6 +23,7 @@ class FixtureRequest extends FormRequest
 
         return [
             'double_round' => ['required', 'boolean'],
+            'legs' => ['nullable', 'integer', 'in:1,2'],
             'groups' => [$stage->type === StageType::Groups ? 'required' : 'nullable', 'integer', 'between:1,16'],
         ];
     }
