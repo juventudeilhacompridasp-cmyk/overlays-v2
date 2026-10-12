@@ -1,7 +1,7 @@
 <#
 Equivalente do Makefile para Windows (PowerShell). Uso:  .\dev.ps1 <comando>
 Se o PowerShell bloquear scripts:  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-Comandos: setup | up | down | restart | logs [servico] | shell | fresh | migrate | test | lint | fix | stan | types | help
+Comandos: setup | up | down | restart | logs [servico] | shell | fresh | migrate | demo | standings | test | lint | fix | stan | types | help
 #>
 param(
     [Parameter(Position = 0)][string]$Command = "help",
@@ -37,6 +37,8 @@ switch ($Command) {
     "shell"   { Dc exec app sh }
     "fresh"   { Dc exec app php artisan migrate:fresh --seed --force }
     "migrate" { Dc exec app php artisan migrate }
+    "demo"      { Dc exec app php artisan db:seed --class=DemoCompetitionSeeder --force; Dc exec app php artisan competitions:standings }
+    "standings" { Dc exec app php artisan competitions:standings }
     "test"    { Dc exec app php artisan test }
     "lint"    { Dc exec app vendor/bin/pint --test }
     "fix"     { Dc exec app vendor/bin/pint }
