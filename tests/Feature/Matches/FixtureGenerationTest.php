@@ -2,10 +2,7 @@
 
 use App\Modules\Competitions\Enums\EntryStatus;
 use App\Modules\Competitions\Enums\StageType;
-use App\Modules\Competitions\Models\Division;
-use App\Modules\Competitions\Models\Entry;
 use App\Modules\Competitions\Models\Group;
-use App\Modules\Competitions\Models\Stage;
 use App\Modules\Matches\Actions\ClearStageFixtures;
 use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Actions\RecordQuickResult;
@@ -13,24 +10,6 @@ use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Teams\Models\Person;
-
-/**
- * Divisão com N equipes confirmadas (cabeça de chave 1..N) e uma fase do tipo informado.
- *
- * @return array{stage: Stage, entries: list<Entry>}
- */
-function fixtureDivision(int $teams, StageType $type = StageType::League): array
-{
-    $division = Division::factory()->create();
-    $stage = Stage::factory()->for($division)->create(['type' => $type]);
-
-    $entries = [];
-    foreach (range(1, $teams) as $seed) {
-        $entries[] = Entry::factory()->for($division)->create(['seed' => $seed, 'status' => EntryStatus::Confirmed]);
-    }
-
-    return ['stage' => $stage, 'entries' => $entries];
-}
 
 it('generates a single round robin league with numbered rounds', function () {
     ['stage' => $stage, 'entries' => $entries] = fixtureDivision(4);

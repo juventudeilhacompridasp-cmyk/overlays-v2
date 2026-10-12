@@ -8,6 +8,7 @@ use App\Modules\Competitions\Http\Controllers\SeasonController;
 use App\Modules\Competitions\Http\Controllers\StageController;
 use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
+use App\Modules\Matches\Http\Controllers\SheetController;
 use App\Modules\Matches\Http\Controllers\VenueController;
 use App\Modules\Teams\Http\Controllers\PersonController;
 use App\Modules\Teams\Http\Controllers\RosterController;
@@ -41,4 +42,10 @@ Route::middleware(['auth', 'verified'])->prefix('painel')->name('panel.')->group
     Route::post('games/{game}/result', [GameController::class, 'result'])->name('games.result');
     Route::post('games/{game}/walkover', [GameController::class, 'walkover'])->name('games.walkover');
     Route::post('games/{game}/reopen', [GameController::class, 'reopen'])->name('games.reopen');
+
+    Route::get('games/{game}/sheet', [SheetController::class, 'show'])->name('games.sheet');
+    Route::put('games/{game}/lineups/{entry}', [SheetController::class, 'lineup'])->name('games.lineup');
+    Route::post('games/{game}/events', [SheetController::class, 'storeEvent'])->name('games.events.store');
+    Route::post('games/{game}/events/{event}/void', [SheetController::class, 'voidEvent'])->name('games.events.void');
+    Route::post('games/{game}/finish', [SheetController::class, 'finish'])->name('games.finish');
 });

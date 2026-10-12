@@ -2,7 +2,7 @@ import Modal from '@/Components/Modal';
 import { Badge, Button, Card, Empty, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Option } from '@/types/panel';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 
 interface Team {
@@ -237,6 +237,12 @@ function GameRow({ game, onSchedule, onResult }: { game: Game; onSchedule: () =>
             </div>
             <div className="flex gap-2">
                 {game.decided ? (
+                    <>
+                    {game.home && game.away && (
+                        <Link href={route('panel.games.sheet', game.id)} className="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200">
+                            Súmula
+                        </Link>
+                    )}
                     <Button
                         small
                         variant="secondary"
@@ -248,8 +254,14 @@ function GameRow({ game, onSchedule, onResult }: { game: Game; onSchedule: () =>
                     >
                         Reabrir
                     </Button>
+                    </>
                 ) : (
                     <>
+                        {game.home && game.away && (
+                            <Link href={route('panel.games.sheet', game.id)} className="inline-flex items-center rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100">
+                                Súmula
+                            </Link>
+                        )}
                         <Button small variant="secondary" onClick={onSchedule}>
                             Agendar
                         </Button>

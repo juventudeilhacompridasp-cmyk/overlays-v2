@@ -107,4 +107,12 @@ class Game extends Model
     {
         return $this->hasMany(GameEvent::class);
     }
+
+    /**
+     * @return HasMany<GameLineup, $this>
+     */
+    public function lineups(): HasMany
+    {
+        return $this->hasMany(GameLineup::class);
+    }
 }

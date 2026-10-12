@@ -1,5 +1,14 @@
 <?php
 
+use App\Modules\Competitions\Enums\EntryStatus;
+use App\Modules\Competitions\Enums\StageType;
+use App\Modules\Competitions\Models\Division;
+use App\Modules\Competitions\Models\Entry;
+use App\Modules\Competitions\Models\Stage;
+use App\Modules\Matches\Actions\GenerateStageFixtures;
+use App\Modules\Matches\Actions\SaveGameLineup;
+use App\Modules\Matches\Models\Game;
+use App\Modules\Teams\Models\RosterEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +53,41 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Divisão com N equipes confirmadas (cabeça de chave 1..N) e uma fase do tipo informado.
+ *
+ * @return array{stage: Stage, entries: list<Entry>}
+ */
+function fixtureDivision(int $teams, StageType $type = StageType::League): array
 {
-    // ..
+    $division = Division::factory()->create();
+    $stage = Stage::factory()->for($division)->create(['type' => $type]);
+
+    $entries = [];
+    foreach (range(1, $teams) as $seed) {
+        $entries[] = Entry::factory()->for($division)->create(['seed' => $seed, 'status' => EntryStatus::Confirmed]);
+    }
+
+    return ['stage' => $stage, 'entries' => $entries];
+}
+
+/**
+ * @return array{game: Game, home: Entry, away: Entry, hp: list<string>, ap: list<string>}
+ */
+function sheetGame(): array
+{
+    ['stage' => $stage] = fixtureDivision(2);
+    app(GenerateStageFixtures::class)->handle($stage);
+
+    $game = Game::query()->where('stage_id', $stage->id)->firstOrFail();
+    $players = fn (Entry $entry): array => RosterEntry::factory()->count(14)->sequence(fn ($s) => ['shirt_number' => $s->index + 1])
+        ->create(['entry_id' => $entry->id])->pluck('person_id')->all();
+
+    $hp = $players($game->homeEntry);
+    $ap = $players($game->awayEntry);
+
+    app(SaveGameLineup::class)->handle($game, $game->homeEntry, array_slice($hp, 0, 11), array_slice($hp, 11));
+    app(SaveGameLineup::class)->handle($game, $game->awayEntry, array_slice($ap, 0, 11), array_slice($ap, 11));
+
+    return ['game' => $game->fresh(), 'home' => $game->homeEntry, 'away' => $game->awayEntry, 'hp' => $hp, 'ap' => $ap];
 }

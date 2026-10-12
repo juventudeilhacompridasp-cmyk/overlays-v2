@@ -28,6 +28,9 @@ final readonly class RuleSet
         public int $walkoverLoserGoals = 0,
         public int $maxSubstitutions = 8,
         public int $maxSubstitutionWindows = 3,
+        public int $maxStarters = 11,
+        public int $maxBench = 11,
+        public int $maxStaff = 3,
     ) {
         if ($yellowCardsForSuspension < 1) {
             throw new InvalidArgumentException('cards.yellow_for_suspension deve ser pelo menos 1.');
@@ -36,7 +39,8 @@ final readonly class RuleSet
         foreach (['pointsWin' => $pointsWin, 'pointsDraw' => $pointsDraw, 'pointsLoss' => $pointsLoss,
             'yellowSuspensionGames' => $yellowSuspensionGames, 'redSuspensionGames' => $redSuspensionGames,
             'walkoverWinnerGoals' => $walkoverWinnerGoals, 'walkoverLoserGoals' => $walkoverLoserGoals,
-            'maxSubstitutions' => $maxSubstitutions, 'maxSubstitutionWindows' => $maxSubstitutionWindows] as $name => $value) {
+            'maxSubstitutions' => $maxSubstitutions, 'maxSubstitutionWindows' => $maxSubstitutionWindows,
+            'maxStarters' => $maxStarters, 'maxBench' => $maxBench, 'maxStaff' => $maxStaff] as $name => $value) {
             if ($value < 0) {
                 throw new InvalidArgumentException("O valor de {$name} não pode ser negativo.");
             }
@@ -99,6 +103,9 @@ final readonly class RuleSet
             walkoverLoserGoals: (int) $merged['walkover']['loser_goals'],
             maxSubstitutions: (int) $merged['substitutions']['max'],
             maxSubstitutionWindows: (int) $merged['substitutions']['max_windows'],
+            maxStarters: (int) $merged['lineup']['max_starters'],
+            maxBench: (int) $merged['lineup']['max_bench'],
+            maxStaff: (int) $merged['lineup']['max_staff'],
         );
     }
 
@@ -119,6 +126,7 @@ final readonly class RuleSet
             ],
             'walkover' => ['winner_goals' => $this->walkoverWinnerGoals, 'loser_goals' => $this->walkoverLoserGoals],
             'substitutions' => ['max' => $this->maxSubstitutions, 'max_windows' => $this->maxSubstitutionWindows],
+            'lineup' => ['max_starters' => $this->maxStarters, 'max_bench' => $this->maxBench, 'max_staff' => $this->maxStaff],
         ];
     }
 }
