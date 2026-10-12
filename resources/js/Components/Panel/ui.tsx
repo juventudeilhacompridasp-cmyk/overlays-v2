@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     ButtonHTMLAttributes,
     InputHTMLAttributes,
@@ -6,6 +6,8 @@ import {
     ReactNode,
     SelectHTMLAttributes,
     TextareaHTMLAttributes,
+    useRef,
+    useState,
 } from 'react';
 import { PaginationLink } from '@/types/panel';
 
@@ -253,5 +255,94 @@ export function SearchBox({
                 Buscar
             </Button>
         </form>
+    );
+}
+
+/** Escudo/foto em miniatura; sem imagem mostra as iniciais sobre a cor informada. */
+export function Logo({ src, name, size = 28, round = false, color }: { src?: string | null; name: string; size?: number; round?: boolean; color?: string | null }) {
+    const shape = round ? 'rounded-full' : 'rounded-md';
+    const initials = name
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join('')
+        .toUpperCase();
+
+    if (src) {
+        return <img src={src} alt="" width={size} height={size} loading="lazy" className={`shrink-0 bg-white object-contain ${shape}`} style={{ width: size, height: size }} />;
+    }
+
+    return (
+        <span
+            aria-hidden="true"
+            className={`inline-flex shrink-0 items-center justify-center text-[10px] font-semibold text-white ${shape}`}
+            style={{ width: size, height: size, backgroundColor: color ?? '#9ca3af' }}
+        >
+            {initials}
+        </span>
+    );
+}
+
+/** Envio de imagem (escudo/foto): mostra a atual, envia o arquivo escolhido e permite remover. */
+export function ImageUpload({
+    label,
+    field,
+    currentUrl,
+    name,
+    uploadUrl,
+    removeUrl,
+    hint,
+    round = false,
+}: {
+    label: string;
+    field: string;
+    currentUrl: string | null;
+    name: string;
+    uploadUrl: string;
+    removeUrl: string;
+    hint?: string;
+    round?: boolean;
+}) {
+    const input = useRef<HTMLInputElement>(null);
+    const [sending, setSending] = useState(false);
+    const error = (usePage().props.errors as Record<string, string> | undefined)?.[field];
+
+    const send = (file: File | undefined) => {
+        if (!file) return;
+        setSending(true);
+        router.post(uploadUrl, { [field]: file }, { forceFormData: true, preserveScroll: true, onFinish: () => setSending(false) });
+        if (input.current) input.current.value = '';
+    };
+
+    return (
+        <div>
+            <span className="mb-1 block text-sm font-medium text-gray-700">{label}</span>
+            <div className="flex items-center gap-4">
+                <Logo src={currentUrl} name={name} size={72} round={round} />
+                <div className="space-y-1">
+                    <div className="flex flex-wrap gap-2">
+                        <Button small variant="secondary" disabled={sending} onClick={() => input.current?.click()}>
+                            {currentUrl ? 'Trocar imagem' : 'Enviar imagem'}
+                        </Button>
+                        {currentUrl && (
+                            <Button
+                                small
+                                variant="danger"
+                                disabled={sending}
+                                onClick={() => {
+                                    if (window.confirm('Remover esta imagem?')) router.delete(removeUrl, { preserveScroll: true });
+                                }}
+                            >
+                                Remover
+                            </Button>
+                        )}
+                    </div>
+                    <input ref={input} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" aria-label={label} onChange={(event) => send(event.target.files?.[0])} />
+                    <p className="text-xs text-gray-500">{hint ?? 'JPG, PNG ou WebP.'}</p>
+                    {error && <p className="text-sm text-red-600">{error}</p>}
+                </div>
+            </div>
+        </div>
     );
 }

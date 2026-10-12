@@ -4,6 +4,7 @@ namespace App\Modules\Teams\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Matches\Models\GameEvent;
+use App\Modules\Teams\Actions\ChangePersonPhoto;
 use App\Modules\Teams\Http\Requests\PersonRequest;
 use App\Modules\Teams\Models\Person;
 use App\Modules\Teams\Support\Cpf;
@@ -41,6 +42,7 @@ class PersonController extends Controller
                 'birth_date' => $person->birth_date?->format('Y-m-d'),
                 'age' => $person->birth_date?->age,
                 'has_document' => $person->document_hash !== null,
+                'photo_url' => $person->photoUrl(96),
                 'roster_entries_count' => $person->roster_entries_count,
             ]);
 
@@ -71,6 +73,7 @@ class PersonController extends Controller
                 'nickname' => $person->nickname,
                 'birth_date' => $person->birth_date?->format('Y-m-d'),
                 'has_document' => $person->document_hash !== null,
+                'photo_url' => $person->photoUrl(400),
             ],
         ]);
     }
@@ -92,6 +95,7 @@ class PersonController extends Controller
             return back()->with('error', 'Esta pessoa está em elencos ou tem histórico de jogos. Remova dos elencos antes de excluir.');
         }
 
+        app(ChangePersonPhoto::class)->handle($person, null);
         $person->delete();
 
         return to_route('panel.people.index')->with('success', 'Pessoa excluída.');

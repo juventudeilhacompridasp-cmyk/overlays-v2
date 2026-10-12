@@ -11,8 +11,10 @@ use App\Modules\Matches\Http\Controllers\GameController;
 use App\Modules\Matches\Http\Controllers\SheetController;
 use App\Modules\Matches\Http\Controllers\VenueController;
 use App\Modules\Teams\Http\Controllers\PersonController;
+use App\Modules\Teams\Http\Controllers\PersonPhotoController;
 use App\Modules\Teams\Http\Controllers\RosterController;
 use App\Modules\Teams\Http\Controllers\TeamController;
+use App\Modules\Teams\Http\Controllers\TeamLogoController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,8 +25,12 @@ Route::middleware(['auth', 'verified'])->prefix('painel')->name('panel.')->group
     Route::get('/', DashboardController::class)->name('dashboard');
 
     Route::resource('teams', TeamController::class)->except('show');
+    Route::post('teams/{team}/logo', [TeamLogoController::class, 'store'])->name('teams.logo.store');
+    Route::delete('teams/{team}/logo', [TeamLogoController::class, 'destroy'])->name('teams.logo.destroy');
     Route::resource('venues', VenueController::class)->except('show');
     Route::resource('people', PersonController::class)->except('show');
+    Route::post('people/{person}/photo', [PersonPhotoController::class, 'store'])->name('people.photo.store');
+    Route::delete('people/{person}/photo', [PersonPhotoController::class, 'destroy'])->name('people.photo.destroy');
 
     Route::resource('competitions', CompetitionController::class);
     Route::resource('competitions.seasons', SeasonController::class)->shallow()->except('index');

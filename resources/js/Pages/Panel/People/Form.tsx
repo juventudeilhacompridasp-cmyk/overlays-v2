@@ -1,5 +1,5 @@
 import { maskCpf } from '@/Components/Panel/cpf';
-import { Button, Card, Field, Input, LinkButton, PageHeader } from '@/Components/Panel/ui';
+import { Button, Card, Field, ImageUpload, Input, LinkButton, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
@@ -10,6 +10,7 @@ interface Person {
     nickname: string | null;
     birth_date: string | null;
     has_document: boolean;
+    photo_url: string | null;
 }
 
 export default function Form({ person }: { person: Person | null }) {
@@ -37,6 +38,23 @@ export default function Form({ person }: { person: Person | null }) {
                 title={person ? 'Editar pessoa' : 'Nova pessoa'}
                 breadcrumbs={[{ label: 'Atletas e comissão', href: route('panel.people.index') }, { label: person ? person.name : 'Nova' }]}
             />
+            {person ? (
+                <Card title="Foto" className="mb-6 max-w-2xl">
+                    <ImageUpload
+                        label="Foto"
+                        field="photo"
+                        name={person.name}
+                        round
+                        currentUrl={person.photo_url}
+                        uploadUrl={route('panel.people.photo.store', person.id)}
+                        removeUrl={route('panel.people.photo.destroy', person.id)}
+                        hint="JPG, PNG ou WebP, até 5 MB; vira um quadrado centralizado. Por LGPD a foto fica em armazenamento privado e só aparece aqui no painel, nunca no portal público."
+                    />
+                </Card>
+            ) : (
+                <p className="mb-4 max-w-2xl text-sm text-gray-500">Salve o cadastro para poder enviar a foto.</p>
+            )}
+
             <Card className="max-w-2xl">
                 <form onSubmit={submit} className="space-y-4">
                     <Field label="Nome completo" htmlFor="name" error={errors.name}>

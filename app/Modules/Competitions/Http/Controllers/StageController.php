@@ -44,6 +44,7 @@ class StageController extends Controller
         $payloadStanding = fn (array $entries) => array_map(fn (StandingEntry $item) => [
             'position' => $item->row->position,
             'team' => $item->entry->team->name,
+            'logo' => $item->entry->team->logoUrl(128),
             'points' => $item->row->points,
             'played' => $item->row->played,
             'wins' => $item->row->wins,
@@ -83,8 +84,8 @@ class StageController extends Controller
                 'number' => $game->number,
                 'round' => $game->round,
                 'group' => $game->group?->name,
-                'home' => $game->homeEntry ? ['id' => $game->homeEntry->id, 'name' => $game->homeEntry->team->name] : null,
-                'away' => $game->awayEntry ? ['id' => $game->awayEntry->id, 'name' => $game->awayEntry->team->name] : null,
+                'home' => $game->homeEntry ? ['id' => $game->homeEntry->id, 'name' => $game->homeEntry->team->name, 'logo' => $game->homeEntry->team->logoUrl(128)] : null,
+                'away' => $game->awayEntry ? ['id' => $game->awayEntry->id, 'name' => $game->awayEntry->team->name, 'logo' => $game->awayEntry->team->logoUrl(128)] : null,
                 'home_score' => $game->home_score,
                 'away_score' => $game->away_score,
                 'status' => $game->status->value,

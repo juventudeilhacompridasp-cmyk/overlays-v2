@@ -14,6 +14,7 @@ interface Goal {
 interface Team {
     name: string;
     short_name: string | null;
+    logo_url: string | null;
 }
 
 export interface Snapshot {
@@ -117,7 +118,10 @@ export default function GameLive({ snapshot: initial, realtime }: { snapshot: Sn
                     {snapshot.competition} · {snapshot.division} · {snapshot.stage}
                 </p>
                 <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-                    <h1 className="text-right text-xl font-bold sm:text-2xl">{home}</h1>
+                    <div className="flex flex-col items-end gap-2">
+                        {snapshot.home?.logo_url && <img src={snapshot.home.logo_url} alt="" className="h-16 w-16 object-contain sm:h-24 sm:w-24" />}
+                        <h1 className="text-right text-xl font-bold sm:text-2xl">{home}</h1>
+                    </div>
                     <div className="rounded-lg bg-black/40 px-6 py-3 text-center" data-testid="live-score">
                         <span className="text-5xl font-extrabold tabular-nums">
                             {snapshot.home_score} x {snapshot.away_score}
@@ -128,7 +132,10 @@ export default function GameLive({ snapshot: initial, realtime }: { snapshot: Sn
                             </div>
                         )}
                     </div>
-                    <h1 className="text-left text-xl font-bold sm:text-2xl">{away}</h1>
+                    <div className="flex flex-col items-start gap-2">
+                        {snapshot.away?.logo_url && <img src={snapshot.away.logo_url} alt="" className="h-16 w-16 object-contain sm:h-24 sm:w-24" />}
+                        <h1 className="text-left text-xl font-bold sm:text-2xl">{away}</h1>
+                    </div>
                 </div>
                 <p className="mt-4 text-center text-lg font-semibold tabular-nums text-emerald-400" data-testid="live-clock" suppressHydrationWarning>
                     {ready || snapshot.clock.state !== 'running' ? clockText : '—'}
