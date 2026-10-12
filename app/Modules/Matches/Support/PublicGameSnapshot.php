@@ -6,6 +6,7 @@ use App\Modules\Matches\Actions\ChangeGamePeriod;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
+use App\Modules\Portal\Support\PublicName;
 use App\Modules\Rules\Sheet\GameClock;
 use App\Modules\Teams\Models\Person;
 
@@ -27,8 +28,8 @@ final class PublicGameSnapshot
 
         $names = Person::query()
             ->whereIn('id', $goals->pluck('person_id')->filter()->unique())
-            ->get(['id', 'name', 'nickname'])
-            ->mapWithKeys(fn (Person $person) => [$person->id => $person->nickname ?: $person->name]);
+            ->get(['id', 'name', 'nickname', 'birth_date'])
+            ->mapWithKeys(fn (Person $person) => [$person->id => PublicName::of($person)]);
 
         $marks = ChangeGamePeriod::marks($game);
 

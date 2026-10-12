@@ -11,6 +11,10 @@ const nav = [
     { label: 'Transmissão', route: 'panel.broadcast.index', match: 'panel.broadcast.*', icon: 'M3 7a2 2 0 012-2h9a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7zM15 10l6-3v10l-6-3' },
 ];
 
+const adminNav = [
+    { label: 'Portal público', route: 'panel.organization.edit', match: 'panel.organization.*', icon: 'M12 21a9 9 0 100-18 9 9 0 000 18zM3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 010 18M12 3a14 14 0 000 18' },
+];
+
 const usersNav = { label: 'Usuários', route: 'panel.users.index', match: 'panel.users.*', icon: 'M16 11a3 3 0 100-6 3 3 0 000 6zM8 11a3 3 0 100-6 3 3 0 000 6zM2 20v-1a4 4 0 014-4h4a4 4 0 014 4v1M15 15h3a4 4 0 014 4v1' };
 
 function Icon({ path }: { path: string }) {
@@ -25,7 +29,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const { auth, flash } = usePage().props;
     const [open, setOpen] = useState(false);
     const canManageUsers = useCan('manage-users');
-    const items = canManageUsers ? [...nav, usersNav] : nav;
+    const items = canManageUsers ? [...nav, ...adminNav, usersNav] : nav;
 
     const menu = (
         <nav className="flex flex-col gap-1 px-3">

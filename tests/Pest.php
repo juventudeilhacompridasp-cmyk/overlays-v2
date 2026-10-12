@@ -2,9 +2,11 @@
 
 use App\Models\User;
 use App\Modules\Competitions\Enums\EntryStatus;
+use App\Modules\Competitions\Enums\SeasonStatus;
 use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Competitions\Models\Division;
 use App\Modules\Competitions\Models\Entry;
+use App\Modules\Competitions\Models\Season;
 use App\Modules\Competitions\Models\Stage;
 use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Actions\SaveGameLineup;
@@ -107,4 +109,13 @@ function panelUser(Role $role = Role::Admin): User
     Membership::query()->create(['organization_id' => $organization->getKey(), 'user_id' => $user->getKey(), 'role' => $role]);
 
     return $user;
+}
+
+/** Publica a edição do jogo/divisão (as fábricas criam edições em rascunho, que o portal público não mostra). */
+function publishSeason(object $model): void
+{
+    $divisionId = $model instanceof Game ? $model->division_id : $model->id;
+    $seasonId = Division::query()->findOrFail($divisionId)->season_id;
+
+    Season::query()->whereKey($seasonId)->update(['status' => SeasonStatus::Active]);
 }
