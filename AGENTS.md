@@ -12,10 +12,10 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 `make test` · `make lint` (Pint) · `make stan` (Larastan) · `make types` (tsc) · `make fresh` (banco com seed). Antes de abrir o PR todos devem passar.
 
 ## Regras de arquitetura
-- Monolito modular: código de domínio em `app/Modules/<Modulo>` (Models, Actions, Policies, Events, Http). Um módulo = um escopo de PR. Não edite outro módulo sem combinar um contrato (ADR).
-- **Multi-tenancy:** toda tabela de domínio tem `organization_id` + global scope + Policy. Nunca consulte dados de domínio sem o escopo da organização.
+- Monolito modular: código de domínio em `app/Modules/<Modulo>` (Models, Enums, Actions, Policies, Events, Http). Módulos atuais: `Tenancy`, `Competitions`, `Teams`, `Matches`. Um módulo = um escopo de PR. Não edite outro módulo sem combinar um contrato (ADR).
+- **Organização (multi-tenancy simplificada):** toda tabela de domínio tem `organization_id`; os modelos usam o trait `BelongsToOrganization` (escopo global + preenchimento automático via `CurrentOrganization`). Por enquanto existe só a organização padrão (`config('platform.default_organization_slug')`), definida pelo middleware `ResolveDefaultOrganization`; subdomínios, papéis e painel de administração ficam para depois. Em jobs/comandos, defina a organização com `CurrentOrganization::using(...)`.
 - **IDs:** ULID em tabelas de domínio (nunca sequenciais expostos publicamente).
-- **Eventos de partida somente de acréscimo** (`match_events`); placar e classificação são projeções. Desfazer = evento compensatório.
+- **Eventos de jogo somente de acréscimo** (`game_events`, modelo `GameEvent`, que lança exceção em update/delete); placar e classificação são projeções. Desfazer = evento compensatório (`compensates_event_id`). O modelo de partida se chama `Game` (`Match` é palavra reservada do PHP).
 - **Regras de competição são parâmetros** (pontos, desempates, cartões/suspensão), nunca valores fixos no código.
 - **LGPD:** documentos pessoais só no disco `s3-private` com URL assinada; dados de menores e disciplina não são públicos por padrão.
 - Arquivos públicos no disco `s3` (CDN); variantes WebP geradas por job.

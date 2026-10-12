@@ -1,0 +1,51 @@
+<?php
+
+namespace App\Modules\Competitions\Models;
+
+use App\Modules\Competitions\Enums\SeasonStatus;
+use App\Modules\Tenancy\Concerns\BelongsToOrganization;
+use Database\Factories\SeasonFactory;
+use Illuminate\Database\Eloquent\Attributes\Unguarded;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+#[Unguarded]
+#[UseFactory(SeasonFactory::class)]
+class Season extends Model
+{
+    /** @use HasFactory<SeasonFactory> */
+    use BelongsToOrganization, HasFactory, HasUlids;
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function casts(): array
+    {
+        return [
+            'status' => SeasonStatus::class,
+            'rules' => 'array',
+            'starts_on' => 'date',
+            'ends_on' => 'date',
+        ];
+    }
+
+    /**
+     * @return BelongsTo<Competition, $this>
+     */
+    public function competition(): BelongsTo
+    {
+        return $this->belongsTo(Competition::class);
+    }
+
+    /**
+     * @return HasMany<Division, $this>
+     */
+    public function divisions(): HasMany
+    {
+        return $this->hasMany(Division::class);
+    }
+}

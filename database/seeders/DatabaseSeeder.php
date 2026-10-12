@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Modules\Tenancy\Models\Organization;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,6 +14,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        Organization::query()->firstOrCreate(
+            ['slug' => config('platform.default_organization_slug')],
+            ['name' => 'Organização padrão'],
+        );
+
         $admin = User::query()->firstOrNew(['email' => 'admin@plataforma.test']);
 
         $admin->forceFill([
