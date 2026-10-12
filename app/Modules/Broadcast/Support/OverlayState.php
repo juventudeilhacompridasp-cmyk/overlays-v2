@@ -96,7 +96,7 @@ final class OverlayState
         }
 
         return [
-            'title' => $game->group?->name ?? $game->stage->name,
+            'title' => data_get($game, 'group.name') ?? $game->stage->name,
             'rows' => array_map(fn (StandingEntry $item) => [
                 'position' => $item->row->position,
                 'team' => $item->entry->team->name,
