@@ -17,10 +17,21 @@ use Inertia\Response;
 class RegisteredUserController extends Controller
 {
     /**
+     * Cadastro público fechado por padrão: usuários são criados por um administrador (Painel > Usuários).
+     * Só abre com `OPEN_REGISTRATION=true` ou enquanto a instalação não tem nenhum usuário (o primeiro vira administrador).
+     */
+    public static function isOpen(): bool
+    {
+        return (bool) config('platform.open_registration') || ! User::query()->exists();
+    }
+
+    /**
      * Display the registration view.
      */
     public function create(): Response
     {
+        abort_unless(self::isOpen(), 403, 'O cadastro está fechado. Peça a um administrador para criar seu acesso.');
+
         return Inertia::render('Auth/Register');
     }
 
@@ -31,6 +42,8 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        abort_unless(self::isOpen(), 403, 'O cadastro está fechado. Peça a um administrador para criar seu acesso.');
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,

@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import { useCan } from '@/lib/can';
 import { PropsWithChildren, useState } from 'react';
 
 const nav = [
@@ -8,6 +9,8 @@ const nav = [
     { label: 'Atletas e comissão', route: 'panel.people.index', match: 'panel.people.*', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1' },
     { label: 'Estádios', route: 'panel.venues.index', match: 'panel.venues.*', icon: 'M12 21s-7-6.2-7-11a7 7 0 1114 0c0 4.8-7 11-7 11zM12 12a2 2 0 100-4 2 2 0 000 4z' },
 ];
+
+const usersNav = { label: 'Usuários', route: 'panel.users.index', match: 'panel.users.*', icon: 'M16 11a3 3 0 100-6 3 3 0 000 6zM8 11a3 3 0 100-6 3 3 0 000 6zM2 20v-1a4 4 0 014-4h4a4 4 0 014 4v1M15 15h3a4 4 0 014 4v1' };
 
 function Icon({ path }: { path: string }) {
     return (
@@ -20,10 +23,12 @@ function Icon({ path }: { path: string }) {
 export default function PanelLayout({ children }: PropsWithChildren) {
     const { auth, flash } = usePage().props;
     const [open, setOpen] = useState(false);
+    const canManageUsers = useCan('manage-users');
+    const items = canManageUsers ? [...nav, usersNav] : nav;
 
     const menu = (
         <nav className="flex flex-col gap-1 px-3">
-            {nav.map((item) => {
+            {items.map((item) => {
                 const active = route().current(item.match);
 
                 return (
@@ -50,6 +55,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
                 {menu}
                 <div className="mt-auto border-t border-gray-100 px-6 pt-4 text-sm">
                     <div className="truncate font-medium text-gray-800">{auth.user.name}</div>
+                    {auth.role_label && <div className="text-xs text-gray-500">{auth.role_label}</div>}
                     <div className="mt-1 flex gap-3 text-gray-500">
                         <Link href={route('profile.edit')} className="hover:text-emerald-700">
                             Perfil

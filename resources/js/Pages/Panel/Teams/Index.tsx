@@ -1,5 +1,6 @@
 import { Badge, Card, DeleteButton, Empty, LinkButton, Logo, PageHeader, Pagination, SearchBox } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
+import { useCan } from '@/lib/can';
 import { Paginated } from '@/types/panel';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
@@ -16,6 +17,7 @@ interface Team {
 
 export default function Index({ teams, filters }: { teams: Paginated<Team>; filters: { q: string } }) {
     const [search, setSearch] = useState(filters.q);
+    const canManage = useCan('manage-registry');
 
     return (
         <PanelLayout>
@@ -23,7 +25,7 @@ export default function Index({ teams, filters }: { teams: Paginated<Team>; filt
             <PageHeader
                 title="Equipes"
                 subtitle="Clubes e times da organização. Eles se inscrevem nas divisões de cada edição."
-                actions={<LinkButton href={route('panel.teams.create')}>Nova equipe</LinkButton>}
+                actions={canManage ? <LinkButton href={route('panel.teams.create')}>Nova equipe</LinkButton> : undefined}
             />
 
             <div className="mb-4">
@@ -66,15 +68,17 @@ export default function Index({ teams, filters }: { teams: Paginated<Team>; filt
                                         <td className="px-5 py-3 text-gray-600">{team.city ?? '—'}</td>
                                         <td className="px-5 py-3 text-gray-600">{team.entries_count}</td>
                                         <td className="px-5 py-3">
-                                            <div className="flex justify-end gap-2">
-                                                <LinkButton href={route('panel.teams.edit', team.id)} variant="secondary" small>
-                                                    Editar
-                                                </LinkButton>
-                                                <DeleteButton
-                                                    href={route('panel.teams.destroy', team.id)}
-                                                    message={`Excluir a equipe "${team.name}"?`}
-                                                />
-                                            </div>
+                                            {canManage && (
+                                                <div className="flex justify-end gap-2">
+                                                    <LinkButton href={route('panel.teams.edit', team.id)} variant="secondary" small>
+                                                        Editar
+                                                    </LinkButton>
+                                                    <DeleteButton
+                                                        href={route('panel.teams.destroy', team.id)}
+                                                        message={`Excluir a equipe "${team.name}"?`}
+                                                    />
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

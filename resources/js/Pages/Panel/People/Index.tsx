@@ -1,5 +1,6 @@
 import { Badge, Card, DeleteButton, Empty, LinkButton, Logo, PageHeader, Pagination, SearchBox } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
+import { useCan } from '@/lib/can';
 import { Paginated } from '@/types/panel';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
@@ -17,6 +18,7 @@ interface Person {
 
 export default function Index({ people, filters }: { people: Paginated<Person>; filters: { q: string } }) {
     const [search, setSearch] = useState(filters.q);
+    const canManage = useCan('manage-registry');
 
     return (
         <PanelLayout>
@@ -24,7 +26,7 @@ export default function Index({ people, filters }: { people: Paginated<Person>; 
             <PageHeader
                 title="Atletas e comissão"
                 subtitle="Cadastro único de pessoas (atletas, técnicos, dirigentes). O elenco de cada equipe é montado dentro da inscrição na divisão."
-                actions={<LinkButton href={route('panel.people.create')}>Nova pessoa</LinkButton>}
+                actions={canManage ? <LinkButton href={route('panel.people.create')}>Nova pessoa</LinkButton> : undefined}
             />
 
             <div className="mb-4">
@@ -71,12 +73,14 @@ export default function Index({ people, filters }: { people: Paginated<Person>; 
                                         <td className="px-5 py-3">{person.has_document ? <Badge tone="green">Informado</Badge> : <span className="text-gray-400">—</span>}</td>
                                         <td className="px-5 py-3 text-gray-600">{person.roster_entries_count}</td>
                                         <td className="px-5 py-3">
-                                            <div className="flex justify-end gap-2">
-                                                <LinkButton href={route('panel.people.edit', person.id)} variant="secondary" small>
-                                                    Editar
-                                                </LinkButton>
-                                                <DeleteButton href={route('panel.people.destroy', person.id)} message={`Excluir o cadastro de "${person.name}"?`} />
-                                            </div>
+                                            {canManage && (
+                                                <div className="flex justify-end gap-2">
+                                                    <LinkButton href={route('panel.people.edit', person.id)} variant="secondary" small>
+                                                        Editar
+                                                    </LinkButton>
+                                                    <DeleteButton href={route('panel.people.destroy', person.id)} message={`Excluir o cadastro de "${person.name}"?`} />
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

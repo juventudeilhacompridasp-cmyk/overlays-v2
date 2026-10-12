@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use App\Modules\Competitions\Enums\EntryStatus;
 use App\Modules\Competitions\Enums\Gender;
 use App\Modules\Competitions\Enums\SeasonStatus;
@@ -20,7 +19,7 @@ beforeEach(function () {
     // Dados criados pelas fábricas ficam na organização padrão, a mesma que o painel usa nas requisições.
     CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug')]));
 
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(panelUser());
 });
 
 function seasonPayload(array $overrides = []): array

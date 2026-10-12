@@ -1,5 +1,6 @@
 import { Card, DeleteButton, Empty, LinkButton, PageHeader, Pagination, SearchBox } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
+import { useCan } from '@/lib/can';
 import { Paginated } from '@/types/panel';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
@@ -13,6 +14,7 @@ interface Competition {
 
 export default function Index({ competitions, filters }: { competitions: Paginated<Competition>; filters: { q: string } }) {
     const [search, setSearch] = useState(filters.q);
+    const canManage = useCan('manage-competitions');
 
     return (
         <PanelLayout>
@@ -20,7 +22,7 @@ export default function Index({ competitions, filters }: { competitions: Paginat
             <PageHeader
                 title="Competições"
                 subtitle="Campeonatos e copas. Cada competição tem edições (por ano), e cada edição tem divisões."
-                actions={<LinkButton href={route('panel.competitions.create')}>Nova competição</LinkButton>}
+                actions={canManage ? <LinkButton href={route('panel.competitions.create')}>Nova competição</LinkButton> : undefined}
             />
 
             <div className="mb-4">
@@ -52,10 +54,12 @@ export default function Index({ competitions, filters }: { competitions: Paginat
                                     <LinkButton href={route('panel.competitions.show', competition.id)} variant="secondary" small>
                                         Abrir
                                     </LinkButton>
-                                    <DeleteButton
-                                        href={route('panel.competitions.destroy', competition.id)}
-                                        message={`Excluir "${competition.name}" com todas as edições, divisões, fases e jogos? Esta ação não pode ser desfeita.`}
-                                    />
+                                    {canManage && (
+                                        <DeleteButton
+                                            href={route('panel.competitions.destroy', competition.id)}
+                                            message={`Excluir "${competition.name}" com todas as edições, divisões, fases e jogos? Esta ação não pode ser desfeita.`}
+                                        />
+                                    )}
                                 </div>
                             </div>
                         </Card>

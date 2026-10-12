@@ -1,5 +1,6 @@
 import { Badge, Button, Card, Field, Input, Logo, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
+import { useCan } from '@/lib/can';
 import { GameClock, formatClock, periodLabel, useGameClock } from '@/lib/clock';
 import { Option } from '@/types/panel';
 import { Head, router } from '@inertiajs/react';
@@ -404,7 +405,11 @@ function TeamCard({ game, team, limits }: { game: Props['game']; team: Team; lim
     );
 }
 
-export default function Sheet({ game, home, away, events, limits, event_types, clock, public_url }: Props) {
+export default function Sheet({ game: serverGame, home, away, events: serverEvents, limits, event_types, clock, public_url }: Props) {
+    // Quem não opera jogos só consulta a súmula: o servidor também recusa as ações, aqui só se escondem os controles.
+    const canOperate = useCan('operate-games');
+    const game = canOperate ? serverGame : { ...serverGame, open: false };
+    const events = canOperate ? serverEvents : serverEvents.map((event) => ({ ...event, voidable: false }));
     const teamOf = (entryId: string | null) => (entryId === null ? null : home && entryId === home.id ? home : away);
 
     return (

@@ -1,5 +1,6 @@
 import { Card, LinkButton, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
+import { useCan } from '@/lib/can';
 import { Head } from '@inertiajs/react';
 
 interface Props {
@@ -7,6 +8,8 @@ interface Props {
 }
 
 export default function Dashboard({ counts }: Props) {
+    const canRegistry = useCan('manage-registry');
+    const canCompetitions = useCan('manage-competitions');
     const stats = [
         { label: 'Competições', value: counts.competitions },
         { label: 'Equipes', value: counts.teams },
@@ -35,8 +38,8 @@ export default function Dashboard({ counts }: Props) {
                     <li>Em cada divisão, cadastre as <strong>fases</strong> e <strong>inscreva as equipes</strong>.</li>
                 </ol>
                 <div className="mt-4 flex flex-wrap gap-2">
-                    <LinkButton href={route('panel.teams.create')} variant="secondary">Nova equipe</LinkButton>
-                    <LinkButton href={route('panel.competitions.create')}>Nova competição</LinkButton>
+                    {canRegistry && <LinkButton href={route('panel.teams.create')} variant="secondary">Nova equipe</LinkButton>}
+                    {canCompetitions && <LinkButton href={route('panel.competitions.create')}>Nova competição</LinkButton>}
                 </div>
             </Card>
         </PanelLayout>

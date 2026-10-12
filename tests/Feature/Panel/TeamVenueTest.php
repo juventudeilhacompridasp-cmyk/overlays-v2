@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use App\Modules\Competitions\Models\Entry;
 use App\Modules\Matches\Models\Venue;
 use App\Modules\Teams\Models\Team;
@@ -11,7 +10,7 @@ beforeEach(function () {
     // Dados criados pelas fábricas ficam na organização padrão, a mesma que o painel usa nas requisições.
     CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug')]));
 
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(panelUser());
 });
 
 it('lists teams with search and entries count', function () {

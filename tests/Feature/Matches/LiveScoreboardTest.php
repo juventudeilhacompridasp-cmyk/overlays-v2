@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use App\Modules\Matches\Actions\ChangeGamePeriod;
 use App\Modules\Matches\Actions\FinishGame;
 use App\Modules\Matches\Actions\RecordGameEvent;
@@ -134,7 +133,7 @@ it('shows the public live page to guests without exposing the organization panel
 
 it('controls the clock from the panel', function () {
     ['game' => $game] = sheetGame();
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(panelUser());
 
     $this->post("/painel/games/{$game->id}/periods", ['action' => 'start', 'period' => 1])->assertSessionHas('success');
     $this->post("/painel/games/{$game->id}/periods", ['action' => 'start', 'period' => 1])->assertSessionHas('error', 'Este período já foi iniciado.');

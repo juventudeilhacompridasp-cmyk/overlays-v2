@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use App\Modules\Competitions\Models\Division;
 use App\Modules\Competitions\Models\Entry;
 use App\Modules\Matches\Enums\GameEventType;
@@ -16,7 +15,7 @@ use App\Modules\Tenancy\Models\Organization;
 beforeEach(function () {
     CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug')]));
 
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(panelUser());
 });
 
 function addToRoster(Entry $entry, ?Person $person = null, string $role = 'athlete', ?int $shirt = null): RosterEntry

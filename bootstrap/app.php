@@ -1,12 +1,16 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Modules\Tenancy\Http\Middleware\EnsureMember;
+use App\Modules\Tenancy\Http\Middleware\EnsurePanelAbility;
 use App\Modules\Tenancy\Http\Middleware\ResolveDefaultOrganization;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -28,9 +32,25 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        //
+        $middleware->alias([
+            'panel.member' => EnsureMember::class,
+            'panel.can' => EnsurePanelAbility::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Sem permissão: formulário/ação (não-GET) volta com aviso; página cai numa tela própria em vez da 403 crua.
+        $exceptions->render(function (HttpExceptionInterface $exception, Request $request) {
+            if ($exception->getStatusCode() !== 403 || ($request->expectsJson() && ! $request->header('X-Inertia'))) {
+                return null;
+            }
+
+            if (! $request->isMethodSafe()) {
+                return back()->with('error', $exception->getMessage() !== '' ? $exception->getMessage() : 'Você não tem permissão para esta ação.');
+            }
+
+            return Inertia::render('Errors/Forbidden')->toResponse($request)->setStatusCode(403);
+        });
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
