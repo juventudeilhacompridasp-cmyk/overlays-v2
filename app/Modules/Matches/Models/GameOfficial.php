@@ -13,6 +13,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property OfficialRole $role
+ */
 #[Unguarded]
 #[UseFactory(GameOfficialFactory::class)]
 class GameOfficial extends Model

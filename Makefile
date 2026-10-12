@@ -43,6 +43,13 @@ fresh: ## Recria o banco com dados de demonstração
 migrate: ## Roda as migrations
 	$(APP) php artisan migrate
 
+demo: ## Cria o campeonato de demonstração e mostra a classificação e os suspensos
+	$(APP) php artisan db:seed --class=DemoCompetitionSeeder --force
+	$(APP) php artisan competitions:standings
+
+standings: ## Mostra a classificação e os suspensos (campeonato de demonstração)
+	$(APP) php artisan competitions:standings
+
 test: ## Testes (Pest)
 	$(APP) php artisan test
 
@@ -58,4 +65,4 @@ stan: ## Análise estática (Larastan)
 types: ## Checagem de tipos do front (tsc)
 	$(DC) exec vite npx tsc --noEmit
 
-.PHONY: help setup up down restart logs shell fresh migrate test lint fix stan types
+.PHONY: help setup up down restart logs shell fresh migrate demo standings test lint fix stan types

@@ -34,6 +34,15 @@ Subdomínios de organizações funcionam em `*.localhost` (ex.: `http://liga.loc
 `make up` · `make down` · `make logs s=app` · `make shell` · `make fresh` (recria o banco com dados de demonstração) ·
 `make test` · `make lint` / `make fix` (Pint) · `make stan` (Larastan) · `make types` (tsc) · `make help`.
 
+### O que já dá para testar (ainda sem telas de campeonato)
+```bash
+make fresh      # (Windows: .\dev.ps1 fresh) recria o banco com as migrations atuais
+make demo       # (Windows: .\dev.ps1 demo)  cria um campeonato de demonstração e imprime a classificação e os suspensos
+make test       # (Windows: .\dev.ps1 test)  roda todos os testes (motor de regras, classificação, disciplina...)
+```
+O `demo` cria 6 equipes, 15 jogos com gols, cartões e um W.O., e mostra a tabela calculada pelo motor de regras e quem está suspenso por cartões.
+Para explorar os dados direto no banco: Postgres em `localhost:5433` (usuário/senha/banco no `.env`).
+
 ### Testar uma branch/PR
 ```bash
 git fetch origin && git checkout <branch> && git pull

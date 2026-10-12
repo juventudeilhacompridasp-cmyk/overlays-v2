@@ -14,6 +14,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property RosterRole $role
+ * @property RosterStatus $status
+ */
 #[Unguarded]
 #[UseFactory(RosterEntryFactory::class)]
 class RosterEntry extends Model

@@ -10,12 +10,19 @@ use App\Modules\Tenancy\Concerns\BelongsToOrganization;
 use Database\Factories\GameEventFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use LogicException;
 
+/**
+ * @property GameEventType $type
+ * @property array<string, mixed>|null $payload
+ * @property Carbon $created_at
+ */
 #[Unguarded]
 #[UseFactory(GameEventFactory::class)]
 class GameEvent extends Model
@@ -51,6 +58,20 @@ class GameEvent extends Model
         static::deleting(function (): never {
             throw new LogicException('Eventos de jogo não podem ser apagados; registre um evento compensatório.');
         });
+    }
+
+    /**
+     * Eventos que valem: exclui os que foram anulados por um evento compensatório e os próprios
+     * eventos compensatórios (que só servem para anular o evento original).
+     *
+     * @param  Builder<GameEvent>  $query
+     */
+    public function scopeEffective(Builder $query): void
+    {
+        $query->whereNull('compensates_event_id')
+            ->whereNotIn('id', fn ($sub) => $sub->select('compensates_event_id')
+                ->from('game_events')
+                ->whereNotNull('compensates_event_id'));
     }
 
     /**
