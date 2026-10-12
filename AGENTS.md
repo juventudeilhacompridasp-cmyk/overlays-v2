@@ -12,7 +12,7 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 `make test` · `make lint` (Pint) · `make stan` (Larastan) · `make types` (tsc) · `make fresh` (banco com seed). Antes de abrir o PR todos devem passar.
 
 ## Regras de arquitetura
-- Monolito modular: código de domínio em `app/Modules/<Modulo>` (Models, Enums, Actions, Policies, Events, Http). Módulos atuais: `Tenancy`, `Competitions`, `Teams`, `Matches`. Um módulo = um escopo de PR. Não edite outro módulo sem combinar um contrato (ADR).
+- Monolito modular: código de domínio em `app/Modules/<Modulo>` (Models, Enums, Actions, Policies, Events, Http). Módulos atuais: `Tenancy`, `Competitions`, `Teams`, `Matches`, `Rules` (motor de regras puro: `RuleSet`, `StandingsCalculator`, `DisciplineTracker`; sem acesso a banco). Um módulo = um escopo de PR. Não edite outro módulo sem combinar um contrato (ADR).
 - **Organização (multi-tenancy simplificada):** toda tabela de domínio tem `organization_id`; os modelos usam o trait `BelongsToOrganization` (escopo global + preenchimento automático via `CurrentOrganization`). Por enquanto existe só a organização padrão (`config('platform.default_organization_slug')`), definida pelo middleware `ResolveDefaultOrganization`; subdomínios, papéis e painel de administração ficam para depois. Em jobs/comandos, defina a organização com `CurrentOrganization::using(...)`.
 - **IDs:** ULID em tabelas de domínio (nunca sequenciais expostos publicamente).
 - **Eventos de jogo somente de acréscimo** (`game_events`, modelo `GameEvent`, que lança exceção em update/delete); placar e classificação são projeções. Desfazer = evento compensatório (`compensates_event_id`). O modelo de partida se chama `Game` (`Match` é palavra reservada do PHP).

@@ -4,6 +4,7 @@ namespace App\Modules\Competitions\Models;
 
 use App\Modules\Competitions\Enums\Gender;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Rules\RuleSet;
 use App\Modules\Tenancy\Concerns\BelongsToOrganization;
 use Database\Factories\DivisionFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
@@ -62,5 +63,19 @@ class Division extends Model
     public function games(): HasMany
     {
         return $this->hasMany(Game::class);
+    }
+
+    /** Regulamento efetivo: regras da edição com as sobrescritas desta divisão. */
+    public function ruleSet(): RuleSet
+    {
+        $rules = array_replace_recursive($this->season->rules ?? [], $this->rules ?? []);
+
+        foreach (['tiebreakers'] as $listKey) {
+            if (isset($this->rules[$listKey])) {
+                $rules[$listKey] = $this->rules[$listKey];
+            }
+        }
+
+        return RuleSet::fromArray($rules);
     }
 }

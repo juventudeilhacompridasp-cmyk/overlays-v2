@@ -3,6 +3,7 @@
 namespace App\Modules\Competitions\Models;
 
 use App\Modules\Competitions\Enums\SeasonStatus;
+use App\Modules\Rules\RuleSet;
 use App\Modules\Tenancy\Concerns\BelongsToOrganization;
 use Database\Factories\SeasonFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
@@ -47,5 +48,11 @@ class Season extends Model
     public function divisions(): HasMany
     {
         return $this->hasMany(Division::class);
+    }
+
+    /** Regulamento da edição (padrões do regulamento de referência para o que não foi configurado). */
+    public function ruleSet(): RuleSet
+    {
+        return RuleSet::fromArray($this->rules ?? []);
     }
 }
