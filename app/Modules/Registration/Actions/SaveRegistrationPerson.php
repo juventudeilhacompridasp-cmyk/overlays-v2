@@ -81,7 +81,7 @@ final class SaveRegistrationPerson
             'document_hash' => $hash,
             'shirt_number' => $shirt,
             'guardian_name' => $minor ? $guardian : null,
-            'guardian_consent_at' => $minor ? ($person?->guardian_consent_at ?? now()) : null,
+            'guardian_consent_at' => $minor ? ($person->guardian_consent_at ?? now()) : null,
         ];
 
         if ($person === null) {

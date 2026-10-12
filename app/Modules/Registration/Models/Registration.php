@@ -22,6 +22,8 @@ use Illuminate\Support\Str;
  * @property Carbon|null $consent_at
  * @property Carbon|null $submitted_at
  * @property Carbon|null $reviewed_at
+ * @property-read int|null $athletes_count
+ * @property-read int|null $people_count
  */
 #[Unguarded]
 #[UseFactory(RegistrationFactory::class)]
