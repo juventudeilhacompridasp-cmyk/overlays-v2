@@ -1,7 +1,8 @@
-import { Badge, Button, Card, DeleteButton, Empty, Field, Input, LinkButton, PageHeader, Select } from '@/Components/Panel/ui';
+import { Badge, Button, Card, DeleteButton, Empty, Field, Input, LinkButton, PageHeader, Select, Textarea } from '@/Components/Panel/ui';
 import Modal from '@/Components/Modal';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Option, RulesData } from '@/types/panel';
+import { useCan } from '@/lib/can';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 
@@ -15,7 +16,19 @@ interface Division {
     stages_count: number;
 }
 
+interface RegistrationSettings {
+    deadline: string | null;
+    instructions: string | null;
+    min_athletes: number;
+    max_athletes: number;
+    require_documents: boolean;
+    open: boolean;
+    apply_url: string | null;
+    pending: number;
+}
+
 interface Props {
+    registration: RegistrationSettings;
     competition: { id: string; name: string };
     season: { id: string; name: string; year: number; starts_on: string | null; ends_on: string | null; status: string; status_label: string };
     rules: RulesData;
@@ -25,6 +38,66 @@ interface Props {
 }
 
 const formatDate = (value: string | null) => (value ? new Date(`${value}T00:00:00`).toLocaleDateString('pt-BR') : '—');
+
+function RegistrationCard({ seasonId, registration }: { seasonId: string; registration: RegistrationSettings }) {
+    const { data, setData, patch, processing, errors } = useForm({
+        deadline: registration.deadline ?? '',
+        instructions: registration.instructions ?? '',
+        min_athletes: registration.min_athletes,
+        max_athletes: registration.max_athletes,
+        require_documents: registration.require_documents,
+    });
+    const can = useCan('manage-competitions');
+
+    return (
+        <Card title="Inscrições online" actions={registration.pending > 0 ? <LinkButton href={route('panel.registrations.index', { status: 'submitted' })} small>{registration.pending} para analisar</LinkButton> : undefined}>
+            <p className="mb-4 text-sm text-gray-600">
+                {registration.open ? <Badge tone="green">Abertas</Badge> : <Badge>Fechadas</Badge>}{' '}
+                <span className="ml-1">As inscrições abrem quando a edição está no status “Inscrições” e o prazo não passou.</span>
+            </p>
+            {registration.apply_url ? (
+                <p className="mb-4 break-all text-sm">
+                    Link público: <a className="text-emerald-700 hover:underline" href={registration.apply_url}>{registration.apply_url}</a>
+                </p>
+            ) : (
+                <p className="mb-4 text-sm text-amber-700">Publique a edição (saia de “Rascunho”) para liberar o link público.</p>
+            )}
+            <form
+                className="grid gap-4 sm:grid-cols-2"
+                onSubmit={(event: FormEvent) => {
+                    event.preventDefault();
+                    patch(route('panel.seasons.registration.update', seasonId), { preserveScroll: true });
+                }}
+            >
+                <Field label="Prazo final" htmlFor="reg-deadline" error={errors.deadline}>
+                    <Input id="reg-deadline" type="date" value={data.deadline} onChange={(e) => setData('deadline', e.target.value)} disabled={!can} />
+                </Field>
+                <div className="grid grid-cols-2 gap-3">
+                    <Field label="Mín. de atletas" htmlFor="reg-min" error={errors.min_athletes}>
+                        <Input id="reg-min" type="number" min={1} value={data.min_athletes} onChange={(e) => setData('min_athletes', Number(e.target.value))} disabled={!can} />
+                    </Field>
+                    <Field label="Máx. de atletas" htmlFor="reg-max" error={errors.max_athletes}>
+                        <Input id="reg-max" type="number" min={1} value={data.max_athletes} onChange={(e) => setData('max_athletes', Number(e.target.value))} disabled={!can} />
+                    </Field>
+                </div>
+                <div className="sm:col-span-2">
+                    <Field label="Instruções para as equipes" htmlFor="reg-instructions" error={errors.instructions}>
+                        <Textarea id="reg-instructions" rows={3} value={data.instructions} onChange={(e) => setData('instructions', e.target.value)} disabled={!can} />
+                    </Field>
+                </div>
+                <label className="flex items-center gap-2 text-sm text-gray-700 sm:col-span-2">
+                    <input type="checkbox" className="rounded border-gray-300 text-emerald-600" checked={data.require_documents} onChange={(e) => setData('require_documents', e.target.checked)} disabled={!can} />
+                    Exigir documento de cada atleta
+                </label>
+                {can && (
+                    <div className="sm:col-span-2">
+                        <Button type="submit" disabled={processing}>Salvar regras de inscrição</Button>
+                    </div>
+                )}
+            </form>
+        </Card>
+    );
+}
 
 function NewDivisionModal({ seasonId, genders, show, onClose }: { seasonId: string; genders: Option[]; show: boolean; onClose: () => void }) {
     const { data, setData, post, processing, errors, reset } = useForm({ name: '', category: '', gender: 'male' });
@@ -72,7 +145,7 @@ function NewDivisionModal({ seasonId, genders, show, onClose }: { seasonId: stri
     );
 }
 
-export default function Show({ competition, season, rules, tiebreaker_labels, divisions, options }: Props) {
+export default function Show({ registration, competition, season, rules, tiebreaker_labels, divisions, options }: Props) {
     const [creating, setCreating] = useState(false);
 
     return (
@@ -132,6 +205,8 @@ export default function Show({ competition, season, rules, tiebreaker_labels, di
                         </ul>
                     )}
                 </Card>
+
+                <RegistrationCard seasonId={season.id} registration={registration} />
 
                 <Card title="Regulamento da edição">
                     <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">

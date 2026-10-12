@@ -88,7 +88,10 @@ it('shows a season with standings, rounds and no disciplinary data', function ()
         ->where('divisions.0.stages.0.rounds.0.games.0.status', 'finished')
         ->where('seo.url', route('portal.season', [$competition->slug, $season->id])));
 
-    $json = json_encode($response->original->getData()['page']['props']);
+    // As rotas compartilhadas (Ziggy) têm nomes como "documents"; o que importa é o conteúdo da página.
+    $props = $response->original->getData()['page']['props'];
+    unset($props['ziggy']);
+    $json = json_encode($props);
     expect($json)->not->toContain('yellow')->not->toContain('red_card')->not->toContain('document')->not->toContain('birth')->not->toContain('person_id');
 });
 

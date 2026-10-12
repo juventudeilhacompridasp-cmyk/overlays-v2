@@ -9,6 +9,8 @@ use App\Modules\Competitions\Enums\SeasonStatus;
 use App\Modules\Competitions\Http\Requests\SeasonRequest;
 use App\Modules\Competitions\Models\Competition;
 use App\Modules\Competitions\Models\Season;
+use App\Modules\Registration\Enums\RegistrationStatus;
+use App\Modules\Registration\Models\Registration;
 use App\Modules\Rules\RuleSet;
 use App\Modules\Rules\Tiebreaker;
 use Illuminate\Http\RedirectResponse;
@@ -67,6 +69,12 @@ class SeasonController extends Controller
             'rules' => $season->ruleSet()->toArray(),
             'tiebreaker_labels' => $this->tiebreakerLabels(),
             'divisions' => $divisions,
+            'registration' => [
+                ...$season->registrationSettings(),
+                'open' => $season->registrationOpen(),
+                'apply_url' => $season->isPublished() ? route('registration.apply', [$season->competition->slug, $season->getKey()]) : null,
+                'pending' => Registration::query()->where('season_id', $season->getKey())->where('status', RegistrationStatus::Submitted)->count(),
+            ],
             'options' => $this->options(),
         ]);
     }
