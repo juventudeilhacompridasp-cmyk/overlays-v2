@@ -27,12 +27,12 @@ class PortalController extends Controller
     public function home(): Response
     {
         $competitions = Competition::query()
-            ->whereHas('seasons', fn (Builder $query) => $query->published())
+            ->whereHas('seasons', fn ($query) => $query->published())
             ->with(['seasons' => fn ($query) => $query->published()->orderByDesc('year')->orderByDesc('name')])
             ->orderBy('name')->get();
 
         $withTeams = ['homeEntry.team', 'awayEntry.team', 'venue', 'group'];
-        $published = fn (Builder $query) => $query->whereHas('division.season', fn (Builder $season) => $season->published());
+        $published = fn ($query) => $query->whereHas('division.season', fn ($season) => $season->published());
 
         $live = Game::query()->where('status', GameStatus::InProgress)->tap($published)->with($withTeams)->orderBy('started_at')->limit(self::SHOWN)->get();
         $upcoming = Game::query()->where('status', GameStatus::Scheduled)->whereNotNull('scheduled_at')->where('scheduled_at', '>=', now()->startOfDay())
@@ -91,7 +91,7 @@ class PortalController extends Controller
     public function team(Team $team): Response
     {
         $entries = Entry::query()->where('team_id', $team->getKey())->where('status', EntryStatus::Confirmed)
-            ->whereHas('division.season', fn (Builder $season) => $season->published())
+            ->whereHas('division.season', fn ($season) => $season->published())
             ->with('division.season.competition')->get();
 
         abort_if($entries->isEmpty(), 404);
@@ -129,7 +129,7 @@ class PortalController extends Controller
             }
         }
 
-        $teams = Team::query()->whereHas('entries', fn (Builder $entry) => $entry->where('status', EntryStatus::Confirmed)->whereHas('division.season', fn (Builder $season) => $season->published()))->pluck('id');
+        $teams = Team::query()->whereHas('entries', fn (Builder $entry) => $entry->where('status', EntryStatus::Confirmed)->whereHas('division.season', fn ($season) => $season->published()))->pluck('id');
 
         foreach ($teams as $id) {
             $urls[] = route('portal.team', $id);

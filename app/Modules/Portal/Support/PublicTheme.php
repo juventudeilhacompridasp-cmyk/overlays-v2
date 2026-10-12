@@ -17,7 +17,7 @@ final class PublicTheme
         $primary = $theme['primary'] ?? null;
 
         return [
-            'name' => $organization?->name ?? config('app.name'),
+            'name' => $organization === null ? (string) config('app.name') : $organization->name,
             'primary' => is_string($primary) && preg_match('/^#[0-9a-fA-F]{6}$/', $primary) === 1 ? $primary : self::DEFAULT_COLOR,
             'tagline' => isset($theme['tagline']) && is_string($theme['tagline']) && $theme['tagline'] !== '' ? $theme['tagline'] : null,
         ];
