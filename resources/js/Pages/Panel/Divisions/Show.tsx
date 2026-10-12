@@ -1,5 +1,5 @@
 import Modal from '@/Components/Modal';
-import { Badge, Button, Card, DeleteButton, Empty, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
+import { Badge, Button, Card, DeleteButton, Empty, Field, Input, LinkButton, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Option } from '@/types/panel';
 import { Head, Link, useForm } from '@inertiajs/react';
@@ -208,6 +208,9 @@ export default function Show({ competition, season, division, stages, entries, a
                                         <Badge tone="blue">{stage.type_label}</Badge>
                                     </div>
                                     <div className="flex gap-2">
+                                        <LinkButton href={route('panel.stages.show', stage.id)} small>
+                                            Jogos e classificação
+                                        </LinkButton>
                                         <Button small variant="secondary" onClick={() => setStageModal({ open: true, stage })}>
                                             Editar
                                         </Button>
@@ -267,11 +270,6 @@ export default function Show({ competition, season, division, stages, entries, a
                     )}
                 </Card>
 
-                <Card title="Jogos e classificação">
-                    <p className="text-sm text-gray-600">
-                        A geração da tabela de jogos, o lançamento de resultados e a classificação desta divisão chegam nas próximas etapas.
-                    </p>
-                </Card>
             </div>
 
             <StageModal

@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Concerns\BelongsToOrganization;
 use Database\Factories\EntryFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -66,5 +67,15 @@ class Entry extends Model
     public function rosterEntries(): HasMany
     {
         return $this->hasMany(RosterEntry::class);
+    }
+
+    /**
+     * Ordem de sorteio: cabeças de chave primeiro (menor número), depois as sem número, e o id como desempate estável.
+     *
+     * @param  Builder<Entry>  $query
+     */
+    public function scopeInDrawOrder(Builder $query): void
+    {
+        $query->orderByRaw('seed is null')->orderBy('seed')->orderBy('id');
     }
 }
