@@ -3,6 +3,7 @@ import { maskCpf } from '@/Components/Panel/cpf';
 import { Badge, Button, Card, DeleteButton, Empty, Field, Input, LinkButton, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Option } from '@/types/panel';
+import { useFeature } from '@/lib/can';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 
@@ -176,6 +177,7 @@ function EditModal({ item, roles, statuses, onClose }: { item: RosterItem; roles
 }
 
 export default function Show({ competition, season, division, entry, team, roster, people, options }: Props) {
+    const cards = useFeature('athlete_cards');
     const [adding, setAdding] = useState(false);
     const [editing, setEditing] = useState<RosterItem | null>(null);
 
@@ -203,9 +205,11 @@ export default function Show({ competition, season, division, entry, team, roste
                 ]}
                 actions={
                     <>
-                        <LinkButton href={route('panel.entries.cards', entry.id)} variant="secondary">
-                            Carteirinhas
-                        </LinkButton>
+                        {cards && (
+                            <LinkButton href={route('panel.entries.cards', entry.id)} variant="secondary">
+                                Carteirinhas
+                            </LinkButton>
+                        )}
                         <Button onClick={() => setAdding(true)}>Adicionar ao elenco</Button>
                     </>
                 }
@@ -244,7 +248,7 @@ export default function Show({ competition, season, division, entry, team, roste
                                         </td>
                                         <td className="px-5 py-3">
                                             <div className="flex justify-end gap-2">
-                                                {item.status === 'active' && (
+                                                {cards && item.status === 'active' && (
                                                     <LinkButton small variant="secondary" href={route('panel.roster.card', item.id)}>
                                                         Carteirinha
                                                     </LinkButton>

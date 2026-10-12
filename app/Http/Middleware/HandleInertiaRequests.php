@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Ability;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -35,11 +36,14 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+                'platform_admin' => $request->user()?->is_platform_admin === true,
                 'role' => $request->user()?->role()?->value,
                 'role_label' => $request->user()?->role()?->label(),
                 // Só para esconder botões; quem decide de verdade é o servidor (middleware `panel.can`).
                 'can' => collect(Ability::cases())->mapWithKeys(fn (Ability $ability) => [$ability->value => $request->user()?->role()?->can($ability) ?? false])->all(),
             ],
+            // Recursos do pacote da organização: só para esconder menus/botões; o servidor barra (middleware `feature`).
+            'features' => CurrentOrganization::get()?->featureKeys() ?? [],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

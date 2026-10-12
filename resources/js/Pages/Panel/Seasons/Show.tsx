@@ -28,7 +28,7 @@ interface RegistrationSettings {
 }
 
 interface Props {
-    registration: RegistrationSettings;
+    registration: RegistrationSettings | null;
     competition: { id: string; name: string };
     season: { id: string; name: string; year: number; starts_on: string | null; ends_on: string | null; status: string; status_label: string };
     rules: RulesData;
@@ -206,7 +206,7 @@ export default function Show({ registration, competition, season, rules, tiebrea
                     )}
                 </Card>
 
-                <RegistrationCard seasonId={season.id} registration={registration} />
+                {registration && <RegistrationCard seasonId={season.id} registration={registration} />}
 
                 <Card title="Regulamento da edição">
                     <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">

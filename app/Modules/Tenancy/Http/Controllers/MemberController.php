@@ -42,12 +42,16 @@ class MemberController extends Controller
 
     public function store(MemberStoreRequest $request, ManageMembers $members): RedirectResponse
     {
-        $members->create(
-            $request->string('name')->toString(),
-            $request->string('email')->toString(),
-            $request->string('password')->toString(),
-            Role::from($request->string('role')->toString()),
-        );
+        try {
+            $members->create(
+                $request->string('name')->toString(),
+                $request->string('email')->toString(),
+                $request->string('password')->toString(),
+                Role::from($request->string('role')->toString()),
+            );
+        } catch (InvalidArgumentException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
 
         return back()->with('success', 'Usuário criado. Repasse a senha provisória por um canal seguro.');
     }

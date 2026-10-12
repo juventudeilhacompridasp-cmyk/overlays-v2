@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Modules\Tenancy\Http\Middleware\EnsureFeature;
 use App\Modules\Tenancy\Http\Middleware\EnsureMember;
 use App\Modules\Tenancy\Http\Middleware\EnsurePanelAbility;
+use App\Modules\Tenancy\Http\Middleware\EnsurePlatformAdmin;
 use App\Modules\Tenancy\Http\Middleware\ResolveDefaultOrganization;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -41,6 +43,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'panel.member' => EnsureMember::class,
             'panel.can' => EnsurePanelAbility::class,
+            'feature' => EnsureFeature::class,
+            'platform.admin' => EnsurePlatformAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
