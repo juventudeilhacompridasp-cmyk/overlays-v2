@@ -39,7 +39,8 @@ Subdomínios de organizações funcionam em `*.localhost` (ex.: `http://liga.loc
 cadastre **equipes** e **estádios**, crie uma **competição**, uma **edição** (com o regulamento: pontuação, ordem dos desempates, cartões, W.O., substituições),
 as **divisões**, as **fases** e **inscreva as equipes**. Dentro de cada fase (**Jogos e classificação**): **gere a tabela** (pontos corridos em turno único ou ida e volta, ou fase de grupos com distribuição em serpentina),
 **agende** cada jogo (data, hora e estádio), **lance o resultado** (ou W.O.) e acompanhe a **classificação** atualizar na hora; dá para **reabrir** um jogo para corrigir.
-Ainda não há atletas/elenco, súmula detalhada (gols e cartões por atleta) nem mata-mata.
+Em **Atletas e comissão** cadastre as pessoas (CPF opcional, guardado só como hash) e, na divisão, abra o **Elenco** de cada equipe para adicionar atletas (com camisa única) e comissão técnica; um atleta só pode estar em uma equipe por divisão.
+Ainda não há súmula detalhada (gols e cartões por atleta) nem mata-mata.
 
 **Pelo terminal** (dados de demonstração e testes):
 ```bash

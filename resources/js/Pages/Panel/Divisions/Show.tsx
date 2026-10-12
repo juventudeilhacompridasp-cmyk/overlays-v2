@@ -18,6 +18,7 @@ interface Entry {
     seed: number | null;
     status: string;
     status_label: string;
+    roster_count: number;
     team: { id: string; name: string; city: string | null };
 }
 
@@ -236,6 +237,7 @@ export default function Show({ competition, season, division, stages, entries, a
                                         <th className="px-5 py-3">Cabeça</th>
                                         <th className="px-5 py-3">Equipe</th>
                                         <th className="px-5 py-3">Situação</th>
+                                        <th className="px-5 py-3">Elenco</th>
                                         <th className="px-5 py-3 text-right">Ações</th>
                                     </tr>
                                 </thead>
@@ -250,8 +252,14 @@ export default function Show({ competition, season, division, stages, entries, a
                                             <td className="px-5 py-3">
                                                 <Badge tone={entryTone(entry.status)}>{entry.status_label}</Badge>
                                             </td>
+                                            <td className="px-5 py-3 text-gray-600">
+                                                {entry.roster_count} {entry.roster_count === 1 ? 'pessoa' : 'pessoas'}
+                                            </td>
                                             <td className="px-5 py-3">
                                                 <div className="flex justify-end gap-2">
+                                                    <LinkButton href={route('panel.entries.show', entry.id)} small>
+                                                        Elenco
+                                                    </LinkButton>
                                                     <Button small variant="secondary" onClick={() => setEntryModal({ open: true, entry })}>
                                                         Editar
                                                     </Button>
