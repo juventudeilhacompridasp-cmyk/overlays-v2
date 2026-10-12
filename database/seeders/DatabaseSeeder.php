@@ -13,9 +13,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::query()->updateOrCreate(
-            ['email' => 'admin@plataforma.test'],
-            ['name' => 'Administrador', 'password' => 'password', 'email_verified_at' => now()],
-        );
+        $admin = User::query()->firstOrNew(['email' => 'admin@plataforma.test']);
+
+        $admin->forceFill([
+            'name' => 'Administrador',
+            'password' => 'password',
+            'email_verified_at' => now(),
+        ])->save();
     }
 }
