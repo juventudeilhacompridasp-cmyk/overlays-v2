@@ -15,6 +15,12 @@ return [
     'document_hash_key' => env('DOCUMENT_HASH_KEY'),
 
     /*
+    | Cadastro público de usuários. Fechado por padrão: um administrador cria os acessos. Uma instalação sem
+    | nenhum usuário aceita o primeiro cadastro mesmo assim (ele vira administrador).
+    */
+    'open_registration' => (bool) env('OPEN_REGISTRATION', false),
+
+    /*
     | Endereço PÚBLICO do Reverb, usado pelo navegador (o servidor Laravel fala com o container "reverb" pelas
     | variáveis REVERB_*). Lido em tempo de execução, então não exige rebuild do front. Sem host, usa o do site.
     */

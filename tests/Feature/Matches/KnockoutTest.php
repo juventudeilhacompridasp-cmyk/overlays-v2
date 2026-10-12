@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Competitions\Models\Entry;
 use App\Modules\Competitions\Models\Stage;
@@ -202,7 +201,7 @@ it('needs at least two teams, a valid number of legs and no existing games', fun
 });
 
 it('generates and shows the bracket through the panel with round names and penalties', function () {
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(panelUser());
     ['stage' => $stage] = fixtureDivision(4, StageType::Knockout);
 
     $this->post("/painel/stages/{$stage->id}/fixtures", ['double_round' => false, 'legs' => 2])
@@ -223,7 +222,7 @@ it('generates and shows the bracket through the panel with round names and penal
 });
 
 it('records a shootout from the sheet and keeps kicks out of the event list', function () {
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(panelUser());
     ['stage' => $stage] = knockoutStage(4);
     $game = roundGames($stage->id, 1)->first();
 

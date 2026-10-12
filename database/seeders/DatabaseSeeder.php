@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Modules\Tenancy\Enums\Role;
+use App\Modules\Tenancy\Models\Membership;
 use App\Modules\Tenancy\Models\Organization;
 use Illuminate\Database\Seeder;
 
@@ -14,7 +16,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Organization::query()->firstOrCreate(
+        $organization = Organization::query()->firstOrCreate(
             ['slug' => config('platform.default_organization_slug')],
             ['name' => 'Organização padrão'],
         );
@@ -26,5 +28,10 @@ class DatabaseSeeder extends Seeder
             'password' => 'password',
             'email_verified_at' => now(),
         ])->save();
+
+        Membership::query()->withoutGlobalScopes()->updateOrCreate(
+            ['organization_id' => $organization->getKey(), 'user_id' => $admin->getKey()],
+            ['role' => Role::Admin],
+        );
     }
 }

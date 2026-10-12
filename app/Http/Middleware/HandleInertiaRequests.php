@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Modules\Tenancy\Enums\Ability;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
@@ -34,6 +35,10 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+                'role' => $request->user()?->role()?->value,
+                'role_label' => $request->user()?->role()?->label(),
+                // Só para esconder botões; quem decide de verdade é o servidor (middleware `panel.can`).
+                'can' => collect(Ability::cases())->mapWithKeys(fn (Ability $ability) => [$ability->value => $request->user()?->role()?->can($ability) ?? false])->all(),
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

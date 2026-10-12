@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use App\Modules\Competitions\Enums\EntryStatus;
 use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Competitions\Models\Division;
@@ -9,6 +10,10 @@ use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Actions\SaveGameLineup;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Teams\Models\RosterEntry;
+use App\Modules\Tenancy\CurrentOrganization;
+use App\Modules\Tenancy\Enums\Role;
+use App\Modules\Tenancy\Models\Membership;
+use App\Modules\Tenancy\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -90,4 +95,16 @@ function sheetGame(): array
     app(SaveGameLineup::class)->handle($game, $game->awayEntry, array_slice($ap, 0, 11), array_slice($ap, 11));
 
     return ['game' => $game->fresh(), 'home' => $game->homeEntry, 'away' => $game->awayEntry, 'hp' => $hp, 'ap' => $ap];
+}
+
+/** Usuário verificado com o papel informado na organização atual (ou na padrão, se ainda não houver uma). */
+function panelUser(Role $role = Role::Admin): User
+{
+    $organization = CurrentOrganization::get()
+        ?? Organization::query()->firstOrCreate(['slug' => config('platform.default_organization_slug')], ['name' => 'Organização padrão']);
+
+    $user = User::factory()->create();
+    Membership::query()->create(['organization_id' => $organization->getKey(), 'user_id' => $user->getKey(), 'role' => $role]);
+
+    return $user;
 }

@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Competitions\Models\Stage;
 use App\Modules\Matches\Actions\GenerateStageFixtures;
@@ -13,7 +12,7 @@ use App\Modules\Tenancy\Models\Organization;
 beforeEach(function () {
     CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug')]));
 
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(panelUser());
 });
 
 it('shows the stage with its standings table, games and generation flags', function () {

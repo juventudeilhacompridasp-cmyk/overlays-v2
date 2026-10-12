@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use App\Modules\Matches\Support\PublicGameSnapshot;
 use App\Modules\Teams\Models\Person;
 use App\Modules\Teams\Models\Team;
@@ -15,7 +14,7 @@ beforeEach(function () {
     Storage::fake('s3');
     Storage::fake('s3-private');
     Storage::disk('s3-private')->buildTemporaryUrlsUsing(fn (string $path) => "https://signed.test/{$path}?sig=1");
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(panelUser());
 });
 
 /** Binário de uma imagem PNG com transparência. */

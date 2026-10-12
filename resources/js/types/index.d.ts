@@ -12,6 +12,9 @@ export type PageProps<
 > = T & {
     auth: {
         user: User;
+        role: string | null;
+        role_label: string | null;
+        can: Record<string, boolean>;
     };
     flash: {
         success?: string | null;

@@ -20,13 +20,13 @@ it('redirects users with an unverified email', function () {
 });
 
 it('sends the old dashboard route to the panel', function () {
-    $this->actingAs(User::factory()->create())
+    $this->actingAs(panelUser())
         ->get('/dashboard')
         ->assertRedirect(route('panel.dashboard'));
 });
 
 it('shows the panel dashboard with counts', function () {
-    $this->actingAs(User::factory()->create())
+    $this->actingAs(panelUser())
         ->get('/painel')
         ->assertOk()
         ->assertInertia(fn ($page) => $page

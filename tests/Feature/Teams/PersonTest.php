@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Teams\Models\Person;
 use App\Modules\Teams\Models\RosterEntry;
@@ -12,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 beforeEach(function () {
     CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug')]));
 
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(panelUser());
 });
 
 it('lists people with search by name, nickname and full CPF', function () {

@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Actions\RecordQuickResult;
 use App\Modules\Matches\Enums\GameEventType;
@@ -13,7 +12,7 @@ use App\Modules\Tenancy\Models\Organization;
 beforeEach(function () {
     CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug')]));
 
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(panelUser());
 });
 
 it('shows the sheet with rosters, lineups and no events', function () {
