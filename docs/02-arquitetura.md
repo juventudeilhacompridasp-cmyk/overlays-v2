@@ -6,7 +6,7 @@ Referência funcional: `01-mapeamento-plataforma.md` (painel do organizador aind
 ## 1. Stack
 | Camada | Escolha | Motivo |
 |---|---|---|
-| Back-end | Laravel 12, PHP 8.4, monolito modular | Domínio do time; filas, policies, scheduler, testes |
+| Back-end | Laravel 13, PHP 8.4, monolito modular | Domínio do time; filas, policies, scheduler, testes |
 | Front (painel + portal) | React + TypeScript + Inertia.js (Vite), **SSR no portal público** | Um deploy, sem API duplicada, SEO no portal |
 | Overlays | Bundle React separado (`resources/js/overlays`), estático, sem login | Leve, fundo transparente, URL com token |
 | Tempo real | Laravel Reverb + Echo | WebSocket nativo; escala via Redis |
