@@ -84,12 +84,6 @@ it('validates the number of groups', function () {
     app(GenerateStageFixtures::class)->handle($stage, groups: 3);
 })->throws(InvalidArgumentException::class, 'pelo menos duas equipes');
 
-it('does not generate knockout fixtures yet', function () {
-    ['stage' => $stage] = fixtureDivision(4, StageType::Knockout);
-
-    app(GenerateStageFixtures::class)->handle($stage);
-})->throws(InvalidArgumentException::class, 'mata-mata');
-
 it('clears the fixtures and the generated groups', function () {
     ['stage' => $stage] = fixtureDivision(4, StageType::Groups);
     app(GenerateStageFixtures::class)->handle($stage, groups: 2);

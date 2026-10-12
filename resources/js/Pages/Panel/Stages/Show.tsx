@@ -2,7 +2,7 @@ import Modal from '@/Components/Modal';
 import { Badge, Button, Card, Empty, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Option } from '@/types/panel';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 
 interface Team {
@@ -22,6 +22,11 @@ interface Game {
     status: string;
     status_label: string;
     decided: boolean;
+    round_label: string | null;
+    leg: number | null;
+    legs: number;
+    home_penalties: number | null;
+    away_penalties: number | null;
     scheduled_at: string | null;
     venue: { id: string; name: string } | null;
 }
@@ -67,15 +72,7 @@ const statusTone = (status: string) =>
     status === 'finished' ? 'green' : status === 'walkover' ? 'blue' : status === 'scheduled' ? 'gray' : status === 'postponed' ? 'amber' : 'red';
 
 function GenerateCard({ stage, confirmedEntries }: { stage: Props['stage']; confirmedEntries: number }) {
-    const { data, setData, post, processing, errors } = useForm({ double_round: false, groups: 2 });
-
-    if (stage.type === 'knockout') {
-        return (
-            <Card title="Gerar tabela de jogos">
-                <p className="text-sm text-gray-600">A geração automática do mata-mata chega na próxima etapa.</p>
-            </Card>
-        );
-    }
+    const { data, setData, post, processing, errors } = useForm({ double_round: false, groups: 2, legs: 1 });
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -89,6 +86,7 @@ function GenerateCard({ stage, confirmedEntries }: { stage: Props['stage']; conf
                     {confirmedEntries} {confirmedEntries === 1 ? 'equipe confirmada' : 'equipes confirmadas'} nesta divisão. A tabela sai sem data e sem estádio; você agenda
                     depois, jogo a jogo.
                     {stage.type === 'groups' && ' As equipes são distribuídas nos grupos em serpentina, pela ordem de cabeça de chave.'}
+                    {stage.type === 'knockout' && ' O chaveamento cruza as cabeças de chave (1ª x última...); com número ímpar de equipes, as melhores folgam na 1ª rodada.'}
                 </p>
                 <div className="grid gap-4 sm:grid-cols-2">
                     {stage.type === 'groups' && (
@@ -96,15 +94,24 @@ function GenerateCard({ stage, confirmedEntries }: { stage: Props['stage']; conf
                             <Input id="groups" type="number" min={1} max={16} value={data.groups} onChange={(e) => setData('groups', Number(e.target.value || 1))} />
                         </Field>
                     )}
+                    {stage.type === 'knockout' ? (
+                        <Field label="Jogos por confronto" htmlFor="legs" error={errors.legs} hint="Na ida e volta o vencedor sai pelo agregado de gols; empate no agregado vai aos pênaltis da volta.">
+                            <Select id="legs" value={String(data.legs)} onChange={(e) => setData('legs', Number(e.target.value))}>
+                                <option value="1">Jogo único</option>
+                                <option value="2">Ida e volta</option>
+                            </Select>
+                        </Field>
+                    ) : (
                     <Field label="Turnos" htmlFor="double_round">
                         <Select id="double_round" value={data.double_round ? '1' : '0'} onChange={(e) => setData('double_round', e.target.value === '1')}>
                             <option value="0">Turno único (todos se enfrentam uma vez)</option>
                             <option value="1">Ida e volta (turno e returno)</option>
                         </Select>
                     </Field>
+                    )}
                 </div>
                 <Button type="submit" disabled={processing || confirmedEntries < 2}>
-                    Gerar tabela
+                    {stage.type === 'knockout' ? 'Gerar chaveamento' : 'Gerar tabela'}
                 </Button>
                 {confirmedEntries < 2 && <p className="text-sm text-amber-700">Confirme pelo menos duas equipes na divisão para gerar a tabela.</p>}
             </form>
@@ -166,11 +173,19 @@ function ScheduleModal({ game, venues, statuses, onClose }: { game: Game; venues
 }
 
 function ResultModal({ game, onClose }: { game: Game; onClose: () => void }) {
-    const { data, setData, post, processing, errors } = useForm({ home_score: '0', away_score: '0' });
+    const { data, setData, post, processing, errors } = useForm({ home_score: '0', away_score: '0', home_penalties: '', away_penalties: '' });
+    const level = data.home_score === data.away_score;
+    const serverError = (usePage().props.flash as { error?: string } | undefined)?.error;
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
-        post(route('panel.games.result', game.id), { preserveScroll: true, onSuccess: onClose });
+        post(route('panel.games.result', game.id), {
+            preserveScroll: true,
+            // O servidor responde com redirect + mensagem de erro (regra violada): nesse caso o modal fica aberto.
+            onSuccess: (page) => {
+                if (!(page.props.flash as { error?: string } | undefined)?.error) onClose();
+            },
+        });
     };
 
     const walkover = (winner: 'home' | 'away') =>
@@ -180,6 +195,7 @@ function ResultModal({ game, onClose }: { game: Game; onClose: () => void }) {
         <Modal show onClose={onClose} maxWidth="md">
             <form onSubmit={submit} className="space-y-4 p-6">
                 <h2 className="text-lg font-semibold text-gray-900">Lançar resultado</h2>
+                {serverError && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{serverError}</p>}
                 <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-3">
                     <Field label={game.home?.name ?? 'Mandante'} htmlFor="home_score" error={errors.home_score}>
                         <Input id="home_score" type="number" min={0} max={99} value={data.home_score} onChange={(e) => setData('home_score', e.target.value)} autoFocus />
@@ -189,6 +205,18 @@ function ResultModal({ game, onClose }: { game: Game; onClose: () => void }) {
                         <Input id="away_score" type="number" min={0} max={99} value={data.away_score} onChange={(e) => setData('away_score', e.target.value)} />
                     </Field>
                 </div>
+                {game.round_label && level && (
+                    <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-3 rounded-md bg-amber-50 p-3">
+                        <Field label="Pênaltis convertidos" htmlFor="home_penalties" error={errors.home_penalties}>
+                            <Input id="home_penalties" type="number" min={0} max={30} value={data.home_penalties} onChange={(e) => setData('home_penalties', e.target.value)} />
+                        </Field>
+                        <span className="pb-2 text-lg font-semibold text-gray-400">x</span>
+                        <Field label=" " htmlFor="away_penalties" error={errors.away_penalties}>
+                            <Input id="away_penalties" type="number" min={0} max={30} value={data.away_penalties} onChange={(e) => setData('away_penalties', e.target.value)} />
+                        </Field>
+                        <p className="col-span-3 text-xs text-amber-800">Mata-mata empatado: informe a disputa de pênaltis se este for o jogo que decide o confronto.</p>
+                    </div>
+                )}
                 <p className="text-xs text-gray-500">Só o placar final. Gols e cartões por atleta serão lançados na súmula, em uma próxima etapa.</p>
                 <div className="flex justify-end gap-2">
                     <Button variant="secondary" onClick={onClose}>
@@ -221,6 +249,7 @@ function GameRow({ game, onSchedule, onResult }: { game: Game; onSchedule: () =>
                 <div className="flex flex-wrap items-center gap-2 text-sm">
                     {game.number && <span className="text-gray-400">#{game.number}</span>}
                     {game.group && <Badge tone="blue">{game.group}</Badge>}
+                    {game.legs > 1 && game.leg && <Badge tone="blue">{game.leg === 1 ? 'Ida' : 'Volta'}</Badge>}
                     <Badge tone={statusTone(game.status)}>{game.status_label}</Badge>
                 </div>
                 <div className="mt-1 flex items-center gap-3 font-medium text-gray-900">
@@ -228,6 +257,11 @@ function GameRow({ game, onSchedule, onResult }: { game: Game; onSchedule: () =>
                     <span className="min-w-14 rounded bg-gray-100 px-2 py-0.5 text-center tabular-nums">
                         {game.decided ? `${game.home_score} x ${game.away_score}` : 'x'}
                     </span>
+                    {game.decided && game.home_penalties !== null && game.away_penalties !== null && (
+                        <span className="text-xs font-normal text-gray-500">
+                            ({game.home_penalties} x {game.away_penalties} nos pênaltis)
+                        </span>
+                    )}
                     <span className="flex-1">{game.away?.name ?? 'A definir'}</span>
                 </div>
                 <div className="mt-1 text-center text-xs text-gray-500">
@@ -365,7 +399,7 @@ export default function Show({ competition, season, division, stage, tables, gam
                         <div className="space-y-6">
                             {rounds.map((round) => (
                                 <div key={round}>
-                                    <h3 className="mb-1 text-sm font-semibold uppercase tracking-wide text-gray-500">{round > 0 ? `Rodada ${round}` : 'Jogos'}</h3>
+                                    <h3 className="mb-1 text-sm font-semibold uppercase tracking-wide text-gray-500">{round > 0 ? (games.find((game) => game.round === round)?.round_label ?? `Rodada ${round}`) : 'Jogos'}</h3>
                                     <ul className="divide-y divide-gray-100">
                                         {games
                                             .filter((game) => (game.round ?? 0) === round)

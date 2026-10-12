@@ -19,6 +19,7 @@ class FixtureController extends Controller
                 $stage,
                 $request->boolean('double_round'),
                 $request->filled('groups') ? $request->integer('groups') : null,
+                $request->filled('legs') ? $request->integer('legs') : 1,
             );
         } catch (InvalidArgumentException $exception) {
             return back()->with('error', $exception->getMessage());

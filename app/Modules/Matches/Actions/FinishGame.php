@@ -11,7 +11,10 @@ use InvalidArgumentException;
  */
 final class FinishGame
 {
-    public function __construct(private readonly ProjectGameScore $projectScore = new ProjectGameScore) {}
+    public function __construct(
+        private readonly ProjectGameScore $projectScore = new ProjectGameScore,
+        private readonly KnockoutProgress $knockout = new KnockoutProgress,
+    ) {}
 
     public function handle(Game $game): Game
     {
@@ -24,11 +27,14 @@ final class FinishGame
         }
 
         $this->projectScore->handle($game);
+        $this->knockout->assertResolvable($game);
 
         $game->forceFill([
             'status' => GameStatus::Finished,
             'finished_at' => now(),
         ])->save();
+
+        $this->knockout->sync($game);
 
         return $game;
     }

@@ -12,11 +12,15 @@ use InvalidArgumentException;
  */
 final class ReopenGame
 {
+    public function __construct(private readonly KnockoutProgress $knockout = new KnockoutProgress) {}
+
     public function handle(Game $game): Game
     {
         if (! $game->status->isDecided()) {
             throw new InvalidArgumentException('Só jogos encerrados ou com W.O. podem ser reabertos.');
         }
+
+        $this->knockout->assertCanRetract($game);
 
         $wasWalkover = $game->status === GameStatus::Walkover;
 
@@ -27,6 +31,8 @@ final class ReopenGame
             'away_penalties' => null,
             ...($wasWalkover ? ['home_score' => 0, 'away_score' => 0] : []),
         ])->save();
+
+        $this->knockout->sync($game);
 
         return $game;
     }
