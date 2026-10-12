@@ -58,7 +58,7 @@ it('enforces the order of periods and freezes the clock at the end of one', func
 
 it('broadcasts a score change with the goal scorer and credits own goals to the opponent', function () {
     ['game' => $game, 'home' => $home, 'away' => $away, 'hp' => $hp, 'ap' => $ap] = sheetGame();
-    Person::query()->whereKey($hp[0])->update(['nickname' => 'Rafa']);
+    Person::query()->whereKey($hp[0])->update(['nickname' => 'Rafa', 'birth_date' => '1990-04-02']);
     Event::fake([GameUpdated::class]);
 
     app(RecordGameEvent::class)->handle($game, GameEventType::Goal, $home->id, $hp[0], minute: 12);
@@ -116,6 +116,7 @@ it('only lets the last period mark be voided and broadcasts the reverted clock',
 
 it('shows the public live page to guests without exposing the organization panel', function () {
     ['game' => $game] = sheetGame();
+    publishSeason($game);
 
     $this->get("/jogos/{$game->id}")
         ->assertOk()

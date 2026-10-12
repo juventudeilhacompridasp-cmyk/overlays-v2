@@ -17,6 +17,7 @@ use App\Modules\Teams\Http\Controllers\RosterController;
 use App\Modules\Teams\Http\Controllers\TeamController;
 use App\Modules\Teams\Http\Controllers\TeamLogoController;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
+use App\Modules\Tenancy\Http\Controllers\OrganizationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -78,8 +79,10 @@ Route::middleware(['auth', 'verified', 'panel.member'])->prefix('painel')->name(
     });
     Route::patch('broadcast/{channel}', [ChannelController::class, 'update'])->middleware('panel.can:operate-games')->name('broadcast.update');
 
-    // Usuários e papéis (só administradores; nem consultar a lista).
+    // Usuários, papéis e identidade do portal (só administradores; nem consultar).
     Route::middleware('panel.can:manage-users')->group(function () {
+        Route::get('organization', [OrganizationController::class, 'edit'])->name('organization.edit');
+        Route::patch('organization', [OrganizationController::class, 'update'])->name('organization.update');
         Route::get('users', [MemberController::class, 'index'])->name('users.index');
         Route::post('users', [MemberController::class, 'store'])->name('users.store');
         Route::patch('users/{membership}', [MemberController::class, 'update'])->name('users.update');

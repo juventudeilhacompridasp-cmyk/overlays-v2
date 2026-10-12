@@ -15,6 +15,7 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
@@ -30,6 +31,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ], append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+        ]);
+
+        // A API pública também precisa da organização ativa antes da resolução dos {parâmetros}.
+        $middleware->api(prepend: [
+            ResolveDefaultOrganization::class,
         ]);
 
         $middleware->alias([

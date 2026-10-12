@@ -14,6 +14,8 @@ class PublicGameController extends Controller
 {
     public function show(Game $game): Response
     {
+        abort_unless($game->division->season->isPublished(), 404);
+
         $realtime = config('platform.realtime');
 
         return Inertia::render('Public/GameLive', [
@@ -30,6 +32,8 @@ class PublicGameController extends Controller
     /** Usado como contingência quando o WebSocket não conecta. */
     public function state(Game $game): JsonResponse
     {
+        abort_unless($game->division->season->isPublished(), 404);
+
         return response()->json(PublicGameSnapshot::for($game));
     }
 }

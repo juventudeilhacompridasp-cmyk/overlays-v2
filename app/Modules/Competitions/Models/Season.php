@@ -8,6 +8,7 @@ use App\Modules\Tenancy\Concerns\BelongsToOrganization;
 use Database\Factories\SeasonFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,6 +40,21 @@ class Season extends Model
             'starts_on' => 'date',
             'ends_on' => 'date',
         ];
+    }
+
+    /**
+     * Edições visíveis no portal público: rascunho nunca aparece.
+     *
+     * @param  Builder<Season>  $query
+     */
+    public function scopePublished(Builder $query): void
+    {
+        $query->where('status', '!=', SeasonStatus::Draft->value);
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->status !== SeasonStatus::Draft;
     }
 
     /**

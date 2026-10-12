@@ -1,6 +1,6 @@
 import { ConnectionState, Realtime, subscribeToGame } from '@/lib/echo';
 import { GameClock, formatClock, periodLabel, useGameClock } from '@/lib/clock';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
 interface Goal {
@@ -112,8 +112,19 @@ export default function GameLive({ snapshot: initial, realtime }: { snapshot: Sn
 
     return (
         <div className="min-h-screen bg-gray-900 px-4 py-8 text-white">
-            <Head title={`${home} x ${away}`} />
+            <Head title={`${home} x ${away}`}>
+                <meta name="description" content={`${home} x ${away} — ${snapshot.competition}, ${snapshot.division}. Placar e lances ao vivo.`} />
+                <link rel="canonical" href={route('public.games.show', snapshot.id)} />
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content={`${home} ${snapshot.home_score} x ${snapshot.away_score} ${away}`} />
+                <meta property="og:description" content={`${snapshot.competition} · ${snapshot.division} · ${snapshot.stage}`} />
+                <meta property="og:url" content={route('public.games.show', snapshot.id)} />
+                {snapshot.home?.logo_url && <meta property="og:image" content={snapshot.home.logo_url} />}
+            </Head>
             <main className="mx-auto max-w-3xl">
+                <Link href={route('portal.home')} className="text-sm text-gray-400 hover:text-white">
+                    ← Portal
+                </Link>
                 <p className="text-center text-sm text-gray-400">
                     {snapshot.competition} · {snapshot.division} · {snapshot.stage}
                 </p>
