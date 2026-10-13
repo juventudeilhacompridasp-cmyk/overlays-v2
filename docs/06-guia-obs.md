@@ -14,6 +14,18 @@ Painel → **Transmissão** → *Novo canal*. Aparecem quatro URLs, todas no for
 
 O **token é a senha do canal**: quem tem a URL vê o canal. Se vazar, use *Renovar token* (as URLs antigas param de funcionar e é preciso colar as novas no OBS).
 
+### Aparência
+
+Em cada canal, a seção **Visual do overlay** configura o preset Arena:
+
+- cores de destaque, fundo e texto;
+- placar no canto esquerdo, centro ou canto direito;
+- escala entre 75% e 150%;
+- animações dinâmicas, suaves ou desligadas.
+
+Clique em **Aplicar visual**. As fontes que já estão abertas no OBS recebem a mudança por Reverb, sem recarregar. As animações
+usam somente opacidade e transformação para reduzir o trabalho de renderização do Chromium do OBS.
+
 ## 2. Configurar o OBS (uma vez)
 1. Em *Fontes*, adicione uma **Fonte de navegador** para cada tela e cole a URL.
 2. **Largura 1920 e altura 1080** (a tela é desenhada para esse quadro). Não precisa de CSS personalizado: o fundo já é transparente.
@@ -34,3 +46,41 @@ O **token é a senha do canal**: quem tem a URL vê o canal. Se vazar, use *Reno
 
 ## 5. Privacidade
 Os overlays mostram **o que o operador coloca no ar**: placar, relógio, gols, lances e, sob demanda, escalação (nome/apelido e camisa) e tabela. Fotos, documentos e disciplina acumulada nunca são enviados. A decisão de exibir atletas menores de idade na transmissão é da organização.
+
+## 6. Controle por API
+
+O organizador pode integrar Stream Deck, Companion ou outro controlador em **Transmissão → Controle por API**. Ao criar o canal,
+uma chave é mostrada uma única vez. **Guarde-a como segredo**. Renovar a chave invalida a anterior sem mudar as URLs do OBS.
+
+```bash
+curl -X PATCH 'https://seu-dominio/api/v1/overlay-channels/ID_DO_CANAL/state' \
+  -H 'Authorization: Bearer SUA_CHAVE' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  --data '{
+    "game_id": "ID_DO_JOGO",
+    "layers": {"lineup": true, "standings": false},
+    "appearance": {
+      "accent_color": "#7c3aed",
+      "background_color": "#0f172a",
+      "text_color": "#ffffff",
+      "position": "top-right",
+      "scale": 1.1,
+      "motion": "dynamic"
+    }
+  }'
+```
+
+Todos os campos são opcionais; envie apenas o que quer mudar. Valores aceitos:
+
+| Campo | Valores |
+|---|---|
+| `game_id` | ULID de um jogo da mesma organização ou `null` |
+| `layers.lineup`, `layers.standings` | `true` ou `false` |
+| cores | hexadecimal com seis dígitos (`#RRGGBB`) |
+| `position` | `top-left`, `top-center`, `top-right` |
+| `scale` | `0.75` a `1.5` |
+| `motion` | `dynamic`, `subtle`, `none` |
+
+A resposta contém o estado completo aplicado. A chave e seu hash nunca são devolvidos. O token que aparece na URL pública do
+overlay serve somente para visualização e não funciona como chave da API.

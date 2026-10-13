@@ -3,6 +3,53 @@
 @tailwind utilities;
 
 /*
+| Animações dos overlays: somente opacity e transform para manter a composição barata no Chromium do OBS.
+| O modo sem movimento não recebe estas classes; reduced-motion também as desliga.
+*/
+@keyframes overlay-slide-in {
+    from {
+        opacity: 0;
+        transform: translate3d(0, -24px, 0) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+}
+
+@keyframes overlay-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes overlay-score-pulse {
+    0%, 100% { transform: scale(1); }
+    45% { transform: scale(1.14); }
+}
+
+.overlay-motion-dynamic {
+    animation: overlay-slide-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: transform, opacity;
+}
+
+.overlay-motion-subtle {
+    animation: overlay-fade-in 300ms ease-out both;
+}
+
+.overlay-score-pulse {
+    animation: overlay-score-pulse 420ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .overlay-motion-dynamic,
+    .overlay-motion-subtle,
+    .overlay-score-pulse {
+        animation: none;
+    }
+}
+
+/*
 | Tema claro/escuro. A escala de cinzas do Tailwind é lida destas variáveis (ver tailwind.config.js); no tema escuro
 | ela se inverte (texto claro, fundos escuros). Cores de status e de marca (verde/vermelho/âmbar/azul) são
 | ajustadas nas regras `.dark` abaixo. Telas feitas para vídeo/OBS (Overlay/*, Public/*) NÃO recebem a classe `dark`.
