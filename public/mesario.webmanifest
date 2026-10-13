@@ -1,0 +1,17 @@
+{
+    "name": "Mesário",
+    "short_name": "Mesário",
+    "description": "Lance placar e súmula dos jogos pelo celular.",
+    "lang": "pt-BR",
+    "start_url": "/painel/mesario",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#f9fafb",
+    "theme_color": "#059669",
+    "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+        { "src": "/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+}

@@ -10,6 +10,7 @@ use App\Modules\Competitions\Http\Controllers\SeasonController;
 use App\Modules\Competitions\Http\Controllers\StageController;
 use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
+use App\Modules\Matches\Http\Controllers\MesarioController;
 use App\Modules\Matches\Http\Controllers\SheetController;
 use App\Modules\Matches\Http\Controllers\VenueController;
 use App\Modules\Portal\Http\Controllers\EmbedPanelController;
@@ -94,6 +95,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
 
     // Operação do jogo: escalação, súmula, cronômetro, pênaltis e encerramento.
     Route::middleware('panel.can:operate-games')->group(function () {
+        Route::get('mesario', [MesarioController::class, 'index'])->name('mesario');
         Route::get('games/{game}/sheet', [SheetController::class, 'show'])->name('games.sheet');
         Route::put('games/{game}/lineups/{entry}', [SheetController::class, 'lineup'])->name('games.lineup');
         Route::post('games/{game}/events', [SheetController::class, 'storeEvent'])->name('games.events.store');
