@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Membership;
 use App\Modules\Tenancy\Models\Organization;
 use App\Modules\Tenancy\Support\OrganizationResolver;
+use App\Modules\Tenancy\Support\SystemProfiles;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -33,6 +34,8 @@ final class CreateOrganization
 
         return DB::transaction(function () use ($name, $slug, $plan, $adminName, $adminEmail): array {
             $organization = Organization::query()->create(['name' => $name, 'slug' => $slug, 'plan' => $plan->value]);
+
+            SystemProfiles::ensure($organization->getKey());
 
             $user = User::query()->where('email', $adminEmail)->first();
             $password = null;

@@ -14,6 +14,7 @@ use App\Modules\Portal\Push\WebPushSender;
 use App\Modules\Teams\Support\GameNotices;
 use App\Modules\Tenancy\Actions\ManageMembers;
 use App\Modules\Tenancy\Enums\Ability;
+use App\Modules\Tenancy\Enums\Permission;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -39,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Permissões do painel: cada ability vale conforme o papel do usuário na organização atual.
         foreach (Ability::cases() as $ability) {
-            Gate::define($ability->value, fn (User $user) => $user->role()?->can($ability) ?? false);
+            Gate::define($ability->value, fn (User $user) => $user->hasPermission(Permission::forAbility($ability)));
         }
 
         // Instalação nova: o primeiro cadastro vira administrador (depois disso, usuários só são criados por um administrador).

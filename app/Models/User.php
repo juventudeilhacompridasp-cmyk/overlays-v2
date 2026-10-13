@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Modules\Tenancy\CurrentOrganization;
+use App\Modules\Tenancy\Enums\Permission;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Membership;
 use Database\Factories\UserFactory;
@@ -20,13 +21,13 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /** @var array<string, Role|null> papel por organização, lido uma vez por requisição */
-    private array $roles = [];
+    /** @var array<string, Membership|null> participação por organização, lida uma vez por requisição */
+    private array $memberships = [];
 
     /**
-     * Papel do usuário na organização atual (null = sem acesso).
+     * Participação do usuário na organização atual (null = sem acesso).
      */
-    public function role(): ?Role
+    private function membership(): ?Membership
     {
         $organizationId = CurrentOrganization::id();
 
@@ -34,17 +35,50 @@ class User extends Authenticatable implements MustVerifyEmail
             return null;
         }
 
-        if (! array_key_exists($organizationId, $this->roles)) {
-            $this->roles[$organizationId] = Membership::query()->where('user_id', $this->getKey())->first()?->role;
+        if (! array_key_exists($organizationId, $this->memberships)) {
+            $this->memberships[$organizationId] = Membership::query()
+                ->with('profile.grants')
+                ->where('user_id', $this->getKey())
+                ->first();
         }
 
-        return $this->roles[$organizationId];
+        return $this->memberships[$organizationId];
     }
 
-    /** Descarta o papel guardado (depois de alterar a participação do usuário). */
+    /**
+     * Papel do usuário na organização atual (null = sem acesso).
+     */
+    public function role(): ?Role
+    {
+        return $this->membership()?->role;
+    }
+
+    /**
+     * Permissões efetivas na organização atual: as do perfil de acesso, se houver, senão as do papel.
+     * O gestor de equipe nunca recebe permissões do painel, nem por perfil.
+     *
+     * @return list<Permission>
+     */
+    public function permissions(): array
+    {
+        $membership = $this->membership();
+
+        if ($membership === null || ! $membership->role->usesPanel()) {
+            return [];
+        }
+
+        return $membership->profile?->permissions() ?? $membership->role->permissions();
+    }
+
+    public function hasPermission(Permission $permission): bool
+    {
+        return in_array($permission, $this->permissions(), true);
+    }
+
+    /** Descarta a participação guardada (depois de alterar o papel/perfil do usuário). */
     public function forgetRole(): void
     {
-        $this->roles = [];
+        $this->memberships = [];
     }
 
     /**

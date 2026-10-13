@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Papel de um usuário na organização atual.
  *
  * @property Role $role
+ * @property string|null $access_profile_id
  */
 #[Unguarded]
 class Membership extends Model
@@ -26,6 +27,16 @@ class Membership extends Model
     protected function casts(): array
     {
         return ['role' => Role::class];
+    }
+
+    /**
+     * Perfil de acesso escolhido (nulo = vale o papel).
+     *
+     * @return BelongsTo<AccessProfile, $this>
+     */
+    public function profile(): BelongsTo
+    {
+        return $this->belongsTo(AccessProfile::class, 'access_profile_id');
     }
 
     /**
