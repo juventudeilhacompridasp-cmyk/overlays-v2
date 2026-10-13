@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Help\Http\Controllers\HelpController;
+use App\Modules\Market\Http\Controllers\Manager\ContactController;
 use App\Modules\Market\Http\Controllers\Manager\MarketController;
 use App\Modules\Teams\Http\Controllers\Manager\CardsController;
 use App\Modules\Teams\Http\Controllers\Manager\DashboardController;
@@ -26,6 +27,8 @@ Route::middleware(['auth', 'verified', 'manager.member', 'legal.accepted', 'feat
     Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'manager')->name('help.index');
     Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'manager')->name('help.show');
     Route::get('mercado', [MarketController::class, 'index'])->middleware('feature:market')->name('market.index');
+    Route::post('mercado/{profile}/pedidos', [ContactController::class, 'store'])->middleware('feature:market')->name('market.requests.store');
+    Route::delete('mercado/pedidos/{contactRequest}', [ContactController::class, 'destroy'])->middleware('feature:market')->name('market.requests.destroy');
     Route::get('jogos', [GameController::class, 'index'])->name('games.index');
     Route::get('jogos/{game}', [GameController::class, 'show'])->name('games.show');
     Route::put('jogos/{game}/escalacao', [GameController::class, 'lineup'])->name('games.lineup');

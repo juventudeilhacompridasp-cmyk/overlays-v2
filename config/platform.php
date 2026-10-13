@@ -47,4 +47,13 @@ return [
         'monthly_reads' => (int) env('SHEET_IMPORT_MONTHLY_READS', 200),
     ],
 
+    /*
+    | Mercado de jogadores livres (ADR 0008): pedidos de contato por equipe por dia (a organização pode mudar em
+    | `settings.market.daily_requests`) e dias de espera até o pedido expirar.
+    */
+    'market' => [
+        'daily_requests' => (int) env('MARKET_DAILY_REQUESTS', 10),
+        'request_days' => (int) env('MARKET_REQUEST_DAYS', 14),
+    ],
+
 ];

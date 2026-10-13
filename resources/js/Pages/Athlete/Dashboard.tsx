@@ -25,6 +25,8 @@ interface Props {
         published_at: string | null;
         expires_at: string | null;
     };
+    requests: { id: string; team: string; message: string; status: string; status_label: string; created_at: string; expires_at: string }[];
+    blocks: { id: string; team: string }[];
     email_verified: boolean;
     options: {
         sports: (Option & { positions: Option[] })[];
@@ -39,7 +41,7 @@ interface Props {
 
 const tone = (status: string) => (status === 'published' ? 'green' : status === 'suspended' ? 'red' : status === 'signed' ? 'blue' : 'amber');
 
-export default function Dashboard({ profile, email_verified, options, revalidate_days }: Props) {
+export default function Dashboard({ profile, requests, blocks, email_verified, options, revalidate_days }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         sport: profile.sport ?? '',
         positions: profile.positions,
@@ -117,6 +119,64 @@ export default function Dashboard({ profile, email_verified, options, revalidate
                             </Button>
                         )}
                     </div>
+                </Card>
+
+                <Card title="Pedidos de contato">
+                    {requests.length === 0 ? (
+                        <p className="text-sm text-gray-500">Nenhum pedido ainda. Quando uma equipe quiser falar com você, ele aparece aqui e você recebe um e-mail.</p>
+                    ) : (
+                        <ul className="divide-y divide-gray-100">
+                            {requests.map((item) => (
+                                <li key={item.id} className="py-3">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <span className="font-medium text-gray-900">{item.team}</span>{' '}
+                                            <Badge tone={item.status === 'accepted' ? 'green' : item.status === 'pending' ? 'amber' : 'gray'}>{item.status_label}</Badge>
+                                            <span className="ml-2 text-xs text-gray-500">{item.created_at}</span>
+                                        </div>
+                                        {item.status === 'pending' && (
+                                            <div className="flex gap-2">
+                                                <Button small onClick={() => router.post(route('athlete.requests.accept', item.id), {}, { preserveScroll: true })}>
+                                                    Aceitar
+                                                </Button>
+                                                <Button small variant="secondary" onClick={() => router.post(route('athlete.requests.decline', item.id), {}, { preserveScroll: true })}>
+                                                    Recusar
+                                                </Button>
+                                            </div>
+                                        )}
+                                        {(item.status === 'pending' || item.status === 'accepted') && (
+                                            <Button
+                                                small
+                                                variant="danger"
+                                                onClick={() => {
+                                                    if (window.confirm(`Bloquear ${item.team}? Ela deixa de ver o seu perfil e de pedir contato.`)) router.post(route('athlete.requests.block', item.id), {}, { preserveScroll: true });
+                                                }}
+                                            >
+                                                Bloquear equipe
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <p className="mt-1 whitespace-pre-line text-sm text-gray-600">“{item.message}”</p>
+                                    {item.status === 'pending' && <p className="mt-1 text-xs text-gray-500">Aceitar mostra o seu contato a esta equipe. Vale até {item.expires_at}.</p>}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    {blocks.length > 0 && (
+                        <div className="mt-4 border-t border-gray-100 pt-3">
+                            <p className="mb-2 text-sm font-medium text-gray-700">Equipes bloqueadas</p>
+                            <ul className="space-y-1 text-sm text-gray-600">
+                                {blocks.map((block) => (
+                                    <li key={block.id} className="flex items-center justify-between">
+                                        {block.team}
+                                        <Button small variant="ghost" onClick={() => router.delete(route('athlete.blocks.destroy', block.id), { preserveScroll: true })}>
+                                            Desbloquear
+                                        </Button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </Card>
 
                 <Card title="Foto">

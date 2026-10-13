@@ -16,13 +16,16 @@ type Settings = {
     push_started: boolean;
     push_score: boolean;
     push_finished: boolean;
+    market_contact_request: boolean;
+    market_contact_answered: boolean;
+    market_profile_expiring: boolean;
     reminder_first_minutes: number;
     reminder_second_minutes: number;
 };
 
 type SwitchKey = Exclude<keyof Settings, 'reminder_first_minutes' | 'reminder_second_minutes'>;
 
-const groups: { title: string; hint: string; feature: 'online_registration' | 'team_portal' | 'push'; items: { key: SwitchKey; label: string }[] }[] = [
+const groups: { title: string; hint: string; feature: 'online_registration' | 'team_portal' | 'push' | 'market'; items: { key: SwitchKey; label: string }[] }[] = [
     {
         title: 'Inscrição online (e-mails para a equipe que se inscreve)',
         hint: 'Desligado, o pedido segue normalmente, mas a equipe não recebe o e-mail (o link pessoal continua aparecendo na tela depois de criar o pedido).',
@@ -53,6 +56,16 @@ const groups: { title: string; hint: string; feature: 'online_registration' | 't
             { key: 'push_started', label: 'Jogo começou' },
             { key: 'push_score', label: 'Gol ou set (placar mudou)' },
             { key: 'push_finished', label: 'Jogo terminou' },
+        ],
+    },
+    {
+        title: 'Mercado de jogadores (e-mails para atletas e gestores)',
+        hint: 'O e-mail nunca leva o contato do atleta: ele só aparece na área do gestor depois que o atleta aceita o pedido.',
+        feature: 'market',
+        items: [
+            { key: 'market_contact_request', label: 'Atleta recebeu um pedido de contato' },
+            { key: 'market_contact_answered', label: 'Gestor recebeu a resposta (aceito ou recusado)' },
+            { key: 'market_profile_expiring', label: 'Perfil do atleta vai expirar em 7 dias' },
         ],
     },
 ];

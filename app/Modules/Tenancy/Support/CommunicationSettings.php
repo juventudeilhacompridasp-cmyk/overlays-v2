@@ -25,6 +25,9 @@ final class CommunicationSettings
         'push_started' => true,
         'push_score' => true,
         'push_finished' => true,
+        'market_contact_request' => true,
+        'market_contact_answered' => true,
+        'market_profile_expiring' => true,
     ];
 
     /** Minutos antes do prazo do gestor em que sai o primeiro e o segundo lembrete de escalação. */

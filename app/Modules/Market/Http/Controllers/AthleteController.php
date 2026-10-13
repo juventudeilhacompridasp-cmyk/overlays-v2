@@ -9,6 +9,9 @@ use App\Modules\Market\Actions\DeleteAthleteAccount;
 use App\Modules\Market\Actions\PauseMarketProfile;
 use App\Modules\Market\Actions\PublishMarketProfile;
 use App\Modules\Market\Actions\SaveMarketProfile;
+use App\Modules\Market\Enums\RequestStatus;
+use App\Modules\Market\Models\ContactRequest;
+use App\Modules\Market\Models\MarketBlock;
 use App\Modules\Market\Models\MarketProfile;
 use App\Modules\Market\Support\MarketOptions;
 use Illuminate\Http\RedirectResponse;
@@ -47,6 +50,20 @@ class AthleteController extends Controller
                 'published_at' => $profile->published_at?->format('d/m/Y'),
                 'expires_at' => $profile->expires_at?->format('d/m/Y'),
             ],
+            'requests' => ContactRequest::query()->with('team:id,name')->where('profile_id', $profile->getKey())
+                ->orderByRaw("case status when 'pending' then 0 else 1 end")->latest()->limit(30)->get()
+                ->map(fn (ContactRequest $item) => [
+                    'id' => $item->getKey(),
+                    'team_id' => $item->team_id,
+                    'team' => $item->team->name,
+                    'message' => $item->message,
+                    'status' => $item->isOpen() ? 'pending' : ($item->status === RequestStatus::Pending ? 'expired' : $item->status->value),
+                    'status_label' => $item->isOpen() ? $item->status->label() : ($item->status === RequestStatus::Pending ? RequestStatus::Expired->label() : $item->status->label()),
+                    'created_at' => $item->created_at->format('d/m/Y'),
+                    'expires_at' => $item->expires_at->format('d/m/Y'),
+                ])->values(),
+            'blocks' => MarketBlock::query()->with('team:id,name')->where('profile_id', $profile->getKey())->get()
+                ->map(fn (MarketBlock $block) => ['id' => $block->getKey(), 'team' => $block->team->name])->values(),
             'email_verified' => $request->user()->hasVerifiedEmail(),
             'options' => [
                 'sports' => collect(Sport::cases())->map(fn (Sport $sport) => [
