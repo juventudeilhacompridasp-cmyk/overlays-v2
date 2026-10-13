@@ -8,7 +8,7 @@
         <script>
             (function () {
                 try {
-                    if (/^(Overlay|Public)\//.test(@json($page['component']))) return;
+                    if (/^(Overlay|Public|Embed)\//.test(@json($page['component']))) return;
                     var theme = localStorage.getItem('theme') || 'system';
                     var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
                     document.documentElement.classList.toggle('dark', dark);

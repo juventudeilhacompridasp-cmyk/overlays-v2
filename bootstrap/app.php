@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\FrameOptions;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\Tenancy\Http\Middleware\EnsureFeature;
 use App\Modules\Tenancy\Http\Middleware\EnsureLegalAccepted;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ], append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            FrameOptions::class,
         ]);
 
         // A API pública também precisa da organização ativa antes da resolução dos {parâmetros}.

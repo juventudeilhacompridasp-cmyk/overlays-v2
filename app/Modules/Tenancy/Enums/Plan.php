@@ -25,7 +25,7 @@ enum Plan: string
     {
         return match ($this) {
             self::Basic => [],
-            self::Standard => [Feature::OnlineRegistration, Feature::AthleteCards, Feature::Reports],
+            self::Standard => [Feature::OnlineRegistration, Feature::AthleteCards, Feature::Reports, Feature::Embeds],
             self::Pro => Feature::cases(),
         };
     }
