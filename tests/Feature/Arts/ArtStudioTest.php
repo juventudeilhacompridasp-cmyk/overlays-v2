@@ -6,6 +6,7 @@ use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameLineup;
 use App\Modules\Teams\Models\Person;
+use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Plan;
 use App\Modules\Tenancy\Enums\Role;
@@ -28,7 +29,7 @@ describe('access', function () {
             test()->actingAs(panelUser($role))->get(route('panel.arts.index'))->assertOk()->assertInertia(fn ($page) => $page->component('Panel/Arts/Index'));
         }
 
-        test()->actingAs(managerFor(App\Modules\Teams\Models\Team::factory()->create()))->get(route('panel.arts.index'))->assertForbidden();
+        test()->actingAs(managerFor(Team::factory()->create()))->get(route('panel.arts.index'))->assertForbidden();
         test()->actingAs(panelUser(Role::Athlete))->get(route('panel.arts.index'))->assertForbidden();
     });
 
