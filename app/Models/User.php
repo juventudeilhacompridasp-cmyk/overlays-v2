@@ -55,19 +55,18 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Permissões efetivas na organização atual: as do perfil de acesso, se houver, senão as do papel.
-     * O gestor de equipe nunca recebe permissões do painel, nem por perfil.
      *
      * @return list<Permission>
      */
     public function permissions(): array
     {
-        $membership = $this->membership();
+        return $this->membership()?->permissions() ?? [];
+    }
 
-        if ($membership === null || ! $membership->role->usesPanel()) {
-            return [];
-        }
-
-        return $membership->profile?->permissions() ?? $membership->role->permissions();
+    /** Nome do perfil ou do papel na organização atual. */
+    public function accessLabel(): ?string
+    {
+        return $this->membership()?->accessLabel();
     }
 
     public function hasPermission(Permission $permission): bool

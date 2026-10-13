@@ -1,6 +1,6 @@
 import { Badge, Button, Card, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
 interface Member {
@@ -8,7 +8,14 @@ interface Member {
     name: string;
     email: string;
     role: string;
+    access: string;
+    access_label: string;
     is_me: boolean;
+}
+
+interface ProfileInfo {
+    id: string;
+    name: string;
 }
 
 interface RoleInfo {
@@ -17,8 +24,35 @@ interface RoleInfo {
     abilities: string[];
 }
 
-export default function Index({ members, roles }: { members: Member[]; roles: RoleInfo[] }) {
-    const { data, setData, post, processing, errors, reset } = useForm({ name: '', email: '', password: '', role: 'operator' });
+// "role:operator" ou "profile:{id}": papel padrão ou perfil de acesso personalizado.
+const payload = (access: string) => (access.startsWith('profile:') ? { profile_id: access.slice(8) } : { role: access.slice(5) });
+
+function AccessOptions({ roles, profiles }: { roles: RoleInfo[]; profiles: ProfileInfo[] }) {
+    return (
+        <>
+            <optgroup label="Papéis padrão">
+                {roles.map((role) => (
+                    <option key={role.value} value={`role:${role.value}`}>
+                        {role.label}
+                    </option>
+                ))}
+            </optgroup>
+            {profiles.length > 0 && (
+                <optgroup label="Perfis personalizados">
+                    {profiles.map((profile) => (
+                        <option key={profile.id} value={`profile:${profile.id}`}>
+                            {profile.name}
+                        </option>
+                    ))}
+                </optgroup>
+            )}
+        </>
+    );
+}
+
+export default function Index({ members, roles, profiles }: { members: Member[]; roles: RoleInfo[]; profiles: ProfileInfo[] }) {
+    const { data, setData, transform, post, processing, errors, reset } = useForm({ name: '', email: '', password: '', access: 'role:operator' });
+    transform((form) => ({ name: form.name, email: form.email, password: form.password, ...payload(form.access) }));
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -43,16 +77,12 @@ export default function Index({ members, roles }: { members: Member[]; roles: Ro
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Select
-                                        aria-label={`Papel de ${member.name}`}
-                                        className="!w-48"
-                                        value={member.role}
-                                        onChange={(event) => router.patch(route('panel.users.update', member.id), { role: event.target.value }, { preserveScroll: true })}
+                                        aria-label={`Acesso de ${member.name}`}
+                                        className="!w-56"
+                                        value={member.access}
+                                        onChange={(event) => router.patch(route('panel.users.update', member.id), payload(event.target.value), { preserveScroll: true })}
                                     >
-                                        {roles.map((role) => (
-                                            <option key={role.value} value={role.value}>
-                                                {role.label}
-                                            </option>
-                                        ))}
+                                        <AccessOptions roles={roles} profiles={profiles} />
                                     </Select>
                                     <Button
                                         small
@@ -82,13 +112,9 @@ export default function Index({ members, roles }: { members: Member[]; roles: Ro
                         <Field label="Senha provisória" htmlFor="password" error={errors.password} hint="Mínimo de 8 caracteres. Passe por um canal seguro; a pessoa troca depois em Perfil.">
                             <Input id="password" type="text" autoComplete="off" value={data.password} onChange={(e) => setData('password', e.target.value)} required />
                         </Field>
-                        <Field label="Papel" htmlFor="role" error={errors.role}>
-                            <Select id="role" value={data.role} onChange={(e) => setData('role', e.target.value)}>
-                                {roles.map((role) => (
-                                    <option key={role.value} value={role.value}>
-                                        {role.label}
-                                    </option>
-                                ))}
+                        <Field label="Acesso (papel ou perfil)" htmlFor="access" error={(errors as Record<string, string | undefined>).role ?? (errors as Record<string, string | undefined>).profile_id}>
+                            <Select id="access" value={data.access} onChange={(e) => setData('access', e.target.value)}>
+                                <AccessOptions roles={roles} profiles={profiles} />
                             </Select>
                         </Field>
                         <div className="sm:col-span-2">
@@ -98,6 +124,10 @@ export default function Index({ members, roles }: { members: Member[]; roles: Ro
                         </div>
                     </form>
                 </Card>
+
+                <p className="text-sm text-gray-600">
+                    Precisa de um acesso sob medida? Crie um perfil em <Link href={route('panel.profiles.index')} className="text-emerald-700 underline">Perfis de acesso</Link> e escolha-o aqui.
+                </p>
 
                 <Card title="O que cada papel pode">
                     <dl className="grid gap-4 sm:grid-cols-2">

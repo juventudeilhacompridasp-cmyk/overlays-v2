@@ -14,4 +14,9 @@ use Illuminate\Database\Eloquent\Model;
 class AccessProfilePermission extends Model
 {
     public $timestamps = false;
+
+    // Chave composta (perfil + permissão): sem coluna `id`, o insert não pede o id de volta.
+    public $incrementing = false;
+
+    protected $primaryKey = null;
 }

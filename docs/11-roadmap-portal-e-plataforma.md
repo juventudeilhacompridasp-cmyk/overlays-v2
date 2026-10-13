@@ -34,7 +34,7 @@ Busca textual primeiro; resposta com IA (RAG) depois, opcional. Conteúdo versio
 
 ## Ordem sugerida
 1. (feito) sheet_import sob demanda + ADRs 0005/0006/0007 + este roadmap.
-2. Perfis e permissões, parte 1 (catálogo + migração sem mudar comportamento) — **base para ajuda, API e leitura de súmulas por perfil**.
+2. Perfis e permissões, partes 1 e 2 (catálogo, perfis e tela de perfis; feitas) — **base para ajuda, API e leitura de súmulas por perfil**.
 3. Leitura de súmulas, parte 2 (leitor estruturado + visão + configuração) e parte 3 (conferência).
 4. Portal rico: dados novos (assistências, mídia, notícias) e as telas, uma tela por PR.
 5. Central de ajuda (busca) e ajuda contextual.
