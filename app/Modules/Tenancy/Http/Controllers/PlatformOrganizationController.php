@@ -113,7 +113,8 @@ class PlatformOrganizationController extends Controller
                 'slug' => $organization->slug,
                 'plan' => $organization->plan()->value,
                 'custom_features' => $organization->features !== null,
-                'features' => $organization->featureKeys(),
+                'features' => $organization->baseFeatureKeys(),
+                'opt_in_features' => $organization->optInFeatureKeys(),
                 'max_users' => $organization->limit('max_users'),
                 'max_competitions' => $organization->limit('max_competitions'),
             ],
@@ -125,7 +126,8 @@ class PlatformOrganizationController extends Controller
                 'label' => $plan->label(),
                 'features' => array_map(fn (Feature $feature) => $feature->value, $plan->features()),
             ], Plan::cases()),
-            'all_features' => array_map(fn (Feature $feature) => ['value' => $feature->value, 'label' => $feature->label()], Feature::cases()),
+            'all_features' => array_map(fn (Feature $feature) => ['value' => $feature->value, 'label' => $feature->label()], Feature::included()),
+            'opt_in_all' => array_map(fn (Feature $feature) => ['value' => $feature->value, 'label' => $feature->label()], Feature::optIn()),
         ]);
     }
 
@@ -135,7 +137,9 @@ class PlatformOrganizationController extends Controller
             'plan' => ['required', Rule::enum(Plan::class)],
             'custom_features' => ['required', 'boolean'],
             'features' => ['array'],
-            'features.*' => [Rule::enum(Feature::class)],
+            'features.*' => [Rule::in(array_map(fn (Feature $feature) => $feature->value, Feature::included()))],
+            'opt_in_features' => ['array'],
+            'opt_in_features.*' => [Rule::in(array_map(fn (Feature $feature) => $feature->value, Feature::optIn()))],
             'max_users' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'max_competitions' => ['nullable', 'integer', 'min:1', 'max:100000'],
         ], [], ['plan' => 'pacote', 'max_users' => 'limite de usuários', 'max_competitions' => 'limite de competições']);
@@ -148,6 +152,7 @@ class PlatformOrganizationController extends Controller
         $organization->update([
             'plan' => $validated['plan'],
             'features' => $validated['custom_features'] ? array_values(array_unique($validated['features'] ?? [])) : null,
+            'opt_in_features' => array_values(array_unique($validated['opt_in_features'] ?? [])) ?: null,
             'limits' => $limits === [] ? null : $limits,
         ]);
 

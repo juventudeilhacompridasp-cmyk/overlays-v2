@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property array<string, mixed>|null $settings
  * @property array<int, string>|null $features
+ * @property array<int, string>|null $opt_in_features
  * @property array<string, int|null>|null $limits
  */
 #[Unguarded]
@@ -31,6 +32,7 @@ class Organization extends Model
         return [
             'settings' => 'array',
             'features' => 'array',
+            'opt_in_features' => 'array',
             'limits' => 'array',
         ];
     }
@@ -47,11 +49,35 @@ class Organization extends Model
      */
     public function featureKeys(): array
     {
+        return array_values(array_unique([...$this->baseFeatureKeys(), ...$this->optInFeatureKeys()]));
+    }
+
+    /**
+     * Recursos do pacote (ou da lista liberada à mão), sem os sob demanda.
+     *
+     * @return list<string>
+     */
+    public function baseFeatureKeys(): array
+    {
+        $included = array_map(fn (Feature $feature) => $feature->value, Feature::included());
+
         if ($this->features !== null) {
-            return array_values(array_intersect($this->features, array_map(fn (Feature $feature) => $feature->value, Feature::cases())));
+            return array_values(array_intersect($this->features, $included));
         }
 
         return array_map(fn (Feature $feature) => $feature->value, $this->plan()->features());
+    }
+
+    /**
+     * Recursos sob demanda que a plataforma liberou para esta organização (desligados por padrão).
+     *
+     * @return list<string>
+     */
+    public function optInFeatureKeys(): array
+    {
+        $optIn = array_map(fn (Feature $feature) => $feature->value, Feature::optIn());
+
+        return array_values(array_intersect($this->opt_in_features ?? [], $optIn));
     }
 
     public function hasFeature(Feature $feature): bool

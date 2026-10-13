@@ -18,6 +18,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
   "Fila offline no navegador".
 
 ## Pendências conhecidas (por ordem sugerida)
+- **Novos pedidos de 13/10 (plano em `docs/11-roadmap-portal-e-plataforma.md`)**: (a) leitura de súmulas parte 2/3, desligada por padrão e ativada pelo Super Admin; (b) portal público muito mais rico; (c) Central de ajuda com busca/RAG (ADR 0006); (d) documentação interna das APIs só para Super Admin (ADR 0007); (e) perfis/permissões totalmente parametrizáveis (ADR 0005).
 - **Parametrização** (tela Painel > Comunicações entregue; falta o restante do plano) (comunicações, ativar/desativar funcionalidades, janelas e limites): levantamento e plano em `docs/10-parametrizacao.md` — começar pela tela Painel > Comunicações.
 - Basquete: faltas técnicas/antidesportivas e relógio de posse (24 s). Pedidos de tempo entregues (ainda sem mostrar no overlay/página pública e sem parar o relógio sozinho).
 - Vôlei: limite de substituições por set, rodízio/líbero, pedidos de tempo.

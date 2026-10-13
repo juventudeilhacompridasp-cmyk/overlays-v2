@@ -11,12 +11,14 @@ interface Props {
         plan: string;
         custom_features: boolean;
         features: string[];
+        opt_in_features: string[];
         max_users: number | null;
         max_competitions: number | null;
     };
     usage: Record<string, number | string | null>;
     plans: { value: string; label: string; features: string[] }[];
     all_features: { value: string; label: string }[];
+    opt_in_all: { value: string; label: string }[];
     domains: { id: string; domain: string }[];
     subdomain: string | null;
 }
@@ -60,11 +62,12 @@ function DomainsCard({ organizationId, domains, subdomain }: { organizationId: s
     );
 }
 
-export default function Edit({ organization, usage, plans, all_features, domains, subdomain }: Props) {
+export default function Edit({ organization, usage, plans, all_features, opt_in_all, domains, subdomain }: Props) {
     const { data, setData, patch, processing, errors } = useForm({
         plan: organization.plan,
         custom_features: organization.custom_features,
         features: organization.features,
+        opt_in_features: organization.opt_in_features,
         max_users: organization.max_users?.toString() ?? '',
         max_competitions: organization.max_competitions?.toString() ?? '',
     });
@@ -74,6 +77,10 @@ export default function Edit({ organization, usage, plans, all_features, domains
 
     const toggle = (feature: string) => {
         setData('features', data.features.includes(feature) ? data.features.filter((item) => item !== feature) : [...data.features, feature]);
+    };
+
+    const toggleOptIn = (feature: string) => {
+        setData('opt_in_features', data.opt_in_features.includes(feature) ? data.opt_in_features.filter((item) => item !== feature) : [...data.opt_in_features, feature]);
     };
 
     const submit = (event: FormEvent) => {
@@ -130,6 +137,19 @@ export default function Edit({ organization, usage, plans, all_features, domains
                                 ))}
                             </ul>
                         </div>
+                    </Card>
+                    <Card title="Recursos sob demanda (desligados por padrão)">
+                        <p className="mb-3 text-sm text-gray-600">Não fazem parte de nenhum pacote: só funcionam para a organização depois de liberados aqui. Libere somente com a organização ciente (ex.: recursos que enviam dados a serviços externos de IA).</p>
+                        <ul className="grid gap-2 sm:grid-cols-2">
+                            {opt_in_all.map((feature) => (
+                                <li key={feature.value}>
+                                    <label className="flex items-center gap-2 text-sm text-gray-800">
+                                        <input type="checkbox" className="rounded border-gray-300 text-emerald-600" checked={data.opt_in_features.includes(feature.value)} onChange={() => toggleOptIn(feature.value)} />
+                                        {feature.label}
+                                    </label>
+                                </li>
+                            ))}
+                        </ul>
                     </Card>
                     <Card title="Limites">
                         <div className="grid gap-4 sm:grid-cols-2">

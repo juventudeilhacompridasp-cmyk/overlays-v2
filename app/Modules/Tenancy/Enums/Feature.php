@@ -16,6 +16,33 @@ enum Feature: string
     case TeamPortal = 'team_portal';
     case SheetImport = 'sheet_import';
 
+    /**
+     * Recurso sob demanda: fica DESLIGADO para todas as organizações, em qualquer pacote, até a plataforma liberá-lo
+     * (`organizations.opt_in_features`, em /plataforma). Hoje: o que envia dados a serviço externo de IA.
+     */
+    public function isOptIn(): bool
+    {
+        return $this === self::SheetImport;
+    }
+
+    /**
+     * Recursos que os pacotes podem incluir (todos, menos os sob demanda).
+     *
+     * @return list<self>
+     */
+    public static function included(): array
+    {
+        return array_values(array_filter(self::cases(), fn (self $feature) => ! $feature->isOptIn()));
+    }
+
+    /**
+     * @return list<self>
+     */
+    public static function optIn(): array
+    {
+        return array_values(array_filter(self::cases(), fn (self $feature) => $feature->isOptIn()));
+    }
+
     public function label(): string
     {
         return match ($this) {
