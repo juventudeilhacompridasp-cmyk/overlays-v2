@@ -5,7 +5,7 @@ use App\Modules\Tenancy\Http\Middleware\EnsureFeature;
 use App\Modules\Tenancy\Http\Middleware\EnsureMember;
 use App\Modules\Tenancy\Http\Middleware\EnsurePanelAbility;
 use App\Modules\Tenancy\Http\Middleware\EnsurePlatformAdmin;
-use App\Modules\Tenancy\Http\Middleware\ResolveDefaultOrganization;
+use App\Modules\Tenancy\Http\Middleware\ResolveOrganization;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -29,7 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // A organização ativa precisa estar definida ANTES da resolução de {team}, {season}...
         // pelas rotas (route model binding), senão o escopo da organização não vale nelas.
         $middleware->web(prepend: [
-            ResolveDefaultOrganization::class,
+            ResolveOrganization::class,
         ], append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
@@ -37,7 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // A API pública também precisa da organização ativa antes da resolução dos {parâmetros}.
         $middleware->api(prepend: [
-            ResolveDefaultOrganization::class,
+            ResolveOrganization::class,
         ]);
 
         $middleware->alias([

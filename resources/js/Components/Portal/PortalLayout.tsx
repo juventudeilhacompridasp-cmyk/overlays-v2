@@ -6,6 +6,9 @@ export interface Theme {
     name: string;
     primary: string;
     tagline: string | null;
+    logo_url: string | null;
+    white_label: boolean;
+    platform_name: string;
 }
 
 export interface Seo {
@@ -40,7 +43,8 @@ export default function PortalLayout({ theme, seo, children }: PropsWithChildren
             <SeoHead seo={seo} />
             <header className="text-white print:hidden" style={{ backgroundColor: theme.primary }}>
                 <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-                    <Link href={route('portal.home')} className="text-xl font-extrabold tracking-tight">
+                    <Link href={route('portal.home')} className="flex items-center gap-2 text-xl font-extrabold tracking-tight">
+                        {theme.logo_url && <img src={theme.logo_url} alt="" className="h-9 w-9 rounded bg-[#ffffff] object-contain p-0.5" />}
                         {theme.name}
                     </Link>
                     <nav className="flex items-center gap-4 text-sm font-medium">
@@ -63,7 +67,7 @@ export default function PortalLayout({ theme, seo, children }: PropsWithChildren
             </header>
             <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
             <footer className="mx-auto max-w-5xl px-4 pb-10 text-xs text-gray-500 print:hidden">
-                {theme.name} · Resultados e classificações atualizados pela organização.
+                {theme.name} · Resultados e classificações atualizados pela organização.{!theme.white_label && ` · Feito com ${theme.platform_name}`}
             </footer>
         </div>
     );

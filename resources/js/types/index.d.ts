@@ -18,6 +18,7 @@ export type PageProps<
         platform_admin: boolean;
     };
     features: string[];
+    brand: { name: string; logo_url: string | null };
     flash: {
         success?: string | null;
         error?: string | null;

@@ -14,7 +14,16 @@ use Illuminate\Mail\Mailables\Envelope;
  */
 class RegistrationMail extends Mailable
 {
-    public function __construct(public Registration $registration, public string $subjectLine, public string $headline, public ?string $note = null) {}
+    /** Link pessoal montado na requisição (no worker da fila o host seria o do APP_URL, não o da organização). */
+    public string $link;
+
+    public string $organizationName;
+
+    public function __construct(public Registration $registration, public string $subjectLine, public string $headline, public ?string $note = null)
+    {
+        $this->link = $registration->manageUrl();
+        $this->organizationName = PublicTheme::current()['name'];
+    }
 
     public static function opened(Registration $registration): self
     {
@@ -44,8 +53,8 @@ class RegistrationMail extends Mailable
     public function content(): Content
     {
         return new Content(view: 'mail.registration', with: [
-            'organization' => PublicTheme::current()['name'],
-            'link' => $this->registration->manageUrl(),
+            'organization' => $this->organizationName,
+            'link' => $this->link,
         ]);
     }
 }

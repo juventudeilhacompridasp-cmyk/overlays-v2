@@ -9,6 +9,12 @@ return [
     'default_organization_slug' => env('DEFAULT_ORGANIZATION_SLUG', 'default'),
 
     /*
+    | Domínio base dos subdomínios das organizações: `{slug}.{base}` abre a organização de mesmo slug.
+    | Vazio = sem subdomínios (só a organização padrão e domínios próprios cadastrados).
+    */
+    'base_domain' => env('PLATFORM_BASE_DOMAIN'),
+
+    /*
     | Chave do hash do CPF (LGPD: o CPF não é guardado em claro). Se vazia, usa a APP_KEY.
     | Mantenha estável: trocar a chave invalida a busca por CPF dos cadastros existentes.
     */

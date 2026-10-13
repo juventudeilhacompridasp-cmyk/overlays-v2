@@ -1,4 +1,4 @@
-import { Button, Card, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
+import { Button, Card, DeleteButton, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
@@ -17,9 +17,50 @@ interface Props {
     usage: Record<string, number | string | null>;
     plans: { value: string; label: string; features: string[] }[];
     all_features: { value: string; label: string }[];
+    domains: { id: string; domain: string }[];
+    subdomain: string | null;
 }
 
-export default function Edit({ organization, usage, plans, all_features }: Props) {
+function DomainsCard({ organizationId, domains, subdomain }: { organizationId: string; domains: Props['domains']; subdomain: string | null }) {
+    const { data, setData, post, processing, errors, reset } = useForm({ domain: '' });
+
+    return (
+        <Card title="Endereços">
+            <ul className="mb-4 space-y-1 text-sm text-gray-700">
+                {subdomain && (
+                    <li>
+                        Subdomínio automático: <span className="font-mono">{subdomain}</span>
+                    </li>
+                )}
+                {domains.map((domain) => (
+                    <li key={domain.id} className="flex items-center justify-between gap-3">
+                        <span className="font-mono">{domain.domain}</span>
+                        <DeleteButton href={route('platform.organizations.domains.destroy', [organizationId, domain.id])} message={`Remover o domínio ${domain.domain}?`} label="Remover" />
+                    </li>
+                ))}
+                {!subdomain && domains.length === 0 && <li className="text-gray-500">Nenhum endereço próprio (usa o endereço padrão da instalação).</li>}
+            </ul>
+            <form
+                className="flex flex-wrap items-start gap-2"
+                onSubmit={(event: FormEvent) => {
+                    event.preventDefault();
+                    post(route('platform.organizations.domains.store', organizationId), { preserveScroll: true, onSuccess: () => reset() });
+                }}
+            >
+                <div>
+                    <Input value={data.domain} onChange={(e) => setData('domain', e.target.value)} placeholder="ligadailha.com.br" className="sm:w-72" />
+                    {errors.domain && <p className="mt-1 text-sm text-red-600">{errors.domain}</p>}
+                </div>
+                <Button type="submit" variant="secondary" disabled={processing || data.domain === ''}>
+                    Adicionar domínio
+                </Button>
+            </form>
+            <p className="mt-2 text-xs text-gray-500">O domínio próprio só funciona com o recurso “Domínio próprio” ligado, o DNS apontando para o servidor e o domínio incluído no proxy.</p>
+        </Card>
+    );
+}
+
+export default function Edit({ organization, usage, plans, all_features, domains, subdomain }: Props) {
     const { data, setData, patch, processing, errors } = useForm({
         plan: organization.plan,
         custom_features: organization.custom_features,
@@ -104,6 +145,8 @@ export default function Edit({ organization, usage, plans, all_features }: Props
                         Salvar
                     </Button>
                 </form>
+
+                <DomainsCard organizationId={organization.id} domains={domains} subdomain={subdomain} />
 
                 <Card title="Uso">
                     <dl className="grid gap-3 text-sm sm:grid-cols-4">

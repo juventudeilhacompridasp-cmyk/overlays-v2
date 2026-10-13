@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Ability;
 use Illuminate\Http\Request;
@@ -44,6 +45,12 @@ class HandleInertiaRequests extends Middleware
             ],
             // Recursos do pacote da organização: só para esconder menus/botões; o servidor barra (middleware `feature`).
             'features' => CurrentOrganization::get()?->featureKeys() ?? [],
+            // Marca do painel: com o recurso white-label, o nome e o logotipo da própria organização.
+            'brand' => (function () {
+                $theme = PublicTheme::current();
+
+                return ['name' => $theme['white_label'] ? $theme['name'] : (string) config('app.name'), 'logo_url' => $theme['logo_url']];
+            })(),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
