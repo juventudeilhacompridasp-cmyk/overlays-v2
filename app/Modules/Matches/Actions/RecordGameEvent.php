@@ -10,6 +10,7 @@ use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Rules\Scoring\SetMatch;
 use App\Modules\Rules\Sheet\SheetEvent;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -30,7 +31,8 @@ final class RecordGameEvent
         GameEventType::FreeThrow, GameEventType::FieldGoal, GameEventType::ThreePointer,
     ];
 
-    public function handle(Game $game, GameEventType $type, string $entryId, ?string $personId, ?string $secondaryPersonId = null, int $period = 1, ?int $minute = null, ?int $recordedBy = null): GameEvent
+    /** @param  Carbon|null  $at  quando o lance aconteceu (lançamento vindo da fila offline); padrão: agora */
+    public function handle(Game $game, GameEventType $type, string $entryId, ?string $personId, ?string $secondaryPersonId = null, int $period = 1, ?int $minute = null, ?int $recordedBy = null, ?Carbon $at = null): GameEvent
     {
         if (! in_array($type, self::SHEET_TYPES, true)) {
             throw new InvalidArgumentException('Este tipo de lançamento não é suportado na súmula.');
@@ -61,10 +63,10 @@ final class RecordGameEvent
         }
 
         if ($type === GameEventType::Point) {
-            return $this->recordPoint($game, $entryId, $recordedBy);
+            return $this->recordPoint($game, $entryId, $recordedBy, $at);
         }
 
-        $event = DB::transaction(function () use ($game, $type, $entryId, $personId, $secondaryPersonId, $period, $minute, $recordedBy): GameEvent {
+        $event = DB::transaction(function () use ($game, $type, $entryId, $personId, $secondaryPersonId, $period, $minute, $recordedBy, $at): GameEvent {
             $error = $this->sheet->handle($game)->check(new SheetEvent($type, $entryId, $personId, $secondaryPersonId, $period, $minute));
 
             if ($error !== null) {
@@ -81,10 +83,11 @@ final class RecordGameEvent
                 'person_id' => $personId,
                 'secondary_person_id' => $type === GameEventType::Substitution ? $secondaryPersonId : null,
                 'recorded_by' => $recordedBy,
+                'created_at' => $at ?? now(),
             ]);
 
             if ($game->status === GameStatus::Scheduled) {
-                $game->forceFill(['status' => GameStatus::InProgress, 'started_at' => $game->started_at ?? now()]);
+                $game->forceFill(['status' => GameStatus::InProgress, 'started_at' => $game->started_at ?? ($at ?? now())]);
             }
 
             $this->projectScore->handle($game);
@@ -105,13 +108,13 @@ final class RecordGameEvent
     /**
      * Ponto de rally (esportes de sets): o set é o da vez (calculado a partir dos pontos anteriores), nunca informado.
      */
-    private function recordPoint(Game $game, string $entryId, ?int $recordedBy): GameEvent
+    private function recordPoint(Game $game, string $entryId, ?int $recordedBy, ?Carbon $at = null): GameEvent
     {
         if ($game->sport()->profile()->scoreModel !== 'sets') {
             throw new InvalidArgumentException('Este esporte não usa pontos de rally.');
         }
 
-        return DB::transaction(function () use ($game, $entryId, $recordedBy): GameEvent {
+        return DB::transaction(function () use ($game, $entryId, $recordedBy, $at): GameEvent {
             $match = new SetMatch($game->division->ruleSet());
             $sides = ProjectGameScore::pointSides($game);
             $error = $match->canScore($sides);
@@ -127,10 +130,11 @@ final class RecordGameEvent
                 'period' => $match->state($sides)['current'],
                 'entry_id' => $entryId,
                 'recorded_by' => $recordedBy,
+                'created_at' => $at ?? now(),
             ]);
 
             if ($game->status === GameStatus::Scheduled) {
-                $game->forceFill(['status' => GameStatus::InProgress, 'started_at' => $game->started_at ?? now()]);
+                $game->forceFill(['status' => GameStatus::InProgress, 'started_at' => $game->started_at ?? ($at ?? now())]);
             }
 
             $this->projectScore->handle($game);

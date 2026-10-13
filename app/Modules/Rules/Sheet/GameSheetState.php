@@ -176,6 +176,16 @@ final class GameSheetState
     }
 
     /**
+     * Cartões amarelos por pessoa no jogo.
+     *
+     * @return array<string, int>
+     */
+    public function yellowsOf(string $teamId): array
+    {
+        return $this->yellows[$teamId] ?? [];
+    }
+
+    /**
      * Eliminados por faltas (basquete) que ainda estão em quadra.
      *
      * @return list<string>

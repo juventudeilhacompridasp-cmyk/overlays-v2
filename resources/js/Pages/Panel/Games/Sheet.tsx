@@ -2,9 +2,14 @@ import { Badge, Button, Card, Field, Input, Logo, PageHeader, Select } from '@/C
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
 import { GameClock, formatClock, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
+import { SheetView, project, ProjectionRules, QueueItem, QueueKind } from '@/lib/sheetProject';
+import { SheetQueue, useSheetQueue } from '@/lib/sheetQueue';
 import { Option } from '@/types/panel';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { FormEvent, useMemo, useState } from 'react';
+
+/** Guarda o lançamento na fila do aparelho (e envia na hora, se houver conexão). `label` descreve o item na lista de pendências. */
+type Send = (kind: QueueKind, payload: Record<string, unknown>, label: string) => void;
 
 interface Person {
     id: string;
@@ -32,12 +37,14 @@ interface Team {
     windows_used: number;
     fouled_out: string[];
     player_fouls: Record<string, number>;
+    yellows: Record<string, number>;
 }
 
 interface SheetEvent {
     id: string;
     type: string;
     entry_id: string | null;
+    person_id: string | null;
     person: string | null;
     secondary_person: string | null;
     period: number;
@@ -69,7 +76,8 @@ interface Props {
     home: Team | null;
     away: Team | null;
     events: SheetEvent[];
-    limits: { starters: number; bench: number; staff: number; substitutions: number; windows: number };
+    limits: { starters: number; bench: number; staff: number; substitutions: number; windows: number; reentry: boolean; max_player_fouls: number | null };
+    clock_offsets: number[];
     event_types: Option[];
     sport: string;
     score_model: string;
@@ -205,12 +213,12 @@ function LineupEditor({ game, team, limits, locked, onSaved }: { game: Props['ga
     );
 }
 
-function ClockCard({ game, clock, publicUrl, sport }: { game: Props['game']; clock: Props['clock']; publicUrl: string; sport: string }) {
+function ClockCard({ game, clock, publicUrl, sport, send }: { game: Props['game']; clock: Props['clock']; publicUrl: string; sport: string; send: Send }) {
     const skew = useMemo(() => Date.now() - clock.server_time_ms, [clock.server_time_ms]);
     const seconds = shownSeconds(clock, useGameClock(clock, skew));
     const post = (action: 'start' | 'end', period: number) =>
-        router.post(route('panel.games.periods.store', game.id), { action, period }, { preserveScroll: true });
-    const pause = (value: boolean) => router.post(route('panel.games.clock.pause', game.id), { pause: value }, { preserveScroll: true });
+        send('period', { start: action === 'start', period }, `${action === 'start' ? 'Início do' : 'Fim do'} ${periodLabel(period, sport)}`);
+    const pause = (value: boolean) => send('clock', { pause: value }, value ? 'Relógio parado' : 'Relógio em andamento');
 
     const next = clock.period === null ? 1 : clock.period + 1;
     const live = clock.state === 'running' || clock.state === 'paused';
@@ -252,10 +260,12 @@ function ClockCard({ game, clock, publicUrl, sport }: { game: Props['game']; clo
     );
 }
 
+const basketLabel: Record<string, string> = { free_throw: 'Lance livre (+1)', field_goal: 'Cesta de 2', three_pointer: 'Cesta de 3', foul: 'Falta' };
+
 /** Basquete: toque rápido por atleta em quadra (+1, +2, +3 e falta). Quem foi eliminado por faltas não pontua nem comete falta. */
-function BasketPad({ game, team, period }: { game: Props['game']; team: Team; period: number }) {
+function BasketPad({ game, team, period, send: enqueue }: { game: Props['game']; team: Team; period: number; send: Send }) {
     const send = (type: string, personId: string) =>
-        router.post(route('panel.games.events.store', game.id), { type, entry_id: team.id, person_id: personId, period }, { preserveScroll: true });
+        enqueue('event', { type, entry_id: team.id, person_id: personId, period }, `${basketLabel[type] ?? type} — ${personName(team, personId)} (${team.name})`);
 
     return (
         <Card title={team.name}>
@@ -291,9 +301,9 @@ function BasketPad({ game, team, period }: { game: Props['game']; team: Team; pe
     );
 }
 
-function PointsCard({ game, sets, home, away, lastPoint }: { game: Props['game']; sets: SetScore[]; home: Team; away: Team; lastPoint: SheetEvent | undefined }) {
+function PointsCard({ game, sets, home, away, lastPoint, send }: { game: Props['game']; sets: SetScore[]; home: Team; away: Team; lastPoint: SheetEvent | undefined; send: Send }) {
     const current = sets.length > 0 && !sets[sets.length - 1].finished ? sets[sets.length - 1] : null;
-    const add = (side: 'home' | 'away') => router.post(route('panel.games.points.store', game.id), { side }, { preserveScroll: true });
+    const add = (side: 'home' | 'away') => send('point', { side }, `Ponto — ${side === 'home' ? home.name : away.name}`);
 
     return (
         <Card title={current ? `Set ${sets.length} em andamento` : sets.length > 0 ? 'Partida encerrada' : 'Pontos'}>
@@ -314,7 +324,7 @@ function PointsCard({ game, sets, home, away, lastPoint }: { game: Props['game']
             </div>
             {game.open && lastPoint && (
                 <div className="mt-3 text-center">
-                    <Button variant="secondary" small onClick={() => router.post(route('panel.games.events.void', [game.id, lastPoint.id]), {}, { preserveScroll: true })}>
+                    <Button variant="secondary" small onClick={() => send('void', { event_id: lastPoint.id }, 'Desfazer o último ponto')}>
                         Desfazer último ponto
                     </Button>
                 </div>
@@ -358,14 +368,13 @@ function ShootoutCard({ game, home, away }: { game: Props['game']; home: Team; a
     );
 }
 
-function EventForm({ game, home, away, eventTypes }: { game: Props['game']; home: Team; away: Team; eventTypes: Option[] }) {
+function EventForm({ home, away, eventTypes, send }: { home: Team; away: Team; eventTypes: Option[]; send: Send }) {
     const [type, setType] = useState('goal');
     const [entryId, setEntryId] = useState(home.id);
     const [personId, setPersonId] = useState('');
     const [secondaryId, setSecondaryId] = useState('');
     const [period, setPeriod] = useState('1');
     const [minute, setMinute] = useState('');
-    const [sending, setSending] = useState(false);
 
     const team = entryId === home.id ? home : away;
     const isSubstitution = type === 'substitution';
@@ -380,24 +389,24 @@ function EventForm({ game, home, away, eventTypes }: { game: Props['game']; home
     });
     const incoming = team.roster.filter((person) => team.available_bench.includes(person.id));
 
+    const label = (person: Person) => `${person.shirt_number ? `${person.shirt_number} · ` : ''}${person.name}`;
+
     const submit = (event: FormEvent) => {
         event.preventDefault();
-        setSending(true);
-        router.post(
-            route('panel.games.events.store', game.id),
-            { type, entry_id: entryId, person_id: personId, secondary_person_id: isSubstitution ? secondaryId : null, period, minute: minute === '' ? null : minute },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setPersonId('');
-                    setSecondaryId('');
-                },
-                onFinish: () => setSending(false),
-            },
-        );
-    };
 
-    const label = (person: Person) => `${person.shirt_number ? `${person.shirt_number} · ` : ''}${person.name}`;
+        const who = team.roster.find((person) => person.id === personId);
+        const incomingPerson = team.roster.find((person) => person.id === secondaryId);
+        const typeText = eventTypes.find((option) => option.value === type)?.label ?? type;
+
+        send(
+            'event',
+            { type, entry_id: entryId, person_id: personId, secondary_person_id: isSubstitution ? secondaryId : null, period: Number(period), minute: minute === '' ? null : Number(minute) },
+            `${typeText} — ${who ? label(who) : ''}${isSubstitution && incomingPerson ? ` ⇄ ${label(incomingPerson)}` : ''} (${team.name})`,
+        );
+
+        setPersonId('');
+        setSecondaryId('');
+    };
 
     return (
         <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6" aria-label="Novo lançamento">
@@ -450,7 +459,7 @@ function EventForm({ game, home, away, eventTypes }: { game: Props['game']; home
                 <Input type="number" min={0} max={150} value={minute} onChange={(event) => setMinute(event.target.value)} />
             </Field>
             <div className="flex items-end">
-                <Button type="submit" disabled={sending || !personId}>
+                <Button type="submit" disabled={!personId}>
                     Lançar
                 </Button>
             </div>
@@ -518,12 +527,121 @@ function TeamCard({ game, team, limits }: { game: Props['game']; team: Team; lim
     );
 }
 
-export default function Sheet({ game: serverGame, home, away, events: serverEvents, limits, event_types, sport, score_model, quarters, sets, fouls, clock, public_url }: Props) {
+/** Fila de envio: o que está guardado no aparelho esperando conexão, o que o servidor recusou e o estado da conexão. */
+function QueueCard({ queue, partial, finishing }: { queue: SheetQueue; partial: boolean; finishing: boolean }) {
+    const { items, online, sending, notice } = queue;
+
+    if (items.length === 0 && !notice && online) {
+        return null;
+    }
+
+    const blocked = items.find((item) => item.status === 'blocked');
+
+    return (
+        <div data-testid="sheet-queue">
+            <Card title={items.length > 0 ? `Fila de envio (${items.length})` : 'Conexão'}>
+                <div className="space-y-3 text-sm">
+                    {!online && (
+                        <p role="status" className="rounded-md bg-amber-50 px-3 py-2 text-amber-900 ring-1 ring-amber-200">
+                            Sem conexão. Continue lançando: os lançamentos ficam guardados neste aparelho e são enviados sozinhos quando a internet voltar. Não feche nem recarregue esta página enquanto estiver sem conexão.
+                        </p>
+                    )}
+                    {notice && (
+                        <p role="alert" className="flex items-start justify-between gap-3 rounded-md bg-red-50 px-3 py-2 text-red-800 ring-1 ring-red-200">
+                            <span>{notice}</span>
+                            <button type="button" className="text-xs underline" onClick={queue.dismissNotice}>
+                                fechar
+                            </button>
+                        </p>
+                    )}
+                    {finishing && <p className="text-gray-700">O encerramento do jogo está na fila: ele só passa a valer na classificação depois do envio.</p>}
+                    {items.length > 0 && partial && <p className="text-xs text-gray-500">Sets, faltas da equipe e anulações só atualizam na tela depois do envio.</p>}
+                    {items.length > 0 && (
+                        <ul className="divide-y divide-gray-100 rounded-md border border-gray-200">
+                            {items.map((item) => (
+                                <li key={item.key} className="flex items-start justify-between gap-3 px-3 py-2">
+                                    <div className="min-w-0">
+                                        <div className="text-gray-900">{item.label}</div>
+                                        {item.message && <div className="text-xs text-red-700">Recusado: {item.message}</div>}
+                                    </div>
+                                    <div className="flex shrink-0 items-center gap-2">
+                                        <Badge tone={item.status === 'blocked' ? 'red' : 'amber'}>{item.status === 'blocked' ? 'Recusado' : sending ? 'Enviando' : 'Aguardando'}</Badge>
+                                        <Button small variant="ghost" onClick={() => window.confirm('Descartar este lançamento? Ele não será enviado.') && queue.discard(item.key)}>
+                                            Descartar
+                                        </Button>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    {blocked && (
+                        <p className="text-gray-700">O servidor recusou um lançamento (regra da súmula). Descarte-o ou ajuste o que for preciso e tente de novo; os seguintes esperam a sua decisão.</p>
+                    )}
+                    {items.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                            {blocked ? (
+                                <Button small onClick={queue.retry}>
+                                    Tentar de novo
+                                </Button>
+                            ) : (
+                                online && (
+                                    <Button small variant="secondary" disabled={sending} onClick={queue.retry}>
+                                        Enviar agora
+                                    </Button>
+                                )
+                            )}
+                            <Button small variant="danger" onClick={() => window.confirm('Descartar TODOS os lançamentos pendentes? Eles não serão enviados.') && queue.discardAll()}>
+                                Descartar todos
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </Card>
+        </div>
+    );
+}
+
+const teamFields = (team: Team) => ({
+    on_field: team.on_field,
+    available_bench: team.available_bench,
+    expelled: team.expelled,
+    fouled_out: team.fouled_out,
+    player_fouls: team.player_fouls,
+    yellows: team.yellows,
+    substitutions_used: team.substitutions_used,
+});
+
+export default function Sheet({ game: serverGame, home: serverHome, away: serverAway, events: serverEvents, limits, clock_offsets, event_types, sport, score_model, quarters, sets, fouls, clock: serverClock, public_url }: Props) {
     // Quem não opera jogos só consulta a súmula: o servidor também recusa as ações, aqui só se escondem os controles.
     const canOperate = useCan('operate-games');
-    const game = canOperate ? serverGame : { ...serverGame, open: false };
-    const events = canOperate ? serverEvents : serverEvents.map((event) => ({ ...event, voidable: false }));
+    const { auth } = usePage().props;
+
+    // Fila offline: lançamentos guardados no aparelho. A tela mostra a projeção (placar, quem está em campo, relógio) como
+    // ficará depois do envio; o servidor reaplica tudo com a validação do regulamento.
+    const skew = useMemo(() => Date.now() - serverClock.server_time_ms, [serverClock.server_time_ms]);
+    const queue = useSheetQueue({ gameId: serverGame.id, userId: auth.user.id, skewMs: skew, enabled: canOperate });
+    const rules: ProjectionRules = useMemo(
+        () => ({ reentry: limits.reentry, maxPlayerFouls: limits.max_player_fouls, offsets: clock_offsets, scoreModel: score_model }),
+        [limits.reentry, limits.max_player_fouls, clock_offsets, score_model],
+    );
+    const view = useMemo(() => {
+        const teams: SheetView['teams'] = {};
+        [serverHome, serverAway].forEach((team) => team && (teams[team.id] = teamFields(team)));
+
+        return project<Props['clock']>(
+            { home_id: serverHome?.id ?? null, away_id: serverAway?.id ?? null, home_score: serverGame.home_score, away_score: serverGame.away_score, teams, clock: serverClock, finishing: false, voided: [], partial: false },
+            queue.items,
+            rules,
+        );
+    }, [serverHome, serverAway, serverGame.home_score, serverGame.away_score, serverClock, queue.items, rules]);
+
+    const home = serverHome ? { ...serverHome, ...view.teams[serverHome.id] } : null;
+    const away = serverAway ? { ...serverAway, ...view.teams[serverAway.id] } : null;
+    const clock = view.clock;
+    const game = canOperate ? { ...serverGame, home_score: view.home_score, away_score: view.away_score, open: serverGame.open && !view.finishing } : { ...serverGame, open: false };
+    const events = canOperate ? serverEvents.map((event) => (view.voided.includes(event.id) ? { ...event, voidable: false } : event)) : serverEvents.map((event) => ({ ...event, voidable: false }));
     const teamOf = (entryId: string | null) => (entryId === null ? null : home && entryId === home.id ? home : away);
+    const send: Send = (kind, payload, label) => queue.enqueue(kind, payload, label);
 
     return (
         <PanelLayout>
@@ -544,7 +662,7 @@ export default function Sheet({ game: serverGame, home, away, events: serverEven
                         <Button
                             onClick={() => {
                                 if (window.confirm('Encerrar o jogo? O placar atual passa a valer na classificação.')) {
-                                    router.post(route('panel.games.finish', game.id), {}, { preserveScroll: true });
+                                    send('finish', {}, 'Encerrar o jogo');
                                 }
                             }}
                         >
@@ -553,6 +671,12 @@ export default function Sheet({ game: serverGame, home, away, events: serverEven
                     ) : undefined
                 }
             />
+
+            {canOperate && (
+                <div className="mb-6">
+                    <QueueCard queue={queue} partial={view.partial} finishing={view.finishing} />
+                </div>
+            )}
 
             <div className="mb-6 flex items-center justify-center gap-6 rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
                 <span className="flex flex-1 items-center justify-end gap-3 text-lg font-semibold">
@@ -578,9 +702,9 @@ export default function Sheet({ game: serverGame, home, away, events: serverEven
             ) : (
                 <div className="space-y-6">
                     {score_model === 'sets' ? (
-                        <PointsCard game={game} sets={sets ?? []} home={home} away={away} lastPoint={[...events].reverse().find((event) => event.type === 'point' && event.voidable)} />
+                        <PointsCard game={game} sets={sets ?? []} home={home} away={away} lastPoint={[...events].reverse().find((event) => event.type === 'point' && event.voidable)} send={send} />
                     ) : (
-                        <ClockCard game={game} clock={clock} publicUrl={public_url} sport={sport} />
+                        <ClockCard game={game} clock={clock} publicUrl={public_url} sport={sport} send={send} />
                     )}
                     {score_model === 'points' && quarters && quarters.length > 0 && (
                         <p className="text-center text-sm tabular-nums text-gray-600" data-testid="panel-quarters">
@@ -589,8 +713,8 @@ export default function Sheet({ game: serverGame, home, away, events: serverEven
                     )}
                     {score_model === 'points' && home.has_lineup && away.has_lineup && (
                         <div className="grid gap-6 lg:grid-cols-2">
-                            <BasketPad game={game} team={home} period={clock.period ?? 1} />
-                            <BasketPad game={game} team={away} period={clock.period ?? 1} />
+                            <BasketPad game={game} team={home} period={clock.period ?? 1} send={send} />
+                            <BasketPad game={game} team={away} period={clock.period ?? 1} send={send} />
                         </div>
                     )}
                     {fouls && (
@@ -619,7 +743,7 @@ export default function Sheet({ game: serverGame, home, away, events: serverEven
 
                     {game.open && home.has_lineup && away.has_lineup && (
                         <Card title="Novo lançamento">
-                            <EventForm game={game} home={home} away={away} eventTypes={event_types} />
+                            <EventForm home={home} away={away} eventTypes={event_types} send={send} />
                         </Card>
                     )}
                     {game.open && !(home.has_lineup && away.has_lineup) && (
@@ -651,7 +775,7 @@ export default function Sheet({ game: serverGame, home, away, events: serverEven
                                                     variant="danger"
                                                     onClick={() => {
                                                         if (window.confirm('Anular este lançamento?')) {
-                                                            router.post(route('panel.games.events.void', [game.id, event.id]), {}, { preserveScroll: true });
+                                                            send('void', { event_id: event.id }, `Anular: ${event.person ?? typeIcon[event.type] ?? event.type} (${event.minute !== null ? `${event.minute}'` : `${event.period}º período`})`);
                                                         }
                                                     }}
                                                 >
