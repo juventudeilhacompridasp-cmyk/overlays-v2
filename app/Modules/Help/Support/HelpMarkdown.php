@@ -67,6 +67,9 @@ final class HelpMarkdown
      * @param  list<array<string, mixed>>  $blocks
      * @param  list<string>  $paragraph
      * @param  array{type: string, items: list<string>}|null  $list
+     *
+     * @param-out null $list
+     *
      * @param  Closure(string): ?string  $resolveLink
      */
     private static function flush(array &$blocks, array &$paragraph, ?array &$list, Closure $resolveLink): void
