@@ -21,8 +21,9 @@ use Inertia\Response;
  */
 class HelpController extends Controller
 {
-    public function index(Request $request, string $area): Response
+    public function index(Request $request): Response
     {
+        $area = $this->area($request);
         $visible = HelpAccess::visible(HelpLibrary::all(), $request->user(), $area);
         $query = trim((string) $request->query('q', ''));
 
@@ -43,8 +44,9 @@ class HelpController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $area, string $slug): Response
+    public function show(Request $request, string $slug): Response
     {
+        $area = $this->area($request);
         $visible = HelpAccess::visible(HelpLibrary::all(), $request->user(), $area);
         $article = collect($visible)->first(fn (HelpArticle $candidate) => $candidate->slug === $slug);
         abort_if($article === null, 404);
@@ -67,6 +69,15 @@ class HelpController extends Controller
             ],
             'related' => $related,
         ]);
+    }
+
+    /** A área (panel, manager ou platform) vem do padrão da rota; o Laravel passa os padrões depois dos parâmetros da URL. */
+    private function area(Request $request): string
+    {
+        $area = (string) $request->route('area');
+        abort_unless(in_array($area, ['panel', 'manager', 'platform'], true), 404);
+
+        return $area;
     }
 
     /**
