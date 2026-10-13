@@ -12,11 +12,16 @@ use Illuminate\Support\Str;
 
 /**
  * @property array<string, bool>|null $layers
+ * @property array<string, mixed>|null $appearance
+ * @property string|null $control_token_hash
  */
 #[Unguarded]
 class OverlayChannel extends Model
 {
     use BelongsToOrganization, HasUlids;
+
+    /** @var list<string> */
+    protected $hidden = ['control_token_hash'];
 
     /** Camadas que o operador liga e desliga (as demais telas ficam sempre ativas). */
     public const LAYERS = ['lineup', 'standings'];
@@ -34,12 +39,28 @@ class OverlayChannel extends Model
      */
     protected function casts(): array
     {
-        return ['layers' => 'array'];
+        return ['layers' => 'array', 'appearance' => 'array'];
     }
 
     public static function newToken(): string
     {
         return Str::random(40);
+    }
+
+    public static function newControlToken(): string
+    {
+        return Str::random(64);
+    }
+
+    public static function controlTokenHash(string $token): string
+    {
+        return hash('sha256', $token);
+    }
+
+    public function acceptsControlToken(string $token): bool
+    {
+        return $this->control_token_hash !== null
+            && hash_equals($this->control_token_hash, self::controlTokenHash($token));
     }
 
     /**

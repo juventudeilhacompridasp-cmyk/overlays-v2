@@ -9,6 +9,16 @@ export interface OverlayTeam {
     color: string | null;
 }
 
+export interface OverlayAppearance {
+    preset: 'arena';
+    accent_color: string;
+    background_color: string;
+    text_color: string;
+    position: 'top-left' | 'top-center' | 'top-right';
+    scale: number;
+    motion: 'dynamic' | 'subtle' | 'none';
+}
+
 export interface OverlayGame {
     id: string;
     status: string;
@@ -41,6 +51,7 @@ export interface LineupSide {
 
 export interface OverlayState {
     channel: string;
+    appearance: OverlayAppearance;
     layers: { lineup: boolean; standings: boolean };
     game: OverlayGame | null;
     lineup: { home: LineupSide; away: LineupSide } | null;

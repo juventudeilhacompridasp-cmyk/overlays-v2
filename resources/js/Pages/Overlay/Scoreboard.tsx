@@ -1,6 +1,7 @@
 import { formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
 import { Realtime } from '@/lib/echo';
 import { OverlayState, OverlayTeam, useOverlay } from '@/lib/overlay';
+import { overlayMotion, overlayPosition, overlayStyle } from '@/lib/overlayVisual';
 import { Head } from '@inertiajs/react';
 
 function Side({ team, align }: { team: OverlayTeam; align: 'left' | 'right' }) {
@@ -8,10 +9,11 @@ function Side({ team, align }: { team: OverlayTeam; align: 'left' | 'right' }) {
     const logo = team.logo_url ? <img src={team.logo_url} alt="" className="h-9 w-9 object-contain" /> : null;
 
     return (
-        <div className="flex items-center gap-3 px-4" style={{ borderBottom: `4px solid ${team.color ?? '#9ca3af'}` }}>
-            {align === 'left' && logo}
-            <span className="max-w-[12rem] truncate text-xl font-bold tracking-wide">{label}</span>
-            {align === 'right' && logo}
+        <div className="relative flex min-w-[13rem] items-center gap-3 px-4 py-2">
+            <span className="absolute inset-x-0 bottom-0 h-1" style={{ backgroundColor: team.color ?? 'var(--overlay-accent)' }} />
+            {align === 'left' && logo && <span className="grid h-11 w-11 place-items-center rounded-full bg-white/95 p-1 shadow-inner">{logo}</span>}
+            <span className={`max-w-[12rem] flex-1 truncate text-xl font-black tracking-[0.08em] ${align === 'right' ? 'text-right' : ''}`}>{label}</span>
+            {align === 'right' && logo && <span className="grid h-11 w-11 place-items-center rounded-full bg-white/95 p-1 shadow-inner">{logo}</span>}
         </div>
     );
 }
@@ -36,50 +38,56 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
     else if (game.clock.state === 'stopped') clock = isInterval(game.clock.period, game.sport) ? 'INTERVALO' : 'FIM DO TEMPO';
     else clock = formatClock(seconds);
 
+    const appearance = state.appearance;
+    const hasMotion = appearance.motion !== 'none';
+
     return (
-        <div className="p-8 font-sans text-white" style={{ textShadow: '0 1px 2px rgba(0,0,0,.6)' }}>
+        <div className={`fixed inset-0 flex p-8 font-sans ${overlayPosition(appearance.position)}`} style={{ ...overlayStyle(appearance), color: appearance.text_color, textShadow: '0 1px 2px rgba(0,0,0,.65)' }}>
             <Head title="Placar" />
-            <div className="inline-flex items-stretch overflow-hidden rounded-lg bg-gray-900/90 shadow-xl" data-testid="overlay-scoreboard">
-                <Side team={game.home} align="left" />
-                <div className="flex items-center gap-3 bg-black/60 px-5 text-4xl font-extrabold tabular-nums" data-testid="overlay-score">
-                    <span>{game.home_score}</span>
-                    <span className="text-2xl text-gray-400">×</span>
-                    <span>{game.away_score}</span>
-                </div>
-                <Side team={game.away} align="right" />
-                <div className="flex min-w-[7.5rem] flex-col items-center justify-center bg-emerald-600 px-4 py-1 text-center" data-testid="overlay-clock">
-                    <span className="text-xl font-bold tabular-nums">{clock}</span>
-                    {sets && currentSet && !game.finished && <span className="text-[10px] uppercase tracking-wider">Set {sets.length}</span>}
-                    {!sets && (game.clock.state === 'running' || game.clock.state === 'paused') && (
-                        <span className="text-[10px] uppercase tracking-wider">
-                            {periodLabel(game.clock.period, game.sport)}
-                            {game.clock.state === 'paused' && ' · parado'}
-                        </span>
+            <div style={{ transform: `scale(${appearance.scale})`, transformOrigin: appearance.position === 'top-right' ? 'top right' : appearance.position === 'top-center' ? 'top center' : 'top left' }}>
+                <div className={overlayMotion(appearance.motion)}>
+                    <div className="relative inline-flex items-stretch overflow-hidden rounded-2xl border border-white/15 shadow-2xl" style={{ background: `linear-gradient(135deg, ${appearance.background_color}f2, ${appearance.background_color}d9)` }} data-testid="overlay-scoreboard" data-preset={appearance.preset} data-motion={appearance.motion}>
+                        <div className="absolute inset-x-0 top-0 h-0.5" style={{ background: `linear-gradient(90deg, transparent, ${appearance.accent_color}, transparent)` }} />
+                        <Side team={game.home} align="left" />
+                        <div key={`${game.home_score}-${game.away_score}`} className={`flex items-center gap-3 border-x border-white/10 bg-black/30 px-6 text-4xl font-black tabular-nums ${hasMotion ? 'overlay-score-pulse' : ''}`} data-testid="overlay-score">
+                            <span>{game.home_score}</span>
+                            <span className="text-xl text-white/35">×</span>
+                            <span>{game.away_score}</span>
+                        </div>
+                        <Side team={game.away} align="right" />
+                        <div className="flex min-w-[8.5rem] flex-col items-center justify-center px-5 py-1 text-center" style={{ background: `linear-gradient(145deg, ${appearance.accent_color}, ${appearance.accent_color}cc)` }} data-testid="overlay-clock">
+                            <span className="text-xl font-black tabular-nums">{clock}</span>
+                            {sets && currentSet && !game.finished && <span className="text-[10px] font-bold uppercase tracking-[0.18em]">Set {sets.length}</span>}
+                            {!sets && (game.clock.state === 'running' || game.clock.state === 'paused') && (
+                                <span className="text-[10px] font-bold uppercase tracking-[0.16em]">
+                                    {periodLabel(game.clock.period, game.sport)}
+                                    {game.clock.state === 'paused' && ' · parado'}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                    {sets && sets.some((set) => set.finished) && (
+                        <div className="mt-1 inline-flex items-center gap-3 rounded-lg border border-white/10 px-3 py-1 text-sm tabular-nums shadow-lg" style={{ backgroundColor: `${appearance.background_color}e6` }} data-testid="overlay-sets">
+                            {sets.filter((set) => set.finished).map((set, index) => (
+                                <span key={index}>{set.home}-{set.away}</span>
+                            ))}
+                        </div>
+                    )}
+                    {game.fouls && (
+                        <div className="mt-1 inline-flex items-center gap-3 rounded-lg border border-white/10 px-3 py-1 text-sm shadow-lg" style={{ backgroundColor: `${appearance.background_color}e6` }} data-testid="overlay-fouls">
+                            <span className="text-white/60">FALTAS</span>
+                            <span className={game.fouls.home >= game.fouls.limit ? 'font-bold text-amber-300' : ''}>{game.fouls.home}</span>
+                            <span className="text-white/30">×</span>
+                            <span className={game.fouls.away >= game.fouls.limit ? 'font-bold text-amber-300' : ''}>{game.fouls.away}</span>
+                        </div>
+                    )}
+                    {game.home_penalties !== null && game.away_penalties !== null && (
+                        <div className="mt-1 inline-block rounded-lg border border-white/10 px-3 py-1 text-sm shadow-lg" style={{ backgroundColor: `${appearance.background_color}e6` }}>
+                            Pênaltis: {game.home_penalties} x {game.away_penalties}
+                        </div>
                     )}
                 </div>
             </div>
-            {sets && sets.some((set) => set.finished) && (
-                <div className="mt-1 inline-flex items-center gap-3 rounded bg-gray-900/90 px-3 py-1 text-sm tabular-nums" data-testid="overlay-sets">
-                    {sets.filter((set) => set.finished).map((set, index) => (
-                        <span key={index}>
-                            {set.home}-{set.away}
-                        </span>
-                    ))}
-                </div>
-            )}
-            {game.fouls && (
-                <div className="mt-1 inline-flex items-center gap-3 rounded bg-gray-900/90 px-3 py-1 text-sm" data-testid="overlay-fouls">
-                    <span className="text-gray-300">FALTAS</span>
-                    <span className={game.fouls.home >= game.fouls.limit ? 'font-bold text-amber-400' : ''}>{game.fouls.home}</span>
-                    <span className="text-gray-500">×</span>
-                    <span className={game.fouls.away >= game.fouls.limit ? 'font-bold text-amber-400' : ''}>{game.fouls.away}</span>
-                </div>
-            )}
-            {game.home_penalties !== null && game.away_penalties !== null && (
-                <div className="mt-1 inline-block rounded bg-gray-900/90 px-3 py-1 text-sm">
-                    Pênaltis: {game.home_penalties} x {game.away_penalties}
-                </div>
-            )}
         </div>
     );
 }

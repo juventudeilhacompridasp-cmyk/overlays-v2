@@ -4,13 +4,31 @@ import { useCan } from '@/lib/can';
 import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 
+interface Appearance {
+    preset: 'arena';
+    accent_color: string;
+    background_color: string;
+    text_color: string;
+    position: 'top-left' | 'top-center' | 'top-right';
+    scale: number;
+    motion: 'dynamic' | 'subtle' | 'none';
+}
+
 interface Channel {
     id: string;
     name: string;
     game_id: string | null;
     game_label: string | null;
     layers: { lineup: boolean; standings: boolean };
+    appearance: Appearance;
+    has_control_token: boolean;
+    control_url: string;
     overlays: { slug: string; title: string; url: string }[];
+}
+
+interface IssuedControl {
+    channel_id: string;
+    token: string;
 }
 
 interface GameOption {
@@ -42,8 +60,9 @@ function CopyButton({ text }: { text: string }) {
     );
 }
 
-function ChannelCard({ channel, games, canManage, canOperate }: { channel: Channel; games: GameOption[]; canManage: boolean; canOperate: boolean }) {
-    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean> }) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true });
+function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: { channel: Channel; games: GameOption[]; canManage: boolean; canOperate: boolean; issuedControl?: IssuedControl }) {
+    const [appearance, setAppearance] = useState(channel.appearance);
+    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; appearance?: Partial<Appearance> }) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true });
     // O jogo atual pode já ter saído da lista de candidatos (ex.: encerrado): mantém a opção para o select refletir o estado real.
     const options = channel.game_id && !games.some((game) => game.id === channel.game_id) ? [{ id: channel.game_id, label: channel.game_label ?? 'Jogo atual' }, ...games] : games;
 
@@ -93,6 +112,42 @@ function ChannelCard({ channel, games, canManage, canOperate }: { channel: Chann
                     </Field>
                 </div>
 
+                <div className="rounded-lg border border-gray-200 p-4">
+                    <div className="mb-3">
+                        <div className="font-medium text-gray-900">Visual do overlay · Arena</div>
+                        <p className="text-xs text-gray-500">As fontes abertas no OBS recebem as mudanças sem recarregar.</p>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        <Field label="Cor de destaque" htmlFor={`accent-${channel.id}`}>
+                            <Input id={`accent-${channel.id}`} type="color" disabled={!canOperate} value={appearance.accent_color} onChange={(event) => setAppearance({ ...appearance, accent_color: event.target.value })} className="h-10" />
+                        </Field>
+                        <Field label="Fundo" htmlFor={`background-${channel.id}`}>
+                            <Input id={`background-${channel.id}`} type="color" disabled={!canOperate} value={appearance.background_color} onChange={(event) => setAppearance({ ...appearance, background_color: event.target.value })} className="h-10" />
+                        </Field>
+                        <Field label="Texto" htmlFor={`text-${channel.id}`}>
+                            <Input id={`text-${channel.id}`} type="color" disabled={!canOperate} value={appearance.text_color} onChange={(event) => setAppearance({ ...appearance, text_color: event.target.value })} className="h-10" />
+                        </Field>
+                        <Field label="Posição do placar" htmlFor={`position-${channel.id}`}>
+                            <Select id={`position-${channel.id}`} disabled={!canOperate} value={appearance.position} onChange={(event) => setAppearance({ ...appearance, position: event.target.value as Appearance['position'] })}>
+                                <option value="top-left">Superior esquerdo</option>
+                                <option value="top-center">Superior central</option>
+                                <option value="top-right">Superior direito</option>
+                            </Select>
+                        </Field>
+                        <Field label={`Escala · ${Math.round(appearance.scale * 100)}%`} htmlFor={`scale-${channel.id}`}>
+                            <Input id={`scale-${channel.id}`} type="range" min="0.75" max="1.5" step="0.05" disabled={!canOperate} value={appearance.scale} onChange={(event) => setAppearance({ ...appearance, scale: Number(event.target.value) })} />
+                        </Field>
+                        <Field label="Animações" htmlFor={`motion-${channel.id}`}>
+                            <Select id={`motion-${channel.id}`} disabled={!canOperate} value={appearance.motion} onChange={(event) => setAppearance({ ...appearance, motion: event.target.value as Appearance['motion'] })}>
+                                <option value="dynamic">Dinâmicas</option>
+                                <option value="subtle">Suaves</option>
+                                <option value="none">Sem animação</option>
+                            </Select>
+                        </Field>
+                    </div>
+                    {canOperate && <Button small className="mt-3" onClick={() => patch({ appearance })}>Aplicar visual</Button>}
+                </div>
+
                 <div>
                     <div className="mb-2 text-sm font-medium text-gray-700">Camadas sob demanda</div>
                     <div className="flex flex-wrap gap-2">
@@ -109,6 +164,36 @@ function ChannelCard({ channel, games, canManage, canOperate }: { channel: Chann
                     </div>
                     {!channel.game_id && <p className="mt-1 text-xs text-gray-500">Escolha um jogo no ar para liberar as camadas.</p>}
                 </div>
+
+                {canManage && (
+                    <div className="rounded-lg border border-gray-200 p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <div className="font-medium text-gray-900">Controle por API</div>
+                                <p className="text-xs text-gray-500">Use uma chave separada das URLs públicas para trocar jogo, camadas e visual.</p>
+                            </div>
+                            <Button
+                                small
+                                variant="secondary"
+                                onClick={() => {
+                                    if (!channel.has_control_token || window.confirm('Renovar a chave? A chave atual deixará de funcionar imediatamente.')) {
+                                        router.post(route('panel.broadcast.control-token', channel.id), {}, { preserveScroll: true });
+                                    }
+                                }}
+                            >
+                                {channel.has_control_token ? 'Renovar chave' : 'Gerar chave'}
+                            </Button>
+                        </div>
+                        <code className="mt-2 block break-all rounded bg-gray-100 px-3 py-2 text-xs text-gray-700">PATCH {channel.control_url}</code>
+                        {issuedControl?.channel_id === channel.id && (
+                            <div className="mt-3 rounded bg-amber-50 p-3 text-sm text-amber-800">
+                                <strong>Copie agora; esta chave não será exibida novamente.</strong>
+                                <code className="mt-2 block break-all rounded bg-white px-2 py-1 text-xs text-gray-900">{issuedControl.token}</code>
+                                <div className="mt-2"><CopyButton text={issuedControl.token} /></div>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div>
                     <div className="mb-2 text-sm font-medium text-gray-700">URLs para o OBS (Fonte de navegador)</div>
@@ -134,7 +219,7 @@ function ChannelCard({ channel, games, canManage, canOperate }: { channel: Chann
     );
 }
 
-export default function Index({ channels, games }: { channels: Channel[]; games: GameOption[] }) {
+export default function Index({ channels, games, issued_control }: { channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl }) {
     const canManage = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
     const { data, setData, post, processing, errors, reset } = useForm({ name: '' });
@@ -153,7 +238,7 @@ export default function Index({ channels, games }: { channels: Channel[]; games:
                 {channels.length === 0 && <Empty title="Nenhum canal de transmissão ainda.">{canManage ? 'Crie um canal abaixo para gerar as URLs do OBS.' : 'Peça a um organizador para criar um canal.'}</Empty>}
 
                 {channels.map((channel) => (
-                    <ChannelCard key={channel.id} channel={channel} games={games} canManage={canManage} canOperate={canOperate} />
+                    <ChannelCard key={channel.id} channel={channel} games={games} canManage={canManage} canOperate={canOperate} issuedControl={issued_control} />
                 ))}
 
                 {canManage && (

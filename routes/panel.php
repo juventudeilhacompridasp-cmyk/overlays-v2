@@ -155,6 +155,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
     Route::middleware(['panel.can:manage-competitions', 'feature:overlays'])->group(function () {
         Route::post('broadcast', [ChannelController::class, 'store'])->name('broadcast.store');
         Route::post('broadcast/{channel}/regenerate', [ChannelController::class, 'regenerate'])->name('broadcast.regenerate');
+        Route::post('broadcast/{channel}/control-token', [ChannelController::class, 'regenerateControlToken'])->name('broadcast.control-token');
         Route::delete('broadcast/{channel}', [ChannelController::class, 'destroy'])->name('broadcast.destroy');
     });
 

@@ -3,8 +3,10 @@
 namespace App\Modules\Broadcast\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Broadcast\Events\OverlayUpdated;
+use App\Modules\Broadcast\Actions\UpdateOverlayChannel;
 use App\Modules\Broadcast\Models\OverlayChannel;
+use App\Modules\Broadcast\Support\OverlayAppearance;
+use App\Modules\Broadcast\Support\OverlayControlRules;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Tenancy\CurrentOrganization;
@@ -38,11 +40,15 @@ class ChannelController extends Controller
                 'game_id' => $channel->game_id,
                 'game_label' => $channel->game ? $label($channel->game) : null,
                 'layers' => array_merge(array_fill_keys(OverlayChannel::LAYERS, false), array_map('boolval', $channel->layers ?? [])),
+                'appearance' => OverlayAppearance::normalize($channel->appearance),
+                'has_control_token' => $channel->control_token_hash !== null,
+                'control_url' => route('api.v1.overlay-channels.state.update', ['channel' => $channel]),
                 'overlays' => collect(OverlayChannel::OVERLAYS)->map(fn (string $title, string $slug) => [
                     'slug' => $slug, 'title' => $title, 'url' => $channel->overlayUrl($slug),
                 ])->values(),
             ])->values(),
             'games' => $candidates->map(fn (Game $game) => ['id' => $game->id, 'label' => $label($game)])->values(),
+            'issued_control' => session()->pull('overlay_issued_control'),
         ]);
     }
 
@@ -52,33 +58,24 @@ class ChannelController extends Controller
             'name' => ['required', 'string', 'max:80', Rule::unique('overlay_channels', 'name')->where('organization_id', CurrentOrganization::id())],
         ], [], ['name' => 'nome']);
 
-        OverlayChannel::query()->create(['name' => $validated['name'], 'token' => OverlayChannel::newToken(), 'layers' => []]);
+        $controlToken = OverlayChannel::newControlToken();
+        $channel = OverlayChannel::query()->create([
+            'name' => $validated['name'],
+            'token' => OverlayChannel::newToken(),
+            'control_token_hash' => OverlayChannel::controlTokenHash($controlToken),
+            'layers' => [],
+            'appearance' => OverlayAppearance::defaults(),
+        ]);
 
-        return back()->with('success', 'Canal criado. Copie as URLs para as fontes de navegador do OBS.');
+        return back()
+            ->with('success', 'Canal criado. Copie as URLs para o OBS e guarde a chave da API.')
+            ->with('overlay_issued_control', ['channel_id' => $channel->id, 'token' => $controlToken]);
     }
 
     /** Operação ao vivo: escolhe o jogo no ar e liga/desliga camadas. */
-    public function update(Request $request, OverlayChannel $channel): RedirectResponse
+    public function update(Request $request, OverlayChannel $channel, UpdateOverlayChannel $update): RedirectResponse
     {
-        $validated = $request->validate([
-            'game_id' => ['sometimes', 'nullable', 'string', Rule::exists('games', 'id')->where('organization_id', $channel->organization_id)],
-            'layers' => ['sometimes', 'array'],
-            'layers.*' => ['boolean'],
-        ]);
-
-        if (array_key_exists('game_id', $validated)) {
-            $channel->game_id = $validated['game_id'];
-        }
-
-        if (isset($validated['layers'])) {
-            $channel->layers = array_merge(
-                $channel->layers ?? [],
-                array_intersect_key(array_map('boolval', $validated['layers']), array_flip(OverlayChannel::LAYERS)),
-            );
-        }
-
-        $channel->save();
-        event(OverlayUpdated::for($channel));
+        $update->handle($channel, $request->validate(OverlayControlRules::for($channel)));
 
         return back()->with('success', 'Transmissão atualizada.');
     }
@@ -89,6 +86,17 @@ class ChannelController extends Controller
         $channel->update(['token' => OverlayChannel::newToken()]);
 
         return back()->with('success', 'Token renovado. Atualize as URLs no OBS.');
+    }
+
+    /** Emite uma nova chave de escrita; o valor em claro aparece somente nesta resposta. */
+    public function regenerateControlToken(OverlayChannel $channel): RedirectResponse
+    {
+        $controlToken = OverlayChannel::newControlToken();
+        $channel->update(['control_token_hash' => OverlayChannel::controlTokenHash($controlToken)]);
+
+        return back()
+            ->with('success', 'Chave da API renovada. A chave anterior deixou de funcionar.')
+            ->with('overlay_issued_control', ['channel_id' => $channel->id, 'token' => $controlToken]);
     }
 
     public function destroy(OverlayChannel $channel): RedirectResponse
