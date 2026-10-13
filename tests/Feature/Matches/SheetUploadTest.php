@@ -11,7 +11,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug')]));
+    // Recurso sob demanda: só existe para quem a plataforma liberou.
+    CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug'), 'opt_in_features' => ['sheet_import']]));
     Storage::fake('s3-private');
     Storage::disk('s3-private')->buildTemporaryUrlsUsing(fn (string $path) => "https://signed.test/{$path}?sig=1");
 });
@@ -105,9 +106,9 @@ describe('listing and opening', function () {
     });
 });
 
-it('needs the sheet_import feature', function () {
+it('needs the sheet_import feature, which no package includes', function () {
     $game = Game::factory()->create();
-    CurrentOrganization::get()->update(['plan' => Plan::Standard->value, 'features' => null]);
+    CurrentOrganization::get()->update(['plan' => Plan::Pro->value, 'features' => null, 'opt_in_features' => null]);
 
     $this->actingAs(panelUser(Role::Admin))->get(route('panel.games.uploads', $game))->assertForbidden();
 });

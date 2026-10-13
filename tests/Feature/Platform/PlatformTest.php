@@ -43,7 +43,7 @@ describe('packages and features', function () {
             ->and($organization->hasFeature(Feature::Overlays))->toBeFalse();
 
         $organization->update(['plan' => 'pro']);
-        expect($organization->featureKeys())->toHaveCount(count(Feature::cases()));
+        expect($organization->featureKeys())->toHaveCount(count(Feature::included()));
 
         $organization->update(['features' => ['overlays', 'invalido']]);
         expect($organization->fresh()->featureKeys())->toBe(['overlays']);
@@ -80,7 +80,7 @@ describe('packages and features', function () {
         $season->update(['status' => 'registration']);
         $this->actingAs(panelUser(Role::Admin));
 
-        $this->get("/painel/seasons/{$season->id}")->assertInertia(fn ($page) => $page->where('registration.open', true)->has('features', count(Feature::cases())));
+        $this->get("/painel/seasons/{$season->id}")->assertInertia(fn ($page) => $page->where('registration.open', true)->has('features', count(Feature::included())));
 
         withPlan(Plan::Basic);
         $this->get("/painel/seasons/{$season->id}")->assertInertia(fn ($page) => $page->where('registration', null)->where('features', []));
@@ -171,5 +171,42 @@ describe('platform area', function () {
         Artisan::call('platform:make-admin', ['email' => 'dono@exemplo.com', '--revoke' => true]);
         expect($user->fresh()->is_platform_admin)->toBeFalse()
             ->and(Artisan::call('platform:make-admin', ['email' => 'ninguem@exemplo.com']))->toBe(1);
+    });
+});
+
+
+describe('opt-in features', function () {
+    it('are off for every package, even the complete one, until the platform releases them', function () {
+        $organization = Organization::factory()->create(['plan' => 'pro']);
+
+        expect($organization->hasFeature(Feature::SheetImport))->toBeFalse()
+            ->and($organization->featureKeys())->not->toContain('sheet_import');
+
+        $organization->update(['features' => array_map(fn (Feature $feature) => $feature->value, Feature::cases())]);
+        expect($organization->fresh()->hasFeature(Feature::SheetImport))->toBeFalse(); // lista à mão não liga recurso sob demanda
+    });
+
+    it('are released and withdrawn by the platform admin, independent of the package', function () {
+        $organization = Organization::factory()->create(['plan' => 'basic']);
+        $this->actingAs(platformAdmin());
+
+        $this->patch("/plataforma/organizations/{$organization->id}", ['plan' => 'basic', 'custom_features' => false, 'opt_in_features' => ['sheet_import']])->assertSessionHas('success');
+        expect($organization->fresh()->hasFeature(Feature::SheetImport))->toBeTrue()
+            ->and($organization->fresh()->hasFeature(Feature::Reports))->toBeFalse();
+
+        $this->get("/plataforma/organizations/{$organization->id}")->assertInertia(fn ($page) => $page
+            ->where('organization.opt_in_features', ['sheet_import'])
+            ->has('opt_in_all', 1));
+
+        $this->patch("/plataforma/organizations/{$organization->id}", ['plan' => 'basic', 'custom_features' => false, 'opt_in_features' => []])->assertSessionHas('success');
+        expect($organization->fresh()->hasFeature(Feature::SheetImport))->toBeFalse();
+    });
+
+    it('cannot be slipped into the hand-picked list or released with a made-up key', function () {
+        $organization = Organization::factory()->create();
+        $this->actingAs(platformAdmin());
+
+        $this->patch("/plataforma/organizations/{$organization->id}", ['plan' => 'pro', 'custom_features' => true, 'features' => ['sheet_import']])->assertSessionHasErrors('features.0');
+        $this->patch("/plataforma/organizations/{$organization->id}", ['plan' => 'pro', 'custom_features' => false, 'opt_in_features' => ['reports']])->assertSessionHasErrors('opt_in_features.0');
     });
 });
