@@ -8,6 +8,8 @@ use App\Modules\Competitions\Models\Season;
 use App\Modules\Registration\Enums\RegistrationStatus;
 use App\Modules\Registration\Models\Registration;
 use App\Modules\Teams\Models\Team;
+use App\Modules\Tenancy\Enums\LegalType;
+use App\Modules\Tenancy\Support\LegalDocuments;
 use InvalidArgumentException;
 
 /**
@@ -66,6 +68,7 @@ final class StartRegistration
             'contact_email' => mb_strtolower(trim($data['contact_email'])),
             'contact_phone' => $data['contact_phone'] ?? null,
             'consent_at' => now(),
+            'consent_document_id' => LegalDocuments::current(LegalType::Privacy)?->getKey(),
         ]);
     }
 }

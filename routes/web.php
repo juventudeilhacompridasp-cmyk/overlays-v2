@@ -5,9 +5,11 @@ use App\Http\Middleware\PrivateNoIndex;
 use App\Modules\Broadcast\Http\Controllers\OverlayController;
 use App\Modules\Matches\Http\Controllers\PublicGameController;
 use App\Modules\Portal\Http\Controllers\CardVerifyController;
+use App\Modules\Portal\Http\Controllers\LegalPageController;
 use App\Modules\Portal\Http\Controllers\PortalController;
 use App\Modules\Registration\Http\Controllers\ApplyController;
 use App\Modules\Registration\Http\Controllers\ManageController;
+use App\Modules\Tenancy\Http\Controllers\LegalAcceptController;
 use Illuminate\Support\Facades\Route;
 
 // Portal público (sem login): só edições publicadas.
@@ -17,6 +19,8 @@ Route::get('/competicoes/{competition:slug}/edicoes/{season}', [PortalController
 Route::get('/equipes/{team}', [PortalController::class, 'team'])->name('portal.team');
 // Verificação da carteirinha (QR): sem cache e fora dos buscadores (cabeçalho e robots).
 Route::get('/carteirinha/{code}', CardVerifyController::class)->name('portal.card')->middleware(['throttle:30,1', 'feature:athlete_cards', PrivateNoIndex::class]);
+Route::get('/termos', [LegalPageController::class, 'terms'])->name('portal.terms');
+Route::get('/privacidade', [LegalPageController::class, 'privacy'])->name('portal.privacy');
 Route::get('/sitemap.xml', [PortalController::class, 'sitemap'])->name('portal.sitemap');
 Route::get('/robots.txt', [PortalController::class, 'robots'])->name('portal.robots');
 
@@ -53,6 +57,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Aceite dos termos/privacidade publicados (exigido antes de usar o painel).
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/aceite-termos', [LegalAcceptController::class, 'show'])->name('legal.accept.show');
+    Route::post('/aceite-termos', [LegalAcceptController::class, 'store'])->name('legal.accept.store');
 });
 
 require __DIR__.'/panel.php';

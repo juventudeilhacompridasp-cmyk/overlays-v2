@@ -20,6 +20,7 @@ use App\Modules\Teams\Http\Controllers\PersonPhotoController;
 use App\Modules\Teams\Http\Controllers\RosterController;
 use App\Modules\Teams\Http\Controllers\TeamController;
 use App\Modules\Teams\Http\Controllers\TeamLogoController;
+use App\Modules\Tenancy\Http\Controllers\LegalController;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Http\Controllers\OrganizationController;
 use Illuminate\Support\Facades\Route;
@@ -28,7 +29,7 @@ use Illuminate\Support\Facades\Route;
 | Painel do organizador. Entra quem está autenticado, verificado e tem papel na organização (`panel.member`).
 | Consultar vale para qualquer papel; escrever exige a permissão da área (`panel.can:{ability}`, ver `Role`).
 */
-Route::middleware(['auth', 'verified', 'panel.member'])->prefix('painel')->name('panel.')->group(function () {
+Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefix('painel')->name('panel.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
 
     // Cadastros: equipes, estádios, atletas e comissão, elencos.
@@ -113,6 +114,9 @@ Route::middleware(['auth', 'verified', 'panel.member'])->prefix('painel')->name(
 
     // Usuários, papéis e identidade do portal (só administradores; nem consultar).
     Route::middleware('panel.can:manage-users')->group(function () {
+        Route::get('legal', [LegalController::class, 'edit'])->name('legal.edit');
+        Route::patch('legal/settings', [LegalController::class, 'updateSettings'])->name('legal.settings');
+        Route::post('legal/publish', [LegalController::class, 'publish'])->name('legal.publish');
         Route::get('organization', [OrganizationController::class, 'edit'])->name('organization.edit');
         Route::patch('organization', [OrganizationController::class, 'update'])->name('organization.update');
         Route::middleware('feature:white_label')->group(function () {

@@ -34,6 +34,7 @@ interface Props {
         contact_email: string;
         contact_phone: string | null;
         consent_at: string | null;
+        consent_version: number | null;
         submitted_at: string | null;
         competition: string;
         season: string;
@@ -127,7 +128,7 @@ export default function Show({ registration, people, requirements, teams, sugges
                         <div><dt className="text-gray-500">Responsável</dt><dd>{registration.contact_name}</dd></div>
                         <div><dt className="text-gray-500">E-mail</dt><dd>{registration.contact_email}</dd></div>
                         <div><dt className="text-gray-500">Telefone</dt><dd>{registration.contact_phone ?? '—'}</dd></div>
-                        <div><dt className="text-gray-500">Aceite de privacidade</dt><dd>{registration.consent_at ?? '—'}</dd></div>
+                        <div><dt className="text-gray-500">Aceite de privacidade</dt><dd>{registration.consent_at ?? '—'}{registration.consent_version !== null && ` (política v${registration.consent_version})`}</dd></div>
                         <div><dt className="text-gray-500">Enviado em</dt><dd>{registration.submitted_at ?? 'ainda não enviado'}</dd></div>
                     </dl>
                     {registration.review_note && <p className="mt-3 text-sm text-gray-700">Última observação: {registration.review_note}</p>}
