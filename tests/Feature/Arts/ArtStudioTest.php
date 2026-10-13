@@ -163,7 +163,7 @@ describe('editor data', function () {
 
 describe('round and cover data', function () {
     /** Divisão de 4 equipes: rodada 1 inteira em 09/10; rodada 2 com um jogo em 09/10 e outro em 10/10. */
-    function roundGames(): array
+    function artRoundGames(): array
     {
         ['stage' => $stage] = fixtureDivision(4);
         app(GenerateStageFixtures::class)->handle($stage);
@@ -179,7 +179,7 @@ describe('round and cover data', function () {
     }
 
     it('lists the games of the same day by default, in time order, with team names and the date', function () {
-        [, $second] = roundGames();
+        [, $second] = artRoundGames();
 
         $data = artProps(test()->actingAs(panelUser())->get(route('panel.arts.editor', ['game' => $second[0]->id, 'kind' => 'round'])))['data'];
 
@@ -192,7 +192,7 @@ describe('round and cover data', function () {
     });
 
     it('can list the games of the same round instead', function () {
-        [, $second] = roundGames();
+        [, $second] = artRoundGames();
 
         $data = artProps(test()->actingAs(panelUser())->get(route('panel.arts.editor', ['game' => $second[0]->id, 'kind' => 'round', 'scope' => 'round'])))['data'];
 
@@ -201,7 +201,7 @@ describe('round and cover data', function () {
     });
 
     it('limits the number of games and never leaks other editions or organizations', function () {
-        [$first] = roundGames();
+        [$first] = artRoundGames();
         $other = Organization::factory()->create();
         CurrentOrganization::using($other, function () {
             ['stage' => $stage] = fixtureDivision(2);
@@ -216,7 +216,7 @@ describe('round and cover data', function () {
     });
 
     it('only sends the games for the round art, and the cover needs no extra data', function () {
-        [$first] = roundGames();
+        [$first] = artRoundGames();
         $admin = panelUser();
 
         expect(artProps(test()->actingAs($admin)->get(route('panel.arts.editor', ['game' => $first[0]->id, 'kind' => 'preview'])))['data']['games'])->toBe([]);
