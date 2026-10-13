@@ -7,6 +7,7 @@ use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Models\SheetCommand;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use InvalidArgumentException;
@@ -33,7 +34,7 @@ final class SyncSheetCommands
      * @param  list<array{key: string, kind: string, at: int, payload: array<string, mixed>}>  $items
      * @return list<array{key: string, status: string, message: string|null}>
      *
-     * @throws \Illuminate\Contracts\Cache\LockTimeoutException
+     * @throws LockTimeoutException
      */
     public function handle(Game $game, array $items, User $by): array
     {
