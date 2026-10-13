@@ -57,7 +57,7 @@ class Season extends Model
     /**
      * Regras da inscrição online (padrões para o que o organizador não configurou).
      *
-     * @return array{deadline: string|null, instructions: string|null, min_athletes: int, max_athletes: int, require_documents: bool}
+     * @return array{deadline: string|null, instructions: string|null, min_athletes: int, max_athletes: int, require_documents: bool, roster_changes: bool, roster_changes_until: string|null}
      */
     public function registrationSettings(): array
     {
