@@ -15,7 +15,7 @@ final class ArtPresets
             ['key' => 'dia', 'name' => 'Clássico claro', 'format' => 'portrait', 'style' => [
                 'background' => ['mode' => 'solid', 'color' => '#f8fafc', 'color2' => '#e2e8f0'],
                 'palette' => ['primary' => '#047857', 'secondary' => '#0369a1', 'text' => '#0f172a', 'muted' => '#475569', 'accent' => '#b45309'],
-                'type' => ['heading' => 'sans', 'weight' => 'black'],
+                'type' => ['heading' => 'montserrat', 'weight' => 'black', 'uppercase' => true],
                 'crest' => ['shape' => 'none'],
                 'layout' => ['frame' => true, 'frame_color' => '#047857'],
             ]],
@@ -23,12 +23,13 @@ final class ArtPresets
                 'background' => ['mode' => 'solid', 'color' => '#111827', 'pattern' => 'stripes', 'pattern_opacity' => 0.06],
                 'palette' => ['primary' => '#dc2626', 'secondary' => '#2563eb', 'accent' => '#fde047'],
                 'layout' => ['variant' => 'split'],
+                'type' => ['heading' => 'bebas'],
                 'crest' => ['shape' => 'rounded', 'size' => 30],
             ]],
             ['key' => 'poster', 'name' => 'Pôster neon', 'format' => 'portrait', 'style' => [
                 'background' => ['mode' => 'solid', 'color' => '#050505', 'pattern' => 'grid', 'pattern_opacity' => 0.1],
                 'palette' => ['primary' => '#22d3ee', 'secondary' => '#f472b6', 'accent' => '#a3e635'],
-                'type' => ['heading' => 'condensed', 'weight' => 'black', 'scale' => 1.1],
+                'type' => ['heading' => 'anton', 'body' => 'barlow', 'weight' => 'normal', 'scale' => 1.1],
                 'layout' => ['variant' => 'poster', 'frame' => true, 'frame_color' => '#22d3ee'],
                 'crest' => ['shape' => 'none', 'size' => 34],
             ]],
@@ -40,7 +41,7 @@ final class ArtPresets
             ['key' => 'minimal', 'name' => 'Minimalista', 'format' => 'link', 'style' => [
                 'background' => ['mode' => 'solid', 'color' => '#ffffff'],
                 'palette' => ['primary' => '#111827', 'secondary' => '#111827', 'text' => '#111827', 'muted' => '#6b7280', 'accent' => '#111827'],
-                'type' => ['heading' => 'serif', 'weight' => 'bold', 'uppercase' => false, 'spacing' => 0],
+                'type' => ['heading' => 'playfair', 'body' => 'inter', 'weight' => 'bold', 'uppercase' => false, 'spacing' => 0],
                 'crest' => ['shape' => 'none', 'size' => 22],
                 'layout' => ['align' => 'left', 'margin' => 7],
             ]],

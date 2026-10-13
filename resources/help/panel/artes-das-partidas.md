@@ -27,6 +27,12 @@ A prévia ao lado é exatamente o que será baixado. Tudo é ajustável:
 - **O que aparece**: competição, fase/rodada, data, horário, local, situação, logotipo da organização e rodapé.
 - **Textos**: título da arte, rodapé e hashtag.
 
+## Rodada, capa e fundo com foto
+- **Rodada / dia** reúne vários jogos numa só arte (do mesmo dia ou da mesma rodada/fase); escolha o escopo no editor.
+- **Capa / anúncio** é a arte de divulgação da transmissão: título, subtítulo, crédito e a faixa de transmissão.
+- Em **Fundo** escolha uma foto enviada pela organização (JPG, PNG ou WebP até 10 MB) e uma **película de cor** por cima para manter o texto legível. Em **Logotipo** escolha outra imagem no lugar do logotipo da organização.
+- Quem gerencia competições envia e exclui imagens (até 30); qualquer membro usa as que já existem.
+
 ## Modelos
 - Os **modelos prontos** do sistema servem de ponto de partida.
 - Quem gerencia competições pode **salvar o estilo como modelo da organização** (“Salvar como novo”), atualizar ou excluir. Os modelos valem para qualquer partida e qualquer tipo de arte.

@@ -8,6 +8,8 @@ enum ArtKind: string
     case Preview = 'preview';
     case Result = 'result';
     case Lineup = 'lineup';
+    case Round = 'round';
+    case Cover = 'cover';
 
     public function label(): string
     {
@@ -15,6 +17,8 @@ enum ArtKind: string
             self::Preview => 'Jogo do dia',
             self::Result => 'Resultado',
             self::Lineup => 'Escalação',
+            self::Round => 'Rodada / dia',
+            self::Cover => 'Capa / anúncio',
         };
     }
 }

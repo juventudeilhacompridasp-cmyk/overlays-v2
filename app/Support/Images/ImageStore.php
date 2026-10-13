@@ -45,8 +45,8 @@ final class ImageStore
         return $base ? Storage::disk('s3')->url(self::path($base, $size)) : null;
     }
 
-    /** Imagem do disco PÚBLICO como data URI (o canvas do navegador não aceita imagem de outra origem); null se não existir. */
-    public static function publicDataUri(?string $base, int $size): ?string
+    /** Bytes da imagem no disco PÚBLICO; null se não existir. */
+    public static function publicContents(?string $base, int $size): ?string
     {
         if (! $base) {
             return null;
@@ -58,7 +58,15 @@ final class ImageStore
             return null;
         }
 
-        return $contents ? 'data:image/webp;base64,'.base64_encode($contents) : null;
+        return $contents ?: null;
+    }
+
+    /** Imagem do disco PÚBLICO como data URI (o canvas do navegador não aceita imagem de outra origem); null se não existir. */
+    public static function publicDataUri(?string $base, int $size): ?string
+    {
+        $contents = self::publicContents($base, $size);
+
+        return $contents !== null ? 'data:image/webp;base64,'.base64_encode($contents) : null;
     }
 
     /** URL temporária assinada (disco privado: dados pessoais). */

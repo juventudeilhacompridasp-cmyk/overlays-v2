@@ -8,6 +8,16 @@ export const ART_FONTS: Record<FontKey, string> = {
     condensed: '"Roboto Condensed","Oswald","Arial Narrow","Helvetica Neue",Arial,sans-serif',
     serif: 'Georgia,"Times New Roman",serif',
     mono: '"SF Mono",Menlo,Consolas,"Courier New",monospace',
+    inter: '"Inter","Segoe UI",Arial,sans-serif',
+    oswald: '"Oswald","Arial Narrow",Impact,sans-serif',
+    bebas: '"Bebas Neue",Impact,"Arial Narrow",sans-serif',
+    anton: '"Anton",Impact,"Arial Narrow",sans-serif',
+    montserrat: '"Montserrat","Segoe UI",Arial,sans-serif',
+    'roboto-condensed': '"Roboto Condensed","Arial Narrow",Arial,sans-serif',
+    playfair: '"Playfair Display",Georgia,"Times New Roman",serif',
+    marker: '"Permanent Marker","Comic Sans MS",cursive',
+    barlow: '"Barlow Condensed","Arial Narrow",Arial,sans-serif',
+    archivo: '"Archivo Black","Arial Black",Impact,sans-serif',
 };
 
 const WEIGHTS = { normal: 400, bold: 700, black: 900 } as const;
@@ -16,7 +26,7 @@ type Images = Map<string, HTMLImageElement>;
 
 /** Carrega as imagens (data URI) de uma lista de operações. Imagem que falha é ignorada (a arte sai sem ela). */
 export async function loadImages(ops: Op[], images: Images = new Map()): Promise<Images> {
-    const sources = [...new Set(ops.flatMap((op) => (op.t === 'image' ? [op.src] : [])))].filter((src) => !images.has(src));
+    const sources = [...new Set(ops.flatMap((op) => (op.t === 'image' || op.t === 'bgimage' ? [op.src] : [])))].filter((src) => !images.has(src));
 
     await Promise.all(
         sources.map(
@@ -64,6 +74,11 @@ function paintBackground(ctx: CanvasRenderingContext2D, style: ArtStyle, W: numb
     }
 
     ctx.fillRect(0, 0, W, H);
+}
+
+/** Textura (listras/grade/pontos) e sombra de baixo para cima: por cima da imagem e da película. */
+function paintTexture(ctx: CanvasRenderingContext2D, style: ArtStyle, W: number, H: number): void {
+    const bg = style.background;
 
     if (bg.pattern !== 'none') {
         const u = Math.min(W, H) / 100;
@@ -115,6 +130,18 @@ function paintBackground(ctx: CanvasRenderingContext2D, style: ArtStyle, W: numb
     }
 }
 
+/** Foto de fundo: `cover` preenche cortando o excesso; `contain` mostra inteira. */
+function paintBgImage(ctx: CanvasRenderingContext2D, image: CanvasImageSource & { width: number; height: number }, fit: 'cover' | 'contain', opacity: number, W: number, H: number): void {
+    const k = fit === 'cover' ? Math.max(W / image.width, H / image.height) : Math.min(W / image.width, H / image.height);
+    const w = image.width * k;
+    const h = image.height * k;
+
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.drawImage(image, (W - w) / 2, (H - h) / 2, w, h);
+    ctx.restore();
+}
+
 /** Desenha a arte inteira no canvas (já com o tamanho final em pixels). */
 export function drawArt(canvas: HTMLCanvasElement, ops: Op[], style: ArtStyle, images: Images): void {
     const ctx = canvas.getContext('2d');
@@ -129,6 +156,14 @@ export function drawArt(canvas: HTMLCanvasElement, ops: Op[], style: ArtStyle, i
         switch (op.t) {
             case 'background':
                 paintBackground(ctx, style, W, H);
+                break;
+            case 'bgimage': {
+                const image = images.get(op.src);
+                if (image) paintBgImage(ctx, image, op.fit, op.opacity, W, H);
+                break;
+            }
+            case 'texture':
+                paintTexture(ctx, style, W, H);
                 break;
             case 'rect':
                 ctx.save();
@@ -162,6 +197,16 @@ export function drawArt(canvas: HTMLCanvasElement, ops: Op[], style: ArtStyle, i
                     rounded(ctx, op.x, op.y, op.w, op.h, op.shape === 'badge' ? op.w * 0.12 : op.w * 0.22);
                     ctx.fill();
                 }
+                ctx.restore();
+                break;
+            case 'poly':
+                ctx.save();
+                ctx.fillStyle = op.fill;
+                ctx.beginPath();
+                ctx.moveTo(op.points[0], op.points[1]);
+                for (let i = 2; i < op.points.length; i += 2) ctx.lineTo(op.points[i], op.points[i + 1]);
+                ctx.closePath();
+                ctx.fill();
                 ctx.restore();
                 break;
             case 'image': {

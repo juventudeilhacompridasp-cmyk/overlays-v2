@@ -92,3 +92,29 @@ it('ships system presets that are already valid', function () {
     expect(ArtPresets::find('inexistente'))->toBeNull()
         ->and(count(array_unique(array_column($presets, 'key'))))->toBe(count($presets));
 });
+
+it('has the broadcast footer off by default and sanitizes its settings', function () {
+    $defaults = ArtStyle::defaults();
+
+    expect($defaults['elements']['broadcast'])->toBeFalse()
+        ->and($defaults['broadcast'])->toBe(['platform' => 'youtube', 'label' => 'Transmissão ao vivo', 'channel' => ''])
+        ->and(ArtStyle::sanitize(['elements' => ['broadcast' => true]])['elements']['broadcast'])->toBeTrue();
+
+    $style = ArtStyle::sanitize(['broadcast' => ['platform' => 'kick', 'label' => '', 'channel' => "  Canal\nda Liga  "]]);
+    expect($style['broadcast'])->toBe(['platform' => 'kick', 'label' => '', 'channel' => 'Canal da Liga'])
+        ->and(ArtStyle::sanitize(['broadcast' => ['platform' => 'tiktok']])['broadcast']['platform'])->toBe('youtube')
+        ->and(mb_strlen(ArtStyle::sanitize(['broadcast' => ['label' => str_repeat('x', 200)]])['broadcast']['label']))->toBe(40);
+});
+
+it('cleans the new free texts too', function () {
+    $style = ArtStyle::sanitize(['text' => ['title' => str_repeat('T', 200), 'subtitle' => "Quartas\nde final", 'credit' => ['x']]]);
+
+    expect(mb_strlen($style['text']['title']))->toBe(60)
+        ->and($style['text']['subtitle'])->toBe('Quartas de final')
+        ->and($style['text']['credit'])->toBe('');
+});
+
+it('offers the 3:4 format', function () {
+    expect(ArtFormats::resolve('tall'))->toBe(['key' => 'tall', 'width' => 1080, 'height' => 1440])
+        ->and(count(ArtFormats::options()))->toBe(6);
+});

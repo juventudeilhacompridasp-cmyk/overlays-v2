@@ -10,17 +10,19 @@ import ts from 'typescript';
 const source = readFileSync(new URL('../../resources/js/lib/arts.ts', import.meta.url), 'utf8');
 const out = join(mkdtempSync(join(tmpdir(), 'arts-')), 'arts.mjs');
 writeFileSync(out, ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 } }).outputText);
-const { buildArt, dateLabel, timeLabel, phaseLabel, wrapWords } = await import(pathToFileURL(out).href);
+const { buildArt, dateLabel, timeLabel, phaseLabel, wrapWords, dayHeading } = await import(pathToFileURL(out).href);
 
 const style = (overrides = {}) => {
     const base = {
-        background: { mode: 'gradient', color: '#0b1220', color2: '#16243d', angle: 160, pattern: 'none', pattern_opacity: 0.08, shade: 0 },
+        background: { mode: 'gradient', color: '#0b1220', color2: '#16243d', angle: 160, pattern: 'none', pattern_opacity: 0.08, shade: 0, image: null, image_fit: 'cover', image_opacity: 1, tint: '#0b3b8c', tint_opacity: 0 },
+        logo: { asset: null, size: 8, position: 'corner' },
         palette: { primary: '#10b981', secondary: '#38bdf8', text: '#ffffff', muted: '#94a3b8', accent: '#facc15' },
         type: { heading: 'display', body: 'sans', scale: 1, weight: 'bold', uppercase: true, spacing: 0.02 },
         layout: { variant: 'classic', align: 'center', margin: 6, frame: false, frame_width: 0.6, frame_color: '#ffffff', radius: 0 },
         crest: { show: true, size: 26, shape: 'circle', bg: '#ffffff', use_team_colors: false },
-        elements: { competition: true, phase: true, date: true, time: true, venue: true, status: true, org_logo: true, footer: true },
-        text: { headline: '', footer: '', hashtag: '' },
+        elements: { competition: true, phase: true, date: true, time: true, venue: true, status: true, org_logo: true, footer: true, broadcast: false },
+        broadcast: { platform: 'youtube', label: 'Transmissão ao vivo', channel: '', badge: null },
+        text: { title: '', subtitle: '', headline: '', credit: '', footer: '', hashtag: '' },
     };
     const merged = {};
     for (const group of Object.keys(base)) merged[group] = { ...base[group], ...(overrides[group] ?? {}) };
@@ -33,6 +35,7 @@ const data = (overrides = {}) => ({
     kind: 'preview',
     competition: 'Copa Ilha',
     season: '2026',
+    division: 'Primeira divisão',
     phase: 'Fase de grupos',
     group: 'Grupo A',
     round: 3,
@@ -47,8 +50,12 @@ const data = (overrides = {}) => ({
     away: side('Registro EC'),
     org: { name: 'Liga', logo: null },
     lineup: null,
+    scope: 'day',
+    games: [],
     ...overrides,
 });
+
+const game = (date, home, away, extra = {}) => ({ id: `${home}-${away}`, date, venue: 'Campo Municipal', status: 'scheduled', status_label: 'Agendado', decided: false, home: side(home), away: side(away), ...extra });
 
 const texts = (ops) => ops.filter((op) => op.t === 'text').map((op) => op.text);
 
@@ -59,6 +66,7 @@ const FORMATS = [
     [1920, 1080],
     [1200, 630],
     [300, 900],
+    [1080, 1440],
 ];
 
 test('formats the date, time and phase labels in Portuguese without time zones', () => {
@@ -173,19 +181,40 @@ test('left alignment moves the header to the left margin', () => {
 test('everything stays inside the canvas for every format, kind and variant', () => {
     const player = (shirt, name) => ({ shirt, name, position: 'ZAG', captain: shirt === 1 });
     const lineupSide = { formation: '4-4-2', starters: Array.from({ length: 11 }, (_, i) => player(i + 1, `Jogador ${i + 1}`)), bench: Array.from({ length: 7 }, (_, i) => player(12 + i, `Reserva ${i}`)), coach: 'Técnico Teste' };
-    const kinds = [data(), data({ kind: 'result', home: side('Ilha FC', 1), away: side('Registro EC', 0) }), data({ kind: 'lineup', lineup: { home: lineupSide, away: lineupSide } }), data({ kind: 'lineup', lineup: null })];
+    const roundGames = [
+        game('2026-10-09T18:45', 'Vila Muniz', 'Boa Vista'),
+        game('2026-10-09T20:45', 'Sacolão Kiko', 'Inhuguvira', { status: 'in_progress', home: side('Sacolão Kiko', 1), away: side('Inhuguvira', 0) }),
+        game('2026-10-10T18:45', 'Bola +1', 'Vila Adriana', { decided: true, status: 'finished', home: side('Bola +1', 2), away: side('Vila Adriana', 2) }),
+        game('2026-10-10T20:45', 'SEI', 'Sacolão Kiko Júnior', { venue: 'Outro campo' }),
+    ];
+    const kinds = [
+        data(),
+        data({ kind: 'result', home: side('Ilha FC', 1), away: side('Registro EC', 0) }),
+        data({ kind: 'lineup', lineup: { home: lineupSide, away: lineupSide } }),
+        data({ kind: 'lineup', lineup: null }),
+        data({ kind: 'round', games: roundGames }),
+        data({ kind: 'round', games: roundGames.slice(0, 1) }),
+        data({ kind: 'round', games: [] }),
+        data({ kind: 'cover' }),
+    ];
 
     for (const [W, H] of FORMATS) {
         for (const variant of ['classic', 'split', 'poster']) {
             for (const align of ['center', 'left']) {
                 for (const item of kinds) {
-                    const ops = buildArt(style({ layout: { variant, align, frame: true } }), item, W, H);
+                    const ops = buildArt(style({ layout: { variant, align, frame: true }, elements: { broadcast: true }, text: { subtitle: 'Quartas de final', credit: 'Narração: Fulano', footer: 'Rodapé', hashtag: '#Copa' }, broadcast: { channel: 'Canal da Liga' } }), item, W, H);
 
                     for (const op of ops) {
                         if (op.t === 'text') {
                             assert.ok(Number.isFinite(op.x) && Number.isFinite(op.y) && op.size > 0, `texto inválido ${JSON.stringify(op)}`);
                             assert.ok(op.x >= 0 && op.x <= W && op.y >= 0 && op.y <= H, `texto fora (${W}x${H} ${variant} ${item.kind}): ${op.text} @ ${op.x},${op.y}`);
                             assert.ok(op.maxW > 0, `largura máxima inválida: ${op.text}`);
+                        }
+                        if (op.t === 'poly') {
+                            assert.ok(op.points.length >= 6 && op.points.every((value, index) => Number.isFinite(value) && value >= -1 && value <= (index % 2 === 0 ? W : H) + 1), `polígono fora: ${JSON.stringify(op)}`);
+                        }
+                        if (op.t === 'rect') {
+                            assert.ok(op.w > 0 && op.h > 0 && Number.isFinite(op.x) && Number.isFinite(op.y), `retângulo inválido: ${JSON.stringify(op)}`);
                         }
                         if (op.t === 'image' || op.t === 'shape') {
                             assert.ok(op.w > 0 && op.h > 0 && op.x >= -1 && op.y >= -1 && op.x + op.w <= W + 1 && op.y + op.h <= H + 1, `imagem fora (${W}x${H} ${variant}): ${JSON.stringify(op)}`);
@@ -215,4 +244,123 @@ test('a bigger text scale makes the text bigger', () => {
 
     assert.ok(size(1.5) > size(1));
     assert.ok(size(0.7) < size(1));
+});
+
+test('day heading is weekday plus day/month', () => {
+    assert.equal(dayHeading('2026-10-09T18:45'), 'sexta — 09/10');
+    assert.equal(dayHeading('2026-10-10T20:45'), 'sábado — 10/10');
+    assert.equal(dayHeading(null), null);
+});
+
+test('round lists every game with its time, grouped by day, and the single venue once', () => {
+    const games = [
+        game('2026-10-09T18:45', 'Vila Muniz', 'Boa Vista'),
+        game('2026-10-09T20:45', 'Sacolão Kiko', 'Inhuguvira'),
+        game('2026-10-10T18:45', 'Bola +1', 'Vila Adriana'),
+    ];
+    const all = texts(buildArt(style(), data({ kind: 'round', games }), 1080, 1440));
+
+    for (const expected of ['Jogos do dia', 'sexta — 09/10', 'sábado — 10/10', '18h45', '20h45', 'Vila Muniz', 'Boa Vista', 'Sacolão Kiko', 'Inhuguvira', 'Bola +1', 'Vila Adriana']) {
+        assert.ok(all.includes(expected), `faltou "${expected}" em ${JSON.stringify(all)}`);
+    }
+    assert.equal(all.filter((text) => text === 'Campo Municipal').length, 1);
+    assert.equal(all.filter((text) => text.startsWith('sexta')).length, 1);
+});
+
+test('round titles itself by the round when the scope is the round, and says so when there are no games', () => {
+    assert.ok(texts(buildArt(style(), data({ kind: 'round', scope: 'round', round: 3, games: [game('2026-10-09T18:45', 'A', 'B')] }), 1080, 1440)).includes('Rodada 3'));
+    assert.ok(texts(buildArt(style(), data({ kind: 'round', games: [] }), 1080, 1440)).includes('Nenhum jogo encontrado'));
+});
+
+test('round shows scores for decided and live games, and marks the live ones', () => {
+    const games = [game('2026-10-09T18:45', 'A', 'B', { decided: true, status: 'finished', home: side('A', 3), away: side('B', 1) }), game('2026-10-09T20:45', 'C', 'D', { status: 'in_progress', home: side('C', 0), away: side('D', 0) }), game('2026-10-09T21:45', 'E', 'F')];
+    const all = texts(buildArt(style(), data({ kind: 'round', games }), 1080, 1920));
+
+    assert.ok(all.includes('3 × 1'));
+    assert.ok(all.includes('0 × 0'));
+    assert.ok(all.includes('×'));
+    assert.ok(all.includes('Ao vivo'));
+});
+
+test('round variants differ: list has no panels, panels fill each game, posters stack the names', () => {
+    const games = [game('2026-10-09T18:45', 'Vila Muniz', 'Boa Vista'), game('2026-10-09T20:45', 'Sacolão Kiko', 'Inhuguvira')];
+    const rects = (variant) => buildArt(style({ layout: { variant } }), data({ kind: 'round', games }), 1080, 1920).filter((op) => op.t === 'rect');
+
+    assert.equal(rects('classic').length, 0);
+    assert.ok(rects('split').length >= 4); // um painel e uma etiqueta de horário por jogo (+ faixa do local)
+    assert.equal(rects('poster').filter((op) => op.h > 5 * 10).length, 0);
+});
+
+test('the broadcast footer shows the platform badge, the label and the channel only when turned on', () => {
+    const on = style({ elements: { broadcast: true }, broadcast: { platform: 'youtube', label: 'Transmissão ao vivo', channel: 'Juventude EC' } });
+    const withBroadcast = buildArt(on, data(), 1080, 1350);
+
+    assert.ok(texts(withBroadcast).includes('YouTube'));
+    assert.ok(texts(withBroadcast).includes('Transmissão ao vivo'));
+    assert.ok(texts(withBroadcast).includes('Juventude EC'));
+    assert.ok(withBroadcast.some((op) => op.t === 'poly'));
+
+    const off = texts(buildArt(style(), data(), 1080, 1350));
+    assert.ok(!off.includes('Transmissão ao vivo'));
+
+    const noBadge = buildArt(style({ elements: { broadcast: true }, broadcast: { platform: 'none', label: 'Ao vivo no canal', channel: '' } }), data(), 1080, 1350);
+    assert.ok(texts(noBadge).includes('Ao vivo no canal'));
+    assert.ok(!noBadge.some((op) => op.t === 'poly'));
+});
+
+test('the broadcast footer pushes the content up instead of covering it', () => {
+    const lowest = (ops) => Math.max(...ops.filter((op) => op.t === 'text' && ['Estádio Municipal', '16h30'].includes(op.text)).map((op) => op.y));
+
+    assert.ok(lowest(buildArt(style({ elements: { broadcast: true } }), data(), 1080, 1350)) < lowest(buildArt(style(), data(), 1080, 1350)));
+});
+
+test('cover uses the title override, the division, the subtitle, the headline and the credit', () => {
+    const ops = buildArt(style({ text: { title: 'Cajati', subtitle: 'Quartas de final', headline: 'Jogos ao vivo!', credit: 'Narração: Izaú' } }), data({ kind: 'cover' }), 1080, 1440);
+    const all = texts(ops);
+
+    for (const expected of ['Primeira divisão', 'Cajati', 'Quartas de final', 'Jogos ao vivo!', 'Narração: Izaú']) {
+        assert.ok(all.includes(expected), `faltou "${expected}" em ${JSON.stringify(all)}`);
+    }
+    assert.ok(!all.includes('Jogo do dia'));
+    assert.ok(!all.includes('Copa Ilha'));
+});
+
+test('cover falls back to the competition name and the season', () => {
+    const all = texts(buildArt(style(), data({ kind: 'cover', division: '' }), 1080, 1440));
+
+    assert.ok(all.includes('Copa Ilha'));
+    assert.ok(all.includes('2026'));
+});
+
+test('title and subtitle overrides also apply to the header of the match arts', () => {
+    const all = texts(buildArt(style({ text: { title: 'Cajati', subtitle: 'Quartas de final' } }), data(), 1080, 1080));
+
+    assert.ok(all.includes('Cajati'));
+    assert.ok(all.includes('Quartas de final'));
+    assert.ok(!all.includes('Copa Ilha'));
+});
+
+test('background image and tint come right after the base fill, before the texture', () => {
+    const assets = { A1: '/painel/artes/imagens/A1/arquivo' };
+    const ops = buildArt(style({ background: { image: 'A1', image_fit: 'contain', image_opacity: 0.8, tint_opacity: 0.5 } }), data(), 1080, 1350, assets);
+
+    assert.deepEqual(ops.slice(0, 4).map((op) => op.t), ['background', 'bgimage', 'rect', 'texture']);
+    assert.equal(ops[1].src, assets.A1);
+    assert.equal(ops[1].fit, 'contain');
+    assert.equal(ops[2].alpha, 0.5);
+});
+
+test('a background image that is no longer available is dropped', () => {
+    const ops = buildArt(style({ background: { image: 'GONE' } }), data(), 1080, 1350, {});
+
+    assert.ok(!ops.some((op) => op.t === 'bgimage'));
+    assert.deepEqual(ops.slice(0, 2).map((op) => op.t), ['background', 'texture']);
+});
+
+test('the chosen logo replaces the organization logo', () => {
+    const ops = buildArt(style({ logo: { asset: 'L1', size: 12 } }), data(), 1080, 1350, { L1: '/logo.webp' });
+    const logo = ops.find((op) => op.t === 'image' && op.src === '/logo.webp');
+
+    assert.ok(logo);
+    assert.ok(logo.w > 0);
 });
