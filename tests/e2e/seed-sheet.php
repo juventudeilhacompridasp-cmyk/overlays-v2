@@ -21,11 +21,12 @@ use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Membership;
 use App\Modules\Tenancy\Models\Organization;
+use Illuminate\Contracts\Console\Kernel;
 
 require __DIR__.'/../../vendor/autoload.php';
 
 $app = require __DIR__.'/../../bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Kernel::class)->bootstrap();
 
 $organization = Organization::query()->firstOrCreate(['slug' => config('platform.default_organization_slug')], ['name' => 'Organização padrão']);
 CurrentOrganization::set($organization);

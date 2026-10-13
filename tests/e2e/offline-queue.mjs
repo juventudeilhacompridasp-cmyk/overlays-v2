@@ -11,10 +11,15 @@ const seed = JSON.parse(seedJson);
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
 const context = await browser.newContext();
 const page = await context.newPage();
+page.on('pageerror', (error) => console.error(`[pageerror] ${error.message}`));
+page.on('requestfailed', (request) => console.error(`[requestfailed] ${request.url()} ${request.failure()?.errorText}`));
+page.on('response', (response) => response.status() >= 400 && console.error(`[http ${response.status()}] ${response.url()}`));
 page.setDefaultTimeout(20000);
 
 const fail = async (message) => {
     console.error(`FALHOU: ${message}`);
+    console.error(`URL: ${page.url()}`);
+    console.error(`Texto da página: ${(await page.locator('body').innerText().catch(() => '')).slice(0, 800)}`);
     await page.screenshot({ path: 'offline-queue-falha.png', fullPage: true }).catch(() => {});
     await browser.close();
     process.exit(1);
@@ -24,7 +29,7 @@ try {
     await page.goto(`${baseUrl}/login`);
     await page.fill('#email', seed.email);
     await page.fill('#password', seed.password);
-    await Promise.all([page.waitForURL((url) => !url.pathname.endsWith('/login')), page.click('button[type=submit]')]);
+    await Promise.all([page.waitForURL((url) => !url.pathname.endsWith('/login'), { waitUntil: 'commit' }), page.click('button[type=submit]')]);
 
     await page.goto(`${baseUrl}/painel/games/${seed.game}/sheet`);
     await page.getByTestId('scoreboard').waitFor();
