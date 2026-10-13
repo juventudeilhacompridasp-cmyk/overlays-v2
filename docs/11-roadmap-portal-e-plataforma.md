@@ -38,5 +38,5 @@ Busca textual primeiro; resposta com IA (RAG) depois, opcional. Conteúdo versio
 3. Leitura de súmulas, parte 2 (leitor estruturado + visão + configuração) e parte 3 (conferência).
 4. Portal rico: dados novos (assistências, mídia, notícias) e as telas, uma tela por PR.
 5. Central de ajuda: busca e artigos (feita); ajuda contextual, "isso ajudou?" e notas da organização (a fazer).
-6. Documentação interna das APIs.
+6. Documentação interna das APIs: gerador, tela e API pública (feitos); rotas internas em volume (a fazer).
 7. Perfis, partes 2–3 (tela de perfis e exceções por usuário).

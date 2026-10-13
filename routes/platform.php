@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\ApiDocs\Http\Controllers\ApiDocsController;
 use App\Modules\Help\Http\Controllers\HelpController;
 use App\Modules\Tenancy\Http\Controllers\PlatformOrganizationController;
 use Illuminate\Support\Facades\Route;
@@ -12,6 +13,8 @@ Route::middleware(['auth', 'verified', 'platform.admin'])->prefix('plataforma')-
     Route::get('/', [PlatformOrganizationController::class, 'index'])->name('organizations.index');
     Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'platform')->name('help.index');
     Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'platform')->name('help.show');
+    Route::get('api-docs', [ApiDocsController::class, 'index'])->name('api-docs.index');
+    Route::get('api-docs/openapi.json', [ApiDocsController::class, 'openapi'])->name('api-docs.openapi');
     Route::get('organizations/create', [PlatformOrganizationController::class, 'create'])->name('organizations.create');
     Route::post('organizations', [PlatformOrganizationController::class, 'store'])->name('organizations.store');
     Route::post('organizations/{organization}/domains', [PlatformOrganizationController::class, 'storeDomain'])->name('organizations.domains.store');
