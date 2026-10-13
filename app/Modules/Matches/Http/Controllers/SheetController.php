@@ -12,6 +12,7 @@ use App\Modules\Matches\Actions\FinishGame;
 use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Actions\RecordShootout;
 use App\Modules\Matches\Actions\SaveGameLineup;
+use App\Modules\Matches\Actions\SyncSheetCommands;
 use App\Modules\Matches\Actions\VoidGameEvent;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\LineupSlot;
@@ -25,8 +26,11 @@ use App\Modules\Rules\Tactics\Formations;
 use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Enums\RosterStatus;
 use App\Modules\Teams\Models\RosterEntry;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use InvalidArgumentException;
@@ -90,6 +94,7 @@ class SheetController extends Controller
                 'expelled' => $state->expelled($entry->getKey()),
                 'fouled_out' => $state->fouledOut($entry->getKey()),
                 'player_fouls' => (object) $state->foulsOf($entry->getKey()),
+                'yellows' => (object) $state->yellowsOf($entry->getKey()),
                 'substitutions_used' => $state->substitutionsUsed($entry->getKey()),
                 'windows_used' => $state->windowsUsed($entry->getKey()),
             ];
@@ -112,6 +117,7 @@ class SheetController extends Controller
             'id' => $event->id,
             'type' => $event->type->value,
             'entry_id' => $event->entry_id,
+            'person_id' => $event->person_id,
             'person' => $event->person_id ? ($names[$event->person_id] ?? null) : null,
             'secondary_person' => $event->secondary_person_id ? ($names[$event->secondary_person_id] ?? null) : null,
             'period' => $event->period,
@@ -150,7 +156,11 @@ class SheetController extends Controller
             'events' => $events,
             'clock' => PublicGameSnapshot::for($game)['clock'] + ['server_time_ms' => (int) (microtime(true) * 1000), 'max_period' => $game->clock()->maxPeriod()],
             'public_url' => route('public.games.show', $game->id),
+            // Para a projeção local da fila offline (relógio e regras que o navegador reaplica enquanto não há conexão).
+            'clock_offsets' => array_map(fn (int $period) => $game->clock()->offsetSeconds($period), range(1, max(1, $game->clock()->maxPeriod()))),
             'limits' => [
+                'reentry' => $rules->allowSubstitutionReentry,
+                'max_player_fouls' => $rules->maxPlayerFouls,
                 'starters' => $rules->maxStarters,
                 'bench' => $rules->maxBench,
                 'staff' => $rules->maxStaff,
@@ -173,6 +183,30 @@ class SheetController extends Controller
                 ],
             })->map(fn (GameEventType $type) => ['value' => $type->value, 'label' => $type->label()])->values(),
         ]);
+    }
+
+    /**
+     * Fila offline do mesário: aplica em ordem os lançamentos guardados no aparelho (ver `SyncSheetCommands`).
+     * Responde JSON com o resultado de cada item; 423 se outro lote do mesmo jogo ainda está sendo aplicado.
+     */
+    public function sync(Request $request, Game $game, SyncSheetCommands $sync): JsonResponse
+    {
+        $data = $request->validate([
+            'items' => ['required', 'array', 'min:1', 'max:200'],
+            'items.*.key' => ['required', 'string', 'max:64'],
+            'items.*.kind' => ['required', Rule::in(SyncSheetCommands::KINDS)],
+            'items.*.at' => ['required', 'integer', 'min:0'],
+            'items.*.payload' => ['present', 'array'],
+        ]);
+
+        try {
+            /** @var list<array{key: string, kind: string, at: int, payload: array<string, mixed>}> $items */
+            $items = array_values($data['items']);
+
+            return response()->json(['results' => $sync->handle($game, $items, $request->user())]);
+        } catch (LockTimeoutException) {
+            return response()->json(['busy' => true, 'results' => []], 423);
+        }
     }
 
     public function lineup(GameLineupRequest $request, Game $game, Entry $entry, SaveGameLineup $save): RedirectResponse

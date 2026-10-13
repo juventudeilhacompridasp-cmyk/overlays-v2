@@ -125,7 +125,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
 
                 {!online && (
                     <div role="alert" className="bg-amber-500 px-4 py-2 text-center text-sm font-medium text-black print:hidden" data-testid="offline-banner">
-                        Sem conexão. O que você lançar agora não será salvo: espere a internet voltar antes de continuar.
+                        Sem conexão. Na súmula os lançamentos ficam guardados neste aparelho e são enviados quando a internet voltar; nas demais telas, o que for salvo agora não chega ao servidor.
                     </div>
                 )}
                 <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">

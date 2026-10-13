@@ -6,6 +6,7 @@ use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -20,7 +21,7 @@ final class VoidGameEvent
         private readonly ProjectGameScore $projectScore = new ProjectGameScore,
     ) {}
 
-    public function handle(Game $game, GameEvent $event, ?int $recordedBy = null): GameEvent
+    public function handle(Game $game, GameEvent $event, ?int $recordedBy = null, ?Carbon $at = null): GameEvent
     {
         if ($event->game_id !== $game->getKey() || $event->compensates_event_id !== null) {
             throw new InvalidArgumentException('Lançamento inválido para este jogo.');
@@ -36,7 +37,7 @@ final class VoidGameEvent
 
         $isMark = $event->type->isClockMark();
 
-        return DB::transaction(function () use ($game, $event, $recordedBy, $isMark): GameEvent {
+        return DB::transaction(function () use ($game, $event, $recordedBy, $isMark, $at): GameEvent {
             if ($isMark) {
                 $last = $game->events()->effective()->whereIn('type', GameEventType::clockMarks())->orderByDesc('id')->first();
 
@@ -76,6 +77,7 @@ final class VoidGameEvent
                 'secondary_person_id' => $event->secondary_person_id,
                 'compensates_event_id' => $event->getKey(),
                 'recorded_by' => $recordedBy,
+                'created_at' => $at ?? now(),
             ]);
 
             $this->projectScore->handle($game);

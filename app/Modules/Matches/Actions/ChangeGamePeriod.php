@@ -8,6 +8,7 @@ use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Rules\Sheet\ClockMark;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -17,7 +18,7 @@ use InvalidArgumentException;
  */
 final class ChangeGamePeriod
 {
-    public function handle(Game $game, bool $start, int $period, ?int $recordedBy = null): GameEvent
+    public function handle(Game $game, bool $start, int $period, ?int $recordedBy = null, ?Carbon $at = null): GameEvent
     {
         if ($game->home_entry_id === null || $game->away_entry_id === null) {
             throw new InvalidArgumentException('O jogo ainda não tem os dois confrontantes definidos.');
@@ -27,7 +28,7 @@ final class ChangeGamePeriod
             throw new InvalidArgumentException('O jogo não está aberto para lançamentos.');
         }
 
-        $event = DB::transaction(function () use ($game, $start, $period, $recordedBy): GameEvent {
+        $event = DB::transaction(function () use ($game, $start, $period, $recordedBy, $at): GameEvent {
             $error = $game->clock()->check(self::marks($game), new ClockMark($start, $period));
 
             if ($error !== null) {
@@ -40,10 +41,11 @@ final class ChangeGamePeriod
                 'type' => $start ? GameEventType::PeriodStart : GameEventType::PeriodEnd,
                 'period' => $period,
                 'recorded_by' => $recordedBy,
+                'created_at' => $at ?? now(),
             ]);
 
             if ($game->status === GameStatus::Scheduled) {
-                $game->forceFill(['status' => GameStatus::InProgress, 'started_at' => $game->started_at ?? now()])->save();
+                $game->forceFill(['status' => GameStatus::InProgress, 'started_at' => $game->started_at ?? ($at ?? now())])->save();
             }
 
             return $event;
@@ -58,7 +60,7 @@ final class ChangeGamePeriod
     /**
      * Para ou retoma o relógio dentro do período em andamento (esportes de relógio parável, como o basquete).
      */
-    public function pause(Game $game, bool $pause, ?int $recordedBy = null): GameEvent
+    public function pause(Game $game, bool $pause, ?int $recordedBy = null, ?Carbon $at = null): GameEvent
     {
         if (! $game->sport()->profile()->pausableClock) {
             throw new InvalidArgumentException('O relógio deste esporte não para.');
@@ -68,7 +70,7 @@ final class ChangeGamePeriod
             throw new InvalidArgumentException('O jogo não está aberto para lançamentos.');
         }
 
-        $event = DB::transaction(function () use ($game, $pause, $recordedBy): GameEvent {
+        $event = DB::transaction(function () use ($game, $pause, $recordedBy, $at): GameEvent {
             $marks = self::marks($game);
             $period = $game->clock()->snapshot($marks)['period'];
 
@@ -88,6 +90,7 @@ final class ChangeGamePeriod
                 'type' => $pause ? GameEventType::ClockPause : GameEventType::ClockResume,
                 'period' => $period,
                 'recorded_by' => $recordedBy,
+                'created_at' => $at ?? now(),
             ]);
         });
 
