@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Modules\Competitions\Models\Entry;
 use App\Modules\Market\Enums\ProfileStatus;
 use App\Modules\Market\Enums\ReportStatus;
 use App\Modules\Market\Enums\RequestStatus;
@@ -56,6 +57,12 @@ function modAcceptedRequest(): array
     ]);
 
     return compact('entry', 'manager', 'athlete', 'profile', 'request');
+}
+
+/** Reforço sem exigir documentos (o fluxo de documentos já é testado na inscrição). */
+function modDocumentsNotRequired(Entry $entry): void
+{
+    $entry->division->season->update(['registration' => ['min_athletes' => 2, 'max_athletes' => 30, 'require_documents' => false]]);
 }
 
 describe('reports', function () {
@@ -231,6 +238,7 @@ describe('from the accepted contact to the roster', function () {
 
     it('marks the athlete as hired only when the organization approves the supplement', function () {
         ['entry' => $entry, 'manager' => $manager, 'athlete' => $athlete, 'profile' => $profile, 'request' => $request] = modAcceptedRequest();
+        modDocumentsNotRequired($entry);
         $this->actingAs($manager)->post(route('manager.market.requests.supplement', $request), ['entry_id' => $entry->getKey()]);
         $registration = Registration::query()->firstOrFail();
 
@@ -256,6 +264,7 @@ describe('from the accepted contact to the roster', function () {
         ['profile' => $profile] = modAcceptedRequest();
         ['entries' => [$entry]] = fixtureDivision(1);
         $manager = managerFor($entry->team);
+        modDocumentsNotRequired($entry);
         $this->actingAs($manager)->post(route('manager.entries.supplement', $entry));
         $registration = Registration::query()->where('entry_id', $entry->getKey())->firstOrFail();
 
