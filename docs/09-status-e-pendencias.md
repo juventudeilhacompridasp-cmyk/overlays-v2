@@ -17,7 +17,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
   "Fila offline no navegador".
 
 ## Pendências conhecidas (por ordem sugerida)
-- **Parametrização** (comunicações, ativar/desativar funcionalidades, janelas e limites): levantamento e plano em `docs/10-parametrizacao.md` — começar pela tela Painel > Comunicações.
+- **Parametrização** (tela Painel > Comunicações entregue; falta o restante do plano) (comunicações, ativar/desativar funcionalidades, janelas e limites): levantamento e plano em `docs/10-parametrizacao.md` — começar pela tela Painel > Comunicações.
 - Basquete: faltas técnicas/antidesportivas e relógio de posse (24 s). Pedidos de tempo entregues (ainda sem mostrar no overlay/página pública e sem parar o relógio sozinho).
 - Vôlei: limite de substituições por set, rodízio/líbero, pedidos de tempo.
 - Fila offline: escalação, pênaltis e resultado rápido ainda exigem internet; a página não abre sem internet se for

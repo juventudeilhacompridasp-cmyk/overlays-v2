@@ -9,6 +9,7 @@ use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Registration\Actions\StartRegistration;
 use App\Modules\Registration\Http\Requests\ApplyRequest;
 use App\Modules\Registration\Mail\RegistrationMail;
+use App\Modules\Tenancy\Support\CommunicationSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
@@ -53,7 +54,9 @@ class ApplyController extends Controller
             return back()->withInput()->with('error', $exception->getMessage());
         }
 
-        Mail::to($registration->contact_email)->queue(RegistrationMail::opened($registration));
+        if (CommunicationSettings::enabled('registration_opened')) {
+            Mail::to($registration->contact_email)->queue(RegistrationMail::opened($registration));
+        }
 
         return redirect()->to($registration->manageUrl())->with('success', 'Pedido criado! Enviamos o link pessoal para o seu e-mail; guarde-o para continuar depois.');
     }

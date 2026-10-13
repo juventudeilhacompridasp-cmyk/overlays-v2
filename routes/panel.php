@@ -23,6 +23,7 @@ use App\Modules\Teams\Http\Controllers\RosterController;
 use App\Modules\Teams\Http\Controllers\TeamController;
 use App\Modules\Teams\Http\Controllers\TeamLogoController;
 use App\Modules\Teams\Http\Controllers\TeamManagerController;
+use App\Modules\Tenancy\Http\Controllers\CommunicationsController;
 use App\Modules\Tenancy\Http\Controllers\LegalController;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Http\Controllers\OrganizationController;
@@ -132,6 +133,8 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::get('legal', [LegalController::class, 'edit'])->name('legal.edit');
         Route::patch('legal/settings', [LegalController::class, 'updateSettings'])->name('legal.settings');
         Route::post('legal/publish', [LegalController::class, 'publish'])->name('legal.publish');
+        Route::get('communications', [CommunicationsController::class, 'edit'])->name('communications.edit');
+        Route::patch('communications', [CommunicationsController::class, 'update'])->name('communications.update');
         Route::get('organization', [OrganizationController::class, 'edit'])->name('organization.edit');
         Route::patch('organization', [OrganizationController::class, 'update'])->name('organization.update');
         Route::middleware('feature:white_label')->group(function () {

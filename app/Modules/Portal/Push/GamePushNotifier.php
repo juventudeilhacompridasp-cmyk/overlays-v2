@@ -5,6 +5,8 @@ namespace App\Modules\Portal\Push;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Portal\Jobs\SendGamePush;
+use App\Modules\Tenancy\Models\Organization;
+use App\Modules\Tenancy\Support\CommunicationSettings;
 
 /**
  * Decide quando um jogo atualizado merece um aviso push: começou, placar mudou (gol, set) ou terminou.
@@ -31,6 +33,11 @@ final class GamePushNotifier
         }
 
         if ($kind === null) {
+            return;
+        }
+
+        // A organização escolhe quais momentos do jogo geram aviso push.
+        if (! CommunicationSettings::enabled('push_'.$kind, Organization::query()->find($game->organization_id))) {
             return;
         }
 

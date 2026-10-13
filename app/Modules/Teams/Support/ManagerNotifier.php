@@ -9,6 +9,7 @@ use App\Modules\Teams\Models\Team;
 use App\Modules\Teams\Models\TeamManager;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Models\Organization;
+use App\Modules\Tenancy\Support\CommunicationSettings;
 use App\Modules\Tenancy\Support\OrganizationUrl;
 use Illuminate\Support\Facades\Mail;
 
@@ -24,6 +25,18 @@ final class ManagerNotifier
      */
     public static function send(Organization $organization, Team $team, string $kind, string $key, string $subject, string $headline, array $lines, string $path): int
     {
+        $setting = match ($kind) {
+            'lineup_24h', 'lineup_2h' => 'manager_lineup_reminder',
+            'game_changed' => 'manager_game_changed',
+            'suspensions' => 'manager_suspensions',
+            default => null,
+        };
+
+        // Tipo desligado pela organização: não envia e não registra (religar volta a avisar o que ainda vale).
+        if ($setting !== null && ! CommunicationSettings::enabled($setting, $organization)) {
+            return 0;
+        }
+
         return CurrentOrganization::using($organization, function () use ($organization, $team, $kind, $key, $subject, $headline, $lines, $path): int {
             $sent = 0;
             $name = PublicTheme::current()['name'];
