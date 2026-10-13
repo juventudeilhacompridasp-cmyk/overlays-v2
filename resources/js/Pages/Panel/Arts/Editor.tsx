@@ -15,7 +15,7 @@ type Template = { id: string; name: string; format: string; width: number; heigh
 
 interface Props {
     game: { id: string; home: string; away: string; scheduled_at: string | null; status_label: string; competition: string };
-    kind: 'preview' | 'result' | 'lineup' | 'round' | 'cover';
+    kind: 'preview' | 'result' | 'lineup' | 'round' | 'cover' | 'standings';
     kinds: Option[];
     data: ArtData;
     initial: { template_id: string | null; preset: string | null; name: string; format: Format; style: ArtStyle };

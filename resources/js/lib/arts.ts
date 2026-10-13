@@ -50,7 +50,7 @@ export interface ArtGame {
 }
 
 export interface ArtData {
-    kind: 'preview' | 'result' | 'lineup' | 'round' | 'cover';
+    kind: 'preview' | 'result' | 'lineup' | 'round' | 'cover' | 'standings';
     competition: string;
     season: string;
     division: string;
@@ -70,6 +70,28 @@ export interface ArtData {
     lineup: { home: ArtLineupSide; away: ArtLineupSide } | null;
     scope: 'day' | 'round';
     games: ArtGame[];
+    standings: ArtStandings | null;
+}
+
+export interface ArtStandingRow {
+    entry: string;
+    position: number;
+    name: string;
+    short: string | null;
+    crest: string | null;
+    played: number;
+    wins: number;
+    draws: number;
+    losses: number;
+    diff: number;
+    points: number;
+}
+
+export interface ArtStandings {
+    title: string;
+    unit: string;
+    rows: ArtStandingRow[];
+    highlight: string[];
 }
 
 export type Align = 'left' | 'center' | 'right';
@@ -292,7 +314,7 @@ export function buildArt(style: ArtStyle, data: ArtData, W: number, H: number, a
     // ── título da arte ───────────────────────────────────────────────────────────
     const roundNumber = data.scope === 'round' && data.round !== null ? `Rodada ${data.round}` : 'Jogos do dia';
     const defaultHeadline =
-        data.kind === 'preview' ? 'Jogo do dia' : data.kind === 'result' ? (data.decided ? 'Fim de jogo' : data.status_label) : data.kind === 'round' ? roundNumber : 'Escalação';
+        data.kind === 'preview' ? 'Jogo do dia' : data.kind === 'result' ? (data.decided ? 'Fim de jogo' : data.status_label) : data.kind === 'round' ? roundNumber : data.kind === 'standings' ? (data.standings?.title ?? 'Classificação') : 'Escalação';
     const headline = style.text.headline !== '' ? style.text.headline : defaultHeadline;
     const headlineSize = 7 * u * S * (variant === 'poster' ? 1.15 : 1);
     top += 1.5 * u;
@@ -306,6 +328,12 @@ export function buildArt(style: ArtStyle, data: ArtData, W: number, H: number, a
 
     if (data.kind === 'round') {
         roundBlock(ops, style, data, { x0, CW, top, bottom, u, S, text, soft, softAlpha });
+
+        return ops;
+    }
+
+    if (data.kind === 'standings') {
+        standingsBlock(ops, style, data, { x0, CW, top, bottom, u, S, text, soft, softAlpha });
 
         return ops;
     }
@@ -683,4 +711,80 @@ function coverBlock(ops: Op[], style: ArtStyle, data: ArtData, c: CoverContext):
     if (style.text.credit !== '' && ly < c.bottom - 3 * u) {
         text(style.text.credit, anchorX, ly, 4 * u * S, p.text, 'heading', { upper: true });
     }
+}
+
+interface StandingsContext {
+    x0: number;
+    CW: number;
+    top: number;
+    bottom: number;
+    u: number;
+    S: number;
+    text: TextFn;
+    soft: string;
+    softAlpha: number | undefined;
+}
+
+/** Tabela de classificação: posição, escudo, equipe, pontos, jogos, vitórias e saldo; as equipes do jogo ficam destacadas. */
+function standingsBlock(ops: Op[], style: ArtStyle, data: ArtData, c: StandingsContext): void {
+    const { x0, CW, u, S, text, soft, softAlpha } = c;
+    const p = style.palette;
+    const table = data.standings;
+
+    if (table === null || table.rows.length === 0) {
+        text('Classificação indisponível para esta fase', x0 + CW / 2, c.top + 8 * u, 3 * u * S, soft, 'body', { alpha: softAlpha, maxW: CW });
+
+        return;
+    }
+
+    const rows = table.rows.slice(0, 16);
+    const headH = 4 * u * S;
+    const rowH = Math.min(7.5 * u * S, (c.bottom - c.top - headH) / rows.length);
+    const size = Math.min(rowH * 0.5, 3.6 * u * S);
+    const crestSize = style.crest.show ? rowH * 0.74 : 0;
+    const cols = [
+        { key: 'points', label: 'P', w: 5 * u * S },
+        { key: 'played', label: 'J', w: 4.2 * u * S },
+        { key: 'wins', label: 'V', w: 4.2 * u * S },
+        { key: 'diff', label: 'SG', w: 5 * u * S },
+    ] as const;
+    const numbersW = cols.reduce((sum, col) => sum + col.w, 0);
+    const posW = 5 * u * S;
+    let y = c.top;
+
+    let cx = x0 + CW - numbersW;
+    for (const col of cols) {
+        text(col.label, cx + col.w / 2, y + headH / 2, size * 0.8, soft, 'body', { alpha: softAlpha, weight: 'bold' });
+        cx += col.w;
+    }
+    y += headH;
+
+    rows.forEach((row, index) => {
+        const mine = table.highlight.includes(row.entry);
+        const mid = y + rowH / 2;
+
+        if (mine) ops.push({ t: 'rect', x: x0, y: y + rowH * 0.06, w: CW, h: rowH * 0.88, fill: p.accent, alpha: 0.2, radius: rowH * 0.2 });
+        else if (index % 2 === 0) ops.push({ t: 'rect', x: x0, y: y + rowH * 0.06, w: CW, h: rowH * 0.88, fill: p.text, alpha: 0.06, radius: rowH * 0.2 });
+
+        text(String(row.position), x0 + posW / 2, mid, size, mine ? p.accent : p.text, 'heading', { weight: 'black' });
+        let nx = x0 + posW;
+
+        if (crestSize > 0) {
+            if (row.crest) ops.push({ t: 'image', src: row.crest, x: nx, y: mid - crestSize / 2, w: crestSize, h: crestSize });
+            else ops.push({ t: 'shape', shape: 'circle', x: nx, y: mid - crestSize / 2, w: crestSize, h: crestSize, fill: p.primary, alpha: 0.6 });
+            nx += crestSize + 1.6 * u;
+        }
+
+        text(row.name, nx, mid, size, p.text, 'heading', { align: 'left', maxW: x0 + CW - numbersW - nx - u, upper: true, weight: mine ? 'black' : 'bold' });
+
+        let vx = x0 + CW - numbersW;
+        for (const col of cols) {
+            const raw = row[col.key];
+            const value = col.key === 'diff' && raw > 0 ? `+${raw}` : String(raw);
+            text(value, vx + col.w / 2, mid, size, col.key === 'points' ? p.accent : p.text, col.key === 'points' ? 'heading' : 'body', { weight: col.key === 'points' ? 'black' : 'normal' });
+            vx += col.w;
+        }
+
+        y += rowH;
+    });
 }
