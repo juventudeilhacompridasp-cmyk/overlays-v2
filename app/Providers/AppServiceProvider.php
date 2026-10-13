@@ -11,6 +11,7 @@ use App\Modules\Matches\Models\Game;
 use App\Modules\Portal\Push\GamePushNotifier;
 use App\Modules\Portal\Push\PushSender;
 use App\Modules\Portal\Push\WebPushSender;
+use App\Modules\Teams\Support\GameNotices;
 use App\Modules\Tenancy\Actions\ManageMembers;
 use App\Modules\Tenancy\Enums\Ability;
 use Illuminate\Auth\Events\Registered;
@@ -57,6 +58,11 @@ class AppServiceProvider extends ServiceProvider
             if ($game->wasChanged(['home_score', 'away_score', 'home_penalties', 'away_penalties', 'sets', 'status', 'started_at', 'finished_at'])) {
                 event(GameUpdated::for($game));
                 GamePushNotifier::afterUpdate($game);
+            }
+
+            // Avisos por e-mail ao gestor: horário/local/situação alterados e suspensões de um jogo encerrado.
+            if ($game->wasChanged(['scheduled_at', 'venue_id', 'status'])) {
+                GameNotices::afterUpdate($game);
             }
         });
     }

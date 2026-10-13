@@ -4,6 +4,7 @@ use App\Modules\Teams\Http\Controllers\Manager\CardsController;
 use App\Modules\Teams\Http\Controllers\Manager\DashboardController;
 use App\Modules\Teams\Http\Controllers\Manager\EntryController;
 use App\Modules\Teams\Http\Controllers\Manager\GameController;
+use App\Modules\Teams\Http\Controllers\Manager\NoticeController;
 use App\Modules\Teams\Http\Controllers\Manager\RosterController;
 use App\Modules\Teams\Http\Controllers\Manager\SupplementController;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware(['auth', 'verified', 'manager.member', 'legal.accepted', 'feature:team_portal'])->prefix('gestor')->name('manager.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+    Route::patch('avisos', [NoticeController::class, 'update'])->name('notices.update');
     Route::get('inscricoes/{entry}', [EntryController::class, 'show'])->name('entries.show');
     Route::patch('elenco/{rosterEntry}', [RosterController::class, 'update'])->name('roster.update');
     Route::delete('elenco/{rosterEntry}', [RosterController::class, 'destroy'])->name('roster.destroy');

@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Pedidos de aviso push de jogos encerrados não ficam guardados.
 Schedule::command('push:prune')->daily();
+
+// Lembretes de escalação aos gestores de equipe (cada aviso sai uma única vez por jogo e gestor).
+Schedule::command('managers:remind-lineups')->everyTenMinutes()->withoutOverlapping();

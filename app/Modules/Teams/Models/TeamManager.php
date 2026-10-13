@@ -18,6 +18,14 @@ class TeamManager extends Model
     protected $table = 'team_managers';
 
     /**
+     * @return array<string, mixed>
+     */
+    protected function casts(): array
+    {
+        return ['notify' => 'boolean'];
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
