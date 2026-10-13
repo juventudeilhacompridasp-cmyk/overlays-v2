@@ -76,10 +76,60 @@ jobs:
       - name: Reverb e Web Push de ponta a ponta
         run: php artisan test --filter=EndToEnd
 
+  offline:
+    name: Fila offline no navegador (Chromium)
+    runs-on: ubuntu-latest
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ${{ github.workspace }}/e2e.sqlite
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      BROADCAST_CONNECTION: 'null'
+      INERTIA_SSR_ENABLED: 'false'
+      APP_ENV: local
+      APP_DEBUG: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl, pdo_sqlite, sqlite3, pcntl, posix, bcmath, gd, exif, zip
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: composer install --prefer-dist --no-interaction --no-progress
+      - run: npm ci
+      - run: cp .env.example .env && php artisan key:generate
+      - run: npm run build
+      - run: npx playwright-core install --with-deps chromium
+      - name: Banco e dados de teste
+        run: |
+          touch "$DB_DATABASE"
+          php artisan migrate --force
+          php tests/e2e/seed-sheet.php > seed.json
+      - name: Servidor e teste de navegador
+        run: |
+          PHP_CLI_SERVER_WORKERS=4 php artisan serve --host=127.0.0.1 --port=8000 > server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/login > /dev/null && break; sleep 1; done
+          node tests/e2e/offline-queue.mjs http://127.0.0.1:8000 "$(cat seed.json)" || { echo '--- server.log'; grep -v '/build/' server.log | tail -40; echo '--- laravel.log'; tail -40 storage/logs/laravel.log || true; exit 1; }
+      - name: Guardar evidências se falhar
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: offline-queue-falha
+          path: |
+            offline-queue-falha.png
+            server.log
+            storage/logs/*.log
+          if-no-files-found: ignore
+
   docker:
     name: Imagens Docker
     runs-on: ubuntu-latest
-    needs: [php, frontend, realtime]
+    needs: [php, frontend, realtime, offline]
     permissions:
       contents: read
       packages: write
