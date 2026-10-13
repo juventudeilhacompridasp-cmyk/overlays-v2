@@ -25,7 +25,9 @@ final class WebPushSender implements PushSender
         foreach ($subscriptions as $subscription) {
             $byEndpoint[$subscription->endpoint] = $subscription->getKey();
             $webPush->queueNotification(
-                Subscription::create(['endpoint' => $subscription->endpoint, 'keys' => ['p256dh' => $subscription->p256dh, 'auth' => $subscription->auth]]),
+                // aes128gcm (RFC 8291) é o único formato aceito pelo Safari/iOS e vale em todos os navegadores atuais;
+                // sem isso a biblioteca usa o formato antigo "aesgcm".
+                Subscription::create(['endpoint' => $subscription->endpoint, 'contentEncoding' => 'aes128gcm', 'keys' => ['p256dh' => $subscription->p256dh, 'auth' => $subscription->auth]]),
                 (string) json_encode($payload, JSON_UNESCAPED_UNICODE),
             );
         }
