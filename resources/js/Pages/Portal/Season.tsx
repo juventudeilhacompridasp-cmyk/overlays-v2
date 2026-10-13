@@ -34,7 +34,41 @@ interface Division {
     scorers: { name: string; team: string | null; goals: number }[];
 }
 
+interface BracketTeam {
+    id: string;
+    name: string;
+    logo_url: string | null;
+    url: string;
+}
+
+interface BracketSide {
+    team: BracketTeam | null;
+    score: number | null;
+    winner: boolean;
+}
+
+interface BracketTie {
+    id: string;
+    a: BracketSide;
+    b: BracketSide;
+    decided: boolean;
+    live: boolean;
+    penalties: { a: number; b: number } | null;
+    legs: { url: string; leg: number | null; home: string | null; away: string | null; home_score: number; away_score: number; status_label: string; decided: boolean; scheduled_at: string | null; venue: string | null }[];
+}
+
+interface Bracket {
+    rounds: { label: string; ties: BracketTie[] }[];
+    champion: BracketTeam | null;
+}
+
+interface Extras {
+    brackets: Record<string, Bracket> | null;
+    rules: Record<string, { points: { label: string; value: number }[]; tiebreakers: string[] }> | null;
+}
+
 interface Props {
+    extras: Extras;
     theme: Theme;
     seo: Seo;
     competition: { id: string; name: string; slug: string };
@@ -85,12 +119,101 @@ function Table({ table, showCaption }: { table: Stage['tables'][number]; showCap
     );
 }
 
-function DivisionView({ division }: { division: Division }) {
+function SideRow({ side, penalties }: { side: BracketSide; penalties: number | null }) {
+    return (
+        <div className={`flex items-center justify-between gap-2 px-2 py-1.5 ${side.winner ? 'bg-emerald-50 font-bold' : ''}`}>
+            <span className="flex min-w-0 items-center gap-1.5">
+                {side.team?.logo_url && <img src={side.team.logo_url} alt="" width={16} height={16} loading="lazy" className="h-4 w-4 object-contain" />}
+                {side.team ? (
+                    <Link href={side.team.url} className="truncate hover:underline">
+                        {side.team.name}
+                    </Link>
+                ) : (
+                    <span className="text-gray-400">A definir</span>
+                )}
+            </span>
+            <span className="tabular-nums">
+                {side.score ?? '–'}
+                {penalties !== null && <span className="ml-1 text-xs font-normal text-gray-500">({penalties})</span>}
+            </span>
+        </div>
+    );
+}
+
+function BracketView({ bracket }: { bracket: Bracket }) {
+    return (
+        <div data-testid="bracket">
+            {bracket.champion && (
+                <p className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900" data-testid="champion">
+                    🏆 Campeão: {bracket.champion.name}
+                </p>
+            )}
+            <div className="flex gap-6 overflow-x-auto pb-2">
+                {bracket.rounds.map((round) => (
+                    <div key={round.label} className="flex min-w-56 flex-col justify-around gap-3">
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">{round.label}</h4>
+                        {round.ties.map((tie) => (
+                            <div key={tie.id} className={`overflow-hidden rounded-md text-sm ring-1 ${tie.live ? 'ring-red-400' : 'ring-gray-200'}`}>
+                                <SideRow side={tie.a} penalties={tie.penalties?.a ?? null} />
+                                <div className="border-t border-gray-100" />
+                                <SideRow side={tie.b} penalties={tie.penalties?.b ?? null} />
+                                <div className="border-t border-gray-100 bg-gray-50 px-2 py-1 text-xs text-gray-500">
+                                    {tie.legs.map((leg) => (
+                                        <a key={leg.url} href={leg.url} className="block hover:underline">
+                                            {tie.legs.length > 1 ? `Jogo ${leg.leg}: ` : ''}
+                                            {leg.decided || tie.live ? `${leg.home ?? '?'} ${leg.home_score} x ${leg.away_score} ${leg.away ?? '?'}` : (leg.scheduled_at ? new Date(leg.scheduled_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'A marcar')}
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function RulesView({ rules }: { rules: { points: { label: string; value: number }[]; tiebreakers: string[] } }) {
+    return (
+        <details className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200 print:shadow-none" data-testid="rules">
+            <summary className="cursor-pointer text-sm font-semibold">Como a classificação é calculada</summary>
+            <div className="mt-3 grid gap-4 text-sm sm:grid-cols-2">
+                <div>
+                    <h4 className="mb-1 font-medium">Pontos</h4>
+                    <ul className="space-y-0.5">
+                        {rules.points.map((item) => (
+                            <li key={item.label} className="flex justify-between gap-4">
+                                <span>{item.label}</span>
+                                <span className="font-semibold tabular-nums">{item.value}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                <div>
+                    <h4 className="mb-1 font-medium">Critérios de desempate, em ordem</h4>
+                    <ol className="list-decimal space-y-0.5 pl-5">
+                        {rules.tiebreakers.map((item) => (
+                            <li key={item}>{item}</li>
+                        ))}
+                    </ol>
+                </div>
+            </div>
+        </details>
+    );
+}
+
+function DivisionView({ division, extras }: { division: Division; extras: Extras }) {
     return (
         <div className="space-y-6">
             {division.stages.map((stage) => (
                 <section key={stage.id} className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200 print:break-inside-avoid-page print:shadow-none">
                     <h3 className="mb-3 text-lg font-bold">{stage.name}</h3>
+                    {extras.brackets?.[stage.id] && (
+                        <div className="mb-5">
+                            <BracketView bracket={extras.brackets[stage.id]} />
+                        </div>
+                    )}
                     {stage.tables.length > 0 && <div className="mb-5 space-y-4">{stage.tables.map((table) => <Table key={table.name} table={table} showCaption={stage.tables.length > 1 || table.name !== stage.name} />)}</div>}
                     {stage.rounds.length === 0 ? (
                         <p className="text-sm text-gray-500">A tabela de jogos ainda não foi divulgada.</p>
@@ -106,6 +229,7 @@ function DivisionView({ division }: { division: Division }) {
                     )}
                 </section>
             ))}
+            {extras.rules?.[division.id] && !division.stages.every((stage) => stage.knockout) && <RulesView rules={extras.rules[division.id]} />}
             {division.scorers.length > 0 && (
                 <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200 print:break-inside-avoid-page print:shadow-none">
                     <h3 className="mb-3 text-lg font-bold">Artilharia</h3>
@@ -127,7 +251,7 @@ function DivisionView({ division }: { division: Division }) {
     );
 }
 
-export default function Season({ theme, seo, competition, season, divisions, stats_url, registration_url, other_seasons }: Props) {
+export default function Season({ theme, seo, competition, season, divisions, stats_url, registration_url, other_seasons, extras }: Props) {
     const [active, setActive] = useState(divisions[0]?.id);
 
     return (
@@ -191,7 +315,7 @@ export default function Season({ theme, seo, competition, season, divisions, sta
                     {divisions.map((division) => (
                         <div key={division.id} role="tabpanel" className={`${division.id === active ? 'block' : 'hidden'} print:mb-8 print:block`}>
                             <h2 className="mb-3 hidden text-xl font-bold print:block">{division.name}</h2>
-                            <DivisionView division={division} />
+                            <DivisionView division={division} extras={extras} />
                         </div>
                     ))}
                 </>

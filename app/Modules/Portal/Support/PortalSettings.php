@@ -23,6 +23,8 @@ final class PortalSettings
         'team_scorers' => ['group' => 'Página da equipe', 'default' => true, 'label' => 'Artilheiros da equipe', 'hint' => 'Os 5 maiores goleadores, pelo nome público (já é público na artilharia da edição).'],
         'team_calendar' => ['group' => 'Página da equipe', 'default' => true, 'label' => 'Calendário (.ics)', 'hint' => 'Link para a pessoa adicionar os jogos da equipe à agenda do celular.'],
         'team_roster' => ['group' => 'Página da equipe', 'default' => false, 'label' => 'Elenco público', 'hint' => 'Atletas (nome público e camisa) e técnico da edição mais recente. Desligado por padrão; sem foto, nascimento ou documento.'],
+        'season_bracket' => ['group' => 'Página da edição', 'default' => true, 'label' => 'Chaveamento do mata-mata', 'hint' => 'Quadro visual das fases eliminatórias, com placares, pênaltis e o campeão.'],
+        'season_rules' => ['group' => 'Página da edição', 'default' => true, 'label' => 'Regras da tabela explicadas', 'hint' => 'Pontos por vitória/empate/derrota e a ordem dos critérios de desempate.'],
     ];
 
     public static function enabled(string $key): bool

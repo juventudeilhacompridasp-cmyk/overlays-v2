@@ -29,6 +29,10 @@ No mesmo cartão (agora "O que as páginas públicas mostram") há as opções d
 - **Forma recente**, **artilheiros da equipe** (nome público, 5 maiores) e **calendário (.ics)**, para a pessoa adicionar os jogos à agenda do celular.
 - **Elenco público**: atletas (nome público e camisa) e técnico da edição mais recente. **Desligado por padrão**; nunca traz foto, nascimento ou documento.
 
+## Página pública da edição
+- **Chaveamento do mata-mata**: quadro visual com as fases (oitavas, quartas, semifinal, final), placar de cada confronto (soma dos dois jogos, quando há ida e volta), pênaltis, o vencedor destacado e o **campeão** no fim.
+- **Regras da tabela explicadas**: quantos pontos vale vitória, empate e derrota e a **ordem dos critérios de desempate** da edição, como estão no regulamento.
+
 Os nomes seguem a regra de privacidade: menores aparecem abreviados. Escalações, fotos e documentos nunca aparecem.
 
 Cada página já sai pronta para buscadores e compartilhamento (título, descrição e imagem). O botão de impressão gera a tabela em A4.
