@@ -96,11 +96,12 @@ describe('asking for contact', function () {
 
         $manager = managerFor($team);
         CurrentOrganization::get()->update(['opt_in_features' => null]);
-        askContact($this, $manager, $profile, $team)->assertForbidden();
+        askContact($this, $manager, $profile, $team)->assertSessionHas('error'); // ação sem o recurso: volta com aviso
+        expect(ContactRequest::query()->count())->toBe(0);
     });
 
     it('refuses profiles that are not published or are out of the deadline', function ($profileState) {
-        [, $profile] = contactTarget($profileState());
+        [, $profile] = contactTarget($profileState);
         $team = Team::factory()->create();
 
         askContact($this, managerFor($team), $profile, $team)->assertSessionHas('error');
