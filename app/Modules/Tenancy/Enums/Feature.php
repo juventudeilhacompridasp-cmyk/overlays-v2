@@ -16,6 +16,7 @@ enum Feature: string
     case TeamPortal = 'team_portal';
     case SheetImport = 'sheet_import';
     case Market = 'market';
+    case Arts = 'arts';
 
     /**
      * Recurso sob demanda: fica DESLIGADO para todas as organizações, em qualquer pacote, até a plataforma liberá-lo
@@ -59,6 +60,7 @@ enum Feature: string
             self::TeamPortal => 'Área do gestor de equipe (escalação e esquema tático)',
             self::SheetImport => 'Súmulas enviadas depois do jogo (leitura e conferência)',
             self::Market => 'Mercado de jogadores livres',
+            self::Arts => 'Artes das partidas (jogo do dia, resultado, escalação)',
         };
     }
 }

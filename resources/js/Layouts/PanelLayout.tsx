@@ -22,6 +22,8 @@ const reportsNav: NavItem = { feature: 'reports', label: 'Relatórios', route: '
 
 const widgetsNav: NavItem = { label: 'Widgets', route: 'panel.widgets.index', match: 'panel.widgets.*', feature: 'embeds', icon: 'M8 9l-4 3 4 3M16 9l4 3-4 3M13 6l-2 12' };
 
+const artsNav: NavItem = { label: 'Artes', route: 'panel.arts.index', match: 'panel.arts.*', feature: 'arts', icon: 'M4 16l4-4 4 4 3-3 5 5M4 5h16v14H4zM15 9h.01' };
+
 const mesarioNav: NavItem = { label: 'Mesário', route: 'panel.mesario', match: 'panel.mesario', icon: 'M12 18h.01M8 3h8a2 2 0 012 2v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2z' };
 
 // Gestor de equipe (ADR 0003): menu próprio, sem nada do painel do organizador.
@@ -77,7 +79,8 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const base = canManageCompetitions ? [...nav.slice(0, 2), registrationsNav, ...nav.slice(2), reportsNav, widgetsNav] : nav;
     const { features } = usePage().props;
     const withMesario = canOperate ? [nav[0], mesarioNav, ...base.slice(1)] : base;
-    const withMarket = canModerateMarket ? [...withMesario, marketNav] : withMesario;
+    const withArts = [...withMesario, artsNav];
+    const withMarket = canModerateMarket ? [...withArts, marketNav] : withArts;
     const all = canManageUsers ? [...withMarket, ...adminNav, usersNav, profilesNav] : withMarket;
     const withPlatform = auth.platform_admin ? [...all, platformNav, apiDocsNav] : all;
     const items = auth.role === 'manager' ? managerNav.filter((item) => !item.feature || features.includes(item.feature)) : auth.role === 'athlete' ? athleteNav : withPlatform.filter((item) => !item.feature || features.includes(item.feature));
