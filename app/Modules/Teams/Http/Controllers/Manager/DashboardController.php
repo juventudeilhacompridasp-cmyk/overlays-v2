@@ -7,6 +7,7 @@ use App\Modules\Competitions\Models\Entry;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Teams\Models\Team;
+use App\Modules\Teams\Models\TeamManager;
 use App\Modules\Teams\Support\ManagedTeams;
 use App\Modules\Teams\Support\ManagerGameRow;
 use Illuminate\Http\Request;
@@ -46,6 +47,8 @@ class DashboardController extends Controller
         $row = fn (Game $game): array => [...ManagerGameRow::of($game, $mineIn($game)), 'lineup' => $status[$game->getKey()] ?? null];
 
         return Inertia::render('Manager/Dashboard', [
+            // Avisos por e-mail ligados? (vale para todas as equipes do gestor; ver NoticeController)
+            'notify' => ! TeamManager::query()->where('user_id', $user->getKey())->where('notify', false)->exists(),
             'teams' => $teams->map(fn (Team $team) => ['id' => $team->getKey(), 'name' => $team->name, 'logo_url' => $team->logoUrl(128)])->values(),
             'entries' => $entries->map(fn (Entry $entry) => [
                 'id' => $entry->getKey(),

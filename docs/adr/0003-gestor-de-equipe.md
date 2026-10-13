@@ -91,7 +91,7 @@ Requisitos: o gestor tem **login e painel próprios**; define **escalação por 
 - O vínculo do gestor é removível a qualquer momento pelo organizador; remover o usuário da organização apaga os vínculos.
 
 ### 8. Fora do escopo desta decisão
-Chat/avisos por e-mail ao gestor (mudança de horário, escalação do adversário), pagamento, substituições planejadas no pré-jogo,
+Avisos por push/WhatsApp ao gestor, escalação do adversário por e-mail, pagamento, substituições planejadas no pré-jogo,
 envio de documentos pelo gestor depois da aprovação (usa nova solicitação de elenco, parte 3) e app nativo.
 
 ## Entrega em partes
@@ -111,6 +111,10 @@ envio de documentos pelo gestor depois da aprovação (usa nova solicitação de
      atletas vale para o elenco inteiro. O gestor abre o pedido pela área dele e preenche no link do pedido (exige o recurso `online_registration`);
    - **convite do responsável** na aprovação de uma inscrição (botão explícito do organizador) e **carteirinhas** do próprio elenco
      (recurso `athlete_cards`, sem renovar códigos).
+
+4. **Parte 4 — avisos por e-mail** (entregue): lembrete de escalação pendente (24 h e 2 h antes do prazo), mudança de horário/local/situação
+   do jogo e suspensões após cada jogo, uma única vez por pessoa e aviso, com opção de desligar. O adversário e dados de outras equipes
+   nunca entram nos e-mails. Push/WhatsApp para o gestor ficam para depois.
 
 ## Consequências
 - Rotas, middleware e páginas novas; `panel.member` passa a recusar o papel `manager`.

@@ -1,16 +1,17 @@
-import { Badge, Card, Empty, LinkButton, Logo, PageHeader } from '@/Components/Panel/ui';
+import { Badge, Button, Card, Empty, LinkButton, Logo, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { GameRow } from './Games/GameRow';
 
 interface Props {
+    notify: boolean;
     teams: { id: string; name: string; logo_url: string | null }[];
     entries: { id: string; team: string; competition: string; season: string; division: string; status: string }[];
     upcoming: GameRow[];
     recent: GameRow[];
 }
 
-export default function Dashboard({ teams, entries, upcoming, recent }: Props) {
+export default function Dashboard({ notify, teams, entries, upcoming, recent }: Props) {
     return (
         <PanelLayout>
             <Head title="Área do gestor" />
@@ -63,6 +64,18 @@ export default function Dashboard({ teams, entries, upcoming, recent }: Props) {
                                 ))}
                             </ul>
                         )}
+                    </Card>
+
+                    <Card title="Avisos por e-mail">
+                        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600">
+                            <p className="max-w-xl">Lembrete quando a escalação ainda não foi confirmada perto do prazo, mudanças de horário ou local do jogo e suspensões depois de cada partida.</p>
+                            <div className="flex items-center gap-2">
+                                <Badge tone={notify ? 'green' : 'gray'}>{notify ? 'Ligados' : 'Desligados'}</Badge>
+                                <Button small variant="secondary" onClick={() => router.patch(route('manager.notices.update'), { notify: !notify }, { preserveScroll: true })}>
+                                    {notify ? 'Desligar' : 'Ligar'}
+                                </Button>
+                            </div>
+                        </div>
                     </Card>
 
                     {recent.length > 0 && (
