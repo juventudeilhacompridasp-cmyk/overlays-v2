@@ -316,8 +316,9 @@ describe('supplement requests', function () {
         $roster = RosterEntry::query()->where('entry_id', $entry->id)->where('status', RosterStatus::Active);
         expect($registration->fresh()->status)->toBe(RegistrationStatus::Approved)
             ->and((clone $roster)->count())->toBe(count($hp) + 2) // 14 atletas + técnico já existentes + 1 reforço
-            ->and((clone $roster)->where('shirt_number', 40)->exists())->toBeTrue()
-            ->and((clone $roster)->where('shirt_number', 41)->exists())->toBeFalse()
+            // Em ordem alfabética "Reforço Dois" (camisa 41) vem antes de "Reforço Um" (camisa 40): o primeiro foi aprovado.
+            ->and((clone $roster)->where('shirt_number', 41)->exists())->toBeTrue()
+            ->and((clone $roster)->where('shirt_number', 40)->exists())->toBeFalse()
             ->and(Team::query()->count())->toBe($teams)
             ->and(Entry::query()->count())->toBe($entries)
             ->and(RosterChange::query()->where('action', RosterChange::SUPPLEMENT_APPROVED)->count())->toBe(1);
