@@ -11,7 +11,6 @@ use App\Modules\Teams\Models\Team;
 use App\Modules\Teams\Models\TeamManager;
 use App\Modules\Teams\Support\ManagedTeams;
 use App\Modules\Tenancy\CurrentOrganization;
-use App\Modules\Tenancy\Enums\Feature;
 use App\Modules\Tenancy\Enums\Plan;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Membership;
@@ -95,7 +94,7 @@ describe('invitation by the organizer', function () {
         expect(ManagedIds($manager))->toEqualCanonicalizing([$team->id, $other->id])
             ->and(Membership::query()->where('user_id', $manager->id)->count())->toBe(1);
 
-        Mail::assertQueued(TeamManagerInvitation::class, fn (TeamManagerInvitation $mail) => ! $mail->newAccount && str_ends_with($mail->link, '/gestor'));
+        Mail::assertQueued(TeamManagerInvitation::class, fn (TeamManagerInvitation $mail) => $mail->newAccount === false && str_ends_with($mail->link, '/gestor'));
     });
 
     it('refuses an e-mail that already has a panel role in the organization', function () {
