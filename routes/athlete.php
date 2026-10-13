@@ -22,6 +22,7 @@ Route::middleware(['auth', 'athlete.member', 'legal.accepted', 'feature:market']
     Route::post('pedidos/{contactRequest}/aceitar', [AthleteRequestController::class, 'accept'])->name('requests.accept');
     Route::post('pedidos/{contactRequest}/recusar', [AthleteRequestController::class, 'decline'])->name('requests.decline');
     Route::post('pedidos/{contactRequest}/bloquear', [AthleteRequestController::class, 'block'])->name('requests.block');
+    Route::post('pedidos/{contactRequest}/denunciar', [AthleteRequestController::class, 'report'])->name('requests.report');
     Route::delete('bloqueios/{block}', [AthleteRequestController::class, 'unblock'])->name('blocks.destroy');
     Route::delete('conta', [AthleteController::class, 'destroy'])->name('destroy');
     Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'athlete')->name('help.index');

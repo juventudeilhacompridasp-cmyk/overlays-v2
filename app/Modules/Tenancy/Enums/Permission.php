@@ -16,6 +16,7 @@ enum Permission: string
     case RegistryManage = 'registry.manage';
     case GamesOperate = 'games.operate';
     case UsersManage = 'users.manage';
+    case MarketModerate = 'market.moderate';
 
     public function label(): string
     {
@@ -29,6 +30,7 @@ enum Permission: string
             'registry' => 'Cadastros',
             'games' => 'Jogos',
             'users' => 'Usuários e perfis',
+            'market' => 'Mercado de jogadores',
             default => ucfirst($this->group()),
         };
     }
@@ -47,6 +49,7 @@ enum Permission: string
             self::RegistryManage => Ability::ManageRegistry,
             self::GamesOperate => Ability::OperateGames,
             self::UsersManage => Ability::ManageUsers,
+            self::MarketModerate => Ability::ManageMarket,
         };
     }
 

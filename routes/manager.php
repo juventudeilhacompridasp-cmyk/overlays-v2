@@ -2,6 +2,7 @@
 
 use App\Modules\Help\Http\Controllers\HelpController;
 use App\Modules\Market\Http\Controllers\Manager\ContactController;
+use App\Modules\Market\Http\Controllers\Manager\HiringController;
 use App\Modules\Market\Http\Controllers\Manager\MarketController;
 use App\Modules\Teams\Http\Controllers\Manager\CardsController;
 use App\Modules\Teams\Http\Controllers\Manager\DashboardController;
@@ -28,6 +29,8 @@ Route::middleware(['auth', 'verified', 'manager.member', 'legal.accepted', 'feat
     Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'manager')->name('help.show');
     Route::get('mercado', [MarketController::class, 'index'])->middleware('feature:market')->name('market.index');
     Route::post('mercado/{profile}/pedidos', [ContactController::class, 'store'])->middleware('feature:market')->name('market.requests.store');
+    Route::post('mercado/{profile}/denunciar', [HiringController::class, 'report'])->middleware('feature:market')->name('market.report');
+    Route::post('mercado/pedidos/{contactRequest}/reforco', [HiringController::class, 'supplement'])->middleware(['feature:market', 'feature:online_registration'])->name('market.requests.supplement');
     Route::delete('mercado/pedidos/{contactRequest}', [ContactController::class, 'destroy'])->middleware('feature:market')->name('market.requests.destroy');
     Route::get('jogos', [GameController::class, 'index'])->name('games.index');
     Route::get('jogos/{game}', [GameController::class, 'show'])->name('games.show');

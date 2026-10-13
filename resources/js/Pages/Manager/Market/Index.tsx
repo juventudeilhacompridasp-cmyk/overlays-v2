@@ -36,6 +36,7 @@ interface RequestRow {
     expires_at: string;
     contact: { channel: string; value: string; link: string } | null;
     name?: string;
+    hiring?: { entries: { id: string; label: string }[]; registration_url: string | null; registration_status: string | null };
 }
 
 interface Filters {
@@ -70,6 +71,42 @@ function ContactBox({ row }: { row: RequestRow }) {
                 {row.contact.value}
             </a>
         </p>
+    );
+}
+
+function HiringBox({ row }: { row: RequestRow }) {
+    const [entryId, setEntryId] = useState(row.hiring?.entries[0]?.id ?? '');
+
+    if (!row.hiring || row.status !== 'accepted') return null;
+
+    if (row.hiring.registration_url) {
+        return (
+            <p className="mt-2 text-sm text-gray-700">
+                Pedido de reforço aberto.{' '}
+                <a href={row.hiring.registration_url} className="font-medium text-emerald-700 underline">
+                    Abrir e copiar o link do atleta
+                </a>
+            </p>
+        );
+    }
+
+    if (row.hiring.entries.length === 0) return <p className="mt-2 text-xs text-gray-500">Para incluir no elenco, a equipe precisa de uma inscrição numa edição.</p>;
+
+    return (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+            {row.hiring.entries.length > 1 && (
+                <Select aria-label="Inscrição" value={entryId} onChange={(event) => setEntryId(event.target.value)}>
+                    {row.hiring.entries.map((entry) => (
+                        <option key={entry.id} value={entry.id}>
+                            {entry.label}
+                        </option>
+                    ))}
+                </Select>
+            )}
+            <Button small onClick={() => router.post(route('manager.market.requests.supplement', row.id), { entry_id: entryId })}>
+                Convidar para o elenco
+            </Button>
+        </div>
     );
 }
 
@@ -176,6 +213,7 @@ export default function Index({ profiles, filters, daily_limit, my_requests, opt
                                     )}
                                 </div>
                                 <ContactBox row={row} />
+                                <HiringBox row={row} />
                             </li>
                         ))}
                     </ul>
@@ -288,9 +326,20 @@ export default function Index({ profiles, filters, daily_limit, my_requests, opt
                                     <div key={row.id} className="mt-3 border-t border-gray-100 pt-3 text-sm">
                                         <span className="text-gray-700">{row.team}</span> <Badge tone={statusTone(row.status)}>{row.status_label}</Badge>
                                         <ContactBox row={row} />
+                                        <HiringBox row={row} />
                                     </div>
                                 ))}
                                 <RequestForm profile={profile} />
+                                <button
+                                    type="button"
+                                    className="mt-3 text-xs text-gray-400 hover:text-red-600"
+                                    onClick={() => {
+                                        const reason = window.prompt(`Denunciar o perfil de ${profile.name} à organização. Conte o motivo (mín. 10 caracteres):`);
+                                        if (reason && reason.trim().length >= 10) router.post(route('manager.market.report', profile.id), { reason }, { preserveScroll: true });
+                                    }}
+                                >
+                                    Denunciar perfil
+                                </button>
                             </Card>
                         ))}
                     </div>

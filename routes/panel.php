@@ -9,6 +9,7 @@ use App\Modules\Competitions\Http\Controllers\ReportController;
 use App\Modules\Competitions\Http\Controllers\SeasonController;
 use App\Modules\Competitions\Http\Controllers\StageController;
 use App\Modules\Help\Http\Controllers\HelpController;
+use App\Modules\Market\Http\Controllers\Panel\AdminController as MarketAdminController;
 use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
 use App\Modules\Matches\Http\Controllers\MesarioController;
@@ -152,6 +153,15 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::post('broadcast', [ChannelController::class, 'store'])->name('broadcast.store');
         Route::post('broadcast/{channel}/regenerate', [ChannelController::class, 'regenerate'])->name('broadcast.regenerate');
         Route::delete('broadcast/{channel}', [ChannelController::class, 'destroy'])->name('broadcast.destroy');
+    });
+
+    // Mercado de jogadores: moderação (denúncias, suspensão, cota). Nem consultar sem a permissão: há denúncias.
+    Route::middleware(['can:manage-market', 'feature:market'])->prefix('mercado')->name('market.')->group(function () {
+        Route::get('/', [MarketAdminController::class, 'index'])->name('index');
+        Route::post('perfis/{profile}/suspender', [MarketAdminController::class, 'suspend'])->name('suspend');
+        Route::post('perfis/{profile}/reativar', [MarketAdminController::class, 'restore'])->name('restore');
+        Route::patch('denuncias/{report}', [MarketAdminController::class, 'resolve'])->name('reports.resolve');
+        Route::patch('configuracoes', [MarketAdminController::class, 'settings'])->name('settings');
     });
 
     // Usuários, papéis e identidade do portal (só administradores; nem consultar).

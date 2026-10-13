@@ -44,6 +44,8 @@ const adminNav: NavItem[] = [
     { label: 'Portal público', route: 'panel.organization.edit', match: 'panel.organization.*', icon: 'M12 21a9 9 0 100-18 9 9 0 000 18zM3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 010 18M12 3a14 14 0 000 18' },
 ];
 
+const marketNav: NavItem = { label: 'Mercado de jogadores', route: 'panel.market.index', match: 'panel.market.*', feature: 'market', icon: 'M17 20h5v-2a4 4 0 00-5-3.9M9 11a4 4 0 100-8 4 4 0 000 8zM2 20v-2a4 4 0 014-4h6a4 4 0 014 4v2' };
+
 const usersNav: NavItem = { label: 'Usuários', route: 'panel.users.index', match: 'panel.users.*', icon: 'M16 11a3 3 0 100-6 3 3 0 000 6zM8 11a3 3 0 100-6 3 3 0 000 6zM2 20v-1a4 4 0 014-4h4a4 4 0 014 4v1M15 15h3a4 4 0 014 4v1' };
 
 const profilesNav: NavItem = { label: 'Perfis de acesso', route: 'panel.profiles.index', match: 'panel.profiles.*', icon: 'M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3zM9 12l2 2 4-4' };
@@ -71,10 +73,12 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     }, []);
     const canManageCompetitions = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
+    const canModerateMarket = useCan('manage-market');
     const base = canManageCompetitions ? [...nav.slice(0, 2), registrationsNav, ...nav.slice(2), reportsNav, widgetsNav] : nav;
     const { features } = usePage().props;
     const withMesario = canOperate ? [nav[0], mesarioNav, ...base.slice(1)] : base;
-    const all = canManageUsers ? [...withMesario, ...adminNav, usersNav, profilesNav] : withMesario;
+    const withMarket = canModerateMarket ? [...withMesario, marketNav] : withMesario;
+    const all = canManageUsers ? [...withMarket, ...adminNav, usersNav, profilesNav] : withMarket;
     const withPlatform = auth.platform_admin ? [...all, platformNav, apiDocsNav] : all;
     const items = auth.role === 'manager' ? managerNav.filter((item) => !item.feature || features.includes(item.feature)) : auth.role === 'athlete' ? athleteNav : withPlatform.filter((item) => !item.feature || features.includes(item.feature));
     // Ajuda para todos: cada público tem a própria central (painel, gestor ou plataforma).

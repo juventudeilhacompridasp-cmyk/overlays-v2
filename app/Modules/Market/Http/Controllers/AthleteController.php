@@ -50,6 +50,7 @@ class AthleteController extends Controller
                 'photo_url' => $profile->photoUrl(400),
                 'published_at' => $profile->published_at?->format('d/m/Y'),
                 'expires_at' => $profile->expires_at?->format('d/m/Y'),
+                'suspended_reason' => $profile->suspended_reason,
             ],
             'requests' => ContactRequest::query()->with('team:id,name')->where('profile_id', $profile->getKey())
                 ->orderByRaw("case status when 'pending' then 0 else 1 end")->latest()->limit(30)->get()

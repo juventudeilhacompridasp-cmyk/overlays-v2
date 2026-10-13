@@ -25,6 +25,7 @@ interface Props {
         photo_url: string | null;
         published_at: string | null;
         expires_at: string | null;
+        suspended_reason: string | null;
     };
     requests: { id: string; team: string; message: string; status: string; status_label: string; created_at: string; expires_at: string }[];
     blocks: { id: string; team: string }[];
@@ -64,7 +65,7 @@ export default function Dashboard({ profile, requests, blocks, videos, email_ver
 
     const positions = options.sports.find((sport) => sport.value === data.sport)?.positions ?? [];
     const published = profile.status === 'published';
-    const locked = profile.status === 'signed' || profile.status === 'suspended';
+    const locked = profile.status === 'suspended';
 
     const toggle = (list: string[], value: string) => (list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
 
@@ -84,6 +85,16 @@ export default function Dashboard({ profile, requests, blocks, videos, email_ver
             <PageHeader title="Meu perfil no Mercado" subtitle="Apresente-se aos gestores de equipe: posição, disponibilidade e foto. O contato só aparece depois que você aceitar o pedido de uma equipe." />
 
             <div className="space-y-6">
+                {profile.status === 'suspended' && (
+                    <div role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-900 ring-1 ring-red-200">
+                        A organização suspendeu o seu perfil no Mercado{profile.suspended_reason ? `: ${profile.suspended_reason}` : '.'} Fale com a organização para pedir a reativação.
+                    </div>
+                )}
+                {profile.status === 'signed' && (
+                    <div role="status" className="rounded-md bg-blue-50 p-4 text-sm text-blue-900 ring-1 ring-blue-200">
+                        Você foi contratado por uma equipe e saiu da busca. Se ficar sem time de novo, clique em “Voltar ao Mercado”.
+                    </div>
+                )}
                 {!email_verified && (
                     <div role="alert" className="rounded-md bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200">
                         Confirme o seu e-mail para poder publicar o perfil. Procure a mensagem na sua caixa de entrada.{' '}
@@ -102,7 +113,7 @@ export default function Dashboard({ profile, requests, blocks, videos, email_ver
                             </Button>
                         ) : (
                             <Button small disabled={locked} onClick={() => router.post(route('athlete.publish'), {}, { preserveScroll: true })}>
-                                Publicar no Mercado
+                                {profile.status === 'signed' ? 'Voltar ao Mercado' : 'Publicar no Mercado'}
                             </Button>
                         )
                     }
@@ -147,6 +158,16 @@ export default function Dashboard({ profile, requests, blocks, videos, email_ver
                                                 </Button>
                                             </div>
                                         )}
+                                        <Button
+                                            small
+                                            variant="ghost"
+                                            onClick={() => {
+                                                const reason = window.prompt(`Denunciar ${item.team} à organização. Conte o que aconteceu (mín. 10 caracteres):`);
+                                                if (reason && reason.trim().length >= 10) router.post(route('athlete.requests.report', item.id), { reason }, { preserveScroll: true });
+                                            }}
+                                        >
+                                            Denunciar
+                                        </Button>
                                         {(item.status === 'pending' || item.status === 'accepted') && (
                                             <Button
                                                 small

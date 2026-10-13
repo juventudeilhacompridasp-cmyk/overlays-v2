@@ -7,6 +7,7 @@ use App\Modules\Competitions\Enums\EntryStatus;
 use App\Modules\Competitions\Models\Entry;
 use App\Modules\Registration\Enums\RegistrationStatus;
 use App\Modules\Registration\Enums\ReviewStatus;
+use App\Modules\Registration\Events\SupplementApproved;
 use App\Modules\Registration\Models\Registration;
 use App\Modules\Registration\Models\RegistrationPerson;
 use App\Modules\Teams\Actions\AddToRoster;
@@ -156,7 +157,7 @@ final class ReviewRegistration
             throw new InvalidArgumentException("O elenco passaria do máximo de {$max} atletas da edição.");
         }
 
-        return DB::transaction(function () use ($registration, $reviewer, $approved, $entry): Entry {
+        $result = DB::transaction(function () use ($registration, $reviewer, $approved, $entry): Entry {
             foreach ($approved as $item) {
                 $person = $this->person($registration, $item);
 
@@ -175,6 +176,11 @@ final class ReviewRegistration
 
             return $entry;
         });
+
+        // Fora da transação: quem escuta (ex.: Mercado) só vê o reforço já aprovado.
+        event(new SupplementApproved($registration->getKey()));
+
+        return $result;
     }
 
     private function team(Registration $registration, ?string $teamId): Team

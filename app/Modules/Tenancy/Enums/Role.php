@@ -39,7 +39,7 @@ enum Role: string
     {
         return match ($this) {
             self::Admin => Ability::cases(),
-            self::Organizer => [Ability::ManageCompetitions, Ability::ManageRegistry, Ability::OperateGames],
+            self::Organizer => [Ability::ManageCompetitions, Ability::ManageRegistry, Ability::OperateGames, Ability::ManageMarket],
             self::Operator => [Ability::OperateGames],
             self::Viewer, self::TeamManager, self::Athlete => [],
         };
