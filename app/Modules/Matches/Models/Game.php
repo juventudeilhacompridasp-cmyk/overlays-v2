@@ -127,6 +127,14 @@ class Game extends Model
         return $this->hasMany(GameLineup::class);
     }
 
+    /**
+     * @return HasMany<GameTactic, $this>
+     */
+    public function tactics(): HasMany
+    {
+        return $this->hasMany(GameTactic::class);
+    }
+
     /** Esporte do jogo (o da competição). */
     public function sport(): Sport
     {

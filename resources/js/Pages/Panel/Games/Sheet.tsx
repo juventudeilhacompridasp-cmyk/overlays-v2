@@ -23,6 +23,7 @@ interface Team {
     roster: Person[];
     lineup: { starters: string[]; bench: string[]; staff: string[] };
     has_lineup: boolean;
+    tactic: { formation: string | null; confirmed: boolean };
     has_events: boolean;
     on_field: string[];
     available_bench: string[];
@@ -471,6 +472,12 @@ function TeamCard({ game, team, limits }: { game: Props['game']; team: Team; lim
                 ) : undefined
             }
         >
+            {(team.tactic.confirmed || team.tactic.formation) && (
+                <div className="mb-3 flex flex-wrap gap-2 text-xs">
+                    {team.tactic.confirmed && <Badge tone="green">Escalação confirmada pelo gestor</Badge>}
+                    {team.tactic.formation && <Badge tone="blue">Formação {team.tactic.formation}</Badge>}
+                </div>
+            )}
             {editing ? (
                 <LineupEditor game={game} team={team} limits={limits} locked={!game.open || team.has_events} onSaved={() => setEditing(false)} />
             ) : (

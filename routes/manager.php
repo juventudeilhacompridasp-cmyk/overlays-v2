@@ -14,4 +14,5 @@ Route::middleware(['auth', 'verified', 'manager.member', 'legal.accepted', 'feat
     Route::get('inscricoes/{entry}', [EntryController::class, 'show'])->name('entries.show');
     Route::get('jogos', [GameController::class, 'index'])->name('games.index');
     Route::get('jogos/{game}', [GameController::class, 'show'])->name('games.show');
+    Route::put('jogos/{game}/escalacao', [GameController::class, 'lineup'])->name('games.lineup');
 });

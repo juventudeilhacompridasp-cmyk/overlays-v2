@@ -7,6 +7,7 @@ use App\Modules\Competitions\Models\Entry;
 use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameLineup;
+use App\Modules\Matches\Models\GameTactic;
 use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Enums\RosterStatus;
 use App\Modules\Teams\Models\RosterEntry;
@@ -24,11 +25,16 @@ final class SaveGameLineup
     public function __construct(private readonly CalculateDiscipline $discipline = new CalculateDiscipline) {}
 
     /**
+     * A ordem das listas vira a ordem na escalação. `$positions` (pessoa => vaga da formação) e `$captain` vêm do esquema
+     * tático; quando omitidos (`null`, ex.: o mesário salvando só os ids), mantém posição e capitão de quem continua na
+     * escalação. Se as pessoas/funções mudarem, a confirmação do gestor (`game_tactics`) é desfeita.
+     *
      * @param  list<string>  $starters
      * @param  list<string>  $bench
      * @param  list<string>  $staff
+     * @param  array<string, string>|null  $positions
      */
-    public function handle(Game $game, Entry $entry, array $starters, array $bench = [], array $staff = []): void
+    public function handle(Game $game, Entry $entry, array $starters, array $bench = [], array $staff = [], ?array $positions = null, ?string $captain = null): void
     {
         if ($entry->getKey() !== $game->home_entry_id && $entry->getKey() !== $game->away_entry_id) {
             throw new InvalidArgumentException('A equipe não participa deste jogo.');
@@ -91,20 +97,45 @@ final class SaveGameLineup
             }
         }
 
-        DB::transaction(function () use ($game, $entry, $starters, $bench, $staff, $roster): void {
+        if ($captain !== null && ! in_array($captain, [...$starters, ...$bench], true)) {
+            throw new InvalidArgumentException('O capitão precisa estar entre os titulares ou reservas.');
+        }
+
+        DB::transaction(function () use ($game, $entry, $starters, $bench, $staff, $roster, $positions, $captain): void {
+            $existing = GameLineup::query()->where('game_id', $game->getKey())->where('entry_id', $entry->getKey())->get();
+            $before = $existing->map(fn (GameLineup $row) => $row->slot->value.':'.$row->person_id)->sort()->values()->all();
+
+            if ($positions === null) {
+                // Só segue valendo a posição de quem continua na mesma função (titular que virou reserva perde a vaga).
+                $newSlot = [...array_fill_keys($starters, LineupSlot::Starter), ...array_fill_keys($bench, LineupSlot::Bench)];
+                $kept = $existing->filter(fn (GameLineup $row) => ($newSlot[$row->person_id] ?? null) === $row->slot);
+                $positions = $kept->whereNotNull('position')->pluck('position', 'person_id')->all();
+                $captain = $kept->firstWhere('is_captain', true)?->person_id;
+            }
+
             GameLineup::query()->where('game_id', $game->getKey())->where('entry_id', $entry->getKey())->delete();
 
             foreach ([[$starters, LineupSlot::Starter], [$bench, LineupSlot::Bench], [$staff, LineupSlot::Staff]] as [$people, $slot]) {
-                foreach ($people as $personId) {
+                foreach (array_values($people) as $index => $personId) {
                     GameLineup::query()->create([
                         'organization_id' => $game->organization_id,
                         'game_id' => $game->getKey(),
                         'entry_id' => $entry->getKey(),
                         'person_id' => $personId,
                         'slot' => $slot,
+                        'position' => $slot === LineupSlot::Staff ? null : ($positions[$personId] ?? null),
+                        'sort' => $index,
+                        'is_captain' => $slot !== LineupSlot::Staff && $captain === $personId,
                         'shirt_number' => $roster->get($personId)?->shirt_number,
                     ]);
                 }
+            }
+
+            $after = collect([[$starters, LineupSlot::Starter], [$bench, LineupSlot::Bench], [$staff, LineupSlot::Staff]])
+                ->flatMap(fn (array $group) => array_map(fn (string $id) => $group[1]->value.':'.$id, $group[0]))->sort()->values()->all();
+
+            if ($before !== $after) {
+                GameTactic::query()->where('game_id', $game->getKey())->where('entry_id', $entry->getKey())->update(['confirmed_at' => null, 'confirmed_by' => null]);
             }
         });
     }

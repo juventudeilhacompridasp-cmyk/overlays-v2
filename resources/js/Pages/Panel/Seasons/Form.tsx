@@ -201,6 +201,13 @@ export default function Form({ competition, season, rules, options, defaults }: 
                     </div>
                 </Card>
 
+                <Card title="Regulamento: escalação pelo gestor da equipe">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {numberField('Prazo da escalação (minutos antes do jogo)', 'rules.lineup.manager_deadline_minutes', data.rules.lineup.manager_deadline_minutes, (d, v) => (d.lineup.manager_deadline_minutes = v), '0 = até o horário do jogo')}
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500">Depois do prazo o gestor só consulta; o mesário e o organizador ainda podem ajustar a escalação pela súmula até o primeiro lançamento.</p>
+                </Card>
+
                 {data.rules.scoring.model === 'points' && (
                     <Card title="Regulamento: basquete">
                         <div className="grid gap-4 sm:grid-cols-2">
