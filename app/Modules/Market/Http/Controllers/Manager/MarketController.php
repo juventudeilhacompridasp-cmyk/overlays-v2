@@ -7,6 +7,7 @@ use App\Modules\Competitions\Enums\Sport;
 use App\Modules\Market\Enums\RequestStatus;
 use App\Modules\Market\Models\ContactRequest;
 use App\Modules\Market\Models\MarketBlock;
+use App\Modules\Market\Models\MarketMedia;
 use App\Modules\Market\Models\MarketProfile;
 use App\Modules\Market\Support\MarketCard;
 use App\Modules\Market\Support\MarketOptions;
@@ -38,9 +39,10 @@ class MarketController extends Controller
 
         $requests = ContactRequest::query()->with('team:id,name')
             ->whereIn('team_id', $teamIds)->whereIn('profile_id', $page->pluck('id'))->latest()->get()->groupBy('profile_id');
+        $videos = MarketMedia::query()->whereIn('profile_id', $page->pluck('id'))->orderBy('sort')->get()->groupBy('profile_id');
         $blocked = MarketBlock::query()->whereIn('team_id', $teamIds)->whereIn('profile_id', $page->pluck('id'))->get()->groupBy('profile_id');
 
-        $profiles = $page->through(function (MarketProfile $profile) use ($requests, $blocked, $teams) {
+        $profiles = $page->through(function (MarketProfile $profile) use ($requests, $blocked, $videos, $teams) {
             $mine = $requests->get($profile->getKey(), collect());
             $blockedTeams = $blocked->get($profile->getKey(), collect())->pluck('team_id')->all();
             $busy = $mine->filter(fn (ContactRequest $item) => $item->isOpen() || in_array($item->status, [RequestStatus::Accepted, RequestStatus::Declined], true))->pluck('team_id')->all();
@@ -49,6 +51,7 @@ class MarketController extends Controller
                 ...MarketCard::of($profile),
                 'teams_available' => $teams->reject(fn ($team) => in_array($team->getKey(), [...$blockedTeams, ...$busy], true))
                     ->map(fn ($team) => ['id' => $team->getKey(), 'name' => $team->name])->values(),
+                'videos' => $videos->get($profile->getKey(), collect())->map(fn (MarketMedia $video) => $video->toCard())->values(),
                 'requests' => $mine->map(fn (ContactRequest $item) => MarketCard::request($item, $profile))->values(),
             ];
         });

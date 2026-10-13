@@ -12,6 +12,7 @@ use App\Modules\Market\Actions\SaveMarketProfile;
 use App\Modules\Market\Enums\RequestStatus;
 use App\Modules\Market\Models\ContactRequest;
 use App\Modules\Market\Models\MarketBlock;
+use App\Modules\Market\Models\MarketMedia;
 use App\Modules\Market\Models\MarketProfile;
 use App\Modules\Market\Support\MarketOptions;
 use Illuminate\Http\RedirectResponse;
@@ -62,6 +63,7 @@ class AthleteController extends Controller
                     'created_at' => $item->created_at->format('d/m/Y'),
                     'expires_at' => $item->expires_at->format('d/m/Y'),
                 ])->values(),
+            'videos' => MarketMedia::query()->where('profile_id', $profile->getKey())->orderBy('sort')->get()->map(fn (MarketMedia $video) => $video->toCard())->values(),
             'blocks' => MarketBlock::query()->with('team:id,name')->where('profile_id', $profile->getKey())->get()
                 ->map(fn (MarketBlock $block) => ['id' => $block->getKey(), 'team' => $block->team->name])->values(),
             'email_verified' => $request->user()->hasVerifiedEmail(),

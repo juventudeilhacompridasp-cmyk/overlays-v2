@@ -1,4 +1,5 @@
 import { Badge, Button, Card, Empty, Field, Input, Logo, PageHeader, Pagination, Select, Textarea } from '@/Components/Panel/ui';
+import VideoEmbed, { MarketVideo } from '@/Components/Market/VideoEmbed';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { PaginationLink } from '@/types/panel';
 import { Head, router, useForm } from '@inertiajs/react';
@@ -22,6 +23,7 @@ interface ProfileCard {
     availability: { day: string; periods: string[] }[];
     published_at: string | null;
     teams_available: { id: string; name: string }[];
+    videos: MarketVideo[];
     requests: RequestRow[];
 }
 
@@ -274,6 +276,13 @@ export default function Index({ profiles, filters, daily_limit, my_requests, opt
                                             </li>
                                         ))}
                                     </ul>
+                                )}
+                                {profile.videos.length > 0 && (
+                                    <div className="mt-3 space-y-2">
+                                        {profile.videos.map((video) => (
+                                            <VideoEmbed key={video.id} video={video} />
+                                        ))}
+                                    </div>
                                 )}
                                 {profile.requests.map((row) => (
                                     <div key={row.id} className="mt-3 border-t border-gray-100 pt-3 text-sm">

@@ -19,6 +19,9 @@ Data de nascimento exata, e-mail, telefone e documentos. O contato só é revela
 
 Só aparecem perfis publicados e renovados nos últimos 60 dias.
 
+## Vídeos
+Se o jogador adicionou vídeos de jogadas, eles aparecem no cartão. Nada de terceiros é carregado com a página: clique em **Assistir** para abrir o player do YouTube, Vimeo ou Instagram, ou em **Abrir no site**.
+
 ## Pedir contato
 No cartão do jogador escreva uma mensagem curta (até 300 caracteres) e clique em **Pedir contato**. Se você gerencia mais de uma equipe, escolha em nome de qual.
 - O jogador recebe um e-mail e decide se **aceita** ou **recusa**. O pedido vale por **14 dias**.
