@@ -2,6 +2,7 @@
 
 use App\Modules\Help\Http\Controllers\HelpController;
 use App\Modules\Market\Http\Controllers\AthleteController;
+use App\Modules\Market\Http\Controllers\AthleteRequestController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,6 +16,10 @@ Route::middleware(['auth', 'athlete.member', 'legal.accepted', 'feature:market']
     Route::delete('foto', [AthleteController::class, 'removePhoto'])->name('photo.destroy');
     Route::post('publicar', [AthleteController::class, 'publish'])->name('publish');
     Route::post('pausar', [AthleteController::class, 'pause'])->name('pause');
+    Route::post('pedidos/{contactRequest}/aceitar', [AthleteRequestController::class, 'accept'])->name('requests.accept');
+    Route::post('pedidos/{contactRequest}/recusar', [AthleteRequestController::class, 'decline'])->name('requests.decline');
+    Route::post('pedidos/{contactRequest}/bloquear', [AthleteRequestController::class, 'block'])->name('requests.block');
+    Route::delete('bloqueios/{block}', [AthleteRequestController::class, 'unblock'])->name('blocks.destroy');
     Route::delete('conta', [AthleteController::class, 'destroy'])->name('destroy');
     Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'athlete')->name('help.index');
     Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'athlete')->name('help.show');

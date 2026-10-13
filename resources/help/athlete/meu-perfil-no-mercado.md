@@ -31,5 +31,14 @@ Nome (o apelido, se você informar um), foto, posições, faixa de idade, regiã
 - **Pausar perfil** tira você da busca na hora.
 - **Apagar meu cadastro** remove o perfil, a foto e o seu acesso. Não dá para desfazer.
 
+## Pedidos de contato
+Quando uma equipe quer falar com você, chega um e-mail e o pedido aparece em **Pedidos de contato**, com a equipe e a mensagem.
+- **Aceitar** mostra o contato que você escolheu **só àquela equipe**.
+- **Recusar** encerra o pedido. A mesma equipe não pode pedir de novo.
+- **Bloquear equipe** recusa os pedidos dela, esconde o seu perfil para ela e retira o contato que ela viu. Dá para desbloquear na mesma tela.
+- Pedidos sem resposta expiram em 14 dias.
+
+Sete dias antes de o perfil expirar você recebe um aviso por e-mail para renová-lo.
+
 ## Documentos e CPF
 O Mercado **não pede CPF nem documentos**. Eles só entram se uma equipe te inscrever, no fluxo de inscrição da competição.

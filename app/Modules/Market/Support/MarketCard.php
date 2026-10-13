@@ -3,6 +3,8 @@
 namespace App\Modules\Market\Support;
 
 use App\Modules\Competitions\Enums\Sport;
+use App\Modules\Market\Enums\RequestStatus;
+use App\Modules\Market\Models\ContactRequest;
 use App\Modules\Market\Models\MarketProfile;
 
 /**
@@ -34,6 +36,42 @@ final class MarketCard
             'neighborhood' => $profile->neighborhood,
             'availability' => self::availability($profile->availability ?? []),
             'published_at' => $profile->published_at?->format('d/m/Y'),
+        ];
+    }
+
+    /**
+     * Pedido do gestor visto por ele. O contato SÓ vai junto quando o atleta aceitou (e o perfil continua existindo);
+     * só o canal que ele escolheu.
+     *
+     * @return array<string, mixed>
+     */
+    public static function request(ContactRequest $request, MarketProfile $profile): array
+    {
+        $open = $request->isOpen();
+        $expired = ! $open && $request->status === RequestStatus::Pending;
+        $status = $expired ? RequestStatus::Expired : $request->status;
+
+        $contact = null;
+
+        if ($status === RequestStatus::Accepted && filled($profile->contact_value)) {
+            $value = (string) $profile->contact_value;
+            $whatsapp = $profile->contact_channel === 'whatsapp';
+
+            $contact = [
+                'channel' => MarketOptions::CHANNELS[$profile->contact_channel ?? ''] ?? 'Contato',
+                'value' => $value,
+                'link' => $whatsapp ? "https://wa.me/55{$value}" : "mailto:{$value}",
+            ];
+        }
+
+        return [
+            'id' => $request->getKey(),
+            'team_id' => $request->team_id,
+            'team' => $request->team->name,
+            'status' => $status->value,
+            'status_label' => $status->label(),
+            'expires_at' => $request->expires_at->format('d/m/Y'),
+            'contact' => $contact,
         ];
     }
 

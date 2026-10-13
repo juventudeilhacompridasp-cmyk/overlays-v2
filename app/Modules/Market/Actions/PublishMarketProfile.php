@@ -42,6 +42,7 @@ final class PublishMarketProfile
             'status' => ProfileStatus::Published,
             'published_at' => $profile->status === ProfileStatus::Published ? $profile->published_at : now(),
             'expires_at' => now()->addDays(MarketOptions::REVALIDATE_DAYS),
+            'expiry_notice_at' => null,
         ])->save();
 
         return $profile;
