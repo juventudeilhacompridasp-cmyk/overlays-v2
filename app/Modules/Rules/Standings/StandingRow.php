@@ -19,6 +19,9 @@ final readonly class StandingRow
         public int $blueCards,
         /** Empate que só o sorteio resolve (todos os critérios calculáveis se esgotaram). */
         public bool $tied,
+        /** Esportes de sets: pontos de rally feitos/sofridos. */
+        public int $scoreFor = 0,
+        public int $scoreAgainst = 0,
     ) {}
 
     public function goalDifference(): int

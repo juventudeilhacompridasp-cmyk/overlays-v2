@@ -34,6 +34,8 @@ export interface Snapshot {
     division: string;
     stage: string;
     clock: GameClock;
+    score_model: string;
+    sets: { home: number; away: number; winner: 'home' | 'away' | null; finished: boolean }[] | null;
     fouls: { home: number; away: number; limit: number; period: number } | null;
     goals: Goal[];
     server_time_ms: number;
@@ -107,6 +109,7 @@ export default function GameLive({ snapshot: initial, realtime }: { snapshot: Sn
 
     let clockText: string;
     if (snapshot.finished) clockText = 'Encerrado';
+    else if (snapshot.sets) clockText = snapshot.sets.length > 0 && snapshot.status !== 'scheduled' ? `Set ${snapshot.sets.length} em andamento` : snapshot.status === 'scheduled' ? 'Em breve' : snapshot.status_label;
     else if (snapshot.clock.state === 'not_started') clockText = snapshot.status === 'scheduled' ? 'Em breve' : snapshot.status_label;
     else if (snapshot.clock.state === 'stopped') clockText = snapshot.clock.period === 1 ? 'Intervalo' : `Fim do ${periodLabel(snapshot.clock.period)}`;
     else clockText = `${formatClock(seconds)} · ${periodLabel(snapshot.clock.period)}`;
@@ -152,6 +155,11 @@ export default function GameLive({ snapshot: initial, realtime }: { snapshot: Sn
                 <p className="mt-4 text-center text-lg font-semibold tabular-nums text-emerald-400" data-testid="live-clock" suppressHydrationWarning>
                     {ready || snapshot.clock.state !== 'running' ? clockText : '—'}
                 </p>
+                {snapshot.sets && snapshot.sets.length > 0 && (
+                    <p className="mt-1 text-center text-sm tabular-nums text-gray-400" data-testid="live-sets">
+                        {snapshot.sets.map((set) => `${set.home}-${set.away}${set.finished ? '' : ' (em andamento)'}`).join(' · ')}
+                    </p>
+                )}
                 {snapshot.fouls && (
                     <p className="mt-1 text-center text-sm text-gray-400" data-testid="live-fouls">
                         Faltas: {snapshot.fouls.home} x {snapshot.fouls.away}

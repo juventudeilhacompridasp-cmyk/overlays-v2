@@ -45,6 +45,14 @@ final class VoidGameEvent
                 }
             }
 
+            if ($event->type === GameEventType::Point) {
+                $lastPoint = $game->events()->effective()->where('type', GameEventType::Point)->orderByDesc('id')->first();
+
+                if ($lastPoint?->getKey() !== $event->getKey()) {
+                    throw new InvalidArgumentException('Só o último ponto pode ser desfeito.');
+                }
+            }
+
             $alreadyVoided = $game->events()->where('compensates_event_id', $event->getKey())->exists();
 
             if ($alreadyVoided) {

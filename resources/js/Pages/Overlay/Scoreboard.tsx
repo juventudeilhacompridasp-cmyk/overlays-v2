@@ -25,8 +25,12 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
         return <Head title="Placar" />;
     }
 
+    const sets = game.sets;
+    const currentSet = sets && sets.length > 0 && !sets[sets.length - 1].finished ? sets[sets.length - 1] : null;
+
     let clock: string;
-    if (game.finished) clock = 'FIM';
+    if (sets) clock = game.finished ? 'FIM' : currentSet ? `${currentSet.home} - ${currentSet.away}` : game.status === 'scheduled' ? 'EM BREVE' : game.status_label.toUpperCase();
+    else if (game.finished) clock = 'FIM';
     else if (game.clock.state === 'not_started') clock = game.status === 'scheduled' ? 'EM BREVE' : game.status_label.toUpperCase();
     else if (game.clock.state === 'stopped') clock = game.clock.period === 1 ? 'INTERVALO' : 'FIM DO TEMPO';
     else clock = formatClock(seconds);
@@ -44,9 +48,19 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
                 <Side team={game.away} align="right" />
                 <div className="flex min-w-[7.5rem] flex-col items-center justify-center bg-emerald-600 px-4 py-1 text-center" data-testid="overlay-clock">
                     <span className="text-xl font-bold tabular-nums">{clock}</span>
-                    {game.clock.state === 'running' && <span className="text-[10px] uppercase tracking-wider">{periodLabel(game.clock.period)}</span>}
+                    {sets && currentSet && !game.finished && <span className="text-[10px] uppercase tracking-wider">Set {sets.length}</span>}
+                    {!sets && game.clock.state === 'running' && <span className="text-[10px] uppercase tracking-wider">{periodLabel(game.clock.period)}</span>}
                 </div>
             </div>
+            {sets && sets.some((set) => set.finished) && (
+                <div className="mt-1 inline-flex items-center gap-3 rounded bg-gray-900/90 px-3 py-1 text-sm tabular-nums" data-testid="overlay-sets">
+                    {sets.filter((set) => set.finished).map((set, index) => (
+                        <span key={index}>
+                            {set.home}-{set.away}
+                        </span>
+                    ))}
+                </div>
+            )}
             {game.fouls && (
                 <div className="mt-1 inline-flex items-center gap-3 rounded bg-gray-900/90 px-3 py-1 text-sm" data-testid="overlay-fouls">
                     <span className="text-gray-300">FALTAS</span>

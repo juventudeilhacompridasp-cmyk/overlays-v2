@@ -201,6 +201,19 @@ export default function Form({ competition, season, rules, options, defaults }: 
                     </div>
                 </Card>
 
+                {data.rules.scoring.model === 'sets' && (
+                    <Card title="Regulamento: sets">
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {numberField('Sets para vencer a partida', 'rules.scoring.sets_to_win', data.rules.scoring.sets_to_win, (d, v) => (d.scoring.sets_to_win = v))}
+                            {numberField('Pontos do set', 'rules.scoring.set_points', data.rules.scoring.set_points, (d, v) => (d.scoring.set_points = v))}
+                            {numberField('Pontos do set decisivo', 'rules.scoring.deciding_set_points', data.rules.scoring.deciding_set_points, (d, v) => (d.scoring.deciding_set_points = v))}
+                            {numberField('Vantagem mínima para fechar o set', 'rules.scoring.min_lead', data.rules.scoring.min_lead, (d, v) => (d.scoring.min_lead = v))}
+                            {numberField('Pontos do vencedor num 3-2 (placar apertado)', 'rules.scoring.points_narrow_win', data.rules.scoring.points_narrow_win ?? data.rules.points.win, (d, v) => (d.scoring.points_narrow_win = v))}
+                            {numberField('Pontos do perdedor num 3-2', 'rules.scoring.points_narrow_loss', data.rules.scoring.points_narrow_loss ?? data.rules.points.loss, (d, v) => (d.scoring.points_narrow_loss = v))}
+                        </div>
+                    </Card>
+                )}
+
                 <div className="flex gap-2">
                     <Button type="submit" disabled={processing}>
                         Salvar edição

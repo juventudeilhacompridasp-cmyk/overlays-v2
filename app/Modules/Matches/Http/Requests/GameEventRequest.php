@@ -26,7 +26,7 @@ class GameEventRequest extends FormRequest
             'entry_id' => ['required', 'string'],
             'person_id' => ['required', 'string'],
             'secondary_person_id' => ['nullable', 'required_if:type,'.GameEventType::Substitution->value, 'string'],
-            'period' => ['required', 'integer', 'between:1,4'],
+            'period' => ['required', 'integer', 'between:1,5'],
             'minute' => ['nullable', 'integer', 'between:0,150'],
         ];
     }

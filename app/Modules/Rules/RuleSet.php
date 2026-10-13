@@ -32,7 +32,22 @@ final readonly class RuleSet
         public int $maxBench = 11,
         public int $maxStaff = 3,
         public bool $allowSubstitutionReentry = false,
+        /** Modelo de placar do esporte (vem do perfil do esporte, não é editável): goals | sets | points. */
+        public string $scoreModel = 'goals',
+        public int $setsToWin = 3,
+        public int $setPoints = 25,
+        public int $decidingSetPoints = 15,
+        public int $setMinLead = 2,
+        /** Pontos na tabela para vitória/derrota por placar apertado de sets (ex.: 3-2 no vôlei). Nulo = igual a vitória/derrota. */
+        public ?int $pointsNarrowWin = null,
+        public ?int $pointsNarrowLoss = null,
     ) {
+        foreach (['setsToWin' => $setsToWin, 'setPoints' => $setPoints, 'decidingSetPoints' => $decidingSetPoints, 'setMinLead' => $setMinLead] as $name => $value) {
+            if ($value < 1) {
+                throw new InvalidArgumentException("O valor de {$name} deve ser pelo menos 1.");
+            }
+        }
+
         if ($yellowCardsForSuspension < 1) {
             throw new InvalidArgumentException('cards.yellow_for_suspension deve ser pelo menos 1.');
         }
@@ -41,7 +56,8 @@ final readonly class RuleSet
             'yellowSuspensionGames' => $yellowSuspensionGames, 'redSuspensionGames' => $redSuspensionGames,
             'walkoverWinnerGoals' => $walkoverWinnerGoals, 'walkoverLoserGoals' => $walkoverLoserGoals,
             'maxSubstitutions' => $maxSubstitutions, 'maxSubstitutionWindows' => $maxSubstitutionWindows,
-            'maxStarters' => $maxStarters, 'maxBench' => $maxBench, 'maxStaff' => $maxStaff] as $name => $value) {
+            'maxStarters' => $maxStarters, 'maxBench' => $maxBench, 'maxStaff' => $maxStaff,
+            'pointsNarrowWin' => $pointsNarrowWin ?? 0, 'pointsNarrowLoss' => $pointsNarrowLoss ?? 0] as $name => $value) {
             if ($value < 0) {
                 throw new InvalidArgumentException("O valor de {$name} não pode ser negativo.");
             }
@@ -76,7 +92,15 @@ final readonly class RuleSet
     public static function fromArray(array $rules, array $sportDefaults = []): self
     {
         $defaults = array_replace_recursive(self::defaults()->toArray(), $sportDefaults);
+
+        // Lista de desempates do esporte substitui a padrão por inteiro (não se mescla por posição).
+        if (isset($sportDefaults['tiebreakers'])) {
+            $defaults['tiebreakers'] = $sportDefaults['tiebreakers'];
+        }
+
         $merged = array_replace_recursive($defaults, $rules);
+        // O modelo de placar é do esporte, nunca do JSON salvo.
+        $merged['scoring']['model'] = $sportDefaults['scoring']['model'] ?? 'goals';
 
         if (array_key_exists('tiebreakers', $rules)) {
             $merged['tiebreakers'] = $rules['tiebreakers'];
@@ -109,6 +133,13 @@ final readonly class RuleSet
             maxBench: (int) $merged['lineup']['max_bench'],
             maxStaff: (int) $merged['lineup']['max_staff'],
             allowSubstitutionReentry: (bool) $merged['substitutions']['allow_reentry'],
+            scoreModel: (string) $merged['scoring']['model'],
+            setsToWin: (int) $merged['scoring']['sets_to_win'],
+            setPoints: (int) $merged['scoring']['set_points'],
+            decidingSetPoints: (int) $merged['scoring']['deciding_set_points'],
+            setMinLead: (int) $merged['scoring']['min_lead'],
+            pointsNarrowWin: isset($merged['scoring']['points_narrow_win']) ? (int) $merged['scoring']['points_narrow_win'] : null,
+            pointsNarrowLoss: isset($merged['scoring']['points_narrow_loss']) ? (int) $merged['scoring']['points_narrow_loss'] : null,
         );
     }
 
@@ -130,6 +161,15 @@ final readonly class RuleSet
             'walkover' => ['winner_goals' => $this->walkoverWinnerGoals, 'loser_goals' => $this->walkoverLoserGoals],
             'substitutions' => ['max' => $this->maxSubstitutions, 'max_windows' => $this->maxSubstitutionWindows, 'allow_reentry' => $this->allowSubstitutionReentry],
             'lineup' => ['max_starters' => $this->maxStarters, 'max_bench' => $this->maxBench, 'max_staff' => $this->maxStaff],
+            'scoring' => [
+                'model' => $this->scoreModel,
+                'sets_to_win' => $this->setsToWin,
+                'set_points' => $this->setPoints,
+                'deciding_set_points' => $this->decidingSetPoints,
+                'min_lead' => $this->setMinLead,
+                'points_narrow_win' => $this->pointsNarrowWin,
+                'points_narrow_loss' => $this->pointsNarrowLoss,
+            ],
         ];
     }
 }

@@ -12,6 +12,10 @@ enum Tiebreaker: string
     case GoalDifference = 'goal_difference';
     case GoalsFor = 'goals_for';
     case GoalsAgainst = 'goals_against';
+    /** Esportes de sets: razão sets ganhos / sets perdidos. */
+    case SetRatio = 'set_ratio';
+    /** Esportes de sets: razão pontos de rally feitos / sofridos. */
+    case PointRatio = 'point_ratio';
     /** Confronto direto: só se aplica quando restam exatamente duas equipes empatadas. */
     case HeadToHead = 'head_to_head';
     case FewestRedCards = 'fewest_red_cards';
@@ -27,6 +31,8 @@ enum Tiebreaker: string
             self::GoalDifference => 'Maior saldo de gols',
             self::GoalsFor => 'Mais gols marcados',
             self::GoalsAgainst => 'Menos gols sofridos',
+            self::SetRatio => 'Maior razão de sets (ganhos ÷ perdidos)',
+            self::PointRatio => 'Maior razão de pontos (feitos ÷ sofridos)',
             self::HeadToHead => 'Confronto direto (só entre duas equipes)',
             self::FewestRedCards => 'Menos cartões vermelhos',
             self::FewestYellowCards => 'Menos cartões amarelos',

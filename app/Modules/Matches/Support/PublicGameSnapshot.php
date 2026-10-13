@@ -53,6 +53,8 @@ final class PublicGameSnapshot
             'division' => $game->division->name,
             'stage' => $game->stage->name,
             'sport' => $game->sport()->value,
+            'score_model' => $game->sport()->profile()->scoreModel,
+            'sets' => $game->sport()->profile()->scoreModel === 'sets' ? ($game->sets ?? []) : null,
             'clock' => $game->clock()->snapshot($marks),
             'fouls' => self::fouls($game, $marks, $side),
             'goals' => $goals->map(function (GameEvent $event) use ($side, $names) {

@@ -4,6 +4,7 @@ namespace App\Modules\Matches\Actions;
 
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Rules\Scoring\SetMatch;
 use InvalidArgumentException;
 
 /**
@@ -20,6 +21,10 @@ final class ProjectGameScore
 
         if ($home === null || $away === null) {
             throw new InvalidArgumentException('O jogo ainda não tem os dois confrontantes definidos.');
+        }
+
+        if ($game->sport()->profile()->scoreModel === 'sets') {
+            return $this->projectSets($game);
         }
 
         $events = $game->events()
@@ -61,5 +66,40 @@ final class ProjectGameScore
         ])->save();
 
         return $game;
+    }
+
+    /**
+     * Esportes de sets (vôlei): `home_score`/`away_score` são os SETS ganhos e `sets` guarda os pontos de cada set,
+     * ambos derivados da sequência de pontos de rally (ver ADR 0002).
+     */
+    private function projectSets(Game $game): Game
+    {
+        $state = (new SetMatch($game->division->ruleSet()))->state(self::pointSides($game));
+
+        $game->forceFill([
+            'home_score' => $state['won']['home'],
+            'away_score' => $state['won']['away'],
+            'home_penalties' => null,
+            'away_penalties' => null,
+            'sets' => $state['sets'],
+        ])->save();
+
+        return $game;
+    }
+
+    /**
+     * Lado de cada ponto de rally válido, em ordem.
+     *
+     * @return list<'home'|'away'>
+     */
+    public static function pointSides(Game $game): array
+    {
+        $sides = [];
+
+        foreach ($game->events()->effective()->where('type', GameEventType::Point)->orderBy('id')->get(['entry_id']) as $event) {
+            $sides[] = $event->entry_id === $game->home_entry_id ? 'home' : 'away';
+        }
+
+        return $sides;
     }
 }

@@ -16,6 +16,9 @@ final readonly class GameResult
         public int $homeGoals,
         public int $awayGoals,
         public bool $walkover = false,
+        /** Esportes de sets: pontos de rally somados em todos os sets (para a razão de pontos). */
+        public int $homePoints = 0,
+        public int $awayPoints = 0,
     ) {}
 
     public static function walkover(string $winnerId, string $loserId, RuleSet $rules, bool $winnerIsHome = true): self

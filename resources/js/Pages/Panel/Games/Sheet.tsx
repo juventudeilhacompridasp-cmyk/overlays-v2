@@ -68,9 +68,19 @@ interface Props {
     events: SheetEvent[];
     limits: { starters: number; bench: number; staff: number; substitutions: number; windows: number };
     event_types: Option[];
+    score_model: string;
+    sets: SetScore[] | null;
+    sets_to_win: number;
     fouls: { home: number; away: number; limit: number; period: number } | null;
     clock: GameClock & { server_time_ms: number; max_period: number };
     public_url: string;
+}
+
+export interface SetScore {
+    home: number;
+    away: number;
+    winner: 'home' | 'away' | null;
+    finished: boolean;
 }
 
 type Slot = '' | 'starter' | 'bench' | 'staff';
@@ -85,6 +95,7 @@ const typeIcon: Record<string, string> = {
     period_start: '▶️',
     period_end: '⏸️',
     foul: '🚫',
+    point: '🏐',
 };
 
 function personName(team: Team, id: string): string {
@@ -224,6 +235,48 @@ function ClockCard({ game, clock, publicUrl }: { game: Props['game']; clock: Pro
                     {publicUrl}
                 </a>
             </p>
+        </Card>
+    );
+}
+
+function PointsCard({ game, sets, home, away, lastPoint }: { game: Props['game']; sets: SetScore[]; home: Team; away: Team; lastPoint: SheetEvent | undefined }) {
+    const current = sets.length > 0 && !sets[sets.length - 1].finished ? sets[sets.length - 1] : null;
+    const add = (side: 'home' | 'away') => router.post(route('panel.games.points.store', game.id), { side }, { preserveScroll: true });
+
+    return (
+        <Card title={current ? `Set ${sets.length} em andamento` : sets.length > 0 ? 'Partida encerrada' : 'Pontos'}>
+            <div className="grid grid-cols-2 gap-4 text-center" data-testid="panel-points">
+                {([['home', home], ['away', away]] as const).map(([side, team]) => (
+                    <div key={side} className="space-y-2">
+                        <div className="text-sm text-gray-500">{team.name}</div>
+                        <div className="text-5xl font-bold tabular-nums" data-testid={`set-points-${side}`}>
+                            {current ? current[side] : 0}
+                        </div>
+                        {game.open && (
+                            <Button className="w-full py-3 text-base" onClick={() => add(side)} data-testid={`point-${side}`}>
+                                +1 ponto
+                            </Button>
+                        )}
+                    </div>
+                ))}
+            </div>
+            {game.open && lastPoint && (
+                <div className="mt-3 text-center">
+                    <Button variant="secondary" small onClick={() => router.post(route('panel.games.events.void', [game.id, lastPoint.id]), {}, { preserveScroll: true })}>
+                        Desfazer último ponto
+                    </Button>
+                </div>
+            )}
+            {sets.some((set) => set.finished) && (
+                <ul className="mt-4 flex flex-wrap justify-center gap-2 text-sm tabular-nums">
+                    {sets.filter((set) => set.finished).map((set, index) => (
+                        <li key={index} className="rounded bg-gray-100 px-2 py-1">
+                            Set {index + 1}: {set.home} x {set.away}
+                        </li>
+                    ))}
+                </ul>
+            )}
+            <p className="mt-3 text-xs text-gray-500">Cada toque lança um ponto de rally; o set termina sozinho ao atingir a pontuação com a vantagem mínima. Só o último ponto pode ser desfeito.</p>
         </Card>
     );
 }
@@ -407,7 +460,7 @@ function TeamCard({ game, team, limits }: { game: Props['game']; team: Team; lim
     );
 }
 
-export default function Sheet({ game: serverGame, home, away, events: serverEvents, limits, event_types, fouls, clock, public_url }: Props) {
+export default function Sheet({ game: serverGame, home, away, events: serverEvents, limits, event_types, score_model, sets, fouls, clock, public_url }: Props) {
     // Quem não opera jogos só consulta a súmula: o servidor também recusa as ações, aqui só se escondem os controles.
     const canOperate = useCan('operate-games');
     const game = canOperate ? serverGame : { ...serverGame, open: false };
@@ -466,7 +519,11 @@ export default function Sheet({ game: serverGame, home, away, events: serverEven
                 </Card>
             ) : (
                 <div className="space-y-6">
-                    <ClockCard game={game} clock={clock} publicUrl={public_url} />
+                    {score_model === 'sets' ? (
+                        <PointsCard game={game} sets={sets ?? []} home={home} away={away} lastPoint={[...events].reverse().find((event) => event.type === 'point' && event.voidable)} />
+                    ) : (
+                        <ClockCard game={game} clock={clock} publicUrl={public_url} />
+                    )}
                     {fouls && (
                         <Card title={`Faltas acumuladas (${fouls.period}º tempo${fouls.period === 2 ? ' e prorrogação' : ''})`}>
                             <div className="flex items-center justify-around text-center" data-testid="panel-fouls">
@@ -489,7 +546,7 @@ export default function Sheet({ game: serverGame, home, away, events: serverEven
                         <TeamCard game={game} team={away} limits={limits} />
                     </div>
 
-                    {game.open && game.knockout && <ShootoutCard game={game} home={home} away={away} />}
+                    {game.open && game.knockout && score_model !== 'sets' && <ShootoutCard game={game} home={home} away={away} />}
 
                     {game.open && home.has_lineup && away.has_lineup && (
                         <Card title="Novo lançamento">
@@ -514,7 +571,7 @@ export default function Sheet({ game: serverGame, home, away, events: serverEven
                                                     {event.minute !== null ? `${event.minute}'` : '—'} · {event.period}T
                                                 </span>
                                                 <span className="mr-2">{typeIcon[event.type] ?? event.type}</span>
-                                                <strong>{event.type === 'period_start' || event.type === 'period_end' ? `${event.type === 'period_start' ? 'Início do' : 'Fim do'} ${periodLabel(event.period)}` : (event.person ?? 'Anônimo')}</strong>
+                                                <strong>{event.type === 'point' ? 'Ponto' : event.type === 'period_start' || event.type === 'period_end' ? `${event.type === 'period_start' ? 'Início do' : 'Fim do'} ${periodLabel(event.period)}` : (event.person ?? 'Anônimo')}</strong>
                                                 {event.secondary_person && <span> ⇄ {event.secondary_person}</span>}
                                                 {team && <span className="ml-2 text-gray-500">({team.name})</span>}
                                                 {event.quick && <span className="ml-2"><Badge>Resultado rápido</Badge></span>}

@@ -15,6 +15,8 @@ enum GameEventType: string
     case PenaltyKick = 'penalty_kick';
     case Warning = 'warning';
     case Foul = 'foul';
+    /** Ponto de rally (esportes de sets); o período é o número do set. */
+    case Point = 'point';
 
     public function label(): string
     {
@@ -30,6 +32,7 @@ enum GameEventType: string
             self::PenaltyKick => 'Cobrança de pênalti',
             self::Warning => 'Advertência',
             self::Foul => 'Falta',
+            self::Point => 'Ponto',
         };
     }
 }
