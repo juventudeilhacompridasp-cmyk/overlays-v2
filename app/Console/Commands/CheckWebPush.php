@@ -58,7 +58,9 @@ class CheckWebPush extends Command
         }
 
         try {
-            VAPID::getVapidHeaders('https://fcm.googleapis.com', (string) config('webpush.subject'), $public, $private, ContentEncoding::aes128gcm);
+            // A biblioteca assina com as chaves já decodificadas (é o que `validate` devolve).
+            $vapid = VAPID::validate(['subject' => (string) config('webpush.subject'), 'publicKey' => $public, 'privateKey' => $private]);
+            VAPID::getVapidHeaders('https://fcm.googleapis.com', $vapid['subject'], $vapid['publicKey'], $vapid['privateKey'], ContentEncoding::aes128gcm);
             $this->ok('chaves VAPID válidas (assinam o cabeçalho de autorização)');
         } catch (Throwable $exception) {
             $this->bad('não consegui assinar com as chaves VAPID: '.$exception->getMessage());
