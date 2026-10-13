@@ -174,7 +174,6 @@ describe('platform area', function () {
     });
 });
 
-
 describe('opt-in features', function () {
     it('are off for every package, even the complete one, until the platform releases them', function () {
         $organization = Organization::factory()->create(['plan' => 'pro']);
