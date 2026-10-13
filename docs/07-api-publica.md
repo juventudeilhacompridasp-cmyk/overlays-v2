@@ -12,3 +12,6 @@ Somente leitura, **sem autenticação**, em `/api/v1`. Mesmo recorte de dados do
 Respostas em `{ "data": ... }`. Mudanças que quebram o formato entram em `/api/v2`; a v1 continua funcionando.
 
 O portal também publica `/sitemap.xml` e `/robots.txt` (bloqueia `/painel`, `/overlay` e `/api`).
+
+
+A referência navegável (com exemplos e esquemas) e o arquivo OpenAPI 3.1 ficam em `/plataforma/api-docs`, visíveis só para o Super Admin; a fonte dos textos é `resources/api-docs/catalog.php`.
