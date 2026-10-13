@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PortalController::class, 'home'])->name('portal.home');
 Route::get('/competicoes/{competition:slug}', [PortalController::class, 'competition'])->name('portal.competition');
 Route::get('/competicoes/{competition:slug}/edicoes/{season}', [PortalController::class, 'season'])->name('portal.season');
+Route::get('/competicoes/{competition:slug}/edicoes/{season}/estatisticas', [PortalController::class, 'stats'])->name('portal.stats');
 Route::get('/equipes/{team}', [PortalController::class, 'team'])->name('portal.team');
 // Verificação da carteirinha (QR): sem cache e fora dos buscadores (cabeçalho e robots).
 Route::get('/carteirinha/{code}', CardVerifyController::class)->name('portal.card')->middleware(['throttle:30,1', 'feature:athlete_cards', PrivateNoIndex::class]);

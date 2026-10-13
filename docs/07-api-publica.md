@@ -6,6 +6,7 @@ Somente leitura, **sem autenticação**, em `/api/v1`. Mesmo recorte de dados do
 |---|---|
 | `GET /api/v1/competitions` | Competições com suas edições publicadas |
 | `GET /api/v1/seasons/{id}` | Edição: divisões, fases (classificação, rodadas, mata-mata) e artilharia |
+| `GET /api/v1/seasons/{id}/stats` | Estatísticas da edição por divisão: ataque, defesa, forma (últimos 5), maiores vitórias e jogos mais movimentados (só jogos encerrados em campo; sem cartões nem atletas) |
 | `GET /api/v1/games/{id}` | Retrato público do jogo: placar, relógio, gols, escudos |
 
 Respostas em `{ "data": ... }`. Mudanças que quebram o formato entram em `/api/v2`; a v1 continua funcionando.
