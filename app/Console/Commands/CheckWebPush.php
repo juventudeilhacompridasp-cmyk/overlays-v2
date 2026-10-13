@@ -8,6 +8,7 @@ use App\Modules\Tenancy\Models\Organization;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Minishlink\WebPush\ContentEncoding;
 use Minishlink\WebPush\VAPID;
 use Throwable;
 
@@ -55,7 +56,7 @@ class CheckWebPush extends Command
         }
 
         try {
-            VAPID::getVapidHeaders('https://fcm.googleapis.com', (string) config('webpush.subject'), $public, $private, 'aes128gcm');
+            VAPID::getVapidHeaders('https://fcm.googleapis.com', (string) config('webpush.subject'), $public, $private, ContentEncoding::aes128gcm);
             $this->ok('chaves VAPID válidas (assinam o cabeçalho de autorização)');
         } catch (Throwable $exception) {
             $this->bad('não consegui assinar com as chaves VAPID: '.$exception->getMessage());
