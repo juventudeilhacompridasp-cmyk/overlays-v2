@@ -8,6 +8,7 @@ use App\Modules\Competitions\Http\Controllers\EntryController;
 use App\Modules\Competitions\Http\Controllers\ReportController;
 use App\Modules\Competitions\Http\Controllers\SeasonController;
 use App\Modules\Competitions\Http\Controllers\StageController;
+use App\Modules\Help\Http\Controllers\HelpController;
 use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
 use App\Modules\Matches\Http\Controllers\MesarioController;
@@ -83,6 +84,10 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::get('roster/{rosterEntry}/card', [CardController::class, 'show'])->name('roster.card');
         Route::post('roster/{rosterEntry}/card/regenerate', [CardController::class, 'regenerate'])->name('roster.card.regenerate');
     });
+
+    // Central de ajuda (ADR 0006): qualquer membro; o que aparece depende do perfil e do pacote.
+    Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'panel')->name('help.index');
+    Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'panel')->name('help.show');
 
     Route::get('widgets', [EmbedPanelController::class, 'index'])->middleware('feature:embeds')->name('widgets.index');
 

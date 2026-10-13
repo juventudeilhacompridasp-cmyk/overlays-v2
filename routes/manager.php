@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Help\Http\Controllers\HelpController;
 use App\Modules\Teams\Http\Controllers\Manager\CardsController;
 use App\Modules\Teams\Http\Controllers\Manager\DashboardController;
 use App\Modules\Teams\Http\Controllers\Manager\EntryController;
@@ -21,6 +22,8 @@ Route::middleware(['auth', 'verified', 'manager.member', 'legal.accepted', 'feat
     Route::delete('elenco/{rosterEntry}', [RosterController::class, 'destroy'])->name('roster.destroy');
     Route::post('inscricoes/{entry}/reforcos', [SupplementController::class, 'store'])->middleware('feature:online_registration')->name('entries.supplement');
     Route::get('inscricoes/{entry}/carteirinhas', [CardsController::class, 'entry'])->middleware('feature:athlete_cards')->name('entries.cards');
+    Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'manager')->name('help.index');
+    Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'manager')->name('help.show');
     Route::get('jogos', [GameController::class, 'index'])->name('games.index');
     Route::get('jogos/{game}', [GameController::class, 'show'])->name('games.show');
     Route::put('jogos/{game}/escalacao', [GameController::class, 'lineup'])->name('games.lineup');

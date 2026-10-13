@@ -40,6 +40,8 @@ x-env: &env
   # Leitura de súmulas por IA (opcional; sem a chave só CSV/XLSX).
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-5-5}
+  SHEET_IMPORT_MAX_READS_PER_GAME: ${SHEET_IMPORT_MAX_READS_PER_GAME:-3}
+  SHEET_IMPORT_MONTHLY_READS: ${SHEET_IMPORT_MONTHLY_READS:-200}
   # Organizações por subdomínio ({slug}.PLATFORM_BASE_DOMAIN) e organização padrão; chave estável do hash do CPF.
   PLATFORM_BASE_DOMAIN: ${PLATFORM_BASE_DOMAIN:-}
   DEFAULT_ORGANIZATION_SLUG: ${DEFAULT_ORGANIZATION_SLUG:-default}

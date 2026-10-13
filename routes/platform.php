@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Help\Http\Controllers\HelpController;
 use App\Modules\Tenancy\Http\Controllers\PlatformOrganizationController;
 use Illuminate\Support\Facades\Route;
 
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware(['auth', 'verified', 'platform.admin'])->prefix('plataforma')->name('platform.')->group(function () {
     Route::get('/', [PlatformOrganizationController::class, 'index'])->name('organizations.index');
+    Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'platform')->name('help.index');
+    Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'platform')->name('help.show');
     Route::get('organizations/create', [PlatformOrganizationController::class, 'create'])->name('organizations.create');
     Route::post('organizations', [PlatformOrganizationController::class, 'store'])->name('organizations.store');
     Route::post('organizations/{organization}/domains', [PlatformOrganizationController::class, 'storeDomain'])->name('organizations.domains.store');
