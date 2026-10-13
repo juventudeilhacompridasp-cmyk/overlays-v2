@@ -116,7 +116,7 @@ final class SaveGameLineup
             GameLineup::query()->where('game_id', $game->getKey())->where('entry_id', $entry->getKey())->delete();
 
             foreach ([[$starters, LineupSlot::Starter], [$bench, LineupSlot::Bench], [$staff, LineupSlot::Staff]] as [$people, $slot]) {
-                foreach (array_values($people) as $index => $personId) {
+                foreach ($people as $index => $personId) {
                     GameLineup::query()->create([
                         'organization_id' => $game->organization_id,
                         'game_id' => $game->getKey(),
