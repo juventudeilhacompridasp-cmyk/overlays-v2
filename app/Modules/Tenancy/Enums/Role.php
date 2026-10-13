@@ -42,6 +42,16 @@ enum Role: string
         };
     }
 
+    /**
+     * Permissões finas equivalentes às abilities do papel (base dos perfis de sistema, ADR 0005).
+     *
+     * @return list<Permission>
+     */
+    public function permissions(): array
+    {
+        return array_map(Permission::forAbility(...), $this->abilities());
+    }
+
     /** Papéis da equipe interna da organização (usam `/painel`); o gestor de equipe tem painel próprio. */
     public function usesPanel(): bool
     {
