@@ -26,10 +26,15 @@ const fail = async (message) => {
 };
 
 try {
-    await page.goto(`${baseUrl}/login`);
+    await page.goto(`${baseUrl}/login`, { waitUntil: 'networkidle' });
     await page.fill('#email', seed.email);
     await page.fill('#password', seed.password);
-    await Promise.all([page.waitForURL((url) => !url.pathname.endsWith('/login'), { waitUntil: 'commit' }), page.click('button[type=submit]')]);
+    const [loginResponse] = await Promise.all([
+        page.waitForResponse((response) => response.request().method() === 'POST' && new URL(response.url()).pathname === '/login'),
+        page.click('button[type=submit]'),
+    ]);
+    console.log(`POST /login -> ${loginResponse.status()}`);
+    await page.waitForURL((url) => !url.pathname.endsWith('/login'), { waitUntil: 'commit' });
 
     await page.goto(`${baseUrl}/painel/games/${seed.game}/sheet`);
     await page.getByTestId('scoreboard').waitFor();
