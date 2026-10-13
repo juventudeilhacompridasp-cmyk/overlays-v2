@@ -61,10 +61,13 @@ it('lists upcoming and recent games', function () {
     $this->get('/')->assertInertia(fn ($page) => $page->has('recent', 1)->where('recent.0.home_score', 2)->has('upcoming', 0));
 });
 
-it('redirects a competition to its latest published season', function () {
+it('redirects a competition to its latest published season when the competition page is off', function () {
     ['competition' => $competition, 'season' => $season] = publishedGame();
     $newer = Season::factory()->create(['competition_id' => $competition->id, 'name' => '2099', 'year' => 2099, 'status' => SeasonStatus::Active]);
     Season::factory()->create(['competition_id' => $competition->id, 'name' => '2100', 'year' => 2100, 'status' => SeasonStatus::Draft]);
+
+    $organization = CurrentOrganization::get();
+    $organization->forceFill(['settings' => ['portal' => ['competition_page' => false]]])->save();
 
     $this->get("/competicoes/{$competition->slug}")->assertRedirect(route('portal.season', [$competition->slug, $newer->id]));
 
