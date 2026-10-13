@@ -30,6 +30,7 @@ A prévia ao lado é exatamente o que será baixado. Tudo é ajustável:
 ## Rodada, capa e fundo com foto
 - **Rodada / dia** reúne vários jogos numa só arte (do mesmo dia ou da mesma rodada/fase); escolha o escopo no editor.
 - **Classificação** mostra a tabela do grupo (ou da fase de pontos corridos) do jogo, com as duas equipes em destaque. Não existe em fases de mata-mata.
+- **Artilharia** lista os maiores goleadores da divisão (até 10; nomes públicos, menores abreviados). Só em esportes de gols.
 - **Capa / anúncio** é a arte de divulgação da transmissão: título, subtítulo, crédito e a faixa de transmissão.
 - Em **Fundo** escolha uma foto enviada pela organização (JPG, PNG ou WebP até 10 MB) e uma **película de cor** por cima para manter o texto legível. Em **Logotipo** escolha outra imagem no lugar do logotipo da organização.
 - Quem gerencia competições envia e exclui imagens (até 30); qualquer membro usa as que já existem.

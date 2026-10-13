@@ -50,7 +50,7 @@ export interface ArtGame {
 }
 
 export interface ArtData {
-    kind: 'preview' | 'result' | 'lineup' | 'round' | 'cover' | 'standings';
+    kind: 'preview' | 'result' | 'lineup' | 'round' | 'cover' | 'standings' | 'scorers';
     competition: string;
     season: string;
     division: string;
@@ -71,6 +71,12 @@ export interface ArtData {
     scope: 'day' | 'round';
     games: ArtGame[];
     standings: ArtStandings | null;
+    scorers: ArtScorers | null;
+}
+
+export interface ArtScorers {
+    title: string;
+    rows: { position: number; name: string; team: string; crest: string | null; goals: number }[];
 }
 
 export interface ArtStandingRow {
@@ -314,7 +320,7 @@ export function buildArt(style: ArtStyle, data: ArtData, W: number, H: number, a
     // ── título da arte ───────────────────────────────────────────────────────────
     const roundNumber = data.scope === 'round' && data.round !== null ? `Rodada ${data.round}` : 'Jogos do dia';
     const defaultHeadline =
-        data.kind === 'preview' ? 'Jogo do dia' : data.kind === 'result' ? (data.decided ? 'Fim de jogo' : data.status_label) : data.kind === 'round' ? roundNumber : data.kind === 'standings' ? (data.standings?.title ?? 'Classificação') : 'Escalação';
+        data.kind === 'preview' ? 'Jogo do dia' : data.kind === 'result' ? (data.decided ? 'Fim de jogo' : data.status_label) : data.kind === 'round' ? roundNumber : data.kind === 'standings' ? (data.standings?.title ?? 'Classificação') : data.kind === 'scorers' ? 'Artilharia' : 'Escalação';
     const headline = style.text.headline !== '' ? style.text.headline : defaultHeadline;
     const headlineSize = 7 * u * S * (variant === 'poster' ? 1.15 : 1);
     top += 1.5 * u;
@@ -334,6 +340,12 @@ export function buildArt(style: ArtStyle, data: ArtData, W: number, H: number, a
 
     if (data.kind === 'standings') {
         standingsBlock(ops, style, data, { x0, CW, top, bottom, u, S, text, soft, softAlpha });
+
+        return ops;
+    }
+
+    if (data.kind === 'scorers') {
+        scorersBlock(ops, style, data, { x0, CW, top, bottom, u, S, text, soft, softAlpha });
 
         return ops;
     }
@@ -784,6 +796,50 @@ function standingsBlock(ops: Op[], style: ArtStyle, data: ArtData, c: StandingsC
             text(value, vx + col.w / 2, mid, size, col.key === 'points' ? p.accent : p.text, col.key === 'points' ? 'heading' : 'body', { weight: col.key === 'points' ? 'black' : 'normal' });
             vx += col.w;
         }
+
+        y += rowH;
+    });
+}
+
+/** Artilharia: posição, escudo, atleta (nome público), equipe e gols; o líder ganha destaque. */
+function scorersBlock(ops: Op[], style: ArtStyle, data: ArtData, c: StandingsContext): void {
+    const { x0, CW, u, S, text, soft, softAlpha } = c;
+    const p = style.palette;
+    const rows = data.scorers?.rows ?? [];
+
+    if (rows.length === 0) {
+        text('Ainda não há gols registrados', x0 + CW / 2, c.top + 8 * u, 3 * u * S, soft, 'body', { alpha: softAlpha, maxW: CW });
+
+        return;
+    }
+
+    const rowH = Math.min(9 * u * S, (c.bottom - c.top) / rows.length);
+    const size = Math.min(rowH * 0.42, 3.8 * u * S);
+    const crestSize = style.crest.show ? rowH * 0.74 : 0;
+    const goalsW = 8 * u * S;
+    const posW = 5.5 * u * S;
+    let y = c.top;
+
+    rows.forEach((row, index) => {
+        const lead = row.position === 1;
+        const mid = y + rowH / 2;
+
+        if (lead) ops.push({ t: 'rect', x: x0, y: y + rowH * 0.06, w: CW, h: rowH * 0.88, fill: p.accent, alpha: 0.2, radius: rowH * 0.2 });
+        else if (index % 2 === 0) ops.push({ t: 'rect', x: x0, y: y + rowH * 0.06, w: CW, h: rowH * 0.88, fill: p.text, alpha: 0.06, radius: rowH * 0.2 });
+
+        text(String(row.position), x0 + posW / 2, mid, size, lead ? p.accent : p.text, 'heading', { weight: 'black' });
+        let nx = x0 + posW;
+
+        if (crestSize > 0) {
+            if (row.crest) ops.push({ t: 'image', src: row.crest, x: nx, y: mid - crestSize / 2, w: crestSize, h: crestSize });
+            else ops.push({ t: 'shape', shape: 'circle', x: nx, y: mid - crestSize / 2, w: crestSize, h: crestSize, fill: p.primary, alpha: 0.6 });
+            nx += crestSize + 1.6 * u;
+        }
+
+        const maxW = x0 + CW - goalsW - nx - u;
+        text(row.name, nx, mid - size * 0.32, size, p.text, 'heading', { align: 'left', maxW, upper: true, weight: lead ? 'black' : 'bold' });
+        text(row.team, nx, mid + size * 0.78, size * 0.62, soft, 'body', { align: 'left', maxW, alpha: softAlpha });
+        text(String(row.goals), x0 + CW - goalsW / 2, mid, size * 1.35, p.accent, 'heading', { weight: 'black' });
 
         y += rowH;
     });

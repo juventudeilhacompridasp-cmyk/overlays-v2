@@ -11,6 +11,7 @@ enum ArtKind: string
     case Round = 'round';
     case Cover = 'cover';
     case Standings = 'standings';
+    case Scorers = 'scorers';
 
     public function label(): string
     {
@@ -21,6 +22,7 @@ enum ArtKind: string
             self::Round => 'Rodada / dia',
             self::Cover => 'Capa / anúncio',
             self::Standings => 'Classificação',
+            self::Scorers => 'Artilharia',
         };
     }
 }
