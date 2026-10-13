@@ -403,3 +403,14 @@ test('scorers shows name, team and goals, and warns when nobody scored', () => {
     for (const wanted of ['Artilharia', 'Zé', 'João S.', 'Registro EC', '7', '5']) assert.ok(all.includes(wanted), wanted);
     assert.ok(texts(buildArt(style(), data({ kind: 'scorers' }), 1080, 1350)).some((t) => t.includes('Ainda não')));
 });
+
+test('a chosen badge image replaces the platform badge, and a missing one falls back to it', () => {
+    const on = { elements: { broadcast: true }, broadcast: { platform: 'youtube', badge: 'B1' } };
+    const own = buildArt(style(on), data(), 1080, 1350, { B1: '/selo.webp' });
+
+    assert.ok(own.some((op) => op.t === 'image' && op.src === '/selo.webp'));
+    assert.ok(!texts(own).includes('YouTube'));
+
+    const gone = buildArt(style(on), data(), 1080, 1350, {});
+    assert.ok(texts(gone).includes('YouTube'));
+});

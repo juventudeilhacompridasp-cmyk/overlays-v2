@@ -45,5 +45,6 @@ A arte usa só dados que o portal público já mostra, mais a escalação. Os **
 
 ## Dicas
 - A escalação precisa estar lançada no jogo; sem ela a arte avisa “Escalação ainda não divulgada”.
+- Na faixa de transmissão dá para enviar um selo próprio (imagem da organização) no lugar do selo da plataforma.
 - Os escudos e o logotipo vêm do cadastro; equipe sem escudo aparece com as iniciais.
 - As fontes usadas são as do aparelho de quem gera a arte; por isso o resultado pode variar um pouco entre computadores.

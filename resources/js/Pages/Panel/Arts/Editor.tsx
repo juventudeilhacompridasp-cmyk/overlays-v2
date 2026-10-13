@@ -407,6 +407,7 @@ export default function Editor({ game, kind, kinds, data, initial, templates, pr
                         {style.elements.broadcast && (
                             <>
                                 <Pick label="Plataforma" value={style.broadcast.platform} options={options.platforms} onChange={(value) => set('broadcast', 'platform', value as ArtStyle['broadcast']['platform'])} />
+                                <AssetPick label="Selo próprio (no lugar do da plataforma)" kind="badge" assets={assets} value={style.broadcast.badge} canUpload={can_save} onChange={(value) => set('broadcast', 'badge', value)} />
                                 <Field label="Chamada">
                                     <Input value={style.broadcast.label} maxLength={40} onChange={(event) => set('broadcast', 'label', event.target.value)} />
                                 </Field>
