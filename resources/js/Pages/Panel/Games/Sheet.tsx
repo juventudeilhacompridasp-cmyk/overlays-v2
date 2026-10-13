@@ -38,7 +38,7 @@ interface Team {
     fouled_out: string[];
     player_fouls: Record<string, number>;
     yellows: Record<string, number>;
-    /** Basquete: pedidos de tempo usados no período atual e o limite (nulo = o esporte não conta). */
+    /** Pedidos de tempo usados no período/set atual e o limite (nulo = o esporte não conta). */
     timeouts: { used: number; limit: number } | null;
 }
 
@@ -265,6 +265,27 @@ function ClockCard({ game, clock, publicUrl, sport, send }: { game: Props['game'
 
 const basketLabel: Record<string, string> = { free_throw: 'Lance livre (+1)', field_goal: 'Cesta de 2', three_pointer: 'Cesta de 3', foul: 'Falta', timeout: 'Pedido de tempo' };
 
+function TimeoutControl({ game, team, period, send, pendingPeriod = false }: { game: Props['game']; team: Team; period: number; send: Send; pendingPeriod?: boolean }) {
+    if (!team.timeouts || !game.open) return null;
+
+    return (
+        <div className="flex items-center justify-between gap-2 text-sm" data-testid={`timeouts-${team.id}`}>
+            <span className="text-gray-600">
+                Pedidos de tempo: {team.timeouts.used}/{team.timeouts.limit}
+            </span>
+            <Button
+                small
+                variant="secondary"
+                disabled={pendingPeriod || team.timeouts.used >= team.timeouts.limit}
+                title={pendingPeriod ? 'Aguarde os pontos pendentes serem enviados para confirmar o set atual.' : undefined}
+                onClick={() => send('event', { type: 'timeout', entry_id: team.id, person_id: null, period }, `Pedido de tempo (${team.name})`)}
+            >
+                Pedir tempo
+            </Button>
+        </div>
+    );
+}
+
 /** Basquete: toque rápido por atleta em quadra (+1, +2, +3 e falta). Quem foi eliminado por faltas não pontua nem comete falta. */
 function BasketPad({ game, team, period, send: enqueue }: { game: Props['game']; team: Team; period: number; send: Send }) {
     const send = (type: string, personId: string) =>
@@ -272,16 +293,7 @@ function BasketPad({ game, team, period, send: enqueue }: { game: Props['game'];
 
     return (
         <Card title={team.name}>
-            {team.timeouts && game.open && (
-                <div className="mb-3 flex items-center justify-between text-sm" data-testid={`timeouts-${team.id}`}>
-                    <span className="text-gray-600">
-                        Pedidos de tempo: {team.timeouts.used}/{team.timeouts.limit}
-                    </span>
-                    <Button small variant="secondary" disabled={team.timeouts.used >= team.timeouts.limit} onClick={() => enqueue('event', { type: 'timeout', entry_id: team.id, person_id: null, period }, `Pedido de tempo (${team.name})`)}>
-                        Pedir tempo
-                    </Button>
-                </div>
-            )}
+            {team.timeouts && game.open && <div className="mb-3"><TimeoutControl game={game} team={team} period={period} send={enqueue} /></div>}
             <ul className="divide-y divide-gray-100" data-testid={`basket-pad-${team.id}`}>
                 {team.on_field.map((id) => {
                     const out = team.fouled_out.includes(id);
@@ -314,8 +326,9 @@ function BasketPad({ game, team, period, send: enqueue }: { game: Props['game'];
     );
 }
 
-function PointsCard({ game, sets, home, away, lastPoint, send }: { game: Props['game']; sets: SetScore[]; home: Team; away: Team; lastPoint: SheetEvent | undefined; send: Send }) {
+function PointsCard({ game, sets, home, away, lastPoint, pendingSet, send }: { game: Props['game']; sets: SetScore[]; home: Team; away: Team; lastPoint: SheetEvent | undefined; pendingSet: boolean; send: Send }) {
     const current = sets.length > 0 && !sets[sets.length - 1].finished ? sets[sets.length - 1] : null;
+    const currentSet = Math.max(1, sets.length);
     const add = (side: 'home' | 'away') => send('point', { side }, `Ponto — ${side === 'home' ? home.name : away.name}`);
 
     return (
@@ -335,6 +348,12 @@ function PointsCard({ game, sets, home, away, lastPoint, send }: { game: Props['
                     </div>
                 ))}
             </div>
+            {game.open && home.has_lineup && away.has_lineup && (
+                <div className="mt-4 grid gap-3 border-t border-gray-100 pt-4 sm:grid-cols-2">
+                    <TimeoutControl game={game} team={home} period={currentSet} send={send} pendingPeriod={pendingSet} />
+                    <TimeoutControl game={game} team={away} period={currentSet} send={send} pendingPeriod={pendingSet} />
+                </div>
+            )}
             {game.open && lastPoint && (
                 <div className="mt-3 text-center">
                     <Button variant="secondary" small onClick={() => send('void', { event_id: lastPoint.id }, 'Desfazer o último ponto')}>
@@ -716,7 +735,7 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
             ) : (
                 <div className="space-y-6">
                     {score_model === 'sets' ? (
-                        <PointsCard game={game} sets={sets ?? []} home={home} away={away} lastPoint={[...events].reverse().find((event) => event.type === 'point' && event.voidable)} send={send} />
+                        <PointsCard game={game} sets={sets ?? []} home={home} away={away} lastPoint={[...events].reverse().find((event) => event.type === 'point' && event.voidable)} pendingSet={view.partial} send={send} />
                     ) : (
                         <ClockCard game={game} clock={clock} publicUrl={public_url} sport={sport} send={send} />
                     )}

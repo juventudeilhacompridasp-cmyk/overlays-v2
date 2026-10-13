@@ -9,12 +9,14 @@ use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Actions\RecordQuickResult;
 use App\Modules\Matches\Actions\RegisterWalkover;
+use App\Modules\Matches\Actions\SaveGameLineup;
 use App\Modules\Matches\Actions\VoidGameEvent;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Support\PublicGameSnapshot;
+use App\Modules\Teams\Models\RosterEntry;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
@@ -47,6 +49,21 @@ function scorePoints(Game $game, string $side, int $n): void
 function winThreeZero(Game $game): void
 {
     scorePoints($game, 'home', 75);
+}
+
+/** Cria as escalações mínimas para os lançamentos da súmula. */
+function volleyballLineups(Game $game): void
+{
+    foreach ([$game->homeEntry, $game->awayEntry] as $entry) {
+        $players = RosterEntry::factory()->count(6)->create(['entry_id' => $entry->id])->pluck('person_id')->all();
+        app(SaveGameLineup::class)->handle($game, $entry, $players);
+    }
+}
+
+function volleyballTimeout(Game $game, string $side, int $set): void
+{
+    $entryId = $side === 'home' ? $game->home_entry_id : $game->away_entry_id;
+    app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Timeout, $entryId, null, null, $set);
 }
 
 it('projects rally points into sets, set by set', function () {
@@ -178,6 +195,40 @@ it('scores from the sheet screen with a button per team and undoes the last poin
     $last = $game->events()->where('type', GameEventType::Point)->orderByDesc('id')->first();
     $this->post("/painel/games/{$game->id}/events/{$last->id}/void")->assertSessionHas('success');
     expect($game->fresh()->sets[0])->toBe(['home' => 1, 'away' => 0, 'winner' => null, 'finished' => false]);
+});
+
+describe('team timeouts', function () {
+    it('gives each team two timeouts in every set', function () {
+        $game = volleyballGame();
+        volleyballLineups($game);
+
+        volleyballTimeout($game, 'home', 1);
+        volleyballTimeout($game, 'home', 1);
+        volleyballTimeout($game, 'away', 1);
+
+        expect(fn () => volleyballTimeout($game, 'home', 1))->toThrow(InvalidArgumentException::class, 'já usou os pedidos de tempo');
+
+        scorePoints($game, 'home', 25);
+        volleyballTimeout($game, 'home', 2);
+        volleyballTimeout($game, 'home', 2);
+
+        expect(fn () => volleyballTimeout($game, 'home', 2))->toThrow(InvalidArgumentException::class)
+            ->and($game->fresh()->home_score)->toBe(1)
+            ->and($game->fresh()->events()->effective()->where('type', GameEventType::Timeout)->count())->toBe(5);
+    });
+
+    it('shows the timeout counter for the current set on the sheet screen', function () {
+        $game = volleyballGame();
+        volleyballLineups($game);
+        scorePoints($game, 'home', 25);
+        volleyballTimeout($game, 'home', 2);
+        $user = panelUser(Role::Operator);
+
+        $this->actingAs($user)->get(route('panel.games.sheet', $game))->assertInertia(fn ($page) => $page
+            ->where('home.timeouts.used', 1)
+            ->where('home.timeouts.limit', 2)
+            ->where('away.timeouts.used', 0));
+    });
 });
 
 it('starts a volleyball season with the volleyball regulation', function () {

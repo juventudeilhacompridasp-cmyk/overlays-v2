@@ -6,8 +6,8 @@ use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Models\Game;
 
 /**
- * Pedidos de tempo de uma equipe (basquete): contados por grupo de períodos (metades e prorrogações), só os eventos
- * válidos. O limite vem do perfil do esporte.
+ * Pedidos de tempo de uma equipe: contados por grupo de períodos (sets, metades ou prorrogações), só os eventos
+ * válidos. O agrupamento e o limite vêm do perfil do esporte.
  */
 final class TeamTimeouts
 {
