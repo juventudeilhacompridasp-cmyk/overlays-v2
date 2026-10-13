@@ -76,7 +76,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const navItems = [...items, helpItem];
 
     const menu = (
-        <nav className="flex flex-col gap-1 px-3">
+        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 pb-2">
             {navItems.map((item) => {
                 const active = route().current(item.match);
 
@@ -100,12 +100,12 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     return (
         <div className="min-h-screen bg-gray-50 print:bg-[#ffffff]">
             <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-gray-200 bg-white py-5 lg:flex print:hidden">
-                <div className="mb-6 flex items-center gap-2 px-6 text-lg font-bold text-emerald-700">
+                <div className="mb-6 flex shrink-0 items-center gap-2 px-6 text-lg font-bold text-emerald-700">
                     {brand.logo_url && <img src={brand.logo_url} alt="" className="h-8 w-8 rounded bg-[#ffffff] object-contain p-0.5" />}
                     <span className="truncate">{brand.name}</span>
                 </div>
                 {menu}
-                <div className="mt-auto border-t border-gray-100 px-6 pt-4 text-sm">
+                <div className="shrink-0 border-t border-gray-100 px-6 pt-4 text-sm">
                     <div className="mb-3">
                         <ThemeToggle />
                     </div>
@@ -132,7 +132,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
                         </svg>
                     </button>
                 </header>
-                {open && <div className="border-b border-gray-200 bg-white py-3 lg:hidden">{menu}</div>}
+                {open && <div className="flex max-h-[calc(100vh-4rem)] flex-col border-b border-gray-200 bg-white py-3 lg:hidden">{menu}</div>}
 
                 {!online && (
                     <div role="alert" className="bg-amber-500 px-4 py-2 text-center text-sm font-medium text-black print:hidden" data-testid="offline-banner">

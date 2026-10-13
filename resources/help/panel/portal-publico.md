@@ -33,6 +33,12 @@ No mesmo cartão (agora "O que as páginas públicas mostram") há as opções d
 - **Chaveamento do mata-mata**: quadro visual com as fases (oitavas, quartas, semifinal, final), placar de cada confronto (soma dos dois jogos, quando há ida e volta), pênaltis, o vencedor destacado e o **campeão** no fim.
 - **Regras da tabela explicadas**: quantos pontos vale vitória, empate e derrota e a **ordem dos critérios de desempate** da edição, como estão no regulamento.
 
+## Página pública da competição
+O endereço da competição (`/competicoes/nome`) mostra o histórico de todas as edições **publicadas** (rascunho nunca aparece):
+- **Página própria**: se desligar, o endereço volta a levar direto à edição mais recente.
+- **Campeão e vice** de cada edição: no mata-mata, pela final decidida; em pontos corridos, pelo líder da tabela **depois que a edição é encerrada**. Fase de grupos sozinha não define campeão.
+- **Recordes e títulos**: equipes com mais títulos, maiores vitórias e jogos com mais placar, só com jogos encerrados em campo (W.O. fica de fora).
+
 Os nomes seguem a regra de privacidade: menores aparecem abreviados. Escalações, fotos e documentos nunca aparecem.
 
 Cada página já sai pronta para buscadores e compartilhamento (título, descrição e imagem). O botão de impressão gera a tabela em A4.

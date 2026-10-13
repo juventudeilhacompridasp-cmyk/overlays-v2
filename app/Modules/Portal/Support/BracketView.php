@@ -17,7 +17,7 @@ use Illuminate\Support\Collection;
 final class BracketView
 {
     /**
-     * @return array{rounds: list<array<string, mixed>>, champion: array<string, mixed>|null}|null
+     * @return array{rounds: list<array<string, mixed>>, champion: array<string, mixed>|null, runner_up: array<string, mixed>|null}|null
      */
     public static function for(Stage $stage): ?array
     {
@@ -41,12 +41,14 @@ final class BracketView
 
         $final = $rounds[count($rounds) - 1]['ties'][0] ?? null;
         $champion = null;
+        $runnerUp = null;
 
         if ($final !== null) {
             $champion = $final['a']['winner'] ? $final['a']['team'] : ($final['b']['winner'] ? $final['b']['team'] : null);
+            $runnerUp = $final['a']['winner'] ? $final['b']['team'] : ($final['b']['winner'] ? $final['a']['team'] : null);
         }
 
-        return ['rounds' => $rounds, 'champion' => $champion];
+        return ['rounds' => $rounds, 'champion' => $champion, 'runner_up' => $runnerUp];
     }
 
     /**

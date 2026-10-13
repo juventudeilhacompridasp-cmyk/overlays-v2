@@ -189,7 +189,7 @@ describe('the organization settings', function () {
     });
 
     it('is saved by the administrator on the portal screen, and by nobody else', function () {
-        $payload = ['game_timeline' => true, 'game_cards' => true, 'game_standings' => false, 'game_form' => true, 'game_head_to_head' => false, 'team_history' => true, 'team_form' => true, 'team_scorers' => false, 'team_calendar' => true, 'team_roster' => true, 'season_bracket' => false, 'season_rules' => true];
+        $payload = ['game_timeline' => true, 'game_cards' => true, 'game_standings' => false, 'game_form' => true, 'game_head_to_head' => false, 'team_history' => true, 'team_form' => true, 'team_scorers' => false, 'team_calendar' => true, 'team_roster' => true, 'season_bracket' => false, 'season_rules' => true, 'competition_page' => true, 'competition_champions' => false, 'competition_records' => true];
 
         $this->actingAs(panelUser(Role::Organizer))->patch(route('panel.organization.portal'), $payload);
         expect(CurrentOrganization::get()->fresh()->settings['portal'] ?? null)->toBeNull();
@@ -202,6 +202,6 @@ describe('the organization settings', function () {
         $this->actingAs(panelUser(Role::Admin))->get(route('panel.organization.edit'))->assertInertia(fn ($page) => $page
             ->where('portal_settings.game_cards', true)
             ->where('portal_settings.game_standings', false)
-            ->has('portal_switches', 12));
+            ->has('portal_switches', 15));
     });
 });

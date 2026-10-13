@@ -25,6 +25,9 @@ final class PortalSettings
         'team_roster' => ['group' => 'Página da equipe', 'default' => false, 'label' => 'Elenco público', 'hint' => 'Atletas (nome público e camisa) e técnico da edição mais recente. Desligado por padrão; sem foto, nascimento ou documento.'],
         'season_bracket' => ['group' => 'Página da edição', 'default' => true, 'label' => 'Chaveamento do mata-mata', 'hint' => 'Quadro visual das fases eliminatórias, com placares, pênaltis e o campeão.'],
         'season_rules' => ['group' => 'Página da edição', 'default' => true, 'label' => 'Regras da tabela explicadas', 'hint' => 'Pontos por vitória/empate/derrota e a ordem dos critérios de desempate.'],
+        'competition_page' => ['group' => 'Página da competição', 'default' => true, 'label' => 'Página própria da competição', 'hint' => 'Endereço /competicoes/{nome} com o histórico das edições. Desligada, o endereço leva direto à edição mais recente.'],
+        'competition_champions' => ['group' => 'Página da competição', 'default' => true, 'label' => 'Campeão e vice de cada edição', 'hint' => 'No mata-mata, pela final decidida; em pontos corridos, pelo líder da tabela depois que a edição é encerrada.'],
+        'competition_records' => ['group' => 'Página da competição', 'default' => true, 'label' => 'Recordes e títulos', 'hint' => 'Equipes com mais títulos, maiores vitórias e jogos com mais placar de todas as edições (só jogos encerrados em campo).'],
     ];
 
     public static function enabled(string $key): bool

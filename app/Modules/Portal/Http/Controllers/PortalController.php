@@ -10,6 +10,7 @@ use App\Modules\Competitions\Models\Season;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Portal\Push\PushConfig;
+use App\Modules\Portal\Support\CompetitionPage;
 use App\Modules\Portal\Support\GamePresenter;
 use App\Modules\Portal\Support\IcsCalendar;
 use App\Modules\Portal\Support\PortalSettings;
@@ -71,13 +72,25 @@ class PortalController extends Controller
     }
 
     /** `/competicoes/{slug}` leva à edição mais recente publicada. */
-    public function competition(Competition $competition): RedirectResponse
+    public function competition(Competition $competition, CompetitionPage $page): RedirectResponse|Response
     {
-        $season = $competition->seasons()->published()->orderByDesc('year')->orderByDesc('name')->first();
+        $latest = $competition->seasons()->published()->orderByDesc('year')->orderByDesc('name')->first();
 
-        abort_if($season === null, 404);
+        abort_if($latest === null, 404);
 
-        return redirect()->route('portal.season', [$competition->slug, $season->getKey()]);
+        if (! PortalSettings::enabled('competition_page')) {
+            return redirect()->route('portal.season', [$competition->slug, $latest->getKey()]);
+        }
+
+        $theme = PublicTheme::current();
+
+        return Inertia::render('Portal/Competition', [
+            'theme' => $theme,
+            'seo' => $this->seo("{$competition->name} · {$theme['name']}", "Histórico, campeões e recordes — {$competition->name}.", route('portal.competition', $competition->slug)),
+            'competition' => ['name' => $competition->name, 'description' => $competition->description, 'sport' => $competition->sport->label()],
+            'latest_url' => route('portal.season', [$competition->slug, $latest->getKey()]),
+            ...$page->for($competition),
+        ]);
     }
 
     public function season(Competition $competition, Season $season, SeasonPresenter $presenter, SeasonExtras $extras): Response
