@@ -1,0 +1,118 @@
+import { Button, Card, Field, Input, PageHeader } from '@/Components/Panel/ui';
+import { useFeature } from '@/lib/can';
+import PanelLayout from '@/Layouts/PanelLayout';
+import { Head, useForm } from '@inertiajs/react';
+import { FormEvent } from 'react';
+
+type Settings = {
+    registration_opened: boolean;
+    registration_approved: boolean;
+    registration_returned: boolean;
+    registration_rejected: boolean;
+    manager_invitation: boolean;
+    manager_lineup_reminder: boolean;
+    manager_game_changed: boolean;
+    manager_suspensions: boolean;
+    push_started: boolean;
+    push_score: boolean;
+    push_finished: boolean;
+    reminder_first_minutes: number;
+    reminder_second_minutes: number;
+};
+
+type SwitchKey = Exclude<keyof Settings, 'reminder_first_minutes' | 'reminder_second_minutes'>;
+
+const groups: { title: string; hint: string; feature: 'online_registration' | 'team_portal' | 'push'; items: { key: SwitchKey; label: string }[] }[] = [
+    {
+        title: 'Inscrição online (e-mails para a equipe que se inscreve)',
+        hint: 'Desligado, o pedido segue normalmente, mas a equipe não recebe o e-mail (o link pessoal continua aparecendo na tela depois de criar o pedido).',
+        feature: 'online_registration',
+        items: [
+            { key: 'registration_opened', label: 'Pedido criado (link pessoal da inscrição)' },
+            { key: 'registration_approved', label: 'Inscrição aprovada' },
+            { key: 'registration_returned', label: 'Pedido devolvido para ajustes' },
+            { key: 'registration_rejected', label: 'Pedido recusado' },
+        ],
+    },
+    {
+        title: 'Gestores de equipe',
+        hint: 'Os gestores ainda podem desligar os avisos para si mesmos.',
+        feature: 'team_portal',
+        items: [
+            { key: 'manager_invitation', label: 'Convite por e-mail (desligado, o gestor entra por "Esqueci minha senha")' },
+            { key: 'manager_lineup_reminder', label: 'Lembrete de escalação pendente' },
+            { key: 'manager_game_changed', label: 'Mudança de data/local, adiamento ou cancelamento do jogo' },
+            { key: 'manager_suspensions', label: 'Suspensões depois do jogo' },
+        ],
+    },
+    {
+        title: 'Avisos push (torcedores que seguem jogos e equipes)',
+        hint: 'Escolha em quais momentos do jogo o aviso é enviado. No basquete só há início e fim.',
+        feature: 'push',
+        items: [
+            { key: 'push_started', label: 'Jogo começou' },
+            { key: 'push_score', label: 'Gol ou set (placar mudou)' },
+            { key: 'push_finished', label: 'Jogo terminou' },
+        ],
+    },
+];
+
+function minutesLabel(minutes: number): string {
+    if (minutes % 1440 === 0) return `${minutes / 1440} dia(s)`;
+    if (minutes % 60 === 0) return `${minutes / 60} h`;
+    return `${minutes} min`;
+}
+
+function Group({ group, data, setData }: { group: (typeof groups)[number]; data: Settings; setData: <K extends keyof Settings>(key: K, value: Settings[K]) => void }) {
+    const available = useFeature(group.feature);
+
+    return (
+        <Card title={group.title} className="max-w-3xl">
+            {!available && <p className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900 ring-1 ring-amber-200">Este recurso não está liberado no pacote da organização; as opções abaixo só valem depois de liberado.</p>}
+            <p className="mb-3 text-sm text-gray-600">{group.hint}</p>
+            <div className="space-y-2">
+                {group.items.map((item) => (
+                    <label key={item.key} className="flex items-start gap-2 text-sm text-gray-700">
+                        <input type="checkbox" className="mt-0.5 rounded border-gray-300 text-emerald-600" checked={data[item.key]} onChange={(e) => setData(item.key, e.target.checked)} />
+                        {item.label}
+                    </label>
+                ))}
+            </div>
+            {group.feature === 'team_portal' && (
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <Field label="Primeiro lembrete (minutos antes do prazo)" htmlFor="first" hint={`Hoje: ${minutesLabel(data.reminder_first_minutes)} antes do prazo para confirmar a escalação.`}>
+                        <Input id="first" type="number" min={30} max={10080} value={data.reminder_first_minutes} onChange={(e) => setData('reminder_first_minutes', Number(e.target.value))} />
+                    </Field>
+                    <Field label="Segundo lembrete, mais urgente (minutos antes do prazo)" htmlFor="second" hint={`Hoje: ${minutesLabel(data.reminder_second_minutes)} antes do prazo. Precisa ser menor que o primeiro.`}>
+                        <Input id="second" type="number" min={15} max={10080} value={data.reminder_second_minutes} onChange={(e) => setData('reminder_second_minutes', Number(e.target.value))} />
+                    </Field>
+                </div>
+            )}
+        </Card>
+    );
+}
+
+export default function Edit({ settings }: { settings: Settings }) {
+    const { data, setData, patch, processing, errors } = useForm<Settings>(settings);
+
+    const submit = (event: FormEvent) => {
+        event.preventDefault();
+        patch(route('panel.communications.update'), { preserveScroll: true });
+    };
+
+    return (
+        <PanelLayout>
+            <Head title="Comunicações" />
+            <PageHeader title="Comunicações" subtitle="Escolha quais e-mails e avisos a organização envia e quando. O padrão é enviar tudo." />
+            <form onSubmit={submit} className="space-y-6">
+                {groups.map((group) => (
+                    <Group key={group.title} group={group} data={data} setData={setData} />
+                ))}
+                {(errors.reminder_first_minutes || errors.reminder_second_minutes) && <p className="max-w-3xl text-sm text-red-600">{errors.reminder_first_minutes ?? errors.reminder_second_minutes}</p>}
+                <Button type="submit" disabled={processing}>
+                    Salvar
+                </Button>
+            </form>
+        </PanelLayout>
+    );
+}

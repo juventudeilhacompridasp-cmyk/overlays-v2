@@ -32,6 +32,7 @@ const managerNav: NavItem[] = [
 const platformNav: NavItem = { label: 'Plataforma', route: 'platform.organizations.index', match: 'platform.*', icon: 'M4 7l8-4 8 4-8 4-8-4zM4 12l8 4 8-4M4 17l8 4 8-4' };
 
 const adminNav: NavItem[] = [
+    { label: 'Comunicações', route: 'panel.communications.edit', match: 'panel.communications.*', icon: 'M3 8l9 6 9-6M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z' },
     { label: 'Termos e privacidade', route: 'panel.legal.edit', match: 'panel.legal.*', icon: 'M9 12h6M9 16h6M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z' },
     { label: 'Portal público', route: 'panel.organization.edit', match: 'panel.organization.*', icon: 'M12 21a9 9 0 100-18 9 9 0 000 18zM3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 010 18M12 3a14 14 0 000 18' },
 ];

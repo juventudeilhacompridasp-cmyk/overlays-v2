@@ -9,17 +9,15 @@ use App\Modules\Matches\Support\ManagerLineupWindow;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
 use App\Modules\Tenancy\Models\Organization;
+use App\Modules\Tenancy\Support\CommunicationSettings;
 
 /**
  * Lembrete por e-mail ao gestor cuja equipe ainda não confirmou a escalação (ADR 0003): um aviso quando faltam até 24 h
- * para o prazo e outro, mais urgente, quando faltam até 2 h. Cada aviso sai uma vez por jogo e gestor.
+ * para o prazo e outro, mais urgente, quando faltam até 2 h (limiares e liga/desliga em {@see CommunicationSettings}).
+ * Cada aviso sai uma vez por jogo e gestor.
  */
 final class LineupReminders
 {
-    private const SOON = 120;
-
-    private const DAY = 1440;
-
     /** @return int quantos e-mails foram enfileirados */
     public static function run(): int
     {
@@ -38,12 +36,17 @@ final class LineupReminders
 
     private static function forOrganization(Organization $organization): int
     {
+        if (! CommunicationSettings::enabled('manager_lineup_reminder', $organization)) {
+            return 0;
+        }
+
+        [$first, $second] = CommunicationSettings::reminderMinutes($organization);
         $sent = 0;
 
         $games = Game::query()
             ->where('status', GameStatus::Scheduled)
             ->where('scheduled_at', '>', now())
-            ->where('scheduled_at', '<=', now()->addDays(4))
+            ->where('scheduled_at', '<=', now()->addMinutes($first + 1440))
             ->with(['homeEntry.team', 'awayEntry.team', 'venue', 'division.season.competition'])
             ->get();
 
@@ -55,7 +58,7 @@ final class LineupReminders
             }
 
             $minutes = (int) now()->diffInMinutes($deadline);
-            $kind = $minutes <= self::SOON ? 'lineup_2h' : ($minutes <= self::DAY ? 'lineup_24h' : null);
+            $kind = $minutes <= $second ? 'lineup_2h' : ($minutes <= $first ? 'lineup_24h' : null);
 
             if ($kind === null) {
                 continue;

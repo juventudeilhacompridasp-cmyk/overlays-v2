@@ -15,6 +15,7 @@ use App\Modules\Teams\Actions\InviteTeamManager;
 use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\Models\LegalDocument;
+use App\Modules\Tenancy\Support\CommunicationSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -144,7 +145,9 @@ class ReviewController extends Controller
             $user = $request->user();
             abort_if($user === null, 403);
             $review->approve($registration, $user, $validated['team_id'] ?? null);
-            Mail::to($registration->contact_email)->queue(RegistrationMail::approved($registration));
+            if (CommunicationSettings::enabled('registration_approved')) {
+                Mail::to($registration->contact_email)->queue(RegistrationMail::approved($registration));
+            }
 
             return $registration->isSupplement() ? 'Reforços aprovados: as pessoas aprovadas entraram no elenco.' : 'Inscrição aprovada: equipe, inscrição e elenco criados.';
         });
@@ -174,7 +177,9 @@ class ReviewController extends Controller
             $user = $request->user();
             abort_if($user === null, 403);
             $review->returnForChanges($registration, $validated['note'], $user);
-            Mail::to($registration->contact_email)->queue(RegistrationMail::returned($registration));
+            if (CommunicationSettings::enabled('registration_returned')) {
+                Mail::to($registration->contact_email)->queue(RegistrationMail::returned($registration));
+            }
 
             return 'Pedido devolvido para ajustes; a equipe foi avisada por e-mail.';
         });
@@ -188,7 +193,9 @@ class ReviewController extends Controller
             $user = $request->user();
             abort_if($user === null, 403);
             $review->reject($registration, $validated['note'], $user);
-            Mail::to($registration->contact_email)->queue(RegistrationMail::rejected($registration));
+            if (CommunicationSettings::enabled('registration_rejected')) {
+                Mail::to($registration->contact_email)->queue(RegistrationMail::rejected($registration));
+            }
 
             return 'Pedido recusado; a equipe foi avisada por e-mail.';
         });

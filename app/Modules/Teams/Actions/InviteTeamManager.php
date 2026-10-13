@@ -8,6 +8,7 @@ use App\Modules\Teams\Models\Team;
 use App\Modules\Teams\Models\TeamManager;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Membership;
+use App\Modules\Tenancy\Support\CommunicationSettings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -69,6 +70,11 @@ final class InviteTeamManager
 
     private function notify(TeamManager $link, bool $newAccount): void
     {
+        // Convite por e-mail desligado pela organização: o acesso é criado e o gestor entra por "Esqueci minha senha".
+        if (! CommunicationSettings::enabled('manager_invitation')) {
+            return;
+        }
+
         $user = $link->user;
         $url = $newAccount
             ? route('password.reset', ['token' => Password::broker()->createToken($user), 'email' => $user->email])
