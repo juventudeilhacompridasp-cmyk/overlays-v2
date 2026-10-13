@@ -41,7 +41,7 @@ final class SpreadsheetRows
             $row = array_map(fn ($cell) => trim((string) $cell), $row);
 
             if (array_filter($row, fn ($cell) => $cell !== '') !== []) {
-                $rows[] = array_values($row);
+                $rows[] = $row;
             }
         }
 
