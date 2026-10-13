@@ -80,7 +80,7 @@ describe('packages and features', function () {
         $season->update(['status' => 'registration']);
         $this->actingAs(panelUser(Role::Admin));
 
-        $this->get("/painel/seasons/{$season->id}")->assertInertia(fn ($page) => $page->where('registration.open', true)->has('features', 6));
+        $this->get("/painel/seasons/{$season->id}")->assertInertia(fn ($page) => $page->where('registration.open', true)->has('features', count(Feature::cases())));
 
         withPlan(Plan::Basic);
         $this->get("/painel/seasons/{$season->id}")->assertInertia(fn ($page) => $page->where('registration', null)->where('features', []));

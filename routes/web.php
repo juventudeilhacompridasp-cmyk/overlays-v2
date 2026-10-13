@@ -5,6 +5,7 @@ use App\Http\Middleware\PrivateNoIndex;
 use App\Modules\Broadcast\Http\Controllers\OverlayController;
 use App\Modules\Matches\Http\Controllers\PublicGameController;
 use App\Modules\Portal\Http\Controllers\CardVerifyController;
+use App\Modules\Portal\Http\Controllers\EmbedController;
 use App\Modules\Portal\Http\Controllers\LegalPageController;
 use App\Modules\Portal\Http\Controllers\PortalController;
 use App\Modules\Registration\Http\Controllers\ApplyController;
@@ -18,6 +19,13 @@ Route::get('/competicoes/{competition:slug}', [PortalController::class, 'competi
 Route::get('/competicoes/{competition:slug}/edicoes/{season}', [PortalController::class, 'season'])->name('portal.season');
 Route::get('/competicoes/{competition:slug}/edicoes/{season}/estatisticas', [PortalController::class, 'stats'])->name('portal.stats');
 Route::get('/equipes/{team}', [PortalController::class, 'team'])->name('portal.team');
+// Widgets para outros sites (iframe): sem login, só edição publicada, liberados pelo recurso "embeds".
+Route::middleware(['throttle:120,1', 'feature:embeds'])->prefix('embed')->name('embed.')->group(function () {
+    Route::get('jogo/{game}', [EmbedController::class, 'game'])->name('game');
+    Route::get('classificacao/{division}', [EmbedController::class, 'standings'])->name('standings');
+    Route::get('jogos/{season}', [EmbedController::class, 'games'])->name('games');
+});
+
 // Verificação da carteirinha (QR): sem cache e fora dos buscadores (cabeçalho e robots).
 Route::get('/carteirinha/{code}', CardVerifyController::class)->name('portal.card')->middleware(['throttle:30,1', 'feature:athlete_cards', PrivateNoIndex::class]);
 Route::get('/termos', [LegalPageController::class, 'terms'])->name('portal.terms');

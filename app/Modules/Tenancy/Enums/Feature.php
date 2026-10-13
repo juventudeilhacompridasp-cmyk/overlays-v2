@@ -11,6 +11,7 @@ enum Feature: string
     case Overlays = 'overlays';
     case CustomDomain = 'custom_domain';
     case WhiteLabel = 'white_label';
+    case Embeds = 'embeds';
 
     public function label(): string
     {
@@ -21,6 +22,7 @@ enum Feature: string
             self::Overlays => 'Overlays para OBS',
             self::CustomDomain => 'Domínio próprio',
             self::WhiteLabel => 'Marca própria (white-label)',
+            self::Embeds => 'Widgets para outros sites',
         };
     }
 }

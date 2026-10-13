@@ -12,6 +12,7 @@ use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
 use App\Modules\Matches\Http\Controllers\SheetController;
 use App\Modules\Matches\Http\Controllers\VenueController;
+use App\Modules\Portal\Http\Controllers\EmbedPanelController;
 use App\Modules\Registration\Http\Controllers\ReviewController;
 use App\Modules\Registration\Http\Controllers\SeasonSettingsController;
 use App\Modules\Teams\Http\Controllers\CardController;
@@ -71,6 +72,8 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::get('roster/{rosterEntry}/card', [CardController::class, 'show'])->name('roster.card');
         Route::post('roster/{rosterEntry}/card/regenerate', [CardController::class, 'regenerate'])->name('roster.card.regenerate');
     });
+
+    Route::get('widgets', [EmbedPanelController::class, 'index'])->middleware('feature:embeds')->name('widgets.index');
 
     Route::middleware(['can:manage-competitions', 'feature:reports'])->group(function () {
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

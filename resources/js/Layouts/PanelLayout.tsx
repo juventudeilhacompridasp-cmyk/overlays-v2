@@ -18,6 +18,8 @@ const registrationsNav: NavItem = { feature: 'online_registration', label: 'Insc
 
 const reportsNav: NavItem = { feature: 'reports', label: 'Relatórios', route: 'panel.reports.index', match: 'panel.reports.*', icon: 'M9 17v-6M13 17V7M17 17v-4M4 4v16h16' };
 
+const widgetsNav: NavItem = { label: 'Widgets', route: 'panel.widgets.index', match: 'panel.widgets.*', feature: 'embeds', icon: 'M8 9l-4 3 4 3M16 9l4 3-4 3M13 6l-2 12' };
+
 const platformNav: NavItem = { label: 'Plataforma', route: 'platform.organizations.index', match: 'platform.*', icon: 'M4 7l8-4 8 4-8 4-8-4zM4 12l8 4 8-4M4 17l8 4 8-4' };
 
 const adminNav: NavItem[] = [
@@ -40,7 +42,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const [open, setOpen] = useState(false);
     const canManageUsers = useCan('manage-users');
     const canManageCompetitions = useCan('manage-competitions');
-    const base = canManageCompetitions ? [...nav.slice(0, 2), registrationsNav, ...nav.slice(2), reportsNav] : nav;
+    const base = canManageCompetitions ? [...nav.slice(0, 2), registrationsNav, ...nav.slice(2), reportsNav, widgetsNav] : nav;
     const { features } = usePage().props;
     const all = canManageUsers ? [...base, ...adminNav, usersNav] : base;
     const withPlatform = auth.platform_admin ? [...all, platformNav] : all;
