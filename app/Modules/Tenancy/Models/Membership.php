@@ -48,7 +48,7 @@ class Membership extends Model
     /** Nome do acesso para mostrar: o do perfil, ou o do papel. */
     public function accessLabel(): string
     {
-        return $this->profile?->name ?? $this->role->label();
+        return $this->access_profile_id === null ? $this->role->label() : $this->profile->name;
     }
 
     /**
