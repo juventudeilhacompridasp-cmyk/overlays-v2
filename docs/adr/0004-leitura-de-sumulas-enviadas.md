@@ -1,6 +1,6 @@
 # ADR 0004 — Leitura e conferência de súmulas enviadas depois do jogo
 
-Status: aceito (implementação em partes; ver "Entrega em partes")
+Status: aceito (partes 1 e 2 entregues; ver "Entrega em partes")
 Data: 13/10/2026
 
 ## Contexto

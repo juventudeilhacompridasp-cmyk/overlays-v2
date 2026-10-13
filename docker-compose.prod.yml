@@ -37,6 +37,9 @@ x-env: &env
   VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
   VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
   VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:contato@example.com}
+  # Leitura de súmulas por IA (opcional; sem a chave só CSV/XLSX).
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-5-5}
   # Organizações por subdomínio ({slug}.PLATFORM_BASE_DOMAIN) e organização padrão; chave estável do hash do CPF.
   PLATFORM_BASE_DOMAIN: ${PLATFORM_BASE_DOMAIN:-}
   DEFAULT_ORGANIZATION_SLUG: ${DEFAULT_ORGANIZATION_SLUG:-default}
