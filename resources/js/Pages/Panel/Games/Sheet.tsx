@@ -1,6 +1,6 @@
-import { Badge, Button, Card, Field, Input, Logo, PageHeader, Select } from '@/Components/Panel/ui';
+import { Badge, Button, Card, Field, Input, LinkButton, Logo, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
-import { useCan } from '@/lib/can';
+import { useCan, useFeature } from '@/lib/can';
 import { GameClock, formatClock, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
 import { SheetView, project, ProjectionRules, QueueItem, QueueKind } from '@/lib/sheetProject';
 import { SheetQueue, useSheetQueue } from '@/lib/sheetQueue';
@@ -628,6 +628,7 @@ const teamFields = (team: Team) => ({
 export default function Sheet({ game: serverGame, home: serverHome, away: serverAway, events: serverEvents, limits, clock_offsets, event_types, sport, score_model, quarters, sets, fouls, clock: serverClock, public_url }: Props) {
     // Quem não opera jogos só consulta a súmula: o servidor também recusa as ações, aqui só se escondem os controles.
     const canOperate = useCan('operate-games');
+    const canImport = useFeature('sheet_import');
     const { auth } = usePage().props;
 
     // Fila offline: lançamentos guardados no aparelho. A tela mostra a projeção (placar, quem está em campo, relógio) como
@@ -672,17 +673,24 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
                     { label: 'Súmula' },
                 ]}
                 actions={
-                    game.open && home && away ? (
-                        <Button
-                            onClick={() => {
-                                if (window.confirm('Encerrar o jogo? O placar atual passa a valer na classificação.')) {
-                                    send('finish', {}, 'Encerrar o jogo');
-                                }
-                            }}
-                        >
-                            Encerrar jogo
-                        </Button>
-                    ) : undefined
+                    <div className="flex flex-wrap gap-2">
+                        {canImport && (
+                            <LinkButton href={route('panel.games.uploads', game.id)} variant="secondary">
+                                Súmulas enviadas
+                            </LinkButton>
+                        )}
+                        {game.open && home && away && (
+                            <Button
+                                onClick={() => {
+                                    if (window.confirm('Encerrar o jogo? O placar atual passa a valer na classificação.')) {
+                                        send('finish', {}, 'Encerrar o jogo');
+                                    }
+                                }}
+                            >
+                                Encerrar jogo
+                            </Button>
+                        )}
+                    </div>
                 }
             />
 

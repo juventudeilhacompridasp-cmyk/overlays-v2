@@ -12,6 +12,7 @@ use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
 use App\Modules\Matches\Http\Controllers\MesarioController;
 use App\Modules\Matches\Http\Controllers\SheetController;
+use App\Modules\Matches\Http\Controllers\SheetUploadController;
 use App\Modules\Matches\Http\Controllers\VenueController;
 use App\Modules\Portal\Http\Controllers\EmbedPanelController;
 use App\Modules\Registration\Http\Controllers\ReviewController;
@@ -114,6 +115,16 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::post('games/{game}/clock', [SheetController::class, 'clockPause'])->name('games.clock.pause');
         Route::post('games/{game}/shootout', [SheetController::class, 'shootout'])->name('games.shootout');
         Route::post('games/{game}/finish', [SheetController::class, 'finish'])->name('games.finish');
+    });
+
+    // Súmulas enviadas depois do jogo (ADR 0004): consultar é para qualquer membro; enviar e excluir é de quem opera jogos.
+    Route::middleware('feature:sheet_import')->group(function () {
+        Route::get('games/{game}/uploads', [SheetUploadController::class, 'index'])->name('games.uploads');
+        Route::get('game-sheet-uploads/{upload}', [SheetUploadController::class, 'show'])->name('games.uploads.show');
+        Route::middleware('panel.can:operate-games')->group(function () {
+            Route::post('games/{game}/uploads', [SheetUploadController::class, 'store'])->name('games.uploads.store');
+            Route::delete('game-sheet-uploads/{upload}', [SheetUploadController::class, 'destroy'])->name('games.uploads.destroy');
+        });
     });
 
     // Transmissão (OBS): ver a lista é para qualquer membro; criar/excluir canal é do organizador; o operador

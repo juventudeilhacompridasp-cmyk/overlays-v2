@@ -13,6 +13,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
   validação do Reverb e do Web Push de verdade no CI; **fila offline da súmula** (PR 33).
 
 ## Em andamento
+- **Leitura de súmulas enviadas depois do jogo (ADR 0004)**: parte 1 (envio e guarda) entregue; faltam a leitura (estruturada + IA com visão, interruptor/limites, texto nos Termos) e a conferência/revisão (relatório sem alterar o jogo).
 - (entregue neste PR) Teste de navegador (Playwright) da fila offline no CI:
   "Fila offline no navegador".
 

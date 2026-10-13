@@ -14,6 +14,7 @@ enum Feature: string
     case Embeds = 'embeds';
     case Push = 'push';
     case TeamPortal = 'team_portal';
+    case SheetImport = 'sheet_import';
 
     public function label(): string
     {
@@ -27,6 +28,7 @@ enum Feature: string
             self::Embeds => 'Widgets para outros sites',
             self::Push => 'Avisos push (jogos e equipes)',
             self::TeamPortal => 'Área do gestor de equipe (escalação e esquema tático)',
+            self::SheetImport => 'Súmulas enviadas depois do jogo (leitura e conferência)',
         };
     }
 }
