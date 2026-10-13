@@ -92,6 +92,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::get('registrations/{registration}', [ReviewController::class, 'show'])->name('registrations.show');
         Route::patch('registrations/{registration}/people/{person}', [ReviewController::class, 'reviewPerson'])->name('registrations.people.review');
         Route::post('registrations/{registration}/approve', [ReviewController::class, 'approve'])->name('registrations.approve');
+        Route::post('registrations/{registration}/manager', [ReviewController::class, 'inviteManager'])->middleware('feature:team_portal')->name('registrations.manager');
         Route::post('registrations/{registration}/return', [ReviewController::class, 'returnForChanges'])->name('registrations.return');
         Route::post('registrations/{registration}/reject', [ReviewController::class, 'reject'])->name('registrations.reject');
         Route::delete('registrations/{registration}', [ReviewController::class, 'destroy'])->name('registrations.destroy');

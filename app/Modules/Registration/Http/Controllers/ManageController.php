@@ -35,6 +35,9 @@ class ManageController extends Controller
             'theme' => $theme,
             'seo' => ['title' => "Minha inscrição · {$theme['name']}", 'description' => 'Acompanhe a inscrição da sua equipe.', 'url' => $registration->manageUrl(), 'image' => null],
             'registration' => [
+                'supplement' => $registration->isSupplement(),
+                // Reforço: volta para a área do gestor (o link do pedido só serve para quem gerencia a equipe).
+                'back_url' => $registration->isSupplement() && $registration->entry_id !== null && $registration->requested_by !== null ? route('manager.entries.show', $registration->entry_id) : null,
                 'status' => $registration->status->value,
                 'status_label' => $registration->status->label(),
                 'editable' => $registration->status->isEditable(),
@@ -83,6 +86,11 @@ class ManageController extends Controller
     {
         return $this->attempt(function () use ($request, $registration): string {
             EnsureEditable::check($registration);
+
+            if ($registration->isSupplement()) {
+                throw new InvalidArgumentException('Os dados da equipe não mudam em um pedido de reforço.');
+            }
+
             $registration->update($request->validated());
 
             return 'Dados da equipe salvos.';

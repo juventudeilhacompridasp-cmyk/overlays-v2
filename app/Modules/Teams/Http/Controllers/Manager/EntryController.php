@@ -7,8 +7,10 @@ use App\Modules\Competitions\Actions\CalculateDiscipline;
 use App\Modules\Competitions\Models\Entry;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Models\GameEvent;
+use App\Modules\Registration\Models\Registration;
 use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Enums\RosterStatus;
+use App\Modules\Teams\Models\RosterChange;
 use App\Modules\Teams\Models\RosterEntry;
 use App\Modules\Teams\Support\ManagedTeams;
 use Illuminate\Http\Request;
@@ -45,7 +47,29 @@ class EntryController extends Controller
             ->sortBy(fn (RosterEntry $row) => [$row->role === RosterRole::Athlete ? 0 : 1, $row->shirt_number ?? 999, $row->person->name])
             ->values();
 
+        $supplements = Registration::query()->where('entry_id', $entry->getKey())->where('kind', Registration::KIND_SUPPLEMENT)
+            ->withCount('people')->orderByDesc('created_at')->limit(10)->get();
+
+        $changes = RosterChange::query()->where('entry_id', $entry->getKey())->with('user:id,name')->orderByDesc('created_at')->orderByDesc('id')->limit(15)->get();
+
         return Inertia::render('Manager/Entry', [
+            'window' => ['closed_reason' => $entry->division->season->rosterChangesClosedReason()],
+            'max_athletes' => $entry->division->season->registrationSettings()['max_athletes'],
+            'supplements' => $supplements->map(fn (Registration $registration) => [
+                'id' => $registration->getKey(),
+                'status' => $registration->status->value,
+                'status_label' => $registration->status->label(),
+                'people_count' => $registration->people_count,
+                'review_note' => $registration->review_note,
+                'created_at' => $registration->created_at?->format('d/m/Y'),
+                'url' => $registration->status->isEditable() ? $registration->manageUrl() : null,
+            ])->values(),
+            'changes' => $changes->map(fn (RosterChange $change) => [
+                'id' => $change->getKey(),
+                'text' => self::describe($change),
+                'by' => $change->user?->name,
+                'at' => $change->created_at?->format('d/m/Y H:i'),
+            ])->values(),
             'entry' => [
                 'id' => $entry->getKey(),
                 'team' => $entry->team->name,
@@ -73,5 +97,21 @@ class EntryController extends Controller
                 ];
             })->all(),
         ]);
+    }
+
+    private static function describe(RosterChange $change): string
+    {
+        $details = $change->details ?? [];
+        $name = (string) ($details['name'] ?? '');
+        $show = fn (mixed $value): string => $value === null || $value === '' ? 'sem' : (string) $value;
+
+        return match ($change->action) {
+            RosterChange::SHIRT => "Camisa de {$name}: {$show($details['from'] ?? null)} → {$show($details['to'] ?? null)}",
+            RosterChange::NICKNAME => "Apelido de {$name}: {$show($details['from'] ?? null)} → {$show($details['to'] ?? null)}",
+            RosterChange::RELEASED => "{$name} desligado(a) do elenco",
+            RosterChange::SUPPLEMENT_REQUESTED => 'Pedido de reforço aberto',
+            RosterChange::SUPPLEMENT_APPROVED => 'Reforços aprovados e incluídos no elenco ('.(int) ($details['people'] ?? 0).')',
+            default => $change->action,
+        };
     }
 }

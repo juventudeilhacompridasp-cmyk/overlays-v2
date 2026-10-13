@@ -11,7 +11,10 @@ use App\Modules\Registration\Models\Registration;
 use App\Modules\Registration\Models\RegistrationPerson;
 use App\Modules\Teams\Actions\AddToRoster;
 use App\Modules\Teams\Enums\RosterRole;
+use App\Modules\Teams\Enums\RosterStatus;
 use App\Modules\Teams\Models\Person;
+use App\Modules\Teams\Models\RosterChange;
+use App\Modules\Teams\Models\RosterEntry;
 use App\Modules\Teams\Models\Team;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -68,6 +71,10 @@ final class ReviewRegistration
     /** @param  string|null  $teamId  vincula a uma equipe já cadastrada em vez de criar uma nova */
     public function approve(Registration $registration, User $reviewer, ?string $teamId = null): Entry
     {
+        if ($registration->isSupplement()) {
+            return $this->approveSupplement($registration, $reviewer);
+        }
+
         $this->ensureSubmitted($registration);
 
         $people = $registration->people()->get();
@@ -119,6 +126,52 @@ final class ReviewRegistration
                 'reviewed_by' => $reviewer->getKey(),
                 'review_note' => null,
             ]);
+
+            return $entry;
+        });
+    }
+
+    /** Reforço: inclui as pessoas aprovadas no elenco da inscrição que já existe (nada de equipe ou inscrição nova). */
+    private function approveSupplement(Registration $registration, User $reviewer): Entry
+    {
+        $this->ensureSubmitted($registration);
+
+        $people = $registration->people()->get();
+
+        if ($people->contains(fn (RegistrationPerson $person) => $person->review_status === ReviewStatus::Pending)) {
+            throw new InvalidArgumentException('Revise todas as pessoas do pedido antes de aprovar.');
+        }
+
+        $approved = $people->filter(fn (RegistrationPerson $person) => $person->review_status === ReviewStatus::Approved);
+
+        if ($approved->isEmpty()) {
+            throw new InvalidArgumentException('Aprove pelo menos uma pessoa para incluir no elenco (ou recuse o pedido).');
+        }
+
+        $entry = Entry::query()->findOrFail($registration->entry_id);
+        $max = $registration->season->registrationSettings()['max_athletes'];
+        $current = RosterEntry::query()->where('entry_id', $entry->getKey())->where('role', RosterRole::Athlete)->where('status', RosterStatus::Active)->count();
+
+        if ($current + $approved->where('role', RosterRole::Athlete)->count() > $max) {
+            throw new InvalidArgumentException("O elenco passaria do máximo de {$max} atletas da edição.");
+        }
+
+        return DB::transaction(function () use ($registration, $reviewer, $approved, $entry): Entry {
+            foreach ($approved as $item) {
+                $person = $this->person($registration, $item);
+
+                try {
+                    $this->roster->handle($entry, $person, $item->role, $item->shirt_number);
+                } catch (ValidationException $exception) {
+                    throw new InvalidArgumentException(collect($exception->errors())->flatten()->first() ?? 'Regra do elenco violada.');
+                }
+
+                $item->update(['person_id' => $person->getKey()]);
+            }
+
+            $registration->update(['status' => RegistrationStatus::Approved, 'reviewed_at' => now(), 'reviewed_by' => $reviewer->getKey(), 'review_note' => null]);
+
+            RosterChange::record($entry->getKey(), $entry->organization_id, RosterChange::SUPPLEMENT_APPROVED, null, $reviewer->getKey(), ['people' => $approved->count()]);
 
             return $entry;
         });

@@ -37,6 +37,10 @@ class RegistrationMail extends Mailable
 
     public static function approved(Registration $registration): self
     {
+        if ($registration->isSupplement()) {
+            return new self($registration, "Reforços de {$registration->team_name} aprovados", 'Os reforços do seu pedido foram aprovados e já fazem parte do elenco.');
+        }
+
         return new self($registration, "Inscrição de {$registration->team_name} aprovada", 'Sua inscrição foi aprovada e a equipe já faz parte da competição.');
     }
 

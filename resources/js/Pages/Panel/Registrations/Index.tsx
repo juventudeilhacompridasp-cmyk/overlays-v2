@@ -6,6 +6,7 @@ import { Head, Link, router } from '@inertiajs/react';
 interface Row {
     id: string;
     team_name: string;
+    supplement: boolean;
     competition: string;
     season: string;
     division: string;
@@ -50,7 +51,7 @@ export default function Index({ registrations, filters, statuses, pending }: Pro
                             <li key={row.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                                 <div>
                                     <Link href={route('panel.registrations.show', row.id)} className="font-medium text-gray-900 hover:text-emerald-700">
-                                        {row.team_name}
+                                        {row.team_name}{row.supplement && <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">Reforço</span>}
                                     </Link>{' '}
                                     <Badge tone={tone(row.status)}>{row.status_label}</Badge>
                                     <div className="mt-0.5 text-sm text-gray-500">

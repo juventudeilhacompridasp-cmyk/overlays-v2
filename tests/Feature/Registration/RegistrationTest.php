@@ -572,7 +572,7 @@ describe('season settings', function () {
 
         $this->patch("/painel/seasons/{$season->id}/registration", ['deadline' => '2030-01-31', 'instructions' => 'Levar RG', 'min_athletes' => 11, 'max_athletes' => 25, 'require_documents' => false])->assertSessionHas('success');
 
-        expect($season->fresh()->registrationSettings())->toBe(['deadline' => '2030-01-31', 'instructions' => 'Levar RG', 'min_athletes' => 11, 'max_athletes' => 25, 'require_documents' => false]);
+        expect($season->fresh()->registrationSettings())->toBe(['deadline' => '2030-01-31', 'instructions' => 'Levar RG', 'min_athletes' => 11, 'max_athletes' => 25, 'require_documents' => false, 'roster_changes' => true, 'roster_changes_until' => null]);
 
         $this->get("/painel/seasons/{$season->id}")->assertInertia(fn ($page) => $page
             ->where('registration.min_athletes', 11)
@@ -594,7 +594,7 @@ describe('season settings', function () {
     it('uses sensible defaults when nothing was configured', function () {
         $season = Season::factory()->create(['status' => SeasonStatus::Registration]);
 
-        expect($season->registrationSettings())->toBe(['deadline' => null, 'instructions' => null, 'min_athletes' => 7, 'max_athletes' => 30, 'require_documents' => true])
+        expect($season->registrationSettings())->toBe(['deadline' => null, 'instructions' => null, 'min_athletes' => 7, 'max_athletes' => 30, 'require_documents' => true, 'roster_changes' => true, 'roster_changes_until' => null])
             ->and($season->registrationOpen())->toBeTrue();
     });
 });

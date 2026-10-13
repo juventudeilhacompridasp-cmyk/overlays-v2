@@ -43,9 +43,9 @@ Requisitos: o gestor tem **login e painel próprios**; define **escalação por 
     suspensões, pendurados), jogos, escalações, carteirinhas (quando o recurso existe);
   - do adversário: só dados públicos do jogo (equipe, data, local), e a escalação dele **somente depois de publicada** (ver 6);
   - **nunca**: CPF/`document_hash`, documentos, dados de outras equipes, súmula completa, cartões do adversário.
-- O que ele **faz**: escalação e esquema tático dos jogos da sua equipe (antes do prazo), edição de dados esportivos básicos
-  (apelido, camisa) do próprio elenco (parte 3) e solicitações de alteração do elenco (parte 3). Ele **não** opera a súmula nem muda
-  placar, jogos, regulamento ou inscrições.
+- O que ele **faz**: escalação e esquema tático dos jogos da sua equipe (antes do prazo), dados esportivos básicos do próprio elenco
+  (apelido, camisa), desligamento e pedidos de reforço (parte 3). Ele **não** opera a súmula nem muda placar, jogos, regulamento ou
+  inscrições.
 
 ### 4. Convite (sem senha repassada)
 - Quem tem `manage-registry` convida em Painel > Equipes > (equipe) > "Gestores": nome + e-mail. Se o e-mail não existe, cria o
@@ -98,8 +98,19 @@ envio de documentos pelo gestor depois da aprovação (usa nova solicitação de
 1. **Parte 1 — acesso e painel**: papel, vínculo, convite, `/gestor` (início, minha equipe/elenco, jogos, disciplina), isolamento por equipe, testes.
 2. **Parte 2 — escalação e esquema tático**: `Rules/Tactics`, migração, `SubmitTeamLineup`, editor de campo/quadra, prazo, confirmação,
    exibição na súmula e no overlay.
-3. **Parte 3 — elenco**: dados esportivos pelo próprio gestor (camisa, apelido) e solicitações de inclusão/saída de atletas com
-   aprovação do organizador (`roster_change_requests`), convite pela aprovação da inscrição, carteirinhas do próprio elenco.
+3. **Parte 3 — elenco** (entregue): dentro da janela de alterações da edição (`registration.roster_changes` e `roster_changes_until`, na
+   regra de inscrição da edição; edição encerrada fecha tudo):
+   - **camisa e apelido** pelo próprio gestor, com as mesmas regras do cadastro do painel (camisa única entre atletas ativos; o apelido
+     só muda se a pessoa não estiver ativa em equipe de outro gestor), e **desligamento** imediato (sai também das escalações dos jogos
+     ainda não iniciados, desfazendo a confirmação; quem tem histórico de jogos fica como "removido"). Tudo vai para `roster_changes`
+     (histórico visível ao gestor). *Ajuste em relação ao texto inicial:* a saída NÃO precisa de aprovação, porque não cria elegibilidade
+     nova; o que cria — a **inclusão** — continua dependendo do organizador;
+   - **inclusão** = **pedido de reforço**: um `Registration` com `kind = supplement` ligado à inscrição existente (`entry_id`), pelo mesmo
+     fluxo da inscrição online (cadastro, CPF só em HMAC, documentos em `s3-private`, autorização do responsável de menores, análise
+     pessoa a pessoa). Aprovar inclui as pessoas aprovadas no elenco existente via `AddToRoster` (nada de equipe/inscrição nova); o teto de
+     atletas vale para o elenco inteiro. O gestor abre o pedido pela área dele e preenche no link do pedido (exige o recurso `online_registration`);
+   - **convite do responsável** na aprovação de uma inscrição (botão explícito do organizador) e **carteirinhas** do próprio elenco
+     (recurso `athlete_cards`, sem renovar códigos).
 
 ## Consequências
 - Rotas, middleware e páginas novas; `panel.member` passa a recusar o papel `manager`.

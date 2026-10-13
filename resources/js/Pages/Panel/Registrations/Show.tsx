@@ -1,5 +1,6 @@
 import { Badge, Button, Card, DeleteButton, Field, PageHeader, Select, Textarea } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
+import { useFeature } from '@/lib/can';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -26,6 +27,8 @@ interface Props {
         status: string;
         status_label: string;
         reviewable: boolean;
+        supplement: boolean;
+        team_id: string | null;
         review_note: string | null;
         team_name: string;
         team_short_name: string | null;
@@ -109,13 +112,14 @@ function PersonRow({ registrationId, person, reviewable }: { registrationId: str
 export default function Show({ registration, people, requirements, teams, suggested_team_id }: Props) {
     const [note, setNote] = useState('');
     const [teamId, setTeamId] = useState(suggested_team_id ?? '');
+    const useTeamPortal = useFeature('team_portal');
     const post = (name: string, data: Record<string, string> = {}) => router.post(route(name, registration.id), data, { preserveScroll: true });
 
     return (
         <PanelLayout>
             <Head title={`Inscrição · ${registration.team_name}`} />
             <PageHeader
-                title={registration.team_name}
+                title={registration.supplement ? `Reforços · ${registration.team_name}` : registration.team_name}
                 subtitle={
                     <>
                         <Badge tone={registration.status === 'submitted' ? 'amber' : registration.status === 'approved' ? 'green' : registration.status === 'rejected' ? 'red' : 'gray'}>{registration.status_label}</Badge>{' '}
@@ -140,7 +144,14 @@ export default function Show({ registration, people, requirements, teams, sugges
                     </dl>
                     {registration.review_note && <p className="mt-3 text-sm text-gray-700">Última observação: {registration.review_note}</p>}
                     {registration.status === 'approved' && (
-                        <p className="mt-3 text-sm text-emerald-800">Aprovada: equipe e elenco já estão na divisão.</p>
+                        <p className="mt-3 text-sm text-emerald-800">{registration.supplement ? 'Aprovado: as pessoas aprovadas já estão no elenco.' : 'Aprovada: equipe e elenco já estão na divisão.'}</p>
+                    )}
+                    {registration.status === 'approved' && !registration.supplement && registration.team_id && useTeamPortal && (
+                        <div className="mt-3">
+                            <Button small variant="secondary" onClick={() => window.confirm(`Convidar ${registration.contact_name} (${registration.contact_email}) como gestor(a) desta equipe? Ele(a) recebe um e-mail para criar a senha.`) && post('panel.registrations.manager')}>
+                                Convidar o responsável como gestor da equipe
+                            </Button>
+                        </div>
                     )}
                 </Card>
 
@@ -155,16 +166,18 @@ export default function Show({ registration, people, requirements, teams, sugges
                 {registration.reviewable && (
                     <Card title="Decisão">
                         <div className="space-y-4">
-                            <Field label="Vincular a uma equipe já cadastrada (opcional)" htmlFor="team" hint="Deixe em branco para criar uma equipe nova com os dados do pedido.">
-                                <Select id="team" value={teamId} onChange={(e) => setTeamId(e.target.value)}>
-                                    <option value="">Criar equipe nova</option>
-                                    {teams.map((team) => (
-                                        <option key={team.id} value={team.id}>{team.name}</option>
-                                    ))}
-                                </Select>
-                            </Field>
-                            <Button onClick={() => window.confirm('Aprovar a inscrição? A equipe e o elenco serão criados.') && post('panel.registrations.approve', teamId ? { team_id: teamId } : {})}>
-                                Aprovar inscrição
+                            {!registration.supplement && (
+                                <Field label="Vincular a uma equipe já cadastrada (opcional)" htmlFor="team" hint="Deixe em branco para criar uma equipe nova com os dados do pedido.">
+                                    <Select id="team" value={teamId} onChange={(e) => setTeamId(e.target.value)}>
+                                        <option value="">Criar equipe nova</option>
+                                        {teams.map((team) => (
+                                            <option key={team.id} value={team.id}>{team.name}</option>
+                                        ))}
+                                    </Select>
+                                </Field>
+                            )}
+                            <Button onClick={() => window.confirm(registration.supplement ? 'Aprovar os reforços? As pessoas aprovadas entram no elenco.' : 'Aprovar a inscrição? A equipe e o elenco serão criados.') && post('panel.registrations.approve', !registration.supplement && teamId ? { team_id: teamId } : {})}>
+                                {registration.supplement ? 'Aprovar reforços' : 'Aprovar inscrição'}
                             </Button>
                             <Field label="Recado para a equipe (devolver ou recusar)" htmlFor="note">
                                 <Textarea id="note" rows={3} value={note} onChange={(e) => setNote(e.target.value)} />

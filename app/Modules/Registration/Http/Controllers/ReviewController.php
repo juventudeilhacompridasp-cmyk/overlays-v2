@@ -11,6 +11,7 @@ use App\Modules\Registration\Mail\RegistrationMail;
 use App\Modules\Registration\Models\Registration;
 use App\Modules\Registration\Models\RegistrationDocument;
 use App\Modules\Registration\Models\RegistrationPerson;
+use App\Modules\Teams\Actions\InviteTeamManager;
 use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\Models\LegalDocument;
@@ -39,6 +40,7 @@ class ReviewController extends Controller
             ->through(fn (Registration $registration) => [
                 'id' => $registration->getKey(),
                 'team_name' => $registration->team_name,
+                'supplement' => $registration->isSupplement(),
                 'competition' => $registration->season->competition->name,
                 'season' => $registration->season->name,
                 'division' => $registration->division->name,
@@ -69,6 +71,8 @@ class ReviewController extends Controller
         return Inertia::render('Panel/Registrations/Show', [
             'registration' => [
                 'id' => $registration->getKey(),
+                'supplement' => $registration->isSupplement(),
+                'team_id' => $registration->team_id,
                 'status' => $registration->status->value,
                 'status_label' => $registration->status->label(),
                 'reviewable' => $registration->status === RegistrationStatus::Submitted,
@@ -142,7 +146,23 @@ class ReviewController extends Controller
             $review->approve($registration, $user, $validated['team_id'] ?? null);
             Mail::to($registration->contact_email)->queue(RegistrationMail::approved($registration));
 
-            return 'Inscrição aprovada: equipe, inscrição e elenco criados.';
+            return $registration->isSupplement() ? 'Reforços aprovados: as pessoas aprovadas entraram no elenco.' : 'Inscrição aprovada: equipe, inscrição e elenco criados.';
+        });
+    }
+
+    /** Convida o responsável da inscrição aprovada como gestor da equipe (ação explícita do organizador; ADR 0003). */
+    public function inviteManager(Request $request, Registration $registration, InviteTeamManager $invite): RedirectResponse
+    {
+        if ($registration->isSupplement() || $registration->status !== RegistrationStatus::Approved || $registration->team_id === null) {
+            return back()->with('error', 'Só dá para convidar o responsável de uma inscrição aprovada.');
+        }
+
+        $team = Team::query()->findOrFail($registration->team_id);
+
+        return $this->attempt(function () use ($request, $invite, $team, $registration): string {
+            $invite->handle($team, $registration->contact_name, $registration->contact_email, $request->user());
+
+            return "{$registration->contact_name} foi convidado(a) como gestor(a) de {$team->name}.";
         });
     }
 

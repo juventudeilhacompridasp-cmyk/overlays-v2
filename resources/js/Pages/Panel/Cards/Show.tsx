@@ -26,6 +26,7 @@ interface Props {
     cards: CardData[];
     entry: { id: string; team: string };
     back_url: string;
+    can_regenerate: boolean;
 }
 
 function Qr({ value }: { value: string }) {
@@ -82,7 +83,7 @@ function Card({ card }: { card: CardData }) {
     );
 }
 
-export default function Show({ cards, entry, back_url }: Props) {
+export default function Show({ cards, entry, back_url, can_regenerate }: Props) {
     return (
         <PanelLayout>
             <Head title={`Carteirinhas · ${entry.team}`} />
@@ -95,7 +96,7 @@ export default function Show({ cards, entry, back_url }: Props) {
                             <LinkButton href={back_url} variant="secondary">
                                 Voltar ao elenco
                             </LinkButton>
-                            {cards.length === 1 && (
+                            {cards.length === 1 && can_regenerate && (
                                 <Button
                                     variant="danger"
                                     onClick={() => window.confirm('Emitir um novo código? O QR desta carteirinha deixa de valer.') && router.post(route('panel.roster.card.regenerate', cards[0].id), {}, { preserveScroll: true })}

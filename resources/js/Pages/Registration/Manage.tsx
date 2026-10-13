@@ -31,6 +31,8 @@ interface Props {
     theme: Theme;
     seo: Seo;
     registration: {
+        supplement: boolean;
+        back_url: string | null;
         status: string;
         status_label: string;
         editable: boolean;
@@ -224,7 +226,14 @@ export default function Manage({ theme, seo, registration, people, problems, req
             <Head>
                 <meta name="robots" content="noindex,nofollow" />
             </Head>
-            <h1 className="text-2xl font-bold">{registration.team_name}</h1>
+            {registration.back_url && (
+                <p className="mb-3 text-sm">
+                    <a href={registration.back_url} className="text-emerald-700 hover:underline">
+                        ← Voltar à área do gestor
+                    </a>
+                </p>
+            )}
+            <h1 className="text-2xl font-bold">{registration.supplement ? `Reforços · ${registration.team_name}` : registration.team_name}</h1>
             <p className="mt-1 text-gray-600">
                 {registration.competition} · {registration.season} · {registration.division}
             </p>
@@ -240,8 +249,18 @@ export default function Manage({ theme, seo, registration, people, problems, req
                 </div>
             )}
             {registration.status === 'submitted' && <p className="mt-4 rounded bg-blue-50 px-3 py-2 text-sm text-blue-900">Inscrição enviada. A organização vai analisar e avisar por e-mail.</p>}
-            {registration.status === 'approved' && <p className="mt-4 rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-900">Inscrição aprovada! Sua equipe já está na competição.</p>}
+            {registration.status === 'approved' && (
+                <p className="mt-4 rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                    {registration.supplement ? 'Reforços aprovados! As pessoas aprovadas já estão no elenco.' : 'Inscrição aprovada! Sua equipe já está na competição.'}
+                </p>
+            )}
+            {registration.supplement && (
+                <p className="mt-4 rounded bg-blue-50 px-3 py-2 text-sm text-blue-900">
+                    Pedido de reforço: cadastre só as pessoas que vão ENTRAR no elenco (dados e documentos). Quem já está no elenco não precisa ser cadastrado de novo.
+                </p>
+            )}
 
+            {!registration.supplement && (
             <section className="mt-6 rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200">
                 <h2 className="mb-3 font-semibold">Dados da equipe</h2>
                 <form onSubmit={saveTeam} className="grid gap-3 sm:grid-cols-2">
@@ -269,11 +288,14 @@ export default function Manage({ theme, seo, registration, people, problems, req
                     )}
                 </form>
             </section>
+            )}
 
             <section className="mt-6 rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200">
                 <div className="mb-3 flex items-center justify-between gap-3">
                     <h2 className="font-semibold">
-                        Atletas e comissão ({athletes} de {requirements.min_athletes} a {requirements.max_athletes} atletas)
+                        {registration.supplement
+                            ? `Pessoas a incluir (${athletes} atleta${athletes === 1 ? '' : 's'}; máximo de ${requirements.max_athletes} no elenco)`
+                            : `Atletas e comissão (${athletes} de ${requirements.min_athletes} a ${requirements.max_athletes} atletas)`}
                     </h2>
                     {registration.editable && !adding && (
                         <button type="button" onClick={() => setAdding(true)} className={`${btn} bg-emerald-600 text-white hover:bg-emerald-700`}>
@@ -338,10 +360,10 @@ export default function Manage({ theme, seo, registration, people, problems, req
                     <button
                         type="button"
                         disabled={problems.length > 0}
-                        onClick={() => window.confirm('Enviar a inscrição para análise?') && router.post(route('registration.submit', token))}
+                        onClick={() => window.confirm(registration.supplement ? 'Enviar o pedido de reforço para análise?' : 'Enviar a inscrição para análise?') && router.post(route('registration.submit', token))}
                         className={`${btn} mt-3 bg-emerald-600 text-white hover:bg-emerald-700`}
                     >
-                        Enviar inscrição
+                        {registration.supplement ? 'Enviar pedido de reforço' : 'Enviar inscrição'}
                     </button>
                 </section>
             )}
