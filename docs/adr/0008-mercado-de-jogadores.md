@@ -1,6 +1,6 @@
 # ADR 0008 — Mercado de jogadores livres
 
-Status: aceito (implementação em partes; partes 1 a 3 entregues — ver "Entrega em partes")
+Status: aceito (implementação em partes; partes 1 a 4 entregues — ver "Entrega em partes")
 Data: 13/10/2026
 
 ## Contexto
@@ -102,7 +102,7 @@ dias, atleta pode pausar o perfil a qualquer momento, perfil sem revalidação e
    disponibilidade, região, bio), foto, publicar/pausar/revalidar, `Feature::Market` sob demanda.
 2. **Parte 2 — busca do gestor (entregue):** `/gestor/mercado`, filtros e cartão do atleta (sem contato).
 3. **Parte 3 — contato (entregue):** pedidos, aceite/recusa, e-mails, bloqueio, cota diária e expiração.
-4. **Parte 4 — vídeos:** links validados e embed sob clique.
+4. **Parte 4 — vídeos (entregue):** links validados e embed sob clique.
 5. **Parte 5 — moderação e contratação:** Painel > Mercado (denúncias, suspender), ligação com o pedido de reforço (`signed`).
 6. **Depois:** alertas ("novo goleiro na sua região"), página pública opcional, mercado entre organizações com opt-in, menores com
    responsável, upload de vídeo.
