@@ -41,6 +41,8 @@ const usersNav: NavItem = { label: 'Usuários', route: 'panel.users.index', matc
 
 const profilesNav: NavItem = { label: 'Perfis de acesso', route: 'panel.profiles.index', match: 'panel.profiles.*', icon: 'M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3zM9 12l2 2 4-4' };
 
+const helpIcon = 'M9.1 9a3 3 0 115.8 1c0 2-3 2-3 4M12 17.5h.01M12 21a9 9 0 100-18 9 9 0 000 18z';
+
 function Icon({ path }: { path: string }) {
     return (
         <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -66,10 +68,14 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const all = canManageUsers ? [...withMesario, ...adminNav, usersNav, profilesNav] : withMesario;
     const withPlatform = auth.platform_admin ? [...all, platformNav] : all;
     const items = auth.role === 'manager' ? managerNav : withPlatform.filter((item) => !item.feature || features.includes(item.feature));
+    // Ajuda para todos: cada público tem a própria central (painel, gestor ou plataforma).
+    const helpArea = auth.role === 'manager' ? 'manager' : auth.role ? 'panel' : 'platform';
+    const helpItem: NavItem = { label: 'Ajuda', route: `${helpArea}.help.index`, match: `${helpArea}.help.*`, icon: helpIcon };
+    const navItems = [...items, helpItem];
 
     const menu = (
         <nav className="flex flex-col gap-1 px-3">
-            {items.map((item) => {
+            {navItems.map((item) => {
                 const active = route().current(item.match);
 
                 return (

@@ -1,6 +1,6 @@
 # ADR 0006 — Central de ajuda com busca e respostas (estilo RAG)
 
-Status: proposto (implementação em partes)
+Status: aceito (parte 1 entregue)
 Data: 13/10/2026
 
 ## Contexto
@@ -15,6 +15,11 @@ conhecimento hoje está espalhado em `AGENTS.md`, `docs/*` e na cabeça de quem 
   (`operator|manager|admin|superadmin`), `tags`, `feature` opcional, `route` opcional da tela relacionada, `updated`). Revisados em PR
   como o código; um teste falha se artigo referencia rota/recurso inexistente.
 - Renderizador próprio e seguro (como `LegalText`: títulos, listas, negrito, links internos; **nunca HTML**).
+
+> **Ajuste na implementação (parte 1):** o acervo é pequeno e versionado, então o índice é montado em PHP (`HelpSearch`: sem acento,
+> singular aproximado, tolerância a 1 erro de digitação), sem tabelas nem `tsvector`. Funciona igual em qualquer banco e não precisa de
+> migração; se o acervo crescer muito, migramos para PostgreSQL FTS/`pg_trgm` mantendo a mesma interface. Públicos: `panel`, `manager`
+> e `platform` (a "ajuda do operador/administrador" se separa por `ability`).
 
 ### 2. Busca (fase 1, sem IA, sem custo, sem dados saindo)
 - Índice `help_articles` + `help_chunks` (trechos por seção) no PostgreSQL com busca de texto completo em português (`tsvector`,
