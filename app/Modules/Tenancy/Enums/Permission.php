@@ -22,6 +22,17 @@ enum Permission: string
         return $this->ability()->label();
     }
 
+    public function groupLabel(): string
+    {
+        return match ($this->group()) {
+            'competitions' => 'Competições',
+            'registry' => 'Cadastros',
+            'games' => 'Jogos',
+            'users' => 'Usuários e perfis',
+            default => ucfirst($this->group()),
+        };
+    }
+
     /** Módulo (agrupa a matriz de perfis). */
     public function group(): string
     {

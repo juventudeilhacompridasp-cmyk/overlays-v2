@@ -4,6 +4,7 @@ namespace App\Modules\Tenancy\Models;
 
 use App\Models\User;
 use App\Modules\Tenancy\Concerns\BelongsToOrganization;
+use App\Modules\Tenancy\Enums\Permission;
 use App\Modules\Tenancy\Enums\Role;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -27,6 +28,27 @@ class Membership extends Model
     protected function casts(): array
     {
         return ['role' => Role::class];
+    }
+
+    /**
+     * Permissões efetivas: as do perfil de acesso, se houver, senão as do papel. O gestor de equipe nunca recebe
+     * permissão do painel, nem por perfil.
+     *
+     * @return list<Permission>
+     */
+    public function permissions(): array
+    {
+        if (! $this->role->usesPanel()) {
+            return [];
+        }
+
+        return $this->profile?->permissions() ?? $this->role->permissions();
+    }
+
+    /** Nome do acesso para mostrar: o do perfil, ou o do papel. */
+    public function accessLabel(): string
+    {
+        return $this->access_profile_id === null ? $this->role->label() : $this->profile->name;
     }
 
     /**

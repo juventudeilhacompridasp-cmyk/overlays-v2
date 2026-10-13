@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Ability;
+use App\Modules\Tenancy\Enums\Permission;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
@@ -39,9 +40,9 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
                 'platform_admin' => $request->user()?->is_platform_admin === true,
                 'role' => $request->user()?->role()?->value,
-                'role_label' => $request->user()?->role()?->label(),
+                'role_label' => $request->user()?->accessLabel(),
                 // Só para esconder botões; quem decide de verdade é o servidor (middleware `panel.can`).
-                'can' => collect(Ability::cases())->mapWithKeys(fn (Ability $ability) => [$ability->value => $request->user()?->role()?->can($ability) ?? false])->all(),
+                'can' => collect(Ability::cases())->mapWithKeys(fn (Ability $ability) => [$ability->value => $request->user()?->hasPermission(Permission::forAbility($ability)) ?? false])->all(),
             ],
             // Recursos do pacote da organização: só para esconder menus/botões; o servidor barra (middleware `feature`).
             'features' => CurrentOrganization::get()?->featureKeys() ?? [],

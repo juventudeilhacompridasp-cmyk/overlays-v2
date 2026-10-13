@@ -39,6 +39,8 @@ const adminNav: NavItem[] = [
 
 const usersNav: NavItem = { label: 'Usuários', route: 'panel.users.index', match: 'panel.users.*', icon: 'M16 11a3 3 0 100-6 3 3 0 000 6zM8 11a3 3 0 100-6 3 3 0 000 6zM2 20v-1a4 4 0 014-4h4a4 4 0 014 4v1M15 15h3a4 4 0 014 4v1' };
 
+const profilesNav: NavItem = { label: 'Perfis de acesso', route: 'panel.profiles.index', match: 'panel.profiles.*', icon: 'M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3zM9 12l2 2 4-4' };
+
 function Icon({ path }: { path: string }) {
     return (
         <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -61,7 +63,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const base = canManageCompetitions ? [...nav.slice(0, 2), registrationsNav, ...nav.slice(2), reportsNav, widgetsNav] : nav;
     const { features } = usePage().props;
     const withMesario = canOperate ? [nav[0], mesarioNav, ...base.slice(1)] : base;
-    const all = canManageUsers ? [...withMesario, ...adminNav, usersNav] : withMesario;
+    const all = canManageUsers ? [...withMesario, ...adminNav, usersNav, profilesNav] : withMesario;
     const withPlatform = auth.platform_admin ? [...all, platformNav] : all;
     const items = auth.role === 'manager' ? managerNav : withPlatform.filter((item) => !item.feature || features.includes(item.feature));
 
