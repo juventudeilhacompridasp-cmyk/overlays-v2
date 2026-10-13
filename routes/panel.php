@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Panel\DashboardController;
+use App\Modules\Arts\Http\Controllers\ArtController;
+use App\Modules\Arts\Http\Controllers\TemplateController as ArtTemplateController;
 use App\Modules\Broadcast\Http\Controllers\ChannelController;
 use App\Modules\Competitions\Http\Controllers\CompetitionController;
 use App\Modules\Competitions\Http\Controllers\DivisionController;
@@ -153,6 +155,17 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::post('broadcast', [ChannelController::class, 'store'])->name('broadcast.store');
         Route::post('broadcast/{channel}/regenerate', [ChannelController::class, 'regenerate'])->name('broadcast.regenerate');
         Route::delete('broadcast/{channel}', [ChannelController::class, 'destroy'])->name('broadcast.destroy');
+    });
+
+    // Artes das partidas (ADR 0009): qualquer membro gera e baixa; salvar modelos é de quem gerencia competições.
+    Route::middleware('feature:arts')->prefix('artes')->name('arts.')->group(function () {
+        Route::get('/', [ArtController::class, 'index'])->name('index');
+        Route::get('editor', [ArtController::class, 'editor'])->name('editor');
+        Route::middleware('panel.can:manage-competitions')->group(function () {
+            Route::post('modelos', [ArtTemplateController::class, 'store'])->name('templates.store');
+            Route::patch('modelos/{template}', [ArtTemplateController::class, 'update'])->name('templates.update');
+            Route::delete('modelos/{template}', [ArtTemplateController::class, 'destroy'])->name('templates.destroy');
+        });
     });
 
     // Mercado de jogadores: moderação (denúncias, suspensão, cota). Nem consultar sem a permissão: há denúncias.
