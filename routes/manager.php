@@ -1,8 +1,11 @@
 <?php
 
+use App\Modules\Teams\Http\Controllers\Manager\CardsController;
 use App\Modules\Teams\Http\Controllers\Manager\DashboardController;
 use App\Modules\Teams\Http\Controllers\Manager\EntryController;
 use App\Modules\Teams\Http\Controllers\Manager\GameController;
+use App\Modules\Teams\Http\Controllers\Manager\RosterController;
+use App\Modules\Teams\Http\Controllers\Manager\SupplementController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -12,6 +15,10 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'verified', 'manager.member', 'legal.accepted', 'feature:team_portal'])->prefix('gestor')->name('manager.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('inscricoes/{entry}', [EntryController::class, 'show'])->name('entries.show');
+    Route::patch('elenco/{rosterEntry}', [RosterController::class, 'update'])->name('roster.update');
+    Route::delete('elenco/{rosterEntry}', [RosterController::class, 'destroy'])->name('roster.destroy');
+    Route::post('inscricoes/{entry}/reforcos', [SupplementController::class, 'store'])->middleware('feature:online_registration')->name('entries.supplement');
+    Route::get('inscricoes/{entry}/carteirinhas', [CardsController::class, 'entry'])->middleware('feature:athlete_cards')->name('entries.cards');
     Route::get('jogos', [GameController::class, 'index'])->name('games.index');
     Route::get('jogos/{game}', [GameController::class, 'show'])->name('games.show');
     Route::put('jogos/{game}/escalacao', [GameController::class, 'lineup'])->name('games.lineup');

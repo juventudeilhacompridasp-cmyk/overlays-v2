@@ -19,7 +19,7 @@ class CardController extends Controller
     {
         abort_unless($rosterEntry->status === RosterStatus::Active, 404);
 
-        return $this->render([$rosterEntry], $rosterEntry->entry, $issue);
+        return $this->present([$rosterEntry], $rosterEntry->entry, $issue, route('panel.entries.show', $rosterEntry->entry_id), true);
     }
 
     public function entry(Entry $entry, IssueAthleteCard $issue): Response
@@ -28,7 +28,7 @@ class CardController extends Controller
             ->sortBy([fn ($a, $b) => ($a->role === RosterRole::Athlete ? 0 : 1) <=> ($b->role === RosterRole::Athlete ? 0 : 1), fn ($a, $b) => ($a->shirt_number ?? 999) <=> ($b->shirt_number ?? 999), fn ($a, $b) => $a->person->name <=> $b->person->name])
             ->values()->all();
 
-        return $this->render($members, $entry, $issue);
+        return $this->present($members, $entry, $issue, route('panel.entries.show', $entry->getKey()), true);
     }
 
     public function regenerate(RosterEntry $rosterEntry, IssueAthleteCard $issue): RedirectResponse
@@ -39,9 +39,11 @@ class CardController extends Controller
     }
 
     /**
+     * Também usada pela área do gestor (só das próprias equipes), que não renova códigos: `$canRegenerate` esconde o botão.
+     *
      * @param  array<int, RosterEntry>  $members
      */
-    private function render(array $members, Entry $entry, IssueAthleteCard $issue): Response
+    public function present(array $members, Entry $entry, IssueAthleteCard $issue, string $backUrl, bool $canRegenerate): Response
     {
         $entry->load('team', 'division.season.competition');
         $division = $entry->division;
@@ -73,7 +75,8 @@ class CardController extends Controller
         return Inertia::render('Panel/Cards/Show', [
             'cards' => $cards,
             'entry' => ['id' => $entry->getKey(), 'team' => $entry->team->name],
-            'back_url' => route('panel.entries.show', $entry->getKey()),
+            'back_url' => $backUrl,
+            'can_regenerate' => $canRegenerate,
         ]);
     }
 }

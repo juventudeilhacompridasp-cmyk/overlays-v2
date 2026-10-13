@@ -3,6 +3,7 @@
 namespace App\Modules\Registration\Models;
 
 use App\Modules\Competitions\Models\Division;
+use App\Modules\Competitions\Models\Entry;
 use App\Modules\Competitions\Models\Season;
 use App\Modules\Registration\Enums\RegistrationStatus;
 use App\Modules\Tenancy\Concerns\BelongsToOrganization;
@@ -19,6 +20,7 @@ use Illuminate\Support\Str;
 
 /**
  * @property RegistrationStatus $status
+ * @property string $kind
  * @property Carbon|null $consent_at
  * @property Carbon|null $submitted_at
  * @property Carbon|null $reviewed_at
@@ -45,6 +47,13 @@ class Registration extends Model
         ];
     }
 
+    public const KIND_SUPPLEMENT = 'supplement';
+
+    public function isSupplement(): bool
+    {
+        return $this->kind === self::KIND_SUPPLEMENT;
+    }
+
     public static function newToken(): string
     {
         return Str::random(40);
@@ -64,6 +73,16 @@ class Registration extends Model
     public function division(): BelongsTo
     {
         return $this->belongsTo(Division::class);
+    }
+
+    /**
+     * Inscrição que recebe os reforços (só em pedidos de reforço; nos demais é preenchida na aprovação).
+     *
+     * @return BelongsTo<Entry, $this>
+     */
+    public function entry(): BelongsTo
+    {
+        return $this->belongsTo(Entry::class);
     }
 
     /**

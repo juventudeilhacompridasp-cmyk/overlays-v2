@@ -69,7 +69,32 @@ class Season extends Model
             'min_athletes' => (int) ($saved['min_athletes'] ?? 7),
             'max_athletes' => (int) ($saved['max_athletes'] ?? 30),
             'require_documents' => (bool) ($saved['require_documents'] ?? true),
+            // Alterações no elenco pelo gestor da equipe (reforços, camisa, apelido, desligamento) e a data limite delas.
+            'roster_changes' => (bool) ($saved['roster_changes'] ?? true),
+            'roster_changes_until' => isset($saved['roster_changes_until']) && is_string($saved['roster_changes_until']) && $saved['roster_changes_until'] !== '' ? $saved['roster_changes_until'] : null,
         ];
+    }
+
+    /** Motivo pelo qual o gestor da equipe não pode mexer no elenco agora (nulo = pode). */
+    public function rosterChangesClosedReason(): ?string
+    {
+        $settings = $this->registrationSettings();
+
+        if ($this->status === SeasonStatus::Finished) {
+            return 'A edição está encerrada.';
+        }
+
+        if (! $settings['roster_changes']) {
+            return 'A organização não permite alterações no elenco pelo gestor nesta edição.';
+        }
+
+        $until = $settings['roster_changes_until'];
+
+        if ($until !== null && now()->startOfDay()->gt(Carbon::parse($until)->startOfDay())) {
+            return 'O prazo para alterar o elenco terminou em '.Carbon::parse($until)->format('d/m/Y').'.';
+        }
+
+        return null;
     }
 
     /** Inscrições online abertas: edição em "Inscrições abertas" e prazo (se houver) não vencido. */

@@ -22,6 +22,8 @@ interface RegistrationSettings {
     min_athletes: number;
     max_athletes: number;
     require_documents: boolean;
+    roster_changes: boolean;
+    roster_changes_until: string | null;
     open: boolean;
     apply_url: string | null;
     pending: number;
@@ -46,6 +48,8 @@ function RegistrationCard({ seasonId, registration }: { seasonId: string; regist
         min_athletes: registration.min_athletes,
         max_athletes: registration.max_athletes,
         require_documents: registration.require_documents,
+        roster_changes: registration.roster_changes,
+        roster_changes_until: registration.roster_changes_until ?? '',
     });
     const can = useCan('manage-competitions');
 
@@ -89,6 +93,13 @@ function RegistrationCard({ seasonId, registration }: { seasonId: string; regist
                     <input type="checkbox" className="rounded border-gray-300 text-emerald-600" checked={data.require_documents} onChange={(e) => setData('require_documents', e.target.checked)} disabled={!can} />
                     Exigir documento de cada atleta
                 </label>
+                <label className="flex items-center gap-2 text-sm text-gray-700 sm:col-span-2">
+                    <input type="checkbox" className="rounded border-gray-300 text-emerald-600" checked={data.roster_changes} onChange={(e) => setData('roster_changes', e.target.checked)} disabled={!can} />
+                    Permitir que o gestor da equipe altere o elenco (camisa, apelido, desligamento e pedidos de reforço)
+                </label>
+                <Field label="Prazo para alterações no elenco" htmlFor="reg-roster-until" error={errors.roster_changes_until}>
+                    <Input id="reg-roster-until" type="date" value={data.roster_changes_until} onChange={(e) => setData('roster_changes_until', e.target.value)} disabled={!can || !data.roster_changes} />
+                </Field>
                 {can && (
                     <div className="sm:col-span-2">
                         <Button type="submit" disabled={processing}>Salvar regras de inscrição</Button>
