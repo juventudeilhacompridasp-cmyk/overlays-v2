@@ -27,6 +27,15 @@ final class FinishGame
         }
 
         $this->projectScore->handle($game);
+
+        if ($game->sport()->profile()->scoreModel === 'sets') {
+            $toWin = $game->division->ruleSet()->setsToWin;
+
+            if ($game->home_score < $toWin && $game->away_score < $toWin) {
+                throw new InvalidArgumentException("A partida ainda não terminou: um lado precisa ganhar {$toWin} sets.");
+            }
+        }
+
         $this->knockout->assertResolvable($game);
 
         $game->forceFill([

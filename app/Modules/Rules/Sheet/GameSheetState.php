@@ -76,7 +76,7 @@ final class GameSheetState
             GameEventType::YellowCard, GameEventType::RedCard, GameEventType::BlueCard, GameEventType::Warning, GameEventType::Foul => $this->checkInLineup($event),
             GameEventType::Substitution => $this->checkSubstitution($event),
             GameEventType::PenaltyKick => $this->checkOnField($event, 'cobrar pênalti'),
-            GameEventType::PeriodStart, GameEventType::PeriodEnd => null,
+            GameEventType::PeriodStart, GameEventType::PeriodEnd, GameEventType::Point => null,
         };
     }
 

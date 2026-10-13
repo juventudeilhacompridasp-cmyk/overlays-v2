@@ -51,7 +51,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Placar ao vivo: qualquer mudança de placar, situação ou horários do jogo é transmitida.
         Game::updated(function (Game $game): void {
-            if ($game->wasChanged(['home_score', 'away_score', 'home_penalties', 'away_penalties', 'status', 'started_at', 'finished_at'])) {
+            if ($game->wasChanged(['home_score', 'away_score', 'home_penalties', 'away_penalties', 'sets', 'status', 'started_at', 'finished_at'])) {
                 event(GameUpdated::for($game));
             }
         });

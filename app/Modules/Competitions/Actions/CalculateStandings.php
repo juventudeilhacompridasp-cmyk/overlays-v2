@@ -82,6 +82,8 @@ final class CalculateStandings
             homeGoals: $game->home_score,
             awayGoals: $game->away_score,
             walkover: $game->status === GameStatus::Walkover,
+            homePoints: (int) collect($game->sets ?? [])->sum('home'),
+            awayPoints: (int) collect($game->sets ?? [])->sum('away'),
         ))->all();
 
         $rows = $this->calculator->calculate(

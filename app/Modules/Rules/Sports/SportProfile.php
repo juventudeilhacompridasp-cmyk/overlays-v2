@@ -23,11 +23,19 @@ final readonly class SportProfile
         public array $periodMinutes,
         public array $ruleDefaults = [],
         public ?int $teamFoulLimit = null,
+        /** goals | sets | points (ver ADR 0002). */
+        public string $scoreModel = 'goals',
     ) {}
 
     public function clock(): GameClock
     {
         return new GameClock($this->periodMinutes);
+    }
+
+    /** O jogo tem cronômetro? (vôlei não tem: o período é o set). */
+    public function hasClock(): bool
+    {
+        return $this->periodMinutes !== [];
     }
 
     public function tracksTeamFouls(): bool

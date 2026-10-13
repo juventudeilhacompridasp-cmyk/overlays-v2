@@ -30,6 +30,10 @@ final class RecordQuickResult
             throw new InvalidArgumentException('O jogo já está encerrado. Reabra para lançar de novo.');
         }
 
+        if ($game->sport()->profile()->scoreModel === 'sets') {
+            throw new InvalidArgumentException('Em esportes de sets, lance os pontos pela súmula (o resultado rápido não vale).');
+        }
+
         if ($homeGoals < 0 || $awayGoals < 0) {
             throw new InvalidArgumentException('O placar não pode ser negativo.');
         }

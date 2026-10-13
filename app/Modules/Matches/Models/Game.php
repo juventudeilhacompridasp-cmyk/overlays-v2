@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $scheduled_at
  * @property Carbon|null $started_at
  * @property Carbon|null $finished_at
+ * @property list<array{home: int, away: int, winner: string|null, finished: bool}>|null $sets
  */
 #[Unguarded]
 #[UseFactory(GameFactory::class)]
@@ -50,6 +51,7 @@ class Game extends Model
             'scheduled_at' => 'datetime',
             'started_at' => 'datetime',
             'finished_at' => 'datetime',
+            'sets' => 'array',
         ];
     }
 

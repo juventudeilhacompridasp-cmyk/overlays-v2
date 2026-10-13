@@ -22,6 +22,8 @@ export interface OverlayGame {
     away_penalties: number | null;
     clock: GameClock;
     sport: string;
+    score_model: string;
+    sets: { home: number; away: number; winner: 'home' | 'away' | null; finished: boolean }[] | null;
     fouls: { home: number; away: number; limit: number; period: number } | null;
     goals: { side: 'home' | 'away' | null; player: string | null; minute: number | null; own_goal: boolean }[];
 }

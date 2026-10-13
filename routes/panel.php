@@ -94,6 +94,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::get('games/{game}/sheet', [SheetController::class, 'show'])->name('games.sheet');
         Route::put('games/{game}/lineups/{entry}', [SheetController::class, 'lineup'])->name('games.lineup');
         Route::post('games/{game}/events', [SheetController::class, 'storeEvent'])->name('games.events.store');
+        Route::post('games/{game}/points', [SheetController::class, 'point'])->name('games.points.store');
         Route::post('games/{game}/events/{event}/void', [SheetController::class, 'voidEvent'])->name('games.events.void');
         Route::post('games/{game}/periods', [SheetController::class, 'period'])->name('games.periods.store');
         Route::post('games/{game}/shootout', [SheetController::class, 'shootout'])->name('games.shootout');

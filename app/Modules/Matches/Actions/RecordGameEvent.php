@@ -8,6 +8,7 @@ use App\Modules\Matches\Events\GameEventRecorded;
 use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
+use App\Modules\Rules\Scoring\SetMatch;
 use App\Modules\Rules\Sheet\SheetEvent;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -25,7 +26,7 @@ final class RecordGameEvent
 
     private const SHEET_TYPES = [
         GameEventType::Goal, GameEventType::OwnGoal, GameEventType::YellowCard, GameEventType::RedCard,
-        GameEventType::BlueCard, GameEventType::Substitution, GameEventType::Foul,
+        GameEventType::BlueCard, GameEventType::Substitution, GameEventType::Foul, GameEventType::Point,
     ];
 
     public function handle(Game $game, GameEventType $type, string $entryId, ?string $personId, ?string $secondaryPersonId = null, int $period = 1, ?int $minute = null, ?int $recordedBy = null): GameEvent
@@ -48,6 +49,10 @@ final class RecordGameEvent
 
         if ($game->status->isDecided() || in_array($game->status, [GameStatus::Cancelled, GameStatus::Postponed], true)) {
             throw new InvalidArgumentException('O jogo não está aberto para lançamentos.');
+        }
+
+        if ($type === GameEventType::Point) {
+            return $this->recordPoint($game, $entryId, $recordedBy);
         }
 
         $event = DB::transaction(function () use ($game, $type, $entryId, $personId, $secondaryPersonId, $period, $minute, $recordedBy): GameEvent {
@@ -86,5 +91,42 @@ final class RecordGameEvent
         GameEventRecorded::dispatch((string) $game->getKey(), (string) $event->getKey());
 
         return $event;
+    }
+
+    /**
+     * Ponto de rally (esportes de sets): o set é o da vez (calculado a partir dos pontos anteriores), nunca informado.
+     */
+    private function recordPoint(Game $game, string $entryId, ?int $recordedBy): GameEvent
+    {
+        if ($game->sport()->profile()->scoreModel !== 'sets') {
+            throw new InvalidArgumentException('Este esporte não usa pontos de rally.');
+        }
+
+        return DB::transaction(function () use ($game, $entryId, $recordedBy): GameEvent {
+            $match = new SetMatch($game->division->ruleSet());
+            $sides = ProjectGameScore::pointSides($game);
+            $error = $match->canScore($sides);
+
+            if ($error !== null) {
+                throw new InvalidArgumentException($error);
+            }
+
+            $event = GameEvent::query()->create([
+                'organization_id' => $game->organization_id,
+                'game_id' => $game->getKey(),
+                'type' => GameEventType::Point,
+                'period' => $match->state($sides)['current'],
+                'entry_id' => $entryId,
+                'recorded_by' => $recordedBy,
+            ]);
+
+            if ($game->status === GameStatus::Scheduled) {
+                $game->forceFill(['status' => GameStatus::InProgress, 'started_at' => $game->started_at ?? now()]);
+            }
+
+            $this->projectScore->handle($game);
+
+            return $event;
+        });
     }
 }

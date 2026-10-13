@@ -96,6 +96,8 @@ class SheetController extends Controller
             ->whereIn('type', [GameEventType::PeriodStart, GameEventType::PeriodEnd])
             ->orderByDesc('id')->value('id');
 
+        $lastPointId = $game->events()->effective()->where('type', GameEventType::Point)->orderByDesc('id')->value('id');
+
         // A disputa de pênaltis aparece como placar (home/away_penalties), não como uma linha por cobrança.
         $events = $game->events()->effective()->where('type', '!=', GameEventType::PenaltyKick)->orderBy('id')->get()->map(fn (GameEvent $event) => [
             'id' => $event->id,
@@ -107,7 +109,8 @@ class SheetController extends Controller
             'minute' => $event->minute,
             'quick' => ($event->payload['quick'] ?? false) === true,
             'voidable' => $open && in_array($event->id, $effectiveIds, true) && ($event->payload['quick'] ?? false) !== true
-                && (! in_array($event->type, [GameEventType::PeriodStart, GameEventType::PeriodEnd], true) || $event->id === $lastMarkId),
+                && (! in_array($event->type, [GameEventType::PeriodStart, GameEventType::PeriodEnd], true) || $event->id === $lastMarkId)
+                && ($event->type !== GameEventType::Point || $event->id === $lastPointId),
         ]);
 
         $division = $game->division;
@@ -146,12 +149,17 @@ class SheetController extends Controller
                 'windows' => $rules->maxSubstitutionWindows,
             ],
             'sport' => $game->sport()->value,
+            'score_model' => $game->sport()->profile()->scoreModel,
+            'sets' => $game->sport()->profile()->scoreModel === 'sets' ? ($game->sets ?? []) : null,
+            'sets_to_win' => $rules->setsToWin,
             'fouls' => PublicGameSnapshot::for($game)['fouls'],
-            'event_types' => collect([
-                GameEventType::Goal, GameEventType::OwnGoal, GameEventType::YellowCard, GameEventType::RedCard,
-                GameEventType::BlueCard, GameEventType::Substitution,
-                ...($game->sport()->profile()->tracksTeamFouls() ? [GameEventType::Foul] : []),
-            ])->map(fn (GameEventType $type) => ['value' => $type->value, 'label' => $type->label()])->values(),
+            'event_types' => collect($game->sport()->profile()->scoreModel === 'sets'
+                ? [GameEventType::Substitution, GameEventType::YellowCard, GameEventType::RedCard]
+                : [
+                    GameEventType::Goal, GameEventType::OwnGoal, GameEventType::YellowCard, GameEventType::RedCard,
+                    GameEventType::BlueCard, GameEventType::Substitution,
+                    ...($game->sport()->profile()->tracksTeamFouls() ? [GameEventType::Foul] : []),
+                ])->map(fn (GameEventType $type) => ['value' => $type->value, 'label' => $type->label()])->values(),
         ]);
     }
 
@@ -184,6 +192,25 @@ class SheetController extends Controller
         }
 
         return back()->with('success', 'Lançamento registrado.');
+    }
+
+    /** Ponto de rally (esportes de sets): `side` = home|away. O set da vez é calculado pelo servidor. */
+    public function point(Request $request, Game $game, RecordGameEvent $record): RedirectResponse
+    {
+        $validated = $request->validate(['side' => ['required', 'in:home,away']]);
+        $entryId = $validated['side'] === 'home' ? $game->home_entry_id : $game->away_entry_id;
+
+        if ($entryId === null) {
+            return back()->with('error', 'O jogo ainda não tem os dois confrontantes definidos.');
+        }
+
+        try {
+            $record->handle($game, GameEventType::Point, $entryId, null, null, 1, null, $request->user()?->getAuthIdentifier());
+        } catch (InvalidArgumentException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return back();
     }
 
     public function voidEvent(Game $game, GameEvent $event, VoidGameEvent $void): RedirectResponse

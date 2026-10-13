@@ -9,6 +9,7 @@ enum Sport: string
 {
     case Football = 'football';
     case Futsal = 'futsal';
+    case Volleyball = 'volleyball';
 
     public function profile(): SportProfile
     {

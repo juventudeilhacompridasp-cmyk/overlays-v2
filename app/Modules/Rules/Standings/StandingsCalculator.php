@@ -25,7 +25,7 @@ final class StandingsCalculator
     {
         $stats = [];
         foreach ($teamIds as $id) {
-            $stats[$id] = ['played' => 0, 'wins' => 0, 'draws' => 0, 'losses' => 0, 'gf' => 0, 'ga' => 0, 'points' => 0];
+            $stats[$id] = ['played' => 0, 'wins' => 0, 'draws' => 0, 'losses' => 0, 'gf' => 0, 'ga' => 0, 'pf' => 0, 'pa' => 0, 'points' => 0];
         }
 
         $results = [];
@@ -37,8 +37,8 @@ final class StandingsCalculator
             }
 
             $results[] = $game;
-            $this->register($stats, $game->homeId, $game->homeGoals, $game->awayGoals, $rules);
-            $this->register($stats, $game->awayId, $game->awayGoals, $game->homeGoals, $rules);
+            $this->register($stats, $game->homeId, $game->homeGoals, $game->awayGoals, $rules, $game->homePoints, $game->awayPoints);
+            $this->register($stats, $game->awayId, $game->awayGoals, $game->homeGoals, $rules, $game->awayPoints, $game->homePoints);
         }
 
         $ordered = $this->order($teamIds, $stats, $results, $cards, $rules);
@@ -60,6 +60,8 @@ final class StandingsCalculator
                 redCards: $cards[$id]['red'] ?? 0,
                 blueCards: $cards[$id]['blue'] ?? 0,
                 tied: $tied,
+                scoreFor: $s['pf'],
+                scoreAgainst: $s['pa'],
             );
         }
 
@@ -69,22 +71,33 @@ final class StandingsCalculator
     /**
      * @param  array<string, array<string, int>>  $stats
      */
-    private function register(array &$stats, string $teamId, int $goalsFor, int $goalsAgainst, RuleSet $rules): void
+    private function register(array &$stats, string $teamId, int $goalsFor, int $goalsAgainst, RuleSet $rules, int $pointsFor = 0, int $pointsAgainst = 0): void
     {
         $stats[$teamId]['played']++;
         $stats[$teamId]['gf'] += $goalsFor;
         $stats[$teamId]['ga'] += $goalsAgainst;
+        $stats[$teamId]['pf'] += $pointsFor;
+        $stats[$teamId]['pa'] += $pointsAgainst;
+
+        // Esportes de sets: vitória/derrota por placar apertado (ex.: 3-2) pode valer pontos diferentes.
+        $narrow = $rules->scoreModel === 'sets' && abs($goalsFor - $goalsAgainst) === 1;
 
         if ($goalsFor > $goalsAgainst) {
             $stats[$teamId]['wins']++;
-            $stats[$teamId]['points'] += $rules->pointsWin;
+            $stats[$teamId]['points'] += $narrow ? ($rules->pointsNarrowWin ?? $rules->pointsWin) : $rules->pointsWin;
         } elseif ($goalsFor === $goalsAgainst) {
             $stats[$teamId]['draws']++;
             $stats[$teamId]['points'] += $rules->pointsDraw;
         } else {
             $stats[$teamId]['losses']++;
-            $stats[$teamId]['points'] += $rules->pointsLoss;
+            $stats[$teamId]['points'] += $narrow ? ($rules->pointsNarrowLoss ?? $rules->pointsLoss) : $rules->pointsLoss;
         }
+    }
+
+    /** Razão em milésimos de ponto base (inteiro, para agrupar): sem perdas, vale muito mais que qualquer razão com perdas. */
+    private function ratio(int $made, int $suffered): int
+    {
+        return $suffered === 0 ? ($made > 0 ? 1_000_000_000 + $made : 0) : intdiv($made * 100_000, $suffered);
     }
 
     /**
@@ -170,6 +183,8 @@ final class StandingsCalculator
             Tiebreaker::GoalDifference => [fn (string $id) => $stats[$id]['gf'] - $stats[$id]['ga'], true],
             Tiebreaker::GoalsFor => [fn (string $id) => $stats[$id]['gf'], true],
             Tiebreaker::GoalsAgainst => [fn (string $id) => $stats[$id]['ga'], false],
+            Tiebreaker::SetRatio => [fn (string $id) => $this->ratio($stats[$id]['gf'], $stats[$id]['ga']), true],
+            Tiebreaker::PointRatio => [fn (string $id) => $this->ratio($stats[$id]['pf'], $stats[$id]['pa']), true],
             Tiebreaker::FewestRedCards => [fn (string $id) => $cards[$id]['red'] ?? 0, false],
             Tiebreaker::FewestYellowCards => [fn (string $id) => $cards[$id]['yellow'] ?? 0, false],
             Tiebreaker::FewestBlueCards => [fn (string $id) => $cards[$id]['blue'] ?? 0, false],
