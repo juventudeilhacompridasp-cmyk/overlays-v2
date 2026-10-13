@@ -287,8 +287,9 @@ describe('deleting the account', function () {
         $this->actingAs($athlete)->delete(route('athlete.destroy'), ['password' => 'password'])->assertRedirect('/');
 
         expect(MarketProfile::query()->count())->toBe(0)
-            ->and(User::query()->whereKey($athlete->getKey())->exists())->toBeFalse()
-            ->and(Membership::query()->where('user_id', $athlete->getKey())->exists())->toBeFalse();
+            ->and(Membership::query()->where('user_id', $athlete->getKey())->exists())->toBeFalse()
+            ->and(DB::table('team_managers')->where('user_id', $athlete->getKey())->exists())->toBeFalse()
+            ->and(User::query()->whereKey($athlete->getKey())->exists())->toBeFalse();
         Storage::disk('s3-private')->assertMissing("{$photo}-400.webp");
     });
 });

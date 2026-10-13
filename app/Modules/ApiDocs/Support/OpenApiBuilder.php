@@ -119,7 +119,7 @@ final class OpenApiBuilder
      */
     public static function tagNames(): array
     {
-        return ['API pública v1', 'Tempo real e avisos', 'Portal público', 'Inscrição online', 'Widgets', 'Overlays (OBS)', 'Painel', 'Gestor de equipe', 'Plataforma', 'Autenticação e conta', 'Outras'];
+        return ['API pública v1', 'Tempo real e avisos', 'Portal público', 'Inscrição online', 'Widgets', 'Overlays (OBS)', 'Painel', 'Gestor de equipe', 'Atleta (Mercado)', 'Plataforma', 'Autenticação e conta', 'Outras'];
     }
 
     private function skip(LaravelRoute $route, string $uri): bool

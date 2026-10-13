@@ -4,7 +4,7 @@ namespace App\Modules\Market\Actions;
 
 use App\Models\User;
 use App\Modules\Market\Models\MarketProfile;
-use App\Modules\Tenancy\Models\Membership;
+use App\Modules\Tenancy\CurrentOrganization;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -25,13 +25,14 @@ final class DeleteAthleteAccount
                 $profile->delete();
             }
 
-            Membership::query()->where('user_id', $user->getKey())->delete();
+            // Usuários são globais: sai o acesso desta organização e, se não sobrar nenhum outro, o usuário.
+            DB::table('memberships')->where('user_id', $user->getKey())->where('organization_id', CurrentOrganization::id())->delete();
 
             $others = DB::table('memberships')->where('user_id', $user->getKey())->exists()
                 || DB::table('team_managers')->where('user_id', $user->getKey())->exists();
 
             if (! $others) {
-                $user->delete();
+                DB::table('users')->where('id', $user->getKey())->delete();
             }
         });
     }
