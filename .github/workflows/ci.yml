@@ -114,7 +114,7 @@ jobs:
         run: |
           PHP_CLI_SERVER_WORKERS=4 php artisan serve --host=127.0.0.1 --port=8000 > server.log 2>&1 &
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/login > /dev/null && break; sleep 1; done
-          node tests/e2e/offline-queue.mjs http://127.0.0.1:8000 "$(cat seed.json)" || { echo '--- server.log'; tail -40 server.log; echo '--- laravel.log'; tail -40 storage/logs/laravel.log || true; exit 1; }
+          node tests/e2e/offline-queue.mjs http://127.0.0.1:8000 "$(cat seed.json)" || { echo '--- server.log'; grep -v '/build/' server.log | tail -40; echo '--- laravel.log'; tail -40 storage/logs/laravel.log || true; exit 1; }
       - name: Guardar evidências se falhar
         if: failure()
         uses: actions/upload-artifact@v4
