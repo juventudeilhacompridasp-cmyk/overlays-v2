@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property SheetUploadStatus $status
  * @property array<string, mixed>|null $extracted
+ * @property array<string, mixed>|null $reviewed
+ * @property list<string>|null $review_changes
  */
 #[Unguarded]
 class GameSheetUpload extends Model
@@ -26,7 +28,7 @@ class GameSheetUpload extends Model
      */
     protected function casts(): array
     {
-        return ['status' => SheetUploadStatus::class, 'extracted' => 'array'];
+        return ['status' => SheetUploadStatus::class, 'extracted' => 'array', 'reviewed' => 'array', 'review_changes' => 'array', 'reviewed_at' => 'datetime'];
     }
 
     /**
@@ -35,6 +37,14 @@ class GameSheetUpload extends Model
     public function game(): BelongsTo
     {
         return $this->belongsTo(Game::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 
     /**

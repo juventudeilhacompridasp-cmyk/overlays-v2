@@ -1,7 +1,7 @@
 import { Badge, Button, Card, DeleteButton, Empty, Field, Input, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { FormEvent, useEffect } from 'react';
 
 interface Upload {
@@ -161,6 +161,16 @@ export default function Uploads({ game, max_mb, ai, uploads }: Props) {
                                         <Button type="button" small variant="secondary" onClick={() => read(upload.id)}>
                                             {upload.status === 'uploaded' ? 'Ler súmula' : 'Ler de novo'}
                                         </Button>
+                                    )}
+                                    {['read', 'reviewed'].includes(upload.status) && (
+                                        <Link href={route('panel.games.uploads.review', upload.id)} className="text-emerald-700 underline">
+                                            {upload.status === 'read' ? 'Revisar' : 'Rever'}
+                                        </Link>
+                                    )}
+                                    {upload.status === 'reviewed' && (
+                                        <Link href={route('panel.games.uploads.report', upload.id)} className="text-emerald-700 underline">
+                                            Conferência
+                                        </Link>
                                     )}
                                     <a href={route('panel.games.uploads.show', upload.id)} className="text-emerald-700 underline">
                                         Abrir

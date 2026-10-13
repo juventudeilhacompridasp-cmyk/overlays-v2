@@ -12,6 +12,7 @@ use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
 use App\Modules\Matches\Http\Controllers\MesarioController;
 use App\Modules\Matches\Http\Controllers\SheetController;
+use App\Modules\Matches\Http\Controllers\SheetReviewController;
 use App\Modules\Matches\Http\Controllers\SheetUploadController;
 use App\Modules\Matches\Http\Controllers\VenueController;
 use App\Modules\Portal\Http\Controllers\EmbedPanelController;
@@ -121,11 +122,16 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
     Route::middleware('feature:sheet_import')->group(function () {
         Route::get('games/{game}/uploads', [SheetUploadController::class, 'index'])->name('games.uploads');
         Route::get('game-sheet-uploads/{upload}', [SheetUploadController::class, 'show'])->name('games.uploads.show');
+        Route::get('game-sheet-uploads/{upload}/review', [SheetReviewController::class, 'review'])->name('games.uploads.review');
+        Route::get('game-sheet-uploads/{upload}/report', [SheetReviewController::class, 'report'])->name('games.uploads.report');
+        Route::get('game-sheet-uploads/{upload}/report.csv', [SheetReviewController::class, 'csv'])->name('games.uploads.report.csv');
         Route::get('sheet-import/template.csv', [SheetUploadController::class, 'template'])->name('sheet-import.template');
         Route::patch('sheet-import/settings', [SheetUploadController::class, 'settings'])->middleware('panel.can:manage-users')->name('sheet-import.settings');
         Route::middleware('panel.can:operate-games')->group(function () {
             Route::post('games/{game}/uploads', [SheetUploadController::class, 'store'])->name('games.uploads.store');
             Route::post('game-sheet-uploads/{upload}/read', [SheetUploadController::class, 'read'])->name('games.uploads.read');
+            Route::post('game-sheet-uploads/{upload}/review', [SheetReviewController::class, 'confirm'])->name('games.uploads.review.confirm');
+            Route::post('game-sheet-uploads/{upload}/discard', [SheetReviewController::class, 'discard'])->name('games.uploads.discard');
             Route::delete('game-sheet-uploads/{upload}', [SheetUploadController::class, 'destroy'])->name('games.uploads.destroy');
         });
     });
