@@ -5,6 +5,7 @@ namespace App\Modules\Competitions\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Competitions\Http\Requests\CompetitionRequest;
 use App\Modules\Competitions\Models\Competition;
+use App\Modules\Tenancy\CurrentOrganization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -37,6 +38,12 @@ class CompetitionController extends Controller
 
     public function store(CompetitionRequest $request): RedirectResponse
     {
+        $max = CurrentOrganization::get()?->limit('max_competitions');
+
+        if ($max !== null && Competition::query()->count() >= $max) {
+            return back()->with('error', "O pacote da organização permite no máximo {$max} competições.");
+        }
+
         $competition = Competition::query()->create([
             ...$request->validated(),
             'slug' => $this->uniqueSlug($request->string('name')->toString()),

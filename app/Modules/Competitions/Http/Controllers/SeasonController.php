@@ -13,6 +13,8 @@ use App\Modules\Registration\Enums\RegistrationStatus;
 use App\Modules\Registration\Models\Registration;
 use App\Modules\Rules\RuleSet;
 use App\Modules\Rules\Tiebreaker;
+use App\Modules\Tenancy\CurrentOrganization;
+use App\Modules\Tenancy\Enums\Feature;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -69,7 +71,7 @@ class SeasonController extends Controller
             'rules' => $season->ruleSet()->toArray(),
             'tiebreaker_labels' => $this->tiebreakerLabels(),
             'divisions' => $divisions,
-            'registration' => [
+            'registration' => ! CurrentOrganization::has(Feature::OnlineRegistration) ? null : [
                 ...$season->registrationSettings(),
                 'open' => $season->registrationOpen(),
                 'apply_url' => $season->isPublished() ? route('registration.apply', [$season->competition->slug, $season->getKey()]) : null,

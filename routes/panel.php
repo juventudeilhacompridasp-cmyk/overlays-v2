@@ -64,12 +64,19 @@ Route::middleware(['auth', 'verified', 'panel.member'])->prefix('painel')->name(
 
     // Inscrições online: análise dos pedidos. Tem dados pessoais e documentos (de menores, inclusive): só quem gerencia
     // competições, até para consultar (`can:`, e não `panel.can:`, que libera a leitura a qualquer membro).
-    Route::middleware('can:manage-competitions')->group(function () {
+    // Cada área depende de um recurso do pacote da organização (`feature:`).
+    Route::middleware(['can:manage-competitions', 'feature:athlete_cards'])->group(function () {
         Route::get('entries/{entry}/cards', [CardController::class, 'entry'])->name('entries.cards');
         Route::get('roster/{rosterEntry}/card', [CardController::class, 'show'])->name('roster.card');
         Route::post('roster/{rosterEntry}/card/regenerate', [CardController::class, 'regenerate'])->name('roster.card.regenerate');
+    });
+
+    Route::middleware(['can:manage-competitions', 'feature:reports'])->group(function () {
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('reports/{season}/{type}.csv', [ReportController::class, 'csv'])->name('reports.csv');
+    });
+
+    Route::middleware(['can:manage-competitions', 'feature:online_registration'])->group(function () {
         Route::get('registrations', [ReviewController::class, 'index'])->name('registrations.index');
         Route::get('registrations/{registration}', [ReviewController::class, 'show'])->name('registrations.show');
         Route::patch('registrations/{registration}/people/{person}', [ReviewController::class, 'reviewPerson'])->name('registrations.people.review');
@@ -94,13 +101,15 @@ Route::middleware(['auth', 'verified', 'panel.member'])->prefix('painel')->name(
 
     // Transmissão (OBS): ver a lista é para qualquer membro; criar/excluir canal é do organizador; o operador
     // escolhe o jogo no ar e liga camadas durante o jogo.
-    Route::get('broadcast', [ChannelController::class, 'index'])->name('broadcast.index');
-    Route::middleware('panel.can:manage-competitions')->group(function () {
+    Route::middleware('feature:overlays')->group(function () {
+        Route::get('broadcast', [ChannelController::class, 'index'])->name('broadcast.index');
+        Route::patch('broadcast/{channel}', [ChannelController::class, 'update'])->middleware('panel.can:operate-games')->name('broadcast.update');
+    });
+    Route::middleware(['panel.can:manage-competitions', 'feature:overlays'])->group(function () {
         Route::post('broadcast', [ChannelController::class, 'store'])->name('broadcast.store');
         Route::post('broadcast/{channel}/regenerate', [ChannelController::class, 'regenerate'])->name('broadcast.regenerate');
         Route::delete('broadcast/{channel}', [ChannelController::class, 'destroy'])->name('broadcast.destroy');
     });
-    Route::patch('broadcast/{channel}', [ChannelController::class, 'update'])->middleware('panel.can:operate-games')->name('broadcast.update');
 
     // Usuários, papéis e identidade do portal (só administradores; nem consultar).
     Route::middleware('panel.can:manage-users')->group(function () {

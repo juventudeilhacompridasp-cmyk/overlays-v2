@@ -3,6 +3,7 @@
 namespace App\Modules\Tenancy\Actions;
 
 use App\Models\User;
+use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Membership;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,12 @@ final class ManageMembers
     /** Cria o usuário (e-mail já verificado) com o papel informado. */
     public function create(string $name, string $email, string $password, Role $role): User
     {
+        $max = CurrentOrganization::get()?->limit('max_users');
+
+        if ($max !== null && Membership::query()->count() >= $max) {
+            throw new InvalidArgumentException("O pacote da organização permite no máximo {$max} usuários.");
+        }
+
         return DB::transaction(function () use ($name, $email, $password, $role): User {
             $user = User::query()->create(['name' => $name, 'email' => $email, 'password' => $password]);
             $user->forceFill(['email_verified_at' => now()])->save();

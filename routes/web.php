@@ -16,12 +16,12 @@ Route::get('/competicoes/{competition:slug}', [PortalController::class, 'competi
 Route::get('/competicoes/{competition:slug}/edicoes/{season}', [PortalController::class, 'season'])->name('portal.season');
 Route::get('/equipes/{team}', [PortalController::class, 'team'])->name('portal.team');
 // Verificação da carteirinha (QR): sem cache e fora dos buscadores (cabeçalho e robots).
-Route::get('/carteirinha/{code}', CardVerifyController::class)->name('portal.card')->middleware(['throttle:30,1', PrivateNoIndex::class]);
+Route::get('/carteirinha/{code}', CardVerifyController::class)->name('portal.card')->middleware(['throttle:30,1', 'feature:athlete_cards', PrivateNoIndex::class]);
 Route::get('/sitemap.xml', [PortalController::class, 'sitemap'])->name('portal.sitemap');
 Route::get('/robots.txt', [PortalController::class, 'robots'])->name('portal.robots');
 
 // Inscrição online de equipes (sem login). O link pessoal da equipe (`/minha-inscricao/{token}`) é o acesso ao pedido.
-Route::middleware('throttle:60,1')->group(function () {
+Route::middleware(['throttle:60,1', 'feature:online_registration'])->group(function () {
     Route::get('/inscricoes/{competition:slug}/{season}', [ApplyController::class, 'show'])->name('registration.apply');
     Route::post('/inscricoes/{competition:slug}/{season}', [ApplyController::class, 'store'])->middleware('throttle:10,1')->name('registration.store');
 
@@ -38,8 +38,8 @@ Route::middleware('throttle:60,1')->group(function () {
 });
 
 // Overlays do OBS (sem login; o token da URL é o acesso). A tela "estado" é a contingência sem WebSocket.
-Route::get('/overlay/{channel:token}/estado', [OverlayController::class, 'state'])->name('overlay.state')->middleware('throttle:120,1');
-Route::get('/overlay/{channel:token}/{overlay}', [OverlayController::class, 'show'])->name('overlay.show');
+Route::get('/overlay/{channel:token}/estado', [OverlayController::class, 'state'])->name('overlay.state')->middleware(['throttle:120,1', 'feature:overlays']);
+Route::get('/overlay/{channel:token}/{overlay}', [OverlayController::class, 'show'])->name('overlay.show')->middleware('feature:overlays');
 
 // Portal público: placar ao vivo (sem login).
 Route::get('/jogos/{game}', [PublicGameController::class, 'show'])->name('public.games.show');
@@ -56,4 +56,5 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/panel.php';
+require __DIR__.'/platform.php';
 require __DIR__.'/auth.php';

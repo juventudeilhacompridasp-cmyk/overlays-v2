@@ -13,6 +13,8 @@ use App\Modules\Portal\Support\GamePresenter;
 use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Portal\Support\SeasonPresenter;
 use App\Modules\Teams\Models\Team;
+use App\Modules\Tenancy\CurrentOrganization;
+use App\Modules\Tenancy\Enums\Feature;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response as HttpResponse;
@@ -83,7 +85,7 @@ class PortalController extends Controller
             'theme' => $theme,
             'seo' => $this->seo("{$title} · {$theme['name']}", "Classificação, jogos, resultados e artilharia — {$title}.", route('portal.season', [$competition->slug, $season->getKey()])),
             ...$data,
-            'registration_url' => $season->registrationOpen() ? route('registration.apply', [$competition->slug, $season->getKey()]) : null,
+            'registration_url' => CurrentOrganization::has(Feature::OnlineRegistration) && $season->registrationOpen() ? route('registration.apply', [$competition->slug, $season->getKey()]) : null,
             'other_seasons' => $competition->seasons()->published()->orderByDesc('year')->orderByDesc('name')->get()
                 ->map(fn (Season $other) => ['id' => $other->getKey(), 'name' => $other->name, 'url' => route('portal.season', [$competition->slug, $other->getKey()]), 'current' => $other->is($season)])->values(),
         ]);

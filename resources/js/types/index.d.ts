@@ -15,7 +15,9 @@ export type PageProps<
         role: string | null;
         role_label: string | null;
         can: Record<string, boolean>;
+        platform_admin: boolean;
     };
+    features: string[];
     flash: {
         success?: string | null;
         error?: string | null;

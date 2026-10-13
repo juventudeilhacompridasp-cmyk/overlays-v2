@@ -2,6 +2,7 @@
 
 namespace App\Modules\Tenancy;
 
+use App\Modules\Tenancy\Enums\Feature;
 use App\Modules\Tenancy\Models\Organization;
 use Closure;
 
@@ -26,6 +27,12 @@ final class CurrentOrganization
     public static function id(): ?string
     {
         return self::$organization?->getKey();
+    }
+
+    /** A organização atual tem o recurso liberado? (sem organização atual, não.) */
+    public static function has(Feature $feature): bool
+    {
+        return self::$organization?->hasFeature($feature) ?? false;
     }
 
     public static function forget(): void

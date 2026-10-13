@@ -22,6 +22,7 @@ class OrganizationFactory extends Factory
             'name' => $name = fake()->unique()->company(),
             'slug' => Str::slug($name).'-'.Str::lower(Str::random(4)),
             'settings' => null,
+            'plan' => 'pro',
         ];
     }
 }

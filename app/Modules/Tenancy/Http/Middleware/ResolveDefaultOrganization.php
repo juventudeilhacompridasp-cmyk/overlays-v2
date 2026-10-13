@@ -14,7 +14,7 @@ class ResolveDefaultOrganization
     {
         $organization = Organization::query()->firstOrCreate(
             ['slug' => config('platform.default_organization_slug')],
-            ['name' => 'Organização padrão'],
+            ['name' => 'Organização padrão', 'plan' => 'pro'],
         );
 
         CurrentOrganization::set($organization);
