@@ -11,7 +11,6 @@ use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
-use Closure;
 use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
@@ -100,7 +99,7 @@ describe('asking for contact', function () {
         askContact($this, $manager, $profile, $team)->assertForbidden();
     });
 
-    it('refuses profiles that are not published or are out of the deadline', function (Closure $profileState) {
+    it('refuses profiles that are not published or are out of the deadline', function ($profileState) {
         [, $profile] = contactTarget($profileState());
         $team = Team::factory()->create();
 
