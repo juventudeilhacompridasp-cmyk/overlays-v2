@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware(['auth', 'verified', 'platform.admin'])->prefix('plataforma')->name('platform.')->group(function () {
     Route::get('/', [PlatformOrganizationController::class, 'index'])->name('organizations.index');
+    Route::get('organizations/create', [PlatformOrganizationController::class, 'create'])->name('organizations.create');
+    Route::post('organizations', [PlatformOrganizationController::class, 'store'])->name('organizations.store');
+    Route::post('organizations/{organization}/domains', [PlatformOrganizationController::class, 'storeDomain'])->name('organizations.domains.store');
+    Route::delete('organizations/{organization}/domains/{domain}', [PlatformOrganizationController::class, 'destroyDomain'])->name('organizations.domains.destroy');
     Route::get('organizations/{organization}', [PlatformOrganizationController::class, 'edit'])->name('organizations.edit');
     Route::patch('organizations/{organization}', [PlatformOrganizationController::class, 'update'])->name('organizations.update');
 });

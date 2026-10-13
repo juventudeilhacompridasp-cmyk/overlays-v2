@@ -3,16 +3,21 @@
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Tenancy\Actions\CreateOrganization;
 use App\Modules\Tenancy\Enums\Feature;
 use App\Modules\Tenancy\Enums\Plan;
 use App\Modules\Tenancy\Models\Organization;
+use App\Modules\Tenancy\Models\OrganizationDomain;
+use App\Modules\Tenancy\Support\OrganizationResolver;
 use App\Modules\Tenancy\Support\OrganizationUsage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 
 /** Área da plataforma (`/plataforma`, só administradores da plataforma): pacotes, recursos, limites e uso por organização. */
 class PlatformOrganizationController extends Controller
@@ -39,6 +44,66 @@ class PlatformOrganizationController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        return Inertia::render('Platform/Organizations/Create', [
+            'plans' => array_map(fn (Plan $plan) => ['value' => $plan->value, 'label' => $plan->label()], Plan::cases()),
+            'base_domain' => OrganizationResolver::baseDomain(),
+        ]);
+    }
+
+    public function store(Request $request, CreateOrganization $create): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'slug' => ['required', 'string', 'max:40', 'regex:/^[a-z0-9]+(-[a-z0-9]+)*$/', Rule::unique('organizations', 'slug')],
+            'plan' => ['required', Rule::enum(Plan::class)],
+            'admin_name' => ['required', 'string', 'max:120'],
+            'admin_email' => ['required', 'email', 'max:190'],
+        ], ['slug.regex' => 'Use só letras minúsculas, números e hífens.'], ['name' => 'nome', 'slug' => 'endereço (slug)', 'plan' => 'pacote', 'admin_name' => 'nome do administrador', 'admin_email' => 'e-mail do administrador']);
+
+        try {
+            $result = $create->handle($validated['name'], $validated['slug'], Plan::from($validated['plan']), $validated['admin_name'], $validated['admin_email']);
+        } catch (InvalidArgumentException $exception) {
+            return back()->withInput()->withErrors(['slug' => $exception->getMessage()]);
+        }
+
+        $message = "Organização “{$result['organization']->name}” criada.";
+        $message .= $result['temporary_password'] !== null
+            ? " Senha provisória do administrador ({$validated['admin_email']}): {$result['temporary_password']} — repasse por canal seguro; ela não será mostrada de novo."
+            : " {$validated['admin_email']} já tinha acesso à plataforma e agora também administra esta organização.";
+
+        return to_route('platform.organizations.edit', $result['organization'])->with('success', $message);
+    }
+
+    public function storeDomain(Request $request, Organization $organization): RedirectResponse
+    {
+        $domain = Str::lower(trim($request->string('domain')->toString()));
+        $request->merge(['domain' => $domain]);
+
+        $request->validate([
+            'domain' => ['required', 'string', 'max:190', 'regex:/^(?=.{4,190}$)([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/', Rule::unique('organization_domains', 'domain')],
+        ], ['domain.regex' => 'Informe só o domínio, por exemplo ligadailha.com.br (sem http:// nem barras).'], ['domain' => 'domínio']);
+
+        $base = OrganizationResolver::baseDomain();
+
+        if ($base !== null && ($domain === $base || str_ends_with($domain, ".{$base}"))) {
+            return back()->withErrors(['domain' => 'Domínios sob o domínio da plataforma são os subdomínios automáticos; cadastre um domínio próprio.']);
+        }
+
+        OrganizationDomain::query()->create(['organization_id' => $organization->getKey(), 'domain' => $domain]);
+
+        return back()->with('success', 'Domínio cadastrado. Aponte o DNS para o servidor e inclua o domínio no proxy; ele só funciona com o recurso “Domínio próprio” ligado.');
+    }
+
+    public function destroyDomain(Organization $organization, OrganizationDomain $domain): RedirectResponse
+    {
+        abort_unless($domain->organization_id === $organization->getKey(), 404);
+        $domain->delete();
+
+        return back()->with('success', 'Domínio removido.');
+    }
+
     public function edit(Organization $organization): Response
     {
         return Inertia::render('Platform/Organizations/Edit', [
@@ -53,6 +118,8 @@ class PlatformOrganizationController extends Controller
                 'max_competitions' => $organization->limit('max_competitions'),
             ],
             'usage' => OrganizationUsage::of($organization),
+            'domains' => OrganizationDomain::query()->where('organization_id', $organization->getKey())->orderBy('domain')->get(['id', 'domain']),
+            'subdomain' => OrganizationResolver::baseDomain() !== null ? "{$organization->slug}.".OrganizationResolver::baseDomain() : null,
             'plans' => array_map(fn (Plan $plan) => [
                 'value' => $plan->value,
                 'label' => $plan->label(),

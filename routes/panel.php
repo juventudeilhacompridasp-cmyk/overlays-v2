@@ -115,6 +115,10 @@ Route::middleware(['auth', 'verified', 'panel.member'])->prefix('painel')->name(
     Route::middleware('panel.can:manage-users')->group(function () {
         Route::get('organization', [OrganizationController::class, 'edit'])->name('organization.edit');
         Route::patch('organization', [OrganizationController::class, 'update'])->name('organization.update');
+        Route::middleware('feature:white_label')->group(function () {
+            Route::post('organization/logo', [OrganizationController::class, 'storeLogo'])->name('organization.logo.store');
+            Route::delete('organization/logo', [OrganizationController::class, 'destroyLogo'])->name('organization.logo.destroy');
+        });
         Route::get('users', [MemberController::class, 'index'])->name('users.index');
         Route::post('users', [MemberController::class, 'store'])->name('users.store');
         Route::patch('users/{membership}', [MemberController::class, 'update'])->name('users.update');

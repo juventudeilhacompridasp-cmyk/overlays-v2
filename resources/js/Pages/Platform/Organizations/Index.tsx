@@ -27,7 +27,7 @@ export default function Index({ organizations, features_total }: { organizations
     return (
         <PlatformLayout>
             <Head title="Plataforma · organizações" />
-            <PageHeader title="Organizações" subtitle="Pacote, recursos liberados e uso de cada organização. A liberação é manual." />
+            <PageHeader title="Organizações" subtitle="Pacote, recursos liberados e uso de cada organização. A liberação é manual." actions={<LinkButton href={route('platform.organizations.create')}>Nova organização</LinkButton>} />
             {organizations.length === 0 ? (
                 <Empty title="Nenhuma organização." />
             ) : (

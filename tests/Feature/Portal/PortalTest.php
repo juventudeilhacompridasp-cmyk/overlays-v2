@@ -203,7 +203,7 @@ it('serves the sitemap and robots.txt with only public pages', function () {
 
 it('reads the theme from the organization settings and falls back on bad colors', function () {
     CurrentOrganization::get()->update(['settings' => ['theme' => ['primary' => '#ff6600', 'tagline' => 'A bola rola aqui']]]);
-    $this->get('/')->assertInertia(fn ($page) => $page->where('theme', ['name' => 'Liga Local', 'primary' => '#ff6600', 'tagline' => 'A bola rola aqui']));
+    $this->get('/')->assertInertia(fn ($page) => $page->where('theme', ['name' => 'Liga Local', 'primary' => '#ff6600', 'tagline' => 'A bola rola aqui', 'logo_url' => null, 'white_label' => true, 'platform_name' => config('app.name')]));
 
     CurrentOrganization::get()->update(['settings' => ['theme' => ['primary' => 'javascript:alert(1)']]]);
     $this->get('/')->assertInertia(fn ($page) => $page->where('theme.primary', '#059669')->where('theme.tagline', null));
@@ -258,7 +258,7 @@ describe('panel: portal identity', function () {
 
         $this->patch('/painel/organization', ['name' => 'Liga das Ilhas', 'primary' => '#1d4ed8', 'tagline' => 'Futebol de base'])->assertSessionHas('success', 'Portal atualizado.');
 
-        $this->get('/')->assertInertia(fn ($page) => $page->where('theme', ['name' => 'Liga das Ilhas', 'primary' => '#1d4ed8', 'tagline' => 'Futebol de base']));
+        $this->get('/')->assertInertia(fn ($page) => $page->where('theme', ['name' => 'Liga das Ilhas', 'primary' => '#1d4ed8', 'tagline' => 'Futebol de base', 'logo_url' => null, 'white_label' => true, 'platform_name' => config('app.name')]));
     });
 
     it('validates the color and refuses non-administrators', function () {

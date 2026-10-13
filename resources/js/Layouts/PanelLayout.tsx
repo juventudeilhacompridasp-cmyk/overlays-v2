@@ -35,7 +35,7 @@ function Icon({ path }: { path: string }) {
 }
 
 export default function PanelLayout({ children }: PropsWithChildren) {
-    const { auth, flash } = usePage().props;
+    const { auth, flash, brand } = usePage().props;
     const [open, setOpen] = useState(false);
     const canManageUsers = useCan('manage-users');
     const canManageCompetitions = useCan('manage-competitions');
@@ -70,7 +70,10 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     return (
         <div className="min-h-screen bg-gray-50 print:bg-[#ffffff]">
             <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-gray-200 bg-white py-5 lg:flex print:hidden">
-                <div className="mb-6 px-6 text-lg font-bold text-emerald-700">Plataforma</div>
+                <div className="mb-6 flex items-center gap-2 px-6 text-lg font-bold text-emerald-700">
+                    {brand.logo_url && <img src={brand.logo_url} alt="" className="h-8 w-8 rounded bg-[#ffffff] object-contain p-0.5" />}
+                    <span className="truncate">{brand.name}</span>
+                </div>
                 {menu}
                 <div className="mt-auto border-t border-gray-100 px-6 pt-4 text-sm">
                     <div className="mb-3">
@@ -91,7 +94,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
 
             <div className="lg:pl-60 print:pl-0">
                 <header className="sticky top-0 z-30 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 lg:hidden print:hidden">
-                    <span className="font-bold text-emerald-700">Plataforma</span>
+                    <span className="font-bold text-emerald-700">{brand.name}</span>
                     <ThemeToggle />
                     <button type="button" onClick={() => setOpen(!open)} className="rounded-md p-2 text-gray-600 hover:bg-gray-100" aria-label="Menu">
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

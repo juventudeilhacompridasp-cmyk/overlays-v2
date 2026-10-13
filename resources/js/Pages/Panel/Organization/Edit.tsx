@@ -1,9 +1,36 @@
-import { Button, Card, Field, Input, PageHeader } from '@/Components/Panel/ui';
+import { Button, Card, DeleteButton, Field, Input, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
-export default function Edit({ theme, portal_url }: { theme: { name: string; primary: string; tagline: string | null }; portal_url: string }) {
+function LogoCard({ logoUrl }: { logoUrl: string | null }) {
+    const { data, setData, post, processing, errors, reset } = useForm<{ logo: File | null }>({ logo: null });
+
+    return (
+        <Card title="Marca própria (logotipo)" className="mt-6 max-w-2xl">
+            <div className="flex flex-wrap items-center gap-4">
+                {logoUrl ? <img src={logoUrl} alt="" className="h-16 w-16 rounded bg-[#ffffff] object-contain p-1 ring-1 ring-gray-200" /> : <span className="text-sm text-gray-500">Sem logotipo.</span>}
+                <form
+                    className="flex flex-wrap items-center gap-2"
+                    onSubmit={(event: FormEvent) => {
+                        event.preventDefault();
+                        post(route('panel.organization.logo.store'), { forceFormData: true, preserveScroll: true, onSuccess: () => reset() });
+                    }}
+                >
+                    <input type="file" accept=".jpg,.jpeg,.png,.webp" onChange={(e) => setData('logo', e.target.files?.[0] ?? null)} className="text-sm" />
+                    <Button type="submit" variant="secondary" disabled={processing || !data.logo}>
+                        Enviar
+                    </Button>
+                </form>
+                {logoUrl && <DeleteButton href={route('panel.organization.logo.destroy')} message="Remover o logotipo?" label="Remover" />}
+            </div>
+            {errors.logo && <p className="mt-2 text-sm text-red-600">{errors.logo}</p>}
+            <p className="mt-2 text-xs text-gray-500">Aparece no topo do portal e no menu do painel. JPG, PNG ou WebP, até 3 MB.</p>
+        </Card>
+    );
+}
+
+export default function Edit({ theme, portal_url, white_label, logo_url }: { theme: { name: string; primary: string; tagline: string | null }; portal_url: string; white_label: boolean; logo_url: string | null }) {
     const { data, setData, patch, processing, errors } = useForm({ name: theme.name, primary: theme.primary, tagline: theme.tagline ?? '' });
 
     const submit = (event: FormEvent) => {
@@ -45,6 +72,7 @@ export default function Edit({ theme, portal_url }: { theme: { name: string; pri
                     </Button>
                 </form>
             </Card>
+            {white_label && <LogoCard logoUrl={logo_url} />}
         </PanelLayout>
     );
 }
