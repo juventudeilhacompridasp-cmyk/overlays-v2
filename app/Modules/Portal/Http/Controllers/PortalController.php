@@ -12,6 +12,7 @@ use App\Modules\Matches\Models\Game;
 use App\Modules\Portal\Support\GamePresenter;
 use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Portal\Support\SeasonPresenter;
+use App\Modules\Portal\Support\SeasonStats;
 use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
@@ -85,9 +86,26 @@ class PortalController extends Controller
             'theme' => $theme,
             'seo' => $this->seo("{$title} · {$theme['name']}", "Classificação, jogos, resultados e artilharia — {$title}.", route('portal.season', [$competition->slug, $season->getKey()])),
             ...$data,
+            'stats_url' => route('portal.stats', [$competition->slug, $season->getKey()]),
             'registration_url' => CurrentOrganization::has(Feature::OnlineRegistration) && $season->registrationOpen() ? route('registration.apply', [$competition->slug, $season->getKey()]) : null,
             'other_seasons' => $competition->seasons()->published()->orderByDesc('year')->orderByDesc('name')->get()
                 ->map(fn (Season $other) => ['id' => $other->getKey(), 'name' => $other->name, 'url' => route('portal.season', [$competition->slug, $other->getKey()]), 'current' => $other->is($season)])->values(),
+        ]);
+    }
+
+    public function stats(Competition $competition, Season $season, SeasonStats $stats): Response
+    {
+        abort_unless($season->competition_id === $competition->getKey() && $season->isPublished(), 404);
+
+        $theme = PublicTheme::current();
+        $title = "{$competition->name} {$season->name}";
+
+        return Inertia::render('Portal/Stats', [
+            'theme' => $theme,
+            'seo' => $this->seo("Estatísticas · {$title} · {$theme['name']}", "Ataque, defesa, forma recente e maiores resultados — {$title}.", route('portal.stats', [$competition->slug, $season->getKey()])),
+            'competition' => ['name' => $competition->name, 'slug' => $competition->slug],
+            'season' => ['id' => $season->getKey(), 'name' => $season->name, 'url' => route('portal.season', [$competition->slug, $season->getKey()])],
+            ...$stats->handle($season),
         ]);
     }
 
@@ -129,6 +147,7 @@ class PortalController extends Controller
         foreach (Competition::query()->with(['seasons' => fn ($query) => $query->published()])->get() as $competition) {
             foreach ($competition->seasons as $season) {
                 $urls[] = route('portal.season', [$competition->slug, $season->getKey()]);
+                $urls[] = route('portal.stats', [$competition->slug, $season->getKey()]);
             }
         }
 

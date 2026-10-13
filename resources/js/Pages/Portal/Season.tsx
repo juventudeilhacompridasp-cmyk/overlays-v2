@@ -39,6 +39,7 @@ interface Props {
     competition: { id: string; name: string; slug: string };
     season: { id: string; name: string; year: number; status_label: string; starts_on: string | null; ends_on: string | null };
     divisions: Division[];
+    stats_url: string;
     registration_url: string | null;
     other_seasons: { id: string; name: string; url: string; current: boolean }[];
 }
@@ -125,7 +126,7 @@ function DivisionView({ division }: { division: Division }) {
     );
 }
 
-export default function Season({ theme, seo, competition, season, divisions, registration_url, other_seasons }: Props) {
+export default function Season({ theme, seo, competition, season, divisions, stats_url, registration_url, other_seasons }: Props) {
     const [active, setActive] = useState(divisions[0]?.id);
 
     return (
@@ -145,9 +146,14 @@ export default function Season({ theme, seo, competition, season, divisions, reg
                         {season.name} · {season.status_label}
                     </p>
                 </div>
-                <button type="button" onClick={() => window.print()} className="rounded-md bg-white px-3 py-2 text-sm font-medium ring-1 ring-gray-300 hover:bg-gray-100 print:hidden">
-                    Imprimir (A4)
-                </button>
+                <div className="flex gap-2 print:hidden">
+                    <Link href={stats_url} className="rounded-md bg-white px-3 py-2 text-sm font-medium ring-1 ring-gray-300 hover:bg-gray-100">
+                        Estatísticas
+                    </Link>
+                    <button type="button" onClick={() => window.print()} className="rounded-md bg-white px-3 py-2 text-sm font-medium ring-1 ring-gray-300 hover:bg-gray-100">
+                        Imprimir (A4)
+                    </button>
+                </div>
             </div>
 
             {other_seasons.length > 1 && (

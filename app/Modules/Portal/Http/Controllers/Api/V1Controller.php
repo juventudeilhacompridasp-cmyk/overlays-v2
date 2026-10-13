@@ -8,6 +8,7 @@ use App\Modules\Competitions\Models\Season;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Support\PublicGameSnapshot;
 use App\Modules\Portal\Support\SeasonPresenter;
+use App\Modules\Portal\Support\SeasonStats;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -43,6 +44,13 @@ class V1Controller extends Controller
         abort_unless($season->isPublished(), 404);
 
         return response()->json(['data' => $presenter->handle($season)]);
+    }
+
+    public function stats(Season $season, SeasonStats $stats): JsonResponse
+    {
+        abort_unless($season->isPublished(), 404);
+
+        return response()->json(['data' => $stats->handle($season)]);
     }
 
     public function game(Game $game): JsonResponse
