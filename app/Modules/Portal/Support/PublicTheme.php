@@ -5,6 +5,7 @@ namespace App\Modules\Portal\Support;
 use App\Modules\Tenancy\Actions\ChangeOrganizationLogo;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
+use App\Modules\Tenancy\Models\Organization;
 
 /** Identidade visual do portal público, vinda das configurações da organização (`settings.theme`). */
 final class PublicTheme
@@ -18,12 +19,12 @@ final class PublicTheme
         $theme = $organization?->settings['theme'] ?? [];
         $primary = $theme['primary'] ?? null;
 
-        $whiteLabel = $organization?->hasFeature(Feature::WhiteLabel) ?? false;
+        $whiteLabel = CurrentOrganization::has(Feature::WhiteLabel);
 
         return [
             'name' => $organization === null ? (string) config('app.name') : $organization->name,
             'primary' => is_string($primary) && preg_match('/^#[0-9a-fA-F]{6}$/', $primary) === 1 ? $primary : self::DEFAULT_COLOR,
-            'logo_url' => $whiteLabel && $organization !== null ? ChangeOrganizationLogo::url($organization, 128) : null,
+            'logo_url' => $whiteLabel && $organization instanceof Organization ? ChangeOrganizationLogo::url($organization, 128) : null,
             'white_label' => $whiteLabel,
             'platform_name' => (string) config('app.name'),
             'tagline' => isset($theme['tagline']) && is_string($theme['tagline']) && $theme['tagline'] !== '' ? $theme['tagline'] : null,
