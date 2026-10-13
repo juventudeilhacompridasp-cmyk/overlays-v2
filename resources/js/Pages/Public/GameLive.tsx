@@ -2,7 +2,7 @@ import { ConnectionState, Realtime, subscribeToGame } from '@/lib/echo';
 import { GameClock, formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
 import PushButton from '@/Components/Portal/PushButton';
 import ShareButtons from '@/Components/Portal/ShareButtons';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
 interface Goal {
@@ -45,7 +45,87 @@ export interface Snapshot {
     server_time_ms: number;
 }
 
+export interface Insights {
+    timeline: { type: string; side: 'home' | 'away' | null; minute: number | null; period: number; player: string | null; out: string | null; own_goal: boolean }[] | null;
+    standings: { title: string; home: StandingSide | null; away: StandingSide | null } | null;
+    form: { home: FormItem[]; away: FormItem[] } | null;
+    head_to_head: { summary: { home_wins: number; draws: number; away_wins: number }; games: { home: string | null; away: string | null; home_score: number; away_score: number; scheduled_at: string | null; competition: string; url: string }[] } | null;
+}
+
+interface StandingSide {
+    position: number;
+    points: number;
+    played: number;
+    of: number;
+}
+
+interface FormItem {
+    result: 'V' | 'E' | 'D';
+    score: string;
+    opponent: string | null;
+    home: boolean;
+    url: string;
+}
+
 const POLL_MS = 5000;
+
+const timelineIcon: Record<string, string> = { goal: '⚽', own_goal: '⚽', substitution: '🔁', yellow_card: '🟨', red_card: '🟥' };
+
+function Section({ title, children, testid }: { title: string; children: React.ReactNode; testid: string }) {
+    return (
+        <section className="mt-8 rounded-lg bg-black/30 p-4" data-testid={testid}>
+            <h2 className="mb-3 text-center text-sm font-semibold uppercase tracking-wide text-gray-400">{title}</h2>
+            {children}
+        </section>
+    );
+}
+
+function Timeline({ items }: { items: NonNullable<Insights['timeline']> }) {
+    return (
+        <ul className="space-y-2 text-sm">
+            {items.map((item, index) => {
+                const text = (
+                    <span className="text-gray-200">
+                        <span aria-hidden>{timelineIcon[item.type] ?? '•'} </span>
+                        {item.type === 'substitution' ? (
+                            <>
+                                <span className="text-emerald-400">▲ {item.player ?? '—'}</span> <span className="text-red-400">▼ {item.out ?? '—'}</span>
+                            </>
+                        ) : (
+                            <>
+                                {item.player ?? (item.type === 'goal' || item.type === 'own_goal' ? 'Gol' : '—')}
+                                {item.own_goal && ' (contra)'}
+                            </>
+                        )}
+                    </span>
+                );
+
+                return (
+                    <li key={index} className="grid grid-cols-[1fr_3rem_1fr] items-center gap-2">
+                        <div className="text-right">{item.side === 'home' ? text : null}</div>
+                        <div className="text-center text-xs tabular-nums text-gray-500">{item.minute !== null ? `${item.minute}'` : ''}</div>
+                        <div className="text-left">{item.side === 'away' ? text : null}</div>
+                    </li>
+                );
+            })}
+        </ul>
+    );
+}
+
+const pill: Record<FormItem['result'], string> = { V: 'bg-emerald-600', E: 'bg-gray-500', D: 'bg-red-600' };
+
+function FormPills({ items }: { items: FormItem[] }) {
+    return (
+        <div className="flex flex-wrap justify-center gap-1">
+            {items.length === 0 && <span className="text-xs text-gray-500">sem jogos anteriores</span>}
+            {items.map((item, index) => (
+                <a key={index} href={item.url} title={`${item.home ? 'em casa' : 'fora'} contra ${item.opponent ?? '—'}: ${item.score}`} className={`flex h-7 w-7 items-center justify-center rounded text-xs font-bold text-white ${pill[item.result]}`}>
+                    {item.result}
+                </a>
+            ))}
+        </div>
+    );
+}
 
 function GoalList({ goals, side }: { goals: Goal[]; side: 'home' | 'away' }) {
     const mine = goals.filter((goal) => goal.side === side);
@@ -63,7 +143,7 @@ function GoalList({ goals, side }: { goals: Goal[]; side: 'home' | 'away' }) {
     );
 }
 
-export default function GameLive({ snapshot: initial, realtime, push_key }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null }) {
+export default function GameLive({ snapshot: initial, realtime, push_key, insights }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null; insights?: Insights }) {
     const [snapshot, setSnapshot] = useState(initial);
     const [connection, setConnection] = useState<ConnectionState>('connecting');
     // Diferença entre o relógio do navegador e o do servidor, medida na carga da página (não nos deltas, que podem atrasar na fila).
@@ -88,6 +168,16 @@ export default function GameLive({ snapshot: initial, realtime, push_key }: { sn
             cancel?.();
         };
     }, [initial.id]);
+
+    // A linha do tempo e a tabela vêm da página: quando o placar ou a situação mudam, pede só esses dados de novo.
+    const first = useRef(true);
+    useEffect(() => {
+        if (first.current) {
+            first.current = false;
+            return;
+        }
+        router.reload({ only: ['insights'] });
+    }, [snapshot.home_score, snapshot.away_score, snapshot.status]);
 
     // Contingência: sem WebSocket, consulta o estado a cada poucos segundos (e para quando o jogo termina).
     useEffect(() => {
@@ -174,10 +264,58 @@ export default function GameLive({ snapshot: initial, realtime, push_key }: { sn
                         Faltas: {snapshot.fouls.home} x {snapshot.fouls.away}
                     </p>
                 )}
-                <div className="mt-6 grid grid-cols-2 gap-6">
-                    <GoalList goals={snapshot.goals} side="home" />
-                    <GoalList goals={snapshot.goals} side="away" />
-                </div>
+                {insights?.timeline ? (
+                    insights.timeline.length > 0 && (
+                        <Section title="Lances do jogo" testid="game-timeline">
+                            <Timeline items={insights.timeline} />
+                        </Section>
+                    )
+                ) : (
+                    <div className="mt-6 grid grid-cols-2 gap-6">
+                        <GoalList goals={snapshot.goals} side="home" />
+                        <GoalList goals={snapshot.goals} side="away" />
+                    </div>
+                )}
+                {insights?.standings && (
+                    <Section title={`Classificação · ${insights.standings.title}`} testid="game-standings">
+                        <div className="grid grid-cols-2 gap-4 text-center text-sm">
+                            {(['home', 'away'] as const).map((side) => {
+                                const item = insights.standings?.[side];
+                                return (
+                                    <div key={side}>
+                                        <div className="text-2xl font-bold tabular-nums">{item ? `${item.position}º` : '—'}</div>
+                                        <div className="text-xs text-gray-400">{item ? `${item.points} pts · ${item.played} jogo(s) · de ${item.of}` : 'fora da tabela'}</div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </Section>
+                )}
+                {insights?.form && (
+                    <Section title="Forma recente" testid="game-form">
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormPills items={insights.form.home} />
+                            <FormPills items={insights.form.away} />
+                        </div>
+                    </Section>
+                )}
+                {insights?.head_to_head && (
+                    <Section title="Confronto direto" testid="game-h2h">
+                        <p className="mb-3 text-center text-sm text-gray-300">
+                            {home} {insights.head_to_head.summary.home_wins} vit. · {insights.head_to_head.summary.draws} emp. · {insights.head_to_head.summary.away_wins} vit. {away}
+                        </p>
+                        <ul className="space-y-1 text-sm text-gray-300">
+                            {insights.head_to_head.games.map((game, index) => (
+                                <li key={index} className="text-center">
+                                    <a href={game.url} className="hover:text-white">
+                                        {game.home} {game.home_score} x {game.away_score} {game.away}
+                                    </a>
+                                    <span className="ml-2 text-xs text-gray-500">{game.competition}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </Section>
+                )}
                 {snapshot.venue && <p className="mt-8 text-center text-sm text-gray-500">{snapshot.venue}</p>}
                 <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-gray-900">
                     {!snapshot.finished && <PushButton kind="game" id={snapshot.id} publicKey={push_key} label="Avisar gols deste jogo" />}

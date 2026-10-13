@@ -170,6 +170,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::patch('communications', [CommunicationsController::class, 'update'])->name('communications.update');
         Route::get('organization', [OrganizationController::class, 'edit'])->name('organization.edit');
         Route::patch('organization', [OrganizationController::class, 'update'])->name('organization.update');
+        Route::patch('organization/portal', [OrganizationController::class, 'updatePortal'])->name('organization.portal');
         Route::middleware('feature:white_label')->group(function () {
             Route::post('organization/logo', [OrganizationController::class, 'storeLogo'])->name('organization.logo.store');
             Route::delete('organization/logo', [OrganizationController::class, 'destroyLogo'])->name('organization.logo.destroy');

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Support\PublicGameSnapshot;
 use App\Modules\Portal\Push\PushConfig;
+use App\Modules\Portal\Support\GameInsights;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,7 +14,7 @@ use Inertia\Response;
 /** Placar ao vivo público: snapshot inicial + deltas pelo canal `games.{id}` do Reverb. */
 class PublicGameController extends Controller
 {
-    public function show(Game $game): Response
+    public function show(Game $game, GameInsights $insights): Response
     {
         abort_unless($game->division->season->isPublished(), 404);
 
@@ -21,6 +22,8 @@ class PublicGameController extends Controller
 
         return Inertia::render('Public/GameLive', [
             'snapshot' => PublicGameSnapshot::for($game),
+            // Reenviado sozinho (recarga parcial) quando o placar ou a situação mudam, para a linha do tempo acompanhar o jogo.
+            'insights' => fn () => $insights->for($game),
             'push_key' => PushConfig::publicKeyFor(),
             'realtime' => [
                 'key' => $realtime['key'],

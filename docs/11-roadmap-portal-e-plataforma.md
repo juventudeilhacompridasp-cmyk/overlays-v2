@@ -14,7 +14,7 @@ nada novo liga sozinho) e com testes. Atualize o status em `docs/09-status-e-pen
 Hoje: home (ao vivo/próximos/recentes), edição (tabela, jogos, artilharia), equipe, jogo ao vivo, estatísticas e widgets. Falta riqueza:
 | Tela | Acrescentar (todos opcionais por organização em `settings.portal`) |
 |---|---|
-| Jogo | linha do tempo completa (gols, cartões **se a organização permitir**, substituições), confronto direto (histórico), posição das duas equipes na tabela, forma recente, local com mapa/endereço, árbitros, escalações públicas (nomes via `PublicName`; menores só inicial), mídia (vídeo/transmissão), compartilhar/calendário (.ics) |
+| Jogo (**feito**: linha do tempo, tabela, forma, confronto direto; falta o resto da linha) | linha do tempo completa (gols, cartões **se a organização permitir**, substituições), confronto direto (histórico), posição das duas equipes na tabela, forma recente, local com mapa/endereço, árbitros, escalações públicas (nomes via `PublicName`; menores só inicial), mídia (vídeo/transmissão), compartilhar/calendário (.ics) |
 | Equipe | histórico por edição, calendário completo, forma, elenco público (`PublicName`, camisa, posição; sem foto de menor), artilheiros da equipe, campanhas, estádio, redes sociais |
 | Edição | **chaveamento visual** do mata-mata, tabela com critérios de desempate explicados, melhor ataque/defesa, artilharia **e assistências**, disciplina "fair play" (só se a organização permitir), calendário por rodada/dia/local, regulamento e notícias, melhores momentos |
 | Competição | histórico de edições, campeões e vice, recordes, regulamento permanente |
