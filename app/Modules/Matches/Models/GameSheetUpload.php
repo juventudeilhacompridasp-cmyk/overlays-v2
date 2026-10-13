@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Súmula enviada depois do jogo (foto/PDF ou arquivo estruturado). Dado pessoal: o arquivo fica em disco privado.
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property array<string, mixed>|null $extracted
  * @property array<string, mixed>|null $reviewed
  * @property list<string>|null $review_changes
+ * @property Carbon|null $reviewed_at
  */
 #[Unguarded]
 class GameSheetUpload extends Model

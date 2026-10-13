@@ -211,11 +211,11 @@ final class SheetComparison
             $found = null;
 
             if ($s['shirt'] !== null) {
-                $found = $this->take($systemRows, fn ($y) => $y['shirt'] === $s['shirt']);
+                [$found, $systemRows] = $this->take($systemRows, fn ($y) => $y['shirt'] === $s['shirt']);
             }
 
             if ($found === null && $s['name'] !== null) {
-                $found = $this->take($systemRows, fn ($y) => NameMatcher::same($s['name'], $y['name']));
+                [$found, $systemRows] = $this->take($systemRows, fn ($y) => NameMatcher::same($s['name'], $y['name']));
             }
 
             if ($found === null) {
@@ -229,7 +229,11 @@ final class SheetComparison
 
         foreach ($left as $s) {
             // Lance sem atleta no sistema (resultado rápido, pedido de tempo): confere pela quantidade.
-            $found = $anonymousMatchesAny ? $this->take($systemRows, fn ($y) => $y['shirt'] === null && $y['name'] === null) : null;
+            $found = null;
+
+            if ($anonymousMatchesAny) {
+                [$found, $systemRows] = $this->take($systemRows, fn ($y) => $y['shirt'] === null && $y['name'] === null);
+            }
             if ($found === null) {
                 $onlySheet[] = $s;
             } else {
@@ -237,27 +241,26 @@ final class SheetComparison
             }
         }
 
-        return [$pairs, $onlySheet, array_values($systemRows)];
+        return [$pairs, $onlySheet, $systemRows];
     }
 
     /**
-     * Tira e devolve a primeira linha que atende ao teste.
+     * Tira a primeira linha que atende ao teste: devolve ela (ou null) e as linhas que sobraram.
      *
      * @param  list<Row>  $rows
-     * @return Row|null
+     * @return array{0: Row|null, 1: list<Row>}
      */
-    private function take(array &$rows, callable $test): ?array
+    private function take(array $rows, callable $test): array
     {
         foreach ($rows as $index => $row) {
             if ($test($row)) {
-                unset($rows[$index]);
-                $rows = array_values($rows);
+                array_splice($rows, $index, 1);
 
-                return $row;
+                return [$row, $rows];
             }
         }
 
-        return null;
+        return [null, $rows];
     }
 
     /**
