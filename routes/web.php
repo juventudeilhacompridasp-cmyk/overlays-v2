@@ -11,8 +11,8 @@ use App\Modules\Portal\Http\Controllers\PortalController;
 use App\Modules\Portal\Http\Controllers\PushController;
 use App\Modules\Registration\Http\Controllers\ApplyController;
 use App\Modules\Registration\Http\Controllers\ManageController;
-use App\Modules\Tenancy\Http\Controllers\LegalAcceptController;
 use App\Modules\Tenancy\Enums\Role;
+use App\Modules\Tenancy\Http\Controllers\LegalAcceptController;
 use Illuminate\Support\Facades\Route;
 
 // Portal público (sem login): só edições publicadas.

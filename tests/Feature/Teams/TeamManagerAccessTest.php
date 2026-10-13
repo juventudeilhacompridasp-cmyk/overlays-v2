@@ -2,12 +2,14 @@
 
 use App\Models\User;
 use App\Modules\Competitions\Models\Entry;
+use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Teams\Mail\TeamManagerInvitation;
 use App\Modules\Teams\Models\RosterEntry;
 use App\Modules\Teams\Models\Team;
 use App\Modules\Teams\Models\TeamManager;
+use App\Modules\Teams\Support\ManagedTeams;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
 use App\Modules\Tenancy\Enums\Plan;
@@ -133,18 +135,22 @@ describe('invitation by the organizer', function () {
 
     it('does not count managers in the user limit of the package', function () {
         $organization = CurrentOrganization::get();
-        $organization->update(['limits' => ['max_users' => 1]]);
+        $organization->update(['limits' => ['max_users' => 2]]);
         CurrentOrganization::set($organization->fresh());
 
-        panelUser(Role::Admin);
         managerFor(Team::factory()->create());
+        managerFor(Team::factory()->create());
+        $admin = panelUser(Role::Admin);
 
-        $this->actingAs(panelUser(Role::Admin))
+        // Dois gestores + 1 administrador: só o administrador conta, então ainda cabe mais um da equipe interna...
+        $this->actingAs($admin)
             ->post(route('panel.users.store'), ['name' => 'Novo', 'email' => 'novo@exemplo.com', 'password' => 'senha-segura-1', 'role' => 'organizer'])
-            ->assertSessionHas('error');
+            ->assertSessionHas('success');
 
-        // O limite continua valendo só para a equipe interna (2 admins já passaram do máximo de 1), mas o gestor não ocupou vaga.
-        expect(Membership::query()->where('role', Role::TeamManager)->count())->toBe(1);
+        // ...e o próximo já passa do limite de 2.
+        $this->actingAs($admin)
+            ->post(route('panel.users.store'), ['name' => 'Outro', 'email' => 'outro@exemplo.com', 'password' => 'senha-segura-1', 'role' => 'organizer'])
+            ->assertSessionHas('error');
     });
 
     it('resends the invitation and removes the manager, dropping the role with the last team', function () {
@@ -206,7 +212,7 @@ describe('what the manager sees', function () {
     function managedSetup(): array
     {
         ['stage' => $stage, 'entries' => $entries] = fixtureDivision(2);
-        app(App\Modules\Matches\Actions\GenerateStageFixtures::class)->handle($stage);
+        app(GenerateStageFixtures::class)->handle($stage);
         $game = Game::query()->where('stage_id', $stage->id)->firstOrFail();
 
         return ['team' => $entries[0]->team, 'entry' => $entries[0], 'game' => $game, 'manager' => managerFor($entries[0]->team)];
@@ -215,7 +221,7 @@ describe('what the manager sees', function () {
     it('lists only the games of the linked teams', function () {
         ['manager' => $manager, 'game' => $game] = managedSetup();
         ['stage' => $otherStage] = fixtureDivision(2);
-        app(App\Modules\Matches\Actions\GenerateStageFixtures::class)->handle($otherStage);
+        app(GenerateStageFixtures::class)->handle($otherStage);
 
         $this->actingAs($manager)->get(route('manager.games.index', ['filtro' => 'all']))
             ->assertOk()
@@ -249,7 +255,7 @@ describe('what the manager sees', function () {
     it('hides other teams: entry, game and roster answer 404', function () {
         ['manager' => $manager] = managedSetup();
         ['entries' => $others, 'stage' => $stage] = fixtureDivision(2);
-        app(App\Modules\Matches\Actions\GenerateStageFixtures::class)->handle($stage);
+        app(GenerateStageFixtures::class)->handle($stage);
         $foreignGame = Game::query()->where('stage_id', $stage->id)->firstOrFail();
 
         $this->actingAs($manager)->get(route('manager.entries.show', $others[0]))->assertNotFound();
@@ -277,5 +283,5 @@ describe('what the manager sees', function () {
 
 function ManagedIds(User $user): array
 {
-    return App\Modules\Teams\Support\ManagedTeams::ids($user);
+    return ManagedTeams::ids($user);
 }

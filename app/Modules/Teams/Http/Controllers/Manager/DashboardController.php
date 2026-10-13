@@ -10,6 +10,7 @@ use App\Modules\Teams\Models\Team;
 use App\Modules\Teams\Support\ManagedTeams;
 use App\Modules\Teams\Support\ManagerGameRow;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -58,9 +59,9 @@ class DashboardController extends Controller
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, Entry>  $mine
+     * @param  Collection<string, Entry>  $mine
      */
-    private function mine(Game $game, $mine): Entry
+    private function mine(Game $game, Collection $mine): Entry
     {
         return $mine->get($game->home_entry_id) ?? $mine->get($game->away_entry_id) ?? abort(404);
     }
