@@ -18,7 +18,8 @@ final class SportProfiles
                 'lineup' => ['max_starters' => 5, 'max_bench' => 9, 'max_staff' => 3],
             ], teamFoulLimit: 5),
             // Vôlei: placar em sets (melhor de 5; 25 pontos, decisivo de 15; vantagem mínima de 2), sem relógio.
-            // Tabela: 3-0/3-1 = 3 pontos; 3-2 = 2 para o vencedor e 1 para o perdedor. W.O. = 3-0 em sets.
+            // Cada equipe tem 2 pedidos de tempo por set. Tabela: 3-0/3-1 = 3 pontos; 3-2 = 2 para o vencedor
+            // e 1 para o perdedor. W.O. = 3-0 em sets.
             'volleyball' => new SportProfile('volleyball', 'Vôlei', [], [
                 'points' => ['win' => 3, 'draw' => 0, 'loss' => 0],
                 'tiebreakers' => ['wins', 'set_ratio', 'point_ratio', 'head_to_head', 'draw'],
@@ -26,7 +27,7 @@ final class SportProfiles
                 'walkover' => ['winner_goals' => 3, 'loser_goals' => 0],
                 'substitutions' => ['max' => 99, 'max_windows' => 99, 'allow_reentry' => true],
                 'lineup' => ['max_starters' => 6, 'max_bench' => 6, 'max_staff' => 3],
-            ], scoreModel: 'sets'),
+            ], scoreModel: 'sets', timeoutGroups: [1, 2, 3, 4, 5], timeoutLimits: [1 => 2, 2 => 2, 3 => 2, 4 => 2, 5 => 2]),
             // Basquete (FIBA): 4 quartos de 10 min + prorrogações de 5 min, relógio regressivo que para e volta,
             // pontos de 1/2/3, 5 faltas por atleta (eliminado) e 5 faltas de equipe por quarto (prorrogação segue o 4º).
             // Pedidos de tempo por equipe: 2 na 1ª metade (quartos 1-2), 3 na 2ª (quartos 3-4) e 1 por prorrogação.

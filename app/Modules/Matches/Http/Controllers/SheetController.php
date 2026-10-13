@@ -44,7 +44,9 @@ class SheetController extends Controller
 
         $state = $buildSheet->handle($game);
         $open = ! $game->status->isDecided();
-        $currentPeriod = max(1, (int) (PublicGameSnapshot::for($game)['clock']['period'] ?? 1));
+        $currentPeriod = $game->sport()->profile()->scoreModel === 'sets'
+            ? max(1, count($game->sets ?? []))
+            : max(1, (int) (PublicGameSnapshot::for($game)['clock']['period'] ?? 1));
 
         $team = function (?Entry $entry) use ($game, $state, $discipline, $currentPeriod): ?array {
             if ($entry === null) {

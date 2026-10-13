@@ -8,6 +8,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 - Fases 1–6: competições, súmula, regras, mata-mata, portal público, overlays do OBS, inscrição online, carteirinhas e
   relatórios, pacotes/recursos/limites, onboarding de organizações, domínios próprios, marca própria, termos e privacidade.
 - Fase 7: multiesporte (futsal, vôlei, basquete).
+- Vôlei: pedidos de tempo (2 por equipe em cada set, com contador na súmula e suporte à fila offline).
 - Fase 8: estatísticas públicas, widgets embutíveis, app do mesário (PWA), avisos push e compartilhamento.
 - Fase 9: gestor de equipe (login, painel `/gestor`, escalação e esquema tático, elenco, reforços, avisos por e-mail);
   validação do Reverb e do Web Push de verdade no CI; **fila offline da súmula** (PR 33).
@@ -19,7 +20,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 ## Pendências conhecidas (por ordem sugerida)
 - **Parametrização** (comunicações, ativar/desativar funcionalidades, janelas e limites): levantamento e plano em `docs/10-parametrizacao.md` — começar pela tela Painel > Comunicações.
 - Basquete: faltas técnicas/antidesportivas e relógio de posse (24 s). Pedidos de tempo entregues (ainda sem mostrar no overlay/página pública e sem parar o relógio sozinho).
-- Vôlei: limite de substituições por set, rodízio/líbero, pedidos de tempo.
+- Vôlei: limite de substituições por set e rodízio/líbero.
 - Fila offline: escalação, pênaltis e resultado rápido ainda exigem internet; a página não abre sem internet se for
   recarregada (o service worker não guarda páginas por causa da LGPD).
 - Gestor de equipe: avisos por push/WhatsApp (hoje só e-mail).
