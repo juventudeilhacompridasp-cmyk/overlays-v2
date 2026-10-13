@@ -24,7 +24,8 @@ class MemberStoreRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class, 'email')],
             'password' => ['required', 'string', Password::min(8)],
-            'role' => ['required', Rule::enum(Role::class)],
+            // O gestor de equipe é convidado pela tela da equipe (precisa do vínculo com ela), não aqui.
+            'role' => ['required', Rule::enum(Role::class)->only(array_filter(Role::cases(), fn (Role $role) => $role->usesPanel()))],
         ];
     }
 

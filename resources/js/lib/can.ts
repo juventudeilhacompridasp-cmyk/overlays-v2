@@ -7,7 +7,7 @@ export function useCan(ability: Ability): boolean {
     return Boolean(usePage().props.auth.can[ability]);
 }
 
-export type FeatureKey = 'online_registration' | 'athlete_cards' | 'reports' | 'overlays' | 'custom_domain' | 'white_label' | 'embeds' | 'push';
+export type FeatureKey = 'online_registration' | 'athlete_cards' | 'reports' | 'overlays' | 'custom_domain' | 'white_label' | 'embeds' | 'push' | 'team_portal';
 
 /** O pacote da organização inclui o recurso? Só para esconder menus/botões; o servidor barra de verdade. */
 export function useFeature(feature: FeatureKey): boolean {

@@ -19,7 +19,7 @@ class MemberController extends Controller
 {
     public function index(Request $request): Response
     {
-        $members = Membership::query()->with('user:id,name,email')->get()
+        $members = Membership::query()->where('role', '!=', Role::TeamManager)->with('user:id,name,email')->get()
             ->sortBy(fn (Membership $membership) => mb_strtolower($membership->user->name))
             ->values()
             ->map(fn (Membership $membership) => [
@@ -32,7 +32,7 @@ class MemberController extends Controller
 
         return Inertia::render('Panel/Users/Index', [
             'members' => $members,
-            'roles' => collect(Role::cases())->map(fn (Role $role) => [
+            'roles' => collect(Role::cases())->filter(fn (Role $role) => $role->usesPanel())->map(fn (Role $role) => [
                 'value' => $role->value,
                 'label' => $role->label(),
                 'abilities' => array_map(fn (Ability $ability) => $ability->label(), $role->abilities()),
@@ -58,7 +58,9 @@ class MemberController extends Controller
 
     public function update(Request $request, Membership $membership, ManageMembers $members): RedirectResponse
     {
-        $validated = $request->validate(['role' => ['required', Rule::enum(Role::class)]]);
+        $validated = $request->validate(['role' => ['required', Rule::enum(Role::class)->only(array_filter(Role::cases(), fn (Role $role) => $role->usesPanel()))]]);
+
+        abort_if($membership->role === Role::TeamManager, 404);
 
         try {
             $members->changeRole($membership, Role::from($validated['role']));
@@ -73,6 +75,8 @@ class MemberController extends Controller
 
     public function destroy(Membership $membership, ManageMembers $members): RedirectResponse
     {
+        abort_if($membership->role === Role::TeamManager, 404);
+
         try {
             $members->remove($membership);
         } catch (InvalidArgumentException $exception) {

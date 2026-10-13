@@ -12,6 +12,7 @@ use App\Modules\Portal\Http\Controllers\PushController;
 use App\Modules\Registration\Http\Controllers\ApplyController;
 use App\Modules\Registration\Http\Controllers\ManageController;
 use App\Modules\Tenancy\Http\Controllers\LegalAcceptController;
+use App\Modules\Tenancy\Enums\Role;
 use Illuminate\Support\Facades\Route;
 
 // Portal público (sem login): só edições publicadas.
@@ -65,7 +66,8 @@ Route::get('/overlay/{channel:token}/{overlay}', [OverlayController::class, 'sho
 Route::get('/jogos/{game}', [PublicGameController::class, 'show'])->name('public.games.show');
 Route::get('/jogos/{game}/estado', [PublicGameController::class, 'state'])->name('public.games.state');
 
-Route::get('/dashboard', fn () => redirect()->route('panel.dashboard'))
+// Destino padrão depois do login: cada papel vai para o seu painel (o gestor de equipe tem o próprio).
+Route::get('/dashboard', fn () => redirect()->route(request()->user()?->role() === Role::TeamManager ? 'manager.dashboard' : 'panel.dashboard'))
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -82,5 +84,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/panel.php';
+require __DIR__.'/manager.php';
 require __DIR__.'/platform.php';
 require __DIR__.'/auth.php';

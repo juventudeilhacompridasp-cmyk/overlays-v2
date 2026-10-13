@@ -19,7 +19,7 @@ final class ManageMembers
     {
         $max = CurrentOrganization::get()?->limit('max_users');
 
-        if ($max !== null && Membership::query()->count() >= $max) {
+        if ($max !== null && Membership::query()->where('role', '!=', Role::TeamManager)->count() >= $max) {
             throw new InvalidArgumentException("O pacote da organização permite no máximo {$max} usuários.");
         }
 
@@ -35,6 +35,10 @@ final class ManageMembers
 
     public function changeRole(Membership $membership, Role $role): Membership
     {
+        if ($role === Role::TeamManager || $membership->role === Role::TeamManager) {
+            throw new InvalidArgumentException('O gestor de equipe é gerenciado na tela da equipe.');
+        }
+
         if ($membership->role === Role::Admin && $role !== Role::Admin) {
             $this->ensureAnotherAdmin($membership);
         }

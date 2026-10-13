@@ -21,6 +21,7 @@ use App\Modules\Teams\Http\Controllers\PersonController;
 use App\Modules\Teams\Http\Controllers\PersonPhotoController;
 use App\Modules\Teams\Http\Controllers\RosterController;
 use App\Modules\Teams\Http\Controllers\TeamController;
+use App\Modules\Teams\Http\Controllers\TeamManagerController;
 use App\Modules\Teams\Http\Controllers\TeamLogoController;
 use App\Modules\Tenancy\Http\Controllers\LegalController;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
@@ -39,6 +40,11 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::resource('teams', TeamController::class)->except('show');
         Route::post('teams/{team}/logo', [TeamLogoController::class, 'store'])->name('teams.logo.store');
         Route::delete('teams/{team}/logo', [TeamLogoController::class, 'destroy'])->name('teams.logo.destroy');
+        Route::middleware('feature:team_portal')->group(function () {
+            Route::post('teams/{team}/managers', [TeamManagerController::class, 'store'])->name('teams.managers.store');
+            Route::post('team-managers/{teamManager}/resend', [TeamManagerController::class, 'resend'])->name('teams.managers.resend');
+            Route::delete('team-managers/{teamManager}', [TeamManagerController::class, 'destroy'])->name('teams.managers.destroy');
+        });
         Route::resource('venues', VenueController::class)->except('show');
         Route::resource('people', PersonController::class)->except('show');
         Route::post('people/{person}/photo', [PersonPhotoController::class, 'store'])->name('people.photo.store');
