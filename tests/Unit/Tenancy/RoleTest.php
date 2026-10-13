@@ -11,7 +11,7 @@ it('gives each role exactly the abilities of its area', function (Role $role, ar
     }
 })->with([
     'administrador' => [Role::Admin, Ability::cases()],
-    'organizador' => [Role::Organizer, [Ability::ManageCompetitions, Ability::ManageRegistry, Ability::OperateGames]],
+    'organizador' => [Role::Organizer, [Ability::ManageCompetitions, Ability::ManageRegistry, Ability::OperateGames, Ability::ManageMarket]],
     'operador' => [Role::Operator, [Ability::OperateGames]],
     'consulta' => [Role::Viewer, []],
     'gestor de equipe' => [Role::TeamManager, []],

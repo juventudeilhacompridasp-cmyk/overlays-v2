@@ -3,7 +3,9 @@
 namespace App\Modules\Market\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Competitions\Enums\EntryStatus;
 use App\Modules\Competitions\Enums\Sport;
+use App\Modules\Competitions\Models\Entry;
 use App\Modules\Market\Enums\RequestStatus;
 use App\Modules\Market\Models\ContactRequest;
 use App\Modules\Market\Models\MarketBlock;
@@ -13,6 +15,8 @@ use App\Modules\Market\Support\MarketCard;
 use App\Modules\Market\Support\MarketOptions;
 use App\Modules\Market\Support\MarketSearch;
 use App\Modules\Market\Support\MarketSettings;
+use App\Modules\Registration\Enums\RegistrationStatus;
+use App\Modules\Registration\Models\Registration;
 use App\Modules\Teams\Support\ManagedTeams;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -42,7 +46,31 @@ class MarketController extends Controller
         $videos = MarketMedia::query()->whereIn('profile_id', $page->pluck('id'))->orderBy('sort')->get()->groupBy('profile_id');
         $blocked = MarketBlock::query()->whereIn('team_id', $teamIds)->whereIn('profile_id', $page->pluck('id'))->get()->groupBy('profile_id');
 
-        $profiles = $page->through(function (MarketProfile $profile) use ($requests, $blocked, $videos, $teams) {
+        // Do contato aceito ao elenco: inscrições da equipe (para abrir o reforço) e pedido de reforço já aberto.
+        $entries = Entry::query()->with(['team:id,name', 'division.season.competition'])->whereIn('team_id', $teamIds)->where('status', '!=', EntryStatus::Withdrawn->value)->get()->groupBy('team_id');
+        $registrations = Registration::query()->whereIn('id', ContactRequest::query()->whereIn('team_id', $teamIds)->whereNotNull('registration_id')->select('registration_id'))->get()->keyBy('id');
+        $hiring = function (ContactRequest $item, array $row) use ($entries, $registrations): array {
+            if ($item->status !== RequestStatus::Accepted) {
+                return $row;
+            }
+
+            $registration = $registrations->get($item->registration_id);
+            $open = $registration !== null && in_array($registration->status, [RegistrationStatus::Draft, RegistrationStatus::Returned, RegistrationStatus::Submitted], true);
+
+            return [
+                ...$row,
+                'hiring' => [
+                    'entries' => $entries->get($item->team_id, collect())->map(fn (Entry $entry) => [
+                        'id' => $entry->getKey(),
+                        'label' => "{$entry->division->season->competition->name} · {$entry->division->season->name} · {$entry->division->name}",
+                    ])->values(),
+                    'registration_url' => $open ? $registration->manageUrl() : null,
+                    'registration_status' => $registration?->status->value,
+                ],
+            ];
+        };
+
+        $profiles = $page->through(function (MarketProfile $profile) use ($requests, $blocked, $videos, $teams, $hiring) {
             $mine = $requests->get($profile->getKey(), collect());
             $blockedTeams = $blocked->get($profile->getKey(), collect())->pluck('team_id')->all();
             $busy = $mine->filter(fn (ContactRequest $item) => $item->isOpen() || in_array($item->status, [RequestStatus::Accepted, RequestStatus::Declined], true))->pluck('team_id')->all();
@@ -52,7 +80,7 @@ class MarketController extends Controller
                 'teams_available' => $teams->reject(fn ($team) => in_array($team->getKey(), [...$blockedTeams, ...$busy], true))
                     ->map(fn ($team) => ['id' => $team->getKey(), 'name' => $team->name])->values(),
                 'videos' => $videos->get($profile->getKey(), collect())->map(fn (MarketMedia $video) => $video->toCard())->values(),
-                'requests' => $mine->map(fn (ContactRequest $item) => MarketCard::request($item, $profile))->values(),
+                'requests' => $mine->map(fn (ContactRequest $item) => $hiring($item, MarketCard::request($item, $profile)))->values(),
             ];
         });
 
@@ -64,7 +92,7 @@ class MarketController extends Controller
             'my_requests' => ContactRequest::query()->with(['team:id,name', 'profile.user:id,name'])
                 ->whereIn('team_id', $teamIds)->latest()->limit(30)->get()
                 ->map(fn (ContactRequest $item) => [
-                    ...MarketCard::request($item, $item->profile),
+                    ...$hiring($item, MarketCard::request($item, $item->profile)),
                     'name' => filled($item->profile->display_name) ? $item->profile->display_name : $item->profile->user->name,
                 ])->values(),
             'options' => [

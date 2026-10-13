@@ -5,6 +5,7 @@ namespace App\Modules\Market\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Market\Actions\AnswerContactRequest;
 use App\Modules\Market\Actions\BlockTeam;
+use App\Modules\Market\Actions\FileMarketReport;
 use App\Modules\Market\Models\ContactRequest;
 use App\Modules\Market\Models\MarketBlock;
 use Illuminate\Http\RedirectResponse;
@@ -35,6 +36,21 @@ class AthleteRequestController extends Controller
         $blocks->block($contactRequest->profile, $contactRequest->team);
 
         return back()->with('success', 'Equipe bloqueada: ela não vê mais o seu perfil.');
+    }
+
+    public function report(Request $request, ContactRequest $contactRequest, FileMarketReport $reports): RedirectResponse
+    {
+        $this->own($request, $contactRequest);
+
+        $data = $request->validate(['reason' => ['required', 'string', 'min:10', 'max:500']], [], ['reason' => 'motivo']);
+
+        try {
+            $reports->byAthlete($request->user(), $contactRequest->profile, $contactRequest->team, trim($data['reason']));
+        } catch (InvalidArgumentException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return back()->with('success', 'Denúncia enviada à organização.');
     }
 
     public function unblock(Request $request, MarketBlock $block, BlockTeam $blocks): RedirectResponse

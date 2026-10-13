@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\User;
 use App\Modules\Broadcast\Listeners\ShowLowerThird;
 use App\Modules\Broadcast\Listeners\SyncOverlays;
+use App\Modules\Market\Listeners\MarkHiredProfiles;
 use App\Modules\Matches\Events\GameEventRecorded;
 use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
@@ -12,6 +13,7 @@ use App\Modules\Portal\Push\GamePushNotifier;
 use App\Modules\Portal\Push\PushSender;
 use App\Modules\Portal\Push\WebPushSender;
 use App\Modules\Portal\Support\PublicTheme;
+use App\Modules\Registration\Events\SupplementApproved;
 use App\Modules\Teams\Support\GameNotices;
 use App\Modules\Tenancy\Actions\ManageMembers;
 use App\Modules\Tenancy\Enums\Ability;
@@ -88,6 +90,9 @@ class AppServiceProvider extends ServiceProvider
                     'footer' => 'Se você não criou uma conta, ignore esta mensagem.',
                 ]);
         });
+
+        // Mercado de jogadores: reforço aprovado tira da busca quem foi contratado.
+        Event::listen(SupplementApproved::class, MarkHiredProfiles::class);
 
         // Transmissão (overlays do OBS): reage ao placar ao vivo e aos lances da súmula.
         Event::listen(GameUpdated::class, SyncOverlays::class);

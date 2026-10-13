@@ -9,6 +9,7 @@ enum Ability: string
     case ManageRegistry = 'manage-registry';
     case OperateGames = 'operate-games';
     case ManageUsers = 'manage-users';
+    case ManageMarket = 'manage-market';
 
     public function label(): string
     {
@@ -17,6 +18,7 @@ enum Ability: string
             self::ManageRegistry => 'Cadastros (equipes, atletas, comissão, estádios, elencos)',
             self::OperateGames => 'Operar jogos (escalação, súmula, cronômetro, pênaltis, encerrar)',
             self::ManageUsers => 'Usuários e papéis',
+            self::ManageMarket => 'Mercado de jogadores (denúncias, suspensão de perfis e cota de pedidos)',
         };
     }
 }

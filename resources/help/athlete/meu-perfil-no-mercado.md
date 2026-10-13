@@ -43,6 +43,11 @@ Quando uma equipe quer falar com você, chega um e-mail e o pedido aparece em **
 - **Bloquear equipe** recusa os pedidos dela, esconde o seu perfil para ela e retira o contato que ela viu. Dá para desbloquear na mesma tela.
 - Pedidos sem resposta expiram em 14 dias.
 
+Algum comportamento inadequado de uma equipe? Use **Denunciar** no pedido: a organização analisa. Se ela suspender o seu perfil, o motivo aparece no topo da tela.
+
+## Contratado
+Se uma equipe te incluir no elenco, o perfil sai da busca e aparece o aviso “contratado”. Ficou sem time de novo? Clique em **Voltar ao Mercado**.
+
 Sete dias antes de o perfil expirar você recebe um aviso por e-mail para renová-lo.
 
 ## Documentos e CPF

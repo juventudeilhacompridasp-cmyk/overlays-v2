@@ -15,8 +15,9 @@ final class PublishMarketProfile
 {
     public function handle(MarketProfile $profile): MarketProfile
     {
-        if (in_array($profile->status, [ProfileStatus::Signed, ProfileStatus::Suspended], true)) {
-            throw new InvalidArgumentException($profile->status === ProfileStatus::Signed ? 'Você já está contratado: o perfil não volta ao Mercado.' : 'Este perfil está suspenso pela organização.');
+        // Contratado pode voltar ao Mercado se ficar sem equipe; suspenso só a organização reativa.
+        if ($profile->status === ProfileStatus::Suspended) {
+            throw new InvalidArgumentException('Este perfil está suspenso pela organização.');
         }
 
         if (! $profile->user->hasVerifiedEmail()) {

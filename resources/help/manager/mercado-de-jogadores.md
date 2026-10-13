@@ -33,3 +33,9 @@ No cartão do jogador escreva uma mensagem curta (até 300 caracteres) e clique 
 Em **Meus pedidos** ficam todos os pedidos das suas equipes. Quando o jogador **aceita**, aparece só o canal que ele escolheu (WhatsApp ou e-mail). Você pode **cancelar** um pedido, e o contato some. O contato nunca vai por e-mail e outras equipes não veem os seus pedidos.
 
 Combinado o jogo, inclua o atleta pelo **pedido de reforço** da inscrição (ele preenche CPF e documentos pelo link pessoal).
+
+## Do contato ao elenco
+Com o contato **aceito**, use **Convidar para o elenco** no pedido: escolha a inscrição da sua equipe (a edição) e o sistema abre o **pedido de reforço**. Copie o link do pedido e envie ao atleta, que preenche CPF e documentos. Quando a organização aprova o reforço, o jogador passa a **contratado** e sai da busca.
+
+## Denunciar um perfil
+Perfil com foto de outra pessoa ou conteúdo impróprio? Use **Denunciar perfil** no cartão e conte o motivo. A organização analisa; você não precisa fazer mais nada.

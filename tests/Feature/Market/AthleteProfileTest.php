@@ -257,12 +257,16 @@ describe('publishing', function () {
         expect($profile->fresh()->status)->toBe(ProfileStatus::Published);
     });
 
-    it('refuses to publish a suspended or signed profile', function (ProfileStatus $status) {
-        [$athlete, $profile] = marketAthlete([...completeMarketProfile(), 'status' => $status]);
+    it('refuses to publish a suspended profile, but lets a hired athlete come back', function () {
+        [$athlete, $profile] = marketAthlete([...completeMarketProfile(), 'status' => ProfileStatus::Suspended]);
 
         $this->actingAs($athlete)->post(route('athlete.publish'))->assertSessionHas('error');
-        expect($profile->fresh()->status)->toBe($status);
-    })->with([ProfileStatus::Suspended, ProfileStatus::Signed]);
+        expect($profile->fresh()->status)->toBe(ProfileStatus::Suspended);
+
+        $profile->update(['status' => ProfileStatus::Signed]);
+        $this->actingAs($athlete)->post(route('athlete.publish'))->assertSessionHas('success');
+        expect($profile->fresh()->status)->toBe(ProfileStatus::Published);
+    });
 
     it('pauses profiles that were not revalidated in time', function () {
         [, $stale] = marketAthlete([...completeMarketProfile(), 'status' => ProfileStatus::Published, 'expires_at' => now()->subDay()]);
