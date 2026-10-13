@@ -1,8 +1,11 @@
 <?php
 
+use App\Modules\Arts\Models\ArtAsset;
 use App\Modules\Arts\Models\ArtTemplate;
 use App\Modules\Arts\Support\ArtStyle;
+use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Enums\GameStatus;
+use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameLineup;
 use App\Modules\Teams\Models\Person;
 use App\Modules\Teams\Models\Team;
@@ -10,6 +13,7 @@ use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Plan;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -54,7 +58,8 @@ describe('game list', function () {
         expect(collect($props['upcoming'])->pluck('id'))->toContain($game->id)
             ->and(collect($props['recent'])->pluck('id'))->toContain($finished->id)
             ->and($props['presets'])->not->toBeEmpty()
-            ->and($props['formats'])->toHaveCount(5);
+            ->and($props['formats'])->toHaveCount(6)
+            ->and(collect($props['kinds'])->pluck('value')->all())->toBe(['preview', 'result', 'lineup', 'round', 'cover']);
     });
 });
 
@@ -156,6 +161,75 @@ describe('editor data', function () {
     });
 });
 
+describe('round and cover data', function () {
+    /** Divisão de 4 equipes: rodada 1 inteira em 09/10; rodada 2 com um jogo em 09/10 e outro em 10/10. */
+    function artRoundGames(): array
+    {
+        ['stage' => $stage] = fixtureDivision(4);
+        app(GenerateStageFixtures::class)->handle($stage);
+        $byRound = Game::query()->where('stage_id', $stage->id)->orderBy('round')->orderBy('number')->get()->groupBy('round');
+        $first = $byRound[1]->values();
+        $second = $byRound[2]->values();
+        $first[0]->update(['scheduled_at' => '2026-10-09 18:45:00']);
+        $first[1]->update(['scheduled_at' => '2026-10-09 20:45:00']);
+        $second[0]->update(['scheduled_at' => '2026-10-09 21:45:00']);
+        $second[1]->update(['scheduled_at' => '2026-10-10 18:45:00']);
+
+        return [$first->all(), $second->all()];
+    }
+
+    it('lists the games of the same day by default, in time order, with team names and the date', function () {
+        [, $second] = artRoundGames();
+
+        $data = artProps(test()->actingAs(panelUser())->get(route('panel.arts.editor', ['game' => $second[0]->id, 'kind' => 'round'])))['data'];
+
+        expect($data['kind'])->toBe('round')
+            ->and($data['scope'])->toBe('day')
+            ->and($data['games'])->toHaveCount(3)
+            ->and(collect($data['games'])->pluck('date')->all())->toBe(['2026-10-09T18:45', '2026-10-09T20:45', '2026-10-09T21:45'])
+            ->and($data['games'][0]['home']['name'])->toBeString()
+            ->and($data['games'][0])->toHaveKeys(['venue', 'status', 'decided']);
+    });
+
+    it('can list the games of the same round instead', function () {
+        [, $second] = artRoundGames();
+
+        $data = artProps(test()->actingAs(panelUser())->get(route('panel.arts.editor', ['game' => $second[0]->id, 'kind' => 'round', 'scope' => 'round'])))['data'];
+
+        expect($data['scope'])->toBe('round')
+            ->and(collect($data['games'])->pluck('id')->sort()->values()->all())->toBe(collect($second)->pluck('id')->sort()->values()->all());
+    });
+
+    it('limits the number of games and never leaks other editions or organizations', function () {
+        [$first] = artRoundGames();
+        $other = Organization::factory()->create();
+        CurrentOrganization::using($other, function () {
+            ['stage' => $stage] = fixtureDivision(2);
+            app(GenerateStageFixtures::class)->handle($stage);
+            Game::query()->where('stage_id', $stage->id)->update(['scheduled_at' => '2026-10-09 17:00:00']);
+        });
+
+        $ids = collect(artProps(test()->actingAs(panelUser())->get(route('panel.arts.editor', ['game' => $first[0]->id, 'kind' => 'round'])))['data']['games'])->pluck('id');
+
+        expect($ids->count())->toBeLessThanOrEqual(8)
+            ->and(Game::query()->whereIn('id', $ids)->count())->toBe($ids->count());
+    });
+
+    it('only sends the games for the round art, and the cover needs no extra data', function () {
+        [$first] = artRoundGames();
+        $admin = panelUser();
+
+        expect(artProps(test()->actingAs($admin)->get(route('panel.arts.editor', ['game' => $first[0]->id, 'kind' => 'preview'])))['data']['games'])->toBe([]);
+
+        $cover = artProps(test()->actingAs($admin)->get(route('panel.arts.editor', ['game' => $first[0]->id, 'kind' => 'cover'])))['data'];
+        expect($cover['kind'])->toBe('cover')
+            ->and($cover['competition'])->toBeString()
+            ->and($cover['division'])->toBeString()
+            ->and($cover['games'])->toBe([])
+            ->and($cover['lineup'])->toBeNull();
+    });
+});
+
 describe('templates', function () {
     it('are saved with a sanitized style and the resolved format', function () {
         ['game' => $game] = sheetGame();
@@ -226,5 +300,62 @@ describe('templates', function () {
         test()->actingAs($organizer)->patch(route('panel.arts.templates.update', $foreign), ['name' => 'Roubado', 'format' => 'square', 'style' => ['a' => 1]])->assertNotFound();
         test()->actingAs($organizer)->delete(route('panel.arts.templates.destroy', $foreign))->assertNotFound();
         expect(artProps(test()->actingAs($organizer)->get(route('panel.arts.index')))['templates'])->toBe([]);
+    });
+});
+
+describe('images of the organization', function () {
+    function artImage(string $name = 'fundo.png', int $size = 300): UploadedFile
+    {
+        return UploadedFile::fake()->image($name, $size, $size);
+    }
+
+    it('stores a re-encoded image and lists it for the editor', function () {
+        $admin = panelUser(Role::Admin);
+
+        test()->actingAs($admin)->post(route('panel.arts.assets.store'), ['file' => artImage(), 'kind' => 'background', 'name' => 'Estádio'])->assertSessionHas('success');
+
+        $asset = ArtAsset::query()->firstOrFail();
+        expect($asset->kind)->toBe('background')->and($asset->name)->toBe('Estádio');
+
+        $props = artProps(test()->actingAs($admin)->get(route('panel.arts.index')));
+        expect($props['assets'])->toHaveCount(1)->and($props['assets'][0]['id'])->toBe($asset->getKey());
+
+        test()->actingAs($admin)->get(route('panel.arts.assets.file', $asset))->assertOk()->assertHeader('Content-Type', 'image/webp');
+    });
+
+    it('only organizers upload; any member reads', function () {
+        test()->actingAs(panelUser(Role::Viewer))->post(route('panel.arts.assets.store'), ['file' => artImage(), 'kind' => 'logo'])->assertSessionHas('error');
+        expect(ArtAsset::query()->count())->toBe(0);
+    });
+
+    it('refuses a file that is not an image and an unknown kind', function () {
+        $admin = panelUser(Role::Admin);
+
+        test()->actingAs($admin)->post(route('panel.arts.assets.store'), ['file' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf'), 'kind' => 'logo'])->assertSessionHasErrors('file');
+        test()->actingAs($admin)->post(route('panel.arts.assets.store'), ['file' => artImage(), 'kind' => 'video'])->assertSessionHasErrors('kind');
+    });
+
+    it('stops at the limit and deletes with the file', function () {
+        $admin = panelUser(Role::Admin);
+
+        foreach (range(1, ArtAsset::LIMIT) as $i) {
+            test()->actingAs($admin)->post(route('panel.arts.assets.store'), ['file' => artImage("a{$i}.png", 40), 'kind' => 'badge']);
+        }
+        expect(ArtAsset::query()->count())->toBe(ArtAsset::LIMIT);
+
+        test()->actingAs($admin)->post(route('panel.arts.assets.store'), ['file' => artImage(), 'kind' => 'badge'])->assertSessionHasErrors('file');
+
+        $asset = ArtAsset::query()->firstOrFail();
+        test()->actingAs($admin)->delete(route('panel.arts.assets.destroy', $asset))->assertSessionHas('success');
+        expect(ArtAsset::query()->count())->toBe(ArtAsset::LIMIT - 1);
+    });
+
+    it('keeps a chosen background and tint in the saved style', function () {
+        $style = ArtStyle::sanitize(['background' => ['image' => str_repeat('A', 26), 'tint' => '#0b3b8c', 'tint_opacity' => 0.4, 'image_fit' => 'contain'], 'logo' => ['asset' => 'not-an-id', 'size' => 99]]);
+
+        expect($style['background']['image'])->toBe(str_repeat('A', 26))
+            ->and($style['background']['tint_opacity'])->toBe(0.4)
+            ->and($style['logo']['asset'])->toBeNull()
+            ->and($style['logo']['size'])->toBeLessThanOrEqual(30);
     });
 });

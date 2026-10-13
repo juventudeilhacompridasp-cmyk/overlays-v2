@@ -1,5 +1,6 @@
 import { Badge, Button, Card, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
+import { ensureFonts } from '@/lib/artFonts';
 import { ArtData, ArtStyle, buildArt } from '@/lib/arts';
 import { drawArt, loadImages } from '@/lib/artsDraw';
 import type { RequestPayload } from '@inertiajs/core';
@@ -9,19 +10,22 @@ import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 type Option = { value: string; label: string };
 type Format = { key: string; width: number; height: number };
 type Preset = { key: string; name: string; format: string; style: ArtStyle };
+type Asset = { id: string; kind: string; name: string; url: string; width: number; height: number };
 type Template = { id: string; name: string; format: string; width: number; height: number; style: ArtStyle };
 
 interface Props {
     game: { id: string; home: string; away: string; scheduled_at: string | null; status_label: string; competition: string };
-    kind: 'preview' | 'result' | 'lineup';
+    kind: 'preview' | 'result' | 'lineup' | 'round' | 'cover';
     kinds: Option[];
     data: ArtData;
     initial: { template_id: string | null; preset: string | null; name: string; format: Format; style: ArtStyle };
     templates: Template[];
     presets: Preset[];
     formats: (Option & { width: number; height: number })[];
-    options: { fonts: Option[]; variants: Option[]; patterns: Option[]; crest_shapes: Option[]; weights: Option[]; elements: Option[]; limits: { min: number; max: number } };
+    options: { fonts: Option[]; variants: Option[]; patterns: Option[]; crest_shapes: Option[]; weights: Option[]; elements: Option[]; platforms: Option[]; limits: { min: number; max: number } };
     can_save: boolean;
+    assets: Asset[];
+    asset_kinds: Option[];
 }
 
 const PREVIEW_MAX = 900;
@@ -87,7 +91,37 @@ function Section({ title, children, open = false }: { title: string; children: R
     );
 }
 
-export default function Editor({ game, kind, kinds, data, initial, templates, presets, formats, options, can_save }: Props) {
+/** Escolhe (ou envia) uma imagem da organização: fundo, logotipo ou selo. */
+function AssetPick({ label, kind, assets, value, canUpload, onChange }: { label: string; kind: string; assets: Asset[]; value: string | null; canUpload: boolean; onChange: (value: string | null) => void }) {
+    const own = assets.filter((asset) => asset.kind === kind);
+    const [sending, setSending] = useState(false);
+
+    const upload = (file: File | undefined) => {
+        if (!file) return;
+        setSending(true);
+        router.post(route('panel.arts.assets.store'), { file, kind, name: file.name.replace(/\.[^.]+$/, '') } as unknown as RequestPayload, {
+            forceFormData: true,
+            preserveScroll: true,
+            preserveState: true,
+            only: ['assets', 'flash', 'errors'],
+            onFinish: () => setSending(false),
+        });
+    };
+
+    return (
+        <div className="space-y-1.5">
+            <Pick label={label} value={value ?? ''} options={[{ value: '', label: kind === 'logo' ? 'Logotipo da organização' : 'Nenhuma' }, ...own.map((asset) => ({ value: asset.id, label: asset.name }))]} onChange={(next) => onChange(next === '' ? null : next)} />
+            {canUpload && (
+                <label className="block text-xs text-gray-500">
+                    {sending ? 'Enviando…' : 'Enviar nova imagem (JPG, PNG ou WebP, até 10 MB)'}
+                    <input type="file" accept="image/jpeg,image/png,image/webp" disabled={sending} onChange={(event) => upload(event.target.files?.[0])} className="mt-1 block w-full text-xs" />
+                </label>
+            )}
+        </div>
+    );
+}
+
+export default function Editor({ game, kind, kinds, data, initial, templates, presets, formats, options, can_save, assets, asset_kinds }: Props) {
     const [style, setStyle] = useState<ArtStyle>(initial.style);
     const [format, setFormat] = useState<Format>(initial.format);
     const [name, setName] = useState(initial.name);
@@ -110,12 +144,13 @@ export default function Editor({ game, kind, kinds, data, initial, templates, pr
     const scale = Math.min(1, PREVIEW_MAX / Math.max(format.width, format.height));
     const previewW = Math.round(format.width * scale);
     const previewH = Math.round(format.height * scale);
-    const ops = useMemo(() => buildArt(style, data, previewW, previewH), [style, data, previewW, previewH]);
+    const assetUrls = useMemo(() => Object.fromEntries(assets.map((asset) => [asset.id, asset.url])), [assets]);
+    const ops = useMemo(() => buildArt(style, data, previewW, previewH, assetUrls), [style, data, previewW, previewH, assetUrls]);
 
     useEffect(() => {
         let cancelled = false;
 
-        loadImages(ops, images.current).then(() => {
+        Promise.all([ensureFonts(style), loadImages(ops, images.current)]).then(() => {
             if (!cancelled && canvas.current) drawArt(canvas.current, ops, style, images.current);
         });
 
@@ -124,7 +159,7 @@ export default function Editor({ game, kind, kinds, data, initial, templates, pr
         };
     }, [ops, style]);
 
-    const changeKind = (next: string) => router.reload({ data: { game: game.id, kind: next }, only: ['data', 'kind'] });
+    const changeKind = (next: string, scope = data.scope) => router.reload({ data: { game: game.id, kind: next, scope }, only: ['data', 'kind'] });
 
     const changeFormat = (key: string) => {
         const preset = formats.find((item) => item.value === key);
@@ -137,8 +172,8 @@ export default function Editor({ game, kind, kinds, data, initial, templates, pr
             const full = document.createElement('canvas');
             full.width = format.width;
             full.height = format.height;
-            const fullOps = buildArt(style, data, format.width, format.height);
-            await loadImages(fullOps, images.current);
+            const fullOps = buildArt(style, data, format.width, format.height, assetUrls);
+            await Promise.all([ensureFonts(style), loadImages(fullOps, images.current)]);
             drawArt(full, fullOps, style, images.current);
             const blob = await new Promise<Blob | null>((resolve) => full.toBlob(resolve, 'image/png'));
             if (!blob) return;
@@ -208,6 +243,17 @@ export default function Editor({ game, kind, kinds, data, initial, templates, pr
                                 {format.width} × {format.height} px
                             </span>
                         </div>
+                        {kind === 'round' && (
+                            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
+                                Jogos:
+                                {(['day', 'round'] as const).map((scope) => (
+                                    <button key={scope} type="button" onClick={() => changeKind('round', scope)} className={`rounded-full px-3 py-1 ${data.scope === scope ? 'bg-emerald-600 text-white' : 'bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50'}`}>
+                                        {scope === 'day' ? 'Do mesmo dia' : 'Da mesma rodada'}
+                                    </button>
+                                ))}
+                                <span className="text-xs text-gray-500">{data.games.length} jogo(s), no máximo 8</span>
+                            </div>
+                        )}
                         {kind === 'lineup' && data.lineup === null && <p className="text-sm text-amber-700">Esta partida ainda não tem escalação lançada.</p>}
                     </div>
                 </div>
@@ -265,8 +311,17 @@ export default function Editor({ game, kind, kinds, data, initial, templates, pr
                     </Section>
 
                     <Section title="Textos">
+                        <Field label="Nome da competição na arte" hint="Vazio usa o nome cadastrado (ex.: use “Cajati” em vez do nome completo).">
+                            <Input value={style.text.title} maxLength={60} onChange={(event) => set('text', 'title', event.target.value)} />
+                        </Field>
+                        <Field label="Subtítulo" hint="Ex.: Quartas de final.">
+                            <Input value={style.text.subtitle} maxLength={80} onChange={(event) => set('text', 'subtitle', event.target.value)} />
+                        </Field>
                         <Field label="Título da arte" hint="Vazio usa o padrão do tipo (ex.: Jogo do dia).">
                             <Input value={style.text.headline} maxLength={80} onChange={(event) => set('text', 'headline', event.target.value)} />
+                        </Field>
+                        <Field label="Crédito" hint="Aparece na capa. Ex.: Narração: Fulano.">
+                            <Input value={style.text.credit} maxLength={120} onChange={(event) => set('text', 'credit', event.target.value)} />
                         </Field>
                         <Field label="Rodapé">
                             <Input value={style.text.footer} maxLength={120} onChange={(event) => set('text', 'footer', event.target.value)} />
@@ -296,7 +351,21 @@ export default function Editor({ game, kind, kinds, data, initial, templates, pr
                         )}
                         <Pick label="Padrão" value={style.background.pattern} options={options.patterns} onChange={(value) => set('background', 'pattern', value as ArtStyle['background']['pattern'])} />
                         {style.background.pattern !== 'none' && <Range label="Força do padrão" value={style.background.pattern_opacity} min={0} max={0.4} step={0.01} onChange={(value) => set('background', 'pattern_opacity', value)} />}
+                        <AssetPick label="Foto de fundo" kind="background" assets={assets} value={style.background.image} canUpload={can_save} onChange={(value) => set('background', 'image', value)} />
+                        {style.background.image && (
+                            <>
+                                <Pick label="Encaixe da foto" value={style.background.image_fit} options={[{ value: 'cover', label: 'Preencher (corta)' }, { value: 'contain', label: 'Mostrar inteira' }]} onChange={(value) => set('background', 'image_fit', value as ArtStyle['background']['image_fit'])} />
+                                <Range label="Opacidade da foto" value={style.background.image_opacity} min={0.1} max={1} step={0.05} onChange={(value) => set('background', 'image_opacity', value)} />
+                            </>
+                        )}
+                        <Color label="Película de cor" value={style.background.tint} onChange={(value) => set('background', 'tint', value)} />
+                        <Range label="Força da película" value={style.background.tint_opacity} min={0} max={0.95} step={0.05} onChange={(value) => set('background', 'tint_opacity', value)} />
                         <Range label="Sombra na parte de baixo" value={style.background.shade} min={0} max={0.9} step={0.05} onChange={(value) => set('background', 'shade', value)} />
+                    </Section>
+
+                    <Section title="Logotipo">
+                        <AssetPick label="Logotipo" kind="logo" assets={assets} value={style.logo.asset} canUpload={can_save} onChange={(value) => set('logo', 'asset', value)} />
+                        <Range label="Tamanho do logotipo" value={style.logo.size} min={4} max={20} step={1} onChange={(value) => set('logo', 'size', value)} />
                     </Section>
 
                     <Section title="Tipografia">
@@ -333,9 +402,24 @@ export default function Editor({ game, kind, kinds, data, initial, templates, pr
                         )}
                     </Section>
 
+                    <Section title="Faixa de transmissão">
+                        <Check label="Mostrar a faixa de transmissão (selo da plataforma, chamada e canal)" checked={style.elements.broadcast} onChange={(value) => set('elements', 'broadcast', value)} />
+                        {style.elements.broadcast && (
+                            <>
+                                <Pick label="Plataforma" value={style.broadcast.platform} options={options.platforms} onChange={(value) => set('broadcast', 'platform', value as ArtStyle['broadcast']['platform'])} />
+                                <Field label="Chamada">
+                                    <Input value={style.broadcast.label} maxLength={40} onChange={(event) => set('broadcast', 'label', event.target.value)} />
+                                </Field>
+                                <Field label="Canal / organização">
+                                    <Input value={style.broadcast.channel} maxLength={60} onChange={(event) => set('broadcast', 'channel', event.target.value)} />
+                                </Field>
+                            </>
+                        )}
+                    </Section>
+
                     <Section title="O que aparece">
                         <div className="grid gap-2 sm:grid-cols-2">
-                            {options.elements.map((element) => (
+                            {options.elements.filter((element) => element.value !== 'broadcast').map((element) => (
                                 <Check key={element.value} label={element.label} checked={style.elements[element.value as keyof ArtStyle['elements']]} onChange={(value) => set('elements', element.value as keyof ArtStyle['elements'], value)} />
                             ))}
                         </div>

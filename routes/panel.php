@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Panel\DashboardController;
 use App\Modules\Arts\Http\Controllers\ArtController;
+use App\Modules\Arts\Http\Controllers\AssetController as ArtAssetController;
 use App\Modules\Arts\Http\Controllers\TemplateController as ArtTemplateController;
 use App\Modules\Broadcast\Http\Controllers\ChannelController;
 use App\Modules\Competitions\Http\Controllers\CompetitionController;
@@ -161,7 +162,10 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
     Route::middleware('feature:arts')->prefix('artes')->name('arts.')->group(function () {
         Route::get('/', [ArtController::class, 'index'])->name('index');
         Route::get('editor', [ArtController::class, 'editor'])->name('editor');
+        Route::get('imagens/{asset}/arquivo', [ArtAssetController::class, 'file'])->name('assets.file');
         Route::middleware('panel.can:manage-competitions')->group(function () {
+            Route::post('imagens', [ArtAssetController::class, 'store'])->name('assets.store');
+            Route::delete('imagens/{asset}', [ArtAssetController::class, 'destroy'])->name('assets.destroy');
             Route::post('modelos', [ArtTemplateController::class, 'store'])->name('templates.store');
             Route::patch('modelos/{template}', [ArtTemplateController::class, 'update'])->name('templates.update');
             Route::delete('modelos/{template}', [ArtTemplateController::class, 'destroy'])->name('templates.destroy');

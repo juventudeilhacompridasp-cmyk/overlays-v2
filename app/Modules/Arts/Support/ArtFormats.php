@@ -12,6 +12,7 @@ final class ArtFormats
     public const PRESETS = [
         'square' => ['label' => 'Quadrado 1:1 (feed)', 'width' => 1080, 'height' => 1080],
         'portrait' => ['label' => 'Retrato 4:5 (feed)', 'width' => 1080, 'height' => 1350],
+        'tall' => ['label' => 'Retrato 3:4', 'width' => 1080, 'height' => 1440],
         'story' => ['label' => 'Story/Reels 9:16', 'width' => 1080, 'height' => 1920],
         'landscape' => ['label' => 'Paisagem 16:9 (TV/YouTube)', 'width' => 1920, 'height' => 1080],
         'link' => ['label' => 'Link 1,91:1 (compartilhamento)', 'width' => 1200, 'height' => 630],

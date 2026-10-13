@@ -9,7 +9,24 @@ namespace App\Modules\Arts\Support;
  */
 final class ArtStyle
 {
-    public const FONTS = ['sans' => 'Moderna (sem serifa)', 'display' => 'Impacto (títulos pesados)', 'condensed' => 'Condensada', 'serif' => 'Clássica (serifa)', 'mono' => 'Monoespaçada'];
+    /** Fontes do catálogo: as do sistema (pilhas seguras) e as web embutidas no front (`artFonts.ts`). */
+    public const FONTS = [
+        'inter' => 'Inter (moderna)',
+        'montserrat' => 'Montserrat (geométrica)',
+        'oswald' => 'Oswald (condensada)',
+        'bebas' => 'Bebas Neue (títulos altos)',
+        'anton' => 'Anton (títulos pesados)',
+        'barlow' => 'Barlow Condensed',
+        'roboto-condensed' => 'Roboto Condensed',
+        'archivo' => 'Archivo Black (extra pesada)',
+        'playfair' => 'Playfair Display (clássica)',
+        'marker' => 'Permanent Marker (manuscrita)',
+        'sans' => 'Sistema: sem serifa',
+        'display' => 'Sistema: Impact',
+        'condensed' => 'Sistema: condensada',
+        'serif' => 'Sistema: Georgia',
+        'mono' => 'Sistema: monoespaçada',
+    ];
 
     public const VARIANTS = ['classic' => 'Clássico (centralizado)', 'split' => 'Dividido (duas metades)', 'poster' => 'Pôster (escudos grandes)'];
 
@@ -28,19 +45,24 @@ final class ArtStyle
         'status' => 'Situação do jogo',
         'org_logo' => 'Logotipo da organização',
         'footer' => 'Rodapé',
+        'broadcast' => 'Rodapé de transmissão',
     ];
+
+    public const PLATFORMS = ['none' => 'Nenhuma (só texto)', 'youtube' => 'YouTube', 'twitch' => 'Twitch', 'facebook' => 'Facebook', 'instagram' => 'Instagram', 'kick' => 'Kick'];
 
     /** @return array<string, array<string, mixed>> */
     public static function defaults(): array
     {
         return [
-            'background' => ['mode' => 'gradient', 'color' => '#0b1220', 'color2' => '#16243d', 'angle' => 160, 'pattern' => 'none', 'pattern_opacity' => 0.08, 'shade' => 0.0],
+            'background' => ['mode' => 'gradient', 'color' => '#0b1220', 'color2' => '#16243d', 'angle' => 160, 'pattern' => 'none', 'pattern_opacity' => 0.08, 'shade' => 0.0, 'image' => null, 'image_fit' => 'cover', 'image_opacity' => 1.0, 'tint' => '#0d6fd6', 'tint_opacity' => 0.0],
+            'logo' => ['asset' => null, 'size' => 8.0, 'position' => 'corner'],
             'palette' => ['primary' => '#10b981', 'secondary' => '#38bdf8', 'text' => '#ffffff', 'muted' => '#94a3b8', 'accent' => '#facc15'],
-            'type' => ['heading' => 'display', 'body' => 'sans', 'scale' => 1.0, 'weight' => 'bold', 'uppercase' => true, 'spacing' => 0.02],
+            'type' => ['heading' => 'oswald', 'body' => 'inter', 'scale' => 1.0, 'weight' => 'bold', 'uppercase' => true, 'spacing' => 0.02],
             'layout' => ['variant' => 'classic', 'align' => 'center', 'margin' => 6.0, 'frame' => false, 'frame_width' => 0.6, 'frame_color' => '#ffffff', 'radius' => 0.0],
             'crest' => ['show' => true, 'size' => 26.0, 'shape' => 'circle', 'bg' => '#ffffff', 'use_team_colors' => false],
-            'elements' => array_fill_keys(array_keys(self::ELEMENTS), true),
-            'text' => ['headline' => '', 'footer' => '', 'hashtag' => ''],
+            'elements' => [...array_fill_keys(array_keys(self::ELEMENTS), true), 'broadcast' => false],
+            'broadcast' => ['platform' => 'youtube', 'label' => 'Transmissão ao vivo', 'channel' => '', 'badge' => null],
+            'text' => ['title' => '', 'subtitle' => '', 'headline' => '', 'credit' => '', 'footer' => '', 'hashtag' => ''],
         ];
     }
 
@@ -60,6 +82,8 @@ final class ArtStyle
         $crest = $in('crest');
         $el = $in('elements');
         $text = $in('text');
+        $bc = $in('broadcast');
+        $logo = $in('logo');
 
         return [
             'background' => [
@@ -70,6 +94,16 @@ final class ArtStyle
                 'pattern' => self::choice($bg['pattern'] ?? null, array_keys(self::PATTERNS), $d['background']['pattern']),
                 'pattern_opacity' => self::number($bg['pattern_opacity'] ?? null, 0, 0.4, $d['background']['pattern_opacity']),
                 'shade' => self::number($bg['shade'] ?? null, 0, 0.9, $d['background']['shade']),
+                'image' => self::assetId($bg['image'] ?? null),
+                'image_fit' => self::choice($bg['image_fit'] ?? null, ['cover', 'contain'], $d['background']['image_fit']),
+                'image_opacity' => self::number($bg['image_opacity'] ?? null, 0, 1, $d['background']['image_opacity']),
+                'tint' => self::color($bg['tint'] ?? null, $d['background']['tint']),
+                'tint_opacity' => self::number($bg['tint_opacity'] ?? null, 0, 1, $d['background']['tint_opacity']),
+            ],
+            'logo' => [
+                'asset' => self::assetId($logo['asset'] ?? null),
+                'size' => self::number($logo['size'] ?? null, 3, 30, $d['logo']['size']),
+                'position' => self::choice($logo['position'] ?? null, ['corner', 'top'], $d['logo']['position']),
             ],
             'palette' => [
                 'primary' => self::color($pal['primary'] ?? null, $d['palette']['primary']),
@@ -102,13 +136,28 @@ final class ArtStyle
                 'bg' => self::color($crest['bg'] ?? null, $d['crest']['bg']),
                 'use_team_colors' => self::bool($crest['use_team_colors'] ?? null, $d['crest']['use_team_colors']),
             ],
-            'elements' => array_combine(array_keys(self::ELEMENTS), array_map(fn (string $key) => self::bool($el[$key] ?? null, true), array_keys(self::ELEMENTS))),
+            'elements' => array_combine(array_keys(self::ELEMENTS), array_map(fn (string $key) => self::bool($el[$key] ?? null, $d['elements'][$key]), array_keys(self::ELEMENTS))),
+            'broadcast' => [
+                'platform' => self::choice($bc['platform'] ?? null, array_keys(self::PLATFORMS), $d['broadcast']['platform']),
+                'label' => array_key_exists('label', $bc) ? self::text($bc['label'], 40) : $d['broadcast']['label'],
+                'channel' => self::text($bc['channel'] ?? null, 60),
+                'badge' => self::assetId($bc['badge'] ?? null),
+            ],
             'text' => [
+                'title' => self::text($text['title'] ?? null, 60),
+                'subtitle' => self::text($text['subtitle'] ?? null, 80),
+                'credit' => self::text($text['credit'] ?? null, 120),
                 'headline' => self::text($text['headline'] ?? null, 80),
                 'footer' => self::text($text['footer'] ?? null, 120),
                 'hashtag' => self::text($text['hashtag'] ?? null, 40),
             ],
         ];
+    }
+
+    /** Identificador de uma imagem da organização (ULID) ou null. */
+    private static function assetId(mixed $value): ?string
+    {
+        return is_string($value) && preg_match('/^[0-9A-Za-z]{26}$/', $value) === 1 ? $value : null;
     }
 
     /** @param  list<string>  $allowed */

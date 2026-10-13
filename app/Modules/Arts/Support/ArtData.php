@@ -22,8 +22,11 @@ use App\Support\Images\ImageStore;
  */
 final class ArtData
 {
+    /** Máximo de jogos numa arte de rodada (a partir daí a arte fica ilegível). */
+    public const MAX_GAMES = 8;
+
     /** @return array<string, mixed> */
-    public static function for(Game $game, ArtKind $kind): array
+    public static function for(Game $game, ArtKind $kind, string $scope = 'day'): array
     {
         $game->loadMissing(['division.season.competition', 'stage', 'group', 'venue', 'homeEntry.team', 'awayEntry.team']);
         $organization = CurrentOrganization::get();
@@ -51,7 +54,40 @@ final class ArtData
                 'logo' => $organization !== null ? ImageStore::publicDataUri($organization->logo_path, 128) : null,
             ],
             'lineup' => $kind === ArtKind::Lineup ? self::lineup($game) : null,
+            'scope' => $scope === 'round' ? 'round' : 'day',
+            'games' => $kind === ArtKind::Round ? self::games($game, $scope === 'round') : [],
         ];
+    }
+
+    /**
+     * Jogos da arte de rodada: os do mesmo dia (padrão) ou os da mesma rodada da fase, na mesma edição, até {@see MAX_GAMES}.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private static function games(Game $game, bool $byRound): array
+    {
+        $query = Game::query()->with(['homeEntry.team', 'awayEntry.team', 'venue'])
+            ->whereHas('division', fn ($division) => $division->where('season_id', $game->division->season_id));
+
+        if ($byRound && $game->round !== null) {
+            $query->where('stage_id', $game->stage_id)->where('round', $game->round);
+        } elseif ($game->scheduled_at !== null) {
+            $query->whereDate('scheduled_at', $game->scheduled_at->toDateString());
+        } else {
+            $query->whereKey($game->getKey());
+        }
+
+        return $query->orderByRaw('scheduled_at is null')->orderBy('scheduled_at')->orderBy('number')->limit(self::MAX_GAMES)->get()
+            ->map(fn (Game $item) => [
+                'id' => $item->getKey(),
+                'date' => $item->scheduled_at?->format('Y-m-d\TH:i'),
+                'venue' => $item->venue?->name,
+                'status' => $item->status->value,
+                'status_label' => $item->status->label(),
+                'decided' => $item->status->isDecided(),
+                'home' => self::side($item->homeEntry, $item->home_score, $item->home_penalties),
+                'away' => self::side($item->awayEntry, $item->away_score, $item->away_penalties),
+            ])->values()->all();
     }
 
     /** @return array<string, mixed> */

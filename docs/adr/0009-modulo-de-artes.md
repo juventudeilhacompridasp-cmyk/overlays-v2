@@ -1,6 +1,6 @@
 # ADR 0009 — Módulo de artes de partidas
 
-Status: aceito (implementação em partes; parte 1 em andamento — ver "Entrega em partes")
+Status: aceito (implementação em partes; partes 1 e 2 entregues — ver "Entrega em partes")
 Data: 13/10/2026
 
 ## Contexto
@@ -51,7 +51,9 @@ reservas e técnico dos dois lados). Depois: **Rodada** (vários jogos), **Class
 ## Entrega em partes
 1. **Parte 1 — motor e estúdio:** formatos, estilo parametrizável, 3 tipos de arte de jogo, modelos do sistema e da organização,
    editor com prévia ao vivo e download do PNG, entrada pela súmula/lista de jogos.
-2. **Parte 2 — mais tipos:** rodada, classificação, artilheiros, destaque; fundos por imagem enviada; fontes web embutidas.
+2. **Parte 2 — entregue (rodada, capa, imagens, fontes):** rodada/dia (lista, painéis, cartazes), capa/anúncio, formato 3:4, faixa de
+   transmissão, fontes web embutidas, imagens da organização (`art_assets`) como fundo (com película de cor) e logotipo.
+   **Fica para depois:** classificação, artilheiros, destaque e selo por imagem.
 3. **Parte 3 — servidor e automação:** renderização no servidor (Chromium), arte gerada ao encerrar o jogo, link público de
    compartilhamento e pacote de artes por rodada.
 

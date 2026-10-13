@@ -4,6 +4,7 @@ namespace App\Modules\Arts\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Arts\Enums\ArtKind;
+use App\Modules\Arts\Models\ArtAsset;
 use App\Modules\Arts\Models\ArtTemplate;
 use App\Modules\Arts\Support\ArtData;
 use App\Modules\Arts\Support\ArtFormats;
@@ -43,6 +44,9 @@ class ArtController extends Controller
             'presets' => ArtPresets::all(),
             'formats' => ArtFormats::options(),
             'kinds' => $this->kinds(),
+            'assets' => $this->assets(),
+            'asset_kinds' => $this->list(ArtAsset::KINDS),
+            'can_save' => Gate::allows(Ability::ManageCompetitions->value),
         ]);
     }
 
@@ -76,7 +80,7 @@ class ArtController extends Controller
             'game' => $this->gameCard($game),
             'kind' => $kind->value,
             'kinds' => $this->kinds(),
-            'data' => ArtData::for($game, $kind),
+            'data' => ArtData::for($game, $kind, (string) $request->query('scope', 'day')),
             'initial' => [
                 'template_id' => $template?->getKey(),
                 'preset' => $preset['key'] ?? null,
@@ -94,10 +98,19 @@ class ArtController extends Controller
                 'crest_shapes' => $this->list(ArtStyle::CREST_SHAPES),
                 'weights' => $this->list(ArtStyle::WEIGHTS),
                 'elements' => $this->list(ArtStyle::ELEMENTS),
+                'platforms' => $this->list(ArtStyle::PLATFORMS),
                 'limits' => ['min' => ArtFormats::MIN, 'max' => ArtFormats::MAX],
             ],
+            'assets' => $this->assets(),
+            'asset_kinds' => $this->list(ArtAsset::KINDS),
             'can_save' => Gate::allows(Ability::ManageCompetitions->value),
         ]);
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function assets(): array
+    {
+        return ArtAsset::query()->orderBy('kind')->orderBy('name')->get()->map(fn (ArtAsset $asset) => $asset->toCard())->values()->all();
     }
 
     /** @return list<array{value: string, label: string}> */
