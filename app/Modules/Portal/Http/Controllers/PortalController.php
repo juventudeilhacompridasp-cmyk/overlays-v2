@@ -9,6 +9,7 @@ use App\Modules\Competitions\Models\Entry;
 use App\Modules\Competitions\Models\Season;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Portal\Push\PushConfig;
 use App\Modules\Portal\Support\GamePresenter;
 use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Portal\Support\SeasonPresenter;
@@ -129,6 +130,7 @@ class PortalController extends Controller
         return Inertia::render('Portal/Team', [
             'theme' => $theme,
             'seo' => $this->seo("{$team->name} · {$theme['name']}", "Jogos e resultados de {$team->name}.", route('portal.team', $team->getKey()), $team->logoUrl(512)),
+            'push_key' => PushConfig::publicKeyFor(),
             'team' => ['id' => $team->getKey(), 'name' => $team->name, 'city' => $team->city, 'logo_url' => $team->logoUrl(512), 'color' => $team->primary_color],
             'participations' => $entries->map(fn (Entry $entry) => [
                 'competition' => $entry->division->season->competition->name,

@@ -1,5 +1,7 @@
 import { ConnectionState, Realtime, subscribeToGame } from '@/lib/echo';
 import { GameClock, formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
+import PushButton from '@/Components/Portal/PushButton';
+import ShareButtons from '@/Components/Portal/ShareButtons';
 import { Head, Link } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -61,7 +63,7 @@ function GoalList({ goals, side }: { goals: Goal[]; side: 'home' | 'away' }) {
     );
 }
 
-export default function GameLive({ snapshot: initial, realtime }: { snapshot: Snapshot; realtime: Realtime }) {
+export default function GameLive({ snapshot: initial, realtime, push_key }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null }) {
     const [snapshot, setSnapshot] = useState(initial);
     const [connection, setConnection] = useState<ConnectionState>('connecting');
     // Diferença entre o relógio do navegador e o do servidor, medida na carga da página (não nos deltas, que podem atrasar na fila).
@@ -177,6 +179,10 @@ export default function GameLive({ snapshot: initial, realtime }: { snapshot: Sn
                     <GoalList goals={snapshot.goals} side="away" />
                 </div>
                 {snapshot.venue && <p className="mt-8 text-center text-sm text-gray-500">{snapshot.venue}</p>}
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-gray-900">
+                    {!snapshot.finished && <PushButton kind="game" id={snapshot.id} publicKey={push_key} label="Avisar gols deste jogo" />}
+                    <ShareButtons text={`${home} ${snapshot.home_score} x ${snapshot.away_score} ${away}`} url={route('public.games.show', snapshot.id)} />
+                </div>
                 <p className="mt-6 text-center text-xs text-gray-600" data-testid="live-connection">
                     {connection === 'connected' ? '● ao vivo' : connection === 'connecting' ? '○ conectando…' : '○ atualizando a cada poucos segundos'}
                 </p>

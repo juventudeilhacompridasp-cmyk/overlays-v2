@@ -1,4 +1,6 @@
 import { GameList, PortalGame } from '@/Components/Portal/GameList';
+import PushButton from '@/Components/Portal/PushButton';
+import ShareButtons from '@/Components/Portal/ShareButtons';
 import PortalLayout, { Seo, Theme } from '@/Components/Portal/PortalLayout';
 import { Link } from '@inertiajs/react';
 
@@ -8,9 +10,10 @@ interface Props {
     team: { id: string; name: string; city: string | null; logo_url: string | null; color: string | null };
     participations: { competition: string; season: string; division: string; url: string }[];
     games: PortalGame[];
+    push_key: string | null;
 }
 
-export default function Team({ theme, seo, team, participations, games }: Props) {
+export default function Team({ theme, seo, team, participations, games, push_key }: Props) {
     const upcoming = games.filter((game) => !game.decided);
     const results = games.filter((game) => game.decided);
 
@@ -21,6 +24,10 @@ export default function Team({ theme, seo, team, participations, games }: Props)
                 <div>
                     <h1 className="text-2xl font-extrabold">{team.name}</h1>
                     {team.city && <p className="text-gray-600">{team.city}</p>}
+                    <div className="mt-2 flex flex-wrap gap-2">
+                        <PushButton kind="team" id={team.id} publicKey={push_key} label="Seguir esta equipe" />
+                        <ShareButtons text={`${team.name} — jogos e resultados:`} url={route('portal.team', team.id)} />
+                    </div>
                 </div>
             </div>
 

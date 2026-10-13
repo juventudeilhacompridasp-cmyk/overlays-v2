@@ -48,6 +48,13 @@ interface Props {
     suggested_team_id: string | null;
 }
 
+/** Número para o link do WhatsApp: só dígitos, com o 55 do Brasil quando faltar. */
+const whatsappNumber = (phone: string): string => {
+    const digits = phone.replace(/\D/g, '');
+
+    return digits.startsWith('55') && digits.length >= 12 ? digits : `55${digits}`;
+};
+
 const tone = (status: string) => (status === 'approved' ? 'green' : status === 'rejected' ? 'red' : 'gray');
 const label: Record<string, string> = { pending: 'Pendente', approved: 'Aprovado', rejected: 'Recusado' };
 
@@ -127,7 +134,7 @@ export default function Show({ registration, people, requirements, teams, sugges
                         <div><dt className="text-gray-500">Sigla / cidade</dt><dd>{registration.team_short_name ?? '—'} · {registration.team_city ?? '—'}</dd></div>
                         <div><dt className="text-gray-500">Responsável</dt><dd>{registration.contact_name}</dd></div>
                         <div><dt className="text-gray-500">E-mail</dt><dd>{registration.contact_email}</dd></div>
-                        <div><dt className="text-gray-500">Telefone</dt><dd>{registration.contact_phone ?? '—'}</dd></div>
+                        <div><dt className="text-gray-500">Telefone</dt><dd>{registration.contact_phone ? <a className="text-emerald-700 hover:underline" href={`https://wa.me/${whatsappNumber(registration.contact_phone)}`} target="_blank" rel="noreferrer">{registration.contact_phone} · WhatsApp</a> : '—'}</dd></div>
                         <div><dt className="text-gray-500">Aceite de privacidade</dt><dd>{registration.consent_at ?? '—'}{registration.consent_version !== null && ` (política v${registration.consent_version})`}</dd></div>
                         <div><dt className="text-gray-500">Enviado em</dt><dd>{registration.submitted_at ?? 'ainda não enviado'}</dd></div>
                     </dl>
