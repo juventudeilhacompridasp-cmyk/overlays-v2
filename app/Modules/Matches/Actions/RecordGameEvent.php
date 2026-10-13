@@ -8,6 +8,7 @@ use App\Modules\Matches\Events\GameEventRecorded;
 use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
+use App\Modules\Matches\Support\TeamTimeouts;
 use App\Modules\Rules\Scoring\SetMatch;
 use App\Modules\Rules\Sheet\SheetEvent;
 use Illuminate\Support\Carbon;
@@ -28,7 +29,7 @@ final class RecordGameEvent
     private const SHEET_TYPES = [
         GameEventType::Goal, GameEventType::OwnGoal, GameEventType::YellowCard, GameEventType::RedCard,
         GameEventType::BlueCard, GameEventType::Substitution, GameEventType::Foul, GameEventType::Point,
-        GameEventType::FreeThrow, GameEventType::FieldGoal, GameEventType::ThreePointer,
+        GameEventType::FreeThrow, GameEventType::FieldGoal, GameEventType::ThreePointer, GameEventType::Timeout,
     ];
 
     /** @param  Carbon|null  $at  quando o lance aconteceu (lançamento vindo da fila offline); padrão: agora */
@@ -40,6 +41,10 @@ final class RecordGameEvent
 
         if ($type === GameEventType::Foul && ! $game->sport()->profile()->tracksTeamFouls()) {
             throw new InvalidArgumentException('Este esporte não registra faltas na súmula.');
+        }
+
+        if ($type === GameEventType::Timeout && ! $game->sport()->profile()->tracksTimeouts()) {
+            throw new InvalidArgumentException('Este esporte não registra pedidos de tempo na súmula.');
         }
 
         if (in_array($type, [GameEventType::Goal, GameEventType::OwnGoal], true) && $game->sport()->profile()->scoreModel !== 'goals') {
@@ -67,6 +72,15 @@ final class RecordGameEvent
         }
 
         $event = DB::transaction(function () use ($game, $type, $entryId, $personId, $secondaryPersonId, $period, $minute, $recordedBy, $at): GameEvent {
+            if ($type === GameEventType::Timeout) {
+                $personId = null;
+                $profile = $game->sport()->profile();
+
+                if (TeamTimeouts::used($game, $entryId, $period) >= $profile->timeoutLimit($period)) {
+                    throw new InvalidArgumentException('A equipe já usou os pedidos de tempo deste período.');
+                }
+            }
+
             $error = $this->sheet->handle($game)->check(new SheetEvent($type, $entryId, $personId, $secondaryPersonId, $period, $minute));
 
             if ($error !== null) {

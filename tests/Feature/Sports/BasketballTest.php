@@ -277,3 +277,78 @@ it('starts a basketball season with the basketball regulation', function () {
     $rules = Season::query()->where('name', 'Basquete 2030')->firstOrFail()->ruleSet();
     expect($rules->maxPlayerFouls)->toBe(6)->and($rules->scoreModel)->toBe('points')->and($rules->pointsWalkoverLoss)->toBe(0);
 });
+
+function basketTimeout(Game $game, string $side, int $period = 1): void
+{
+    app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Timeout, $side === 'home' ? $game->home_entry_id : $game->away_entry_id, null, null, $period);
+}
+
+describe('team timeouts', function () {
+    it('gives 2 timeouts per team in the first half, 3 in the second and 1 per overtime', function () {
+        ['game' => $game] = basketballGame();
+
+        basketTimeout($game, 'home', 1);
+        basketTimeout($game, 'home', 2); // quartos 1 e 2 dividem os 2 pedidos da primeira metade
+
+        expect(fn () => basketTimeout($game, 'home', 1))->toThrow(InvalidArgumentException::class, 'já usou os pedidos de tempo');
+
+        basketTimeout($game, 'home', 3);
+        basketTimeout($game, 'home', 3);
+        basketTimeout($game, 'home', 4);
+
+        expect(fn () => basketTimeout($game, 'home', 4))->toThrow(InvalidArgumentException::class)
+            ->and($game->fresh()->events()->where('type', GameEventType::Timeout)->count())->toBe(5);
+
+        basketTimeout($game, 'home', 5);
+        expect(fn () => basketTimeout($game, 'home', 5))->toThrow(InvalidArgumentException::class);
+        basketTimeout($game, 'home', 6); // cada prorrogação tem o seu
+    });
+
+    it('counts each team on its own and keeps the timeout out of the score and the athletes', function () {
+        ['game' => $game] = basketballGame();
+
+        basketTimeout($game, 'home');
+        basketTimeout($game, 'home');
+        basketTimeout($game, 'away');
+
+        $game->refresh();
+        $event = $game->events()->where('type', GameEventType::Timeout)->first();
+
+        expect($game->home_score)->toBe(0)->and($game->away_score)->toBe(0)
+            ->and($event->person_id)->toBeNull()
+            ->and($game->status)->toBe(GameStatus::InProgress);
+    });
+
+    it('gives the timeout back when it is voided', function () {
+        ['game' => $game] = basketballGame();
+
+        basketTimeout($game, 'home');
+        basketTimeout($game, 'home');
+        $last = $game->events()->where('type', GameEventType::Timeout)->orderByDesc('id')->firstOrFail();
+        app(VoidGameEvent::class)->handle($game->fresh(), $last);
+
+        basketTimeout($game, 'home'); // volta a ter um pedido
+
+        expect($game->fresh()->events()->effective()->where('type', GameEventType::Timeout)->count())->toBe(2);
+    });
+
+    it('is refused in sports that do not count timeouts', function () {
+        ['game' => $game] = sheetGame();
+
+        expect(fn () => app(RecordGameEvent::class)->handle($game, GameEventType::Timeout, $game->home_entry_id, null))
+            ->toThrow(InvalidArgumentException::class, 'não registra pedidos de tempo');
+    });
+
+    it('is recorded by the sheet screen without an athlete and shows how many were used', function () {
+        ['game' => $game] = basketballGame();
+        $user = panelUser(Role::Operator);
+
+        $this->actingAs($user)->post(route('panel.games.events.store', $game), ['type' => 'timeout', 'entry_id' => $game->home_entry_id, 'period' => 1])
+            ->assertSessionHas('success');
+
+        $this->actingAs($user)->get(route('panel.games.sheet', $game))->assertInertia(fn ($page) => $page
+            ->where('home.timeouts.used', 1)
+            ->where('home.timeouts.limit', 2)
+            ->where('away.timeouts.used', 0));
+    });
+});

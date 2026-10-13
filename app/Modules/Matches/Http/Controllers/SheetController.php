@@ -22,6 +22,7 @@ use App\Modules\Matches\Http\Requests\GamePeriodRequest;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Support\PublicGameSnapshot;
+use App\Modules\Matches\Support\TeamTimeouts;
 use App\Modules\Rules\Tactics\Formations;
 use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Enums\RosterStatus;
@@ -43,8 +44,9 @@ class SheetController extends Controller
 
         $state = $buildSheet->handle($game);
         $open = ! $game->status->isDecided();
+        $currentPeriod = max(1, (int) (PublicGameSnapshot::for($game)['clock']['period'] ?? 1));
 
-        $team = function (?Entry $entry) use ($game, $state, $discipline): ?array {
+        $team = function (?Entry $entry) use ($game, $state, $discipline, $currentPeriod): ?array {
             if ($entry === null) {
                 return null;
             }
@@ -95,6 +97,9 @@ class SheetController extends Controller
                 'fouled_out' => $state->fouledOut($entry->getKey()),
                 'player_fouls' => (object) $state->foulsOf($entry->getKey()),
                 'yellows' => (object) $state->yellowsOf($entry->getKey()),
+                'timeouts' => $game->sport()->profile()->tracksTimeouts()
+                    ? ['used' => TeamTimeouts::used($game, $entry->getKey(), $currentPeriod), 'limit' => $game->sport()->profile()->timeoutLimit($currentPeriod)]
+                    : null,
                 'substitutions_used' => $state->substitutionsUsed($entry->getKey()),
                 'windows_used' => $state->windowsUsed($entry->getKey()),
             ];
@@ -227,7 +232,7 @@ class SheetController extends Controller
                 $game,
                 GameEventType::from($request->string('type')->toString()),
                 $request->string('entry_id')->toString(),
-                $request->string('person_id')->toString(),
+                $request->filled('person_id') ? $request->string('person_id')->toString() : null,
                 $request->filled('secondary_person_id') ? $request->string('secondary_person_id')->toString() : null,
                 $request->integer('period'),
                 $request->filled('minute') ? $request->integer('minute') : null,

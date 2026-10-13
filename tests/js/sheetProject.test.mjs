@@ -156,3 +156,18 @@ test('the projection never changes the data it received', () => {
 test('nothing in the queue means nothing changes', () => {
     assert.deepEqual(project(base(), [], rules), base());
 });
+
+test('um pedido de tempo na fila conta como usado para a equipe, sem mexer no placar', () => {
+    const view = base();
+    view.teams[HOME] = team({ timeouts: { used: 1, limit: 2 } });
+
+    const result = project(
+        view,
+        [{ key: 'k1', kind: 'event', payload: { type: 'timeout', entry_id: HOME, person_id: null, period: 1 }, at: 1000, offline: true, status: 'pending', label: 'Pedido de tempo' }],
+        rules,
+    );
+
+    assert.equal(result.teams[HOME].timeouts.used, 2);
+    assert.equal(view.teams[HOME].timeouts.used, 1);
+    assert.equal(result.home_score, 0);
+});
