@@ -50,8 +50,9 @@ class SeasonRequest extends FormRequest
             'rules.cards.second_yellow_counts_for_series' => ['required', 'boolean'],
             'rules.walkover.winner_goals' => ['required', 'integer', 'between:0,20'],
             'rules.walkover.loser_goals' => ['required', 'integer', 'between:0,20'],
-            'rules.substitutions.max' => ['required', 'integer', 'between:0,30'],
-            'rules.substitutions.max_windows' => ['required', 'integer', 'between:0,30'],
+            'rules.substitutions.max' => ['required', 'integer', 'between:0,99'],
+            'rules.substitutions.max_windows' => ['required', 'integer', 'between:0,99'],
+            'rules.substitutions.allow_reentry' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -67,7 +68,9 @@ class SeasonRequest extends FormRequest
 
         /** @var array<string, mixed> $rules */
         $rules = $validated['rules'];
-        $validated['rules'] = RuleSet::fromArray($rules)->toArray();
+        $competition = $this->route('competition') ?? $this->route('season')?->competition;
+        $sportDefaults = $competition instanceof Competition ? $competition->sport->profile()->ruleDefaults : [];
+        $validated['rules'] = RuleSet::fromArray($rules, $sportDefaults)->toArray();
 
         return $validated;
     }

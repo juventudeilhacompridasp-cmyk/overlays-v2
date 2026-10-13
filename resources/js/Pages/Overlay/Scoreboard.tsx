@@ -47,6 +47,14 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
                     {game.clock.state === 'running' && <span className="text-[10px] uppercase tracking-wider">{periodLabel(game.clock.period)}</span>}
                 </div>
             </div>
+            {game.fouls && (
+                <div className="mt-1 inline-flex items-center gap-3 rounded bg-gray-900/90 px-3 py-1 text-sm" data-testid="overlay-fouls">
+                    <span className="text-gray-300">FALTAS</span>
+                    <span className={game.fouls.home >= game.fouls.limit ? 'font-bold text-amber-400' : ''}>{game.fouls.home}</span>
+                    <span className="text-gray-500">×</span>
+                    <span className={game.fouls.away >= game.fouls.limit ? 'font-bold text-amber-400' : ''}>{game.fouls.away}</span>
+                </div>
+            )}
             {game.home_penalties !== null && game.away_penalties !== null && (
                 <div className="mt-1 inline-block rounded bg-gray-900/90 px-3 py-1 text-sm">
                     Pênaltis: {game.home_penalties} x {game.away_penalties}

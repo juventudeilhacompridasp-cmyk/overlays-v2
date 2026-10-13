@@ -28,5 +28,5 @@ export type RulesData = {
         second_yellow_counts_for_series: boolean;
     };
     walkover: { winner_goals: number; loser_goals: number };
-    substitutions: { max: number; max_windows: number };
+    substitutions: { max: number; max_windows: number; allow_reentry: boolean };
 };

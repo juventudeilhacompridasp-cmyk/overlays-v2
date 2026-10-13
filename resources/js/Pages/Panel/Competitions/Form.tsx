@@ -1,4 +1,4 @@
-import { Button, Card, Field, Input, LinkButton, PageHeader, Textarea } from '@/Components/Panel/ui';
+import { Button, Card, Field, Input, LinkButton, PageHeader, Select, Textarea } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
@@ -7,12 +7,14 @@ interface Competition {
     id: string;
     name: string;
     description: string | null;
+    sport: string;
 }
 
-export default function Form({ competition }: { competition: Competition | null }) {
+export default function Form({ competition, sports, sport_locked }: { competition: Competition | null; sports: { value: string; label: string }[]; sport_locked: boolean }) {
     const { data, setData, post, put, processing, errors } = useForm({
         name: competition?.name ?? '',
         description: competition?.description ?? '',
+        sport: competition?.sport ?? 'football',
     });
 
     const submit = (event: FormEvent) => {
@@ -30,7 +32,7 @@ export default function Form({ competition }: { competition: Competition | null 
             <Head title={competition ? 'Editar competição' : 'Nova competição'} />
             <PageHeader
                 title={competition ? 'Editar competição' : 'Nova competição'}
-                subtitle="O esporte desta versão é futebol."
+                subtitle="O esporte define o cronômetro, as faltas e o regulamento padrão das edições."
                 breadcrumbs={[
                     { label: 'Competições', href: route('panel.competitions.index') },
                     { label: competition ? competition.name : 'Nova' },
@@ -40,6 +42,15 @@ export default function Form({ competition }: { competition: Competition | null 
                 <form onSubmit={submit} className="space-y-4">
                     <Field label="Nome" htmlFor="name" error={errors.name} hint="Ex.: Campeonato Municipal de Futebol Amador">
                         <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} autoFocus required />
+                    </Field>
+                    <Field label="Esporte" htmlFor="sport" error={errors.sport} hint={sport_locked ? 'Não dá para trocar: a competição já tem edições.' : 'Escolha antes de criar as edições.'}>
+                        <Select id="sport" value={data.sport} onChange={(e) => setData('sport', e.target.value)} disabled={sport_locked}>
+                            {sports.map((sport) => (
+                                <option key={sport.value} value={sport.value}>
+                                    {sport.label}
+                                </option>
+                            ))}
+                        </Select>
                     </Field>
                     <Field label="Descrição" htmlFor="description" error={errors.description}>
                         <Textarea id="description" rows={4} value={data.description} onChange={(e) => setData('description', e.target.value)} />

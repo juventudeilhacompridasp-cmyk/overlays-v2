@@ -73,7 +73,7 @@ final class GameSheetState
 
         return match ($event->type) {
             GameEventType::Goal, GameEventType::OwnGoal => $this->checkOnField($event, 'marcar gol'),
-            GameEventType::YellowCard, GameEventType::RedCard, GameEventType::BlueCard, GameEventType::Warning => $this->checkInLineup($event),
+            GameEventType::YellowCard, GameEventType::RedCard, GameEventType::BlueCard, GameEventType::Warning, GameEventType::Foul => $this->checkInLineup($event),
             GameEventType::Substitution => $this->checkSubstitution($event),
             GameEventType::PenaltyKick => $this->checkOnField($event, 'cobrar pênalti'),
             GameEventType::PeriodStart, GameEventType::PeriodEnd => null,
@@ -105,6 +105,12 @@ final class GameSheetState
                 $this->onField[$team] = array_values(array_diff($this->onField[$team], [(string) $person]));
                 $this->bench[$team] = array_values(array_diff($this->bench[$team], [(string) $event->secondaryPersonId]));
                 $this->onField[$team][] = (string) $event->secondaryPersonId;
+
+                // Esportes com substituição volante (futsal): quem saiu volta a ser reserva e pode entrar de novo.
+                if ($this->rules->allowSubstitutionReentry) {
+                    $this->bench[$team][] = (string) $person;
+                }
+
                 $this->substitutions[$team]++;
                 $this->windows[$team][$this->windowKey($event)] = true;
                 $this->used[$team][(string) $person] = true;
@@ -209,7 +215,7 @@ final class GameSheetState
             return 'Quem sai precisa estar em campo.';
         }
 
-        if (isset($this->used[$team][$in])) {
+        if (! $this->rules->allowSubstitutionReentry && isset($this->used[$team][$in])) {
             return 'Quem já jogou e saiu não pode voltar ao jogo.';
         }
 

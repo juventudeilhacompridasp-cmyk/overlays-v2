@@ -2,7 +2,9 @@
 
 namespace App\Modules\Competitions\Http\Requests;
 
+use App\Modules\Competitions\Enums\Sport;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CompetitionRequest extends FormRequest
 {
@@ -19,6 +21,7 @@ class CompetitionRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:150'],
             'description' => ['nullable', 'string', 'max:2000'],
+            'sport' => ['sometimes', Rule::enum(Sport::class)],
         ];
     }
 }

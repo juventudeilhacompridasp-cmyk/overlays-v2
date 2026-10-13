@@ -14,6 +14,7 @@ enum GameEventType: string
     case PeriodEnd = 'period_end';
     case PenaltyKick = 'penalty_kick';
     case Warning = 'warning';
+    case Foul = 'foul';
 
     public function label(): string
     {
@@ -28,6 +29,7 @@ enum GameEventType: string
             self::PeriodEnd => 'Fim de período',
             self::PenaltyKick => 'Cobrança de pênalti',
             self::Warning => 'Advertência',
+            self::Foul => 'Falta',
         };
     }
 }

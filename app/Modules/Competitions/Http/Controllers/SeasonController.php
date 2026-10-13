@@ -11,7 +11,6 @@ use App\Modules\Competitions\Models\Competition;
 use App\Modules\Competitions\Models\Season;
 use App\Modules\Registration\Enums\RegistrationStatus;
 use App\Modules\Registration\Models\Registration;
-use App\Modules\Rules\RuleSet;
 use App\Modules\Rules\Tiebreaker;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
@@ -26,7 +25,7 @@ class SeasonController extends Controller
         return Inertia::render('Panel/Seasons/Form', [
             'competition' => $competition->only(['id', 'name']),
             'season' => null,
-            'rules' => RuleSet::defaults()->toArray(),
+            'rules' => $competition->sport->profile()->defaultRules()->toArray(),
             'options' => $this->options(),
             'defaults' => ['year' => (int) now()->format('Y')],
         ]);

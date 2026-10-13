@@ -3,7 +3,7 @@ import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, Link } from '@inertiajs/react';
 
 interface Props {
-    competition: { id: string; name: string; description: string | null };
+    competition: { id: string; name: string; description: string | null; sport_label: string };
     seasons: { id: string; name: string; year: number; status: string; status_label: string; divisions_count: number }[];
 }
 
@@ -15,7 +15,7 @@ export default function Show({ competition, seasons }: Props) {
             <Head title={competition.name} />
             <PageHeader
                 title={competition.name}
-                subtitle={competition.description ?? undefined}
+                subtitle={[competition.sport_label, competition.description].filter(Boolean).join(' · ')}
                 breadcrumbs={[{ label: 'Competições', href: route('panel.competitions.index') }, { label: competition.name }]}
                 actions={
                     <>

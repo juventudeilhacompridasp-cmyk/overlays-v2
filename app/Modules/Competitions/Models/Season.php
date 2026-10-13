@@ -111,6 +111,6 @@ class Season extends Model
         /** @var array<string, mixed> $rules */
         $rules = $this->rules ?? [];
 
-        return RuleSet::fromArray($rules);
+        return RuleSet::fromArray($rules, $this->competition->sport->profile()->ruleDefaults);
     }
 }

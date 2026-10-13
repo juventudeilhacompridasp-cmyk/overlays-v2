@@ -31,6 +31,7 @@ final readonly class RuleSet
         public int $maxStarters = 11,
         public int $maxBench = 11,
         public int $maxStaff = 3,
+        public bool $allowSubstitutionReentry = false,
     ) {
         if ($yellowCardsForSuspension < 1) {
             throw new InvalidArgumentException('cards.yellow_for_suspension deve ser pelo menos 1.');
@@ -70,10 +71,11 @@ final readonly class RuleSet
      * Monta a partir do JSON salvo na edição/divisão. Chaves ausentes usam o padrão.
      *
      * @param  array<string, mixed>  $rules
+     * @param  array<string, mixed>  $sportDefaults  sobrescritas dos padrões feitas pelo esporte (ver SportProfile)
      */
-    public static function fromArray(array $rules): self
+    public static function fromArray(array $rules, array $sportDefaults = []): self
     {
-        $defaults = self::defaults()->toArray();
+        $defaults = array_replace_recursive(self::defaults()->toArray(), $sportDefaults);
         $merged = array_replace_recursive($defaults, $rules);
 
         if (array_key_exists('tiebreakers', $rules)) {
@@ -106,6 +108,7 @@ final readonly class RuleSet
             maxStarters: (int) $merged['lineup']['max_starters'],
             maxBench: (int) $merged['lineup']['max_bench'],
             maxStaff: (int) $merged['lineup']['max_staff'],
+            allowSubstitutionReentry: (bool) $merged['substitutions']['allow_reentry'],
         );
     }
 
@@ -125,7 +128,7 @@ final readonly class RuleSet
                 'second_yellow_counts_for_series' => $this->secondYellowCountsForSeries,
             ],
             'walkover' => ['winner_goals' => $this->walkoverWinnerGoals, 'loser_goals' => $this->walkoverLoserGoals],
-            'substitutions' => ['max' => $this->maxSubstitutions, 'max_windows' => $this->maxSubstitutionWindows],
+            'substitutions' => ['max' => $this->maxSubstitutions, 'max_windows' => $this->maxSubstitutionWindows, 'allow_reentry' => $this->allowSubstitutionReentry],
             'lineup' => ['max_starters' => $this->maxStarters, 'max_bench' => $this->maxBench, 'max_staff' => $this->maxStaff],
         ];
     }

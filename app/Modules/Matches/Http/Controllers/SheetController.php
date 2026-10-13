@@ -21,7 +21,6 @@ use App\Modules\Matches\Http\Requests\GamePeriodRequest;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Support\PublicGameSnapshot;
-use App\Modules\Rules\Sheet\GameClock;
 use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Enums\RosterStatus;
 use App\Modules\Teams\Models\RosterEntry;
@@ -137,7 +136,7 @@ class SheetController extends Controller
             'home' => $team($game->homeEntry),
             'away' => $team($game->awayEntry),
             'events' => $events,
-            'clock' => PublicGameSnapshot::for($game)['clock'] + ['server_time_ms' => (int) (microtime(true) * 1000), 'max_period' => (new GameClock)->maxPeriod()],
+            'clock' => PublicGameSnapshot::for($game)['clock'] + ['server_time_ms' => (int) (microtime(true) * 1000), 'max_period' => $game->clock()->maxPeriod()],
             'public_url' => route('public.games.show', $game->id),
             'limits' => [
                 'starters' => $rules->maxStarters,
@@ -146,9 +145,12 @@ class SheetController extends Controller
                 'substitutions' => $rules->maxSubstitutions,
                 'windows' => $rules->maxSubstitutionWindows,
             ],
+            'sport' => $game->sport()->value,
+            'fouls' => PublicGameSnapshot::for($game)['fouls'],
             'event_types' => collect([
                 GameEventType::Goal, GameEventType::OwnGoal, GameEventType::YellowCard, GameEventType::RedCard,
                 GameEventType::BlueCard, GameEventType::Substitution,
+                ...($game->sport()->profile()->tracksTeamFouls() ? [GameEventType::Foul] : []),
             ])->map(fn (GameEventType $type) => ['value' => $type->value, 'label' => $type->label()])->values(),
         ]);
     }
