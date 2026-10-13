@@ -33,6 +33,15 @@ x-env: &env
   REVERB_PUBLIC_PORT: ${REVERB_PUBLIC_PORT:-443}
   REVERB_PUBLIC_SCHEME: ${REVERB_PUBLIC_SCHEME:-https}
   REVERB_SCALING_ENABLED: "true"
+  # Avisos push (Web Push/VAPID): sem as chaves o recurso fica desligado. Gere com `php artisan webpush:keys`.
+  VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+  VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+  VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:contato@example.com}
+  # Organizações por subdomínio ({slug}.PLATFORM_BASE_DOMAIN) e organização padrão; chave estável do hash do CPF.
+  PLATFORM_BASE_DOMAIN: ${PLATFORM_BASE_DOMAIN:-}
+  DEFAULT_ORGANIZATION_SLUG: ${DEFAULT_ORGANIZATION_SLUG:-default}
+  DOCUMENT_HASH_KEY: ${DOCUMENT_HASH_KEY:-}
+  OPEN_REGISTRATION: ${OPEN_REGISTRATION:-false}
   FILESYSTEM_DISK: s3
   AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:?}
   AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?}
