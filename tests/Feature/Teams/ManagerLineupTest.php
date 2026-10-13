@@ -4,6 +4,7 @@ use App\Models\User;
 use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Support\OverlayState;
 use App\Modules\Competitions\Models\Entry;
+use App\Modules\Matches\Actions\FinishGame;
 use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Actions\SaveGameLineup;
@@ -15,6 +16,7 @@ use App\Modules\Matches\Models\GameLineup;
 use App\Modules\Matches\Models\GameTactic;
 use App\Modules\Teams\Models\Person;
 use App\Modules\Teams\Models\RosterEntry;
+use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
@@ -133,7 +135,7 @@ describe('saving the lineup', function () {
         $earlier = Game::factory()->create(['stage_id' => $game->stage_id, 'home_entry_id' => $home->id, 'round' => 0]);
         app(SaveGameLineup::class)->handle($earlier, $home, [$hp[0]]);
         app(RecordGameEvent::class)->handle($earlier, GameEventType::RedCard, $home->id, $hp[0]);
-        app(App\Modules\Matches\Actions\FinishGame::class)->handle($earlier);
+        app(FinishGame::class)->handle($earlier);
 
         $this->actingAs($manager)->put(route('manager.games.lineup', $game), lineupPayload($hp))->assertSessionHas('error');
     });
@@ -207,7 +209,7 @@ describe('the manager window', function () {
 describe('isolation', function () {
     it('answers 404 to a manager of another team, for the game and for saving', function () {
         ['game' => $game, 'hp' => $hp] = managedGame();
-        $stranger = managerFor(App\Modules\Teams\Models\Team::factory()->create());
+        $stranger = managerFor(Team::factory()->create());
 
         $this->actingAs($stranger)->get(route('manager.games.show', $game))->assertNotFound();
         $this->actingAs($stranger)->put(route('manager.games.lineup', $game), lineupPayload($hp))->assertNotFound();

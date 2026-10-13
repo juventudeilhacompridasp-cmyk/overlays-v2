@@ -55,7 +55,7 @@ final class OverlayState
 
             $named = function (string $slot) use ($rows, $people, $formation) {
                 return $rows->where('slot', LineupSlot::from($slot))
-                    ->map(function (GameLineup $row) use ($people): array {
+                    ->map(function (GameLineup $row) use ($people, $formation): array {
                         $roster = $people->get($row->person_id);
                         $person = $roster?->person;
 
