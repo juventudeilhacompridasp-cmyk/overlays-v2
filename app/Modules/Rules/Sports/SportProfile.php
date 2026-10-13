@@ -35,6 +35,8 @@ final readonly class SportProfile
         public array $timeoutGroups = [],
         /** @var array<int, int> pedidos de tempo permitidos por equipe em cada grupo */
         public array $timeoutLimits = [],
+        /** @var array<string, string> posições de jogo (chave => rótulo) usadas no Mercado de jogadores (ADR 0008) */
+        public array $positions = [],
     ) {}
 
     public function clock(): GameClock

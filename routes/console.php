@@ -13,3 +13,6 @@ Schedule::command('push:prune')->daily();
 
 // Lembretes de escalação aos gestores de equipe (cada aviso sai uma única vez por jogo e gestor).
 Schedule::command('managers:remind-lineups')->everyTenMinutes()->withoutOverlapping();
+
+// Perfis do Mercado sem revalidação há 60 dias saem da busca (o atleta pode publicar de novo).
+Schedule::command('market:expire')->daily();

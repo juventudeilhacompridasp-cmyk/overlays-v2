@@ -1,6 +1,6 @@
 # ADR 0008 — Mercado de jogadores livres
 
-Status: aceito (implementação em partes; nada entregue ainda — ver "Entrega em partes")
+Status: aceito (implementação em partes; parte 1 entregue — ver "Entrega em partes")
 Data: 13/10/2026
 
 ## Contexto
@@ -98,7 +98,7 @@ dias, atleta pode pausar o perfil a qualquer momento, perfil sem revalidação e
   recurso desligado = 404/403; `signed` some da busca.
 
 ## Entrega em partes
-1. **Parte 1 — perfil:** `Role::Athlete`, `/atleta`, cadastro com verificação de e-mail e trava de menor, perfil (posições do esporte,
+1. **Parte 1 — perfil (entregue):** (a foto fica em `market_profiles.photo_path`; a tabela `market_media` só nasce com os vídeos, na parte 4) `Role::Athlete`, `/atleta`, cadastro com verificação de e-mail e trava de menor, perfil (posições do esporte,
    disponibilidade, região, bio), foto, publicar/pausar/revalidar, `Feature::Market` sob demanda.
 2. **Parte 2 — busca do gestor:** `/gestor/mercado`, filtros e cartão do atleta (sem contato).
 3. **Parte 3 — contato:** pedidos, aceite/recusa, e-mails, bloqueio, cota diária e expiração.

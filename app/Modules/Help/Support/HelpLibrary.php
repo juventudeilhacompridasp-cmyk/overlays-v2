@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\File;
  */
 final class HelpLibrary
 {
-    public const AUDIENCES = ['panel', 'manager', 'platform'];
+    public const AUDIENCES = ['panel', 'manager', 'athlete', 'platform'];
 
     /** @var list<HelpArticle>|null */
     private static ?array $articles = null;

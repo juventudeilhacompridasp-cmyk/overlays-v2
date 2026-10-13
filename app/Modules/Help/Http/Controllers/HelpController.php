@@ -75,7 +75,7 @@ class HelpController extends Controller
     private function area(Request $request): string
     {
         $area = (string) $request->route('area');
-        abort_unless(in_array($area, ['panel', 'manager', 'platform'], true), 404);
+        abort_unless(in_array($area, ['panel', 'manager', 'athlete', 'platform'], true), 404);
 
         return $area;
     }

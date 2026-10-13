@@ -195,7 +195,7 @@ describe('opt-in features', function () {
 
         $this->get("/plataforma/organizations/{$organization->id}")->assertInertia(fn ($page) => $page
             ->where('organization.opt_in_features', ['sheet_import'])
-            ->has('opt_in_all', 1));
+            ->has('opt_in_all', 2));
 
         $this->patch("/plataforma/organizations/{$organization->id}", ['plan' => 'basic', 'custom_features' => false, 'opt_in_features' => []])->assertSessionHas('success');
         expect($organization->fresh()->hasFeature(Feature::SheetImport))->toBeFalse();

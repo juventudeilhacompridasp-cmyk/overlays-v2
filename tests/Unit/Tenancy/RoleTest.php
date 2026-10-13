@@ -14,6 +14,8 @@ it('gives each role exactly the abilities of its area', function (Role $role, ar
     'organizador' => [Role::Organizer, [Ability::ManageCompetitions, Ability::ManageRegistry, Ability::OperateGames]],
     'operador' => [Role::Operator, [Ability::OperateGames]],
     'consulta' => [Role::Viewer, []],
+    'gestor de equipe' => [Role::TeamManager, []],
+    'atleta' => [Role::Athlete, []],
 ]);
 
 it('only lets administrators manage users', function () {

@@ -35,6 +35,7 @@ final class HelpAccess
         // A área escolhe o que cabe na tela; o usuário precisa ser mesmo daquele público.
         $allowed = match ($area) {
             'manager' => $article->audience === 'manager' && $role === Role::TeamManager,
+            'athlete' => $article->audience === 'athlete' && $role === Role::Athlete,
             'platform' => $article->audience === 'platform' && $platform,
             default => ($article->audience === 'panel' && $role?->usesPanel() === true) || ($article->audience === 'platform' && $platform && $role?->usesPanel() === true),
         };

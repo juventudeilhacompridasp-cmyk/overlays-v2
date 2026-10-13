@@ -4,6 +4,7 @@ namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Tenancy\Actions\AcceptLegalDocuments;
+use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\LegalDocument;
 use App\Modules\Tenancy\Support\LegalDocuments;
 use Illuminate\Http\RedirectResponse;
@@ -19,7 +20,7 @@ class LegalAcceptController extends Controller
         $pending = LegalDocuments::pendingFor($request->user());
 
         if ($pending->isEmpty()) {
-            return redirect()->route('panel.dashboard');
+            return redirect()->route($this->home($request));
         }
 
         return Inertia::render('Legal/Accept', [
@@ -38,6 +39,16 @@ class LegalAcceptController extends Controller
 
         $accept->handle($request->user());
 
-        return redirect()->route('panel.dashboard');
+        return redirect()->route($this->home($request));
+    }
+
+    /** Cada papel volta para o seu painel (gestor de equipe e atleta têm o próprio). */
+    private function home(Request $request): string
+    {
+        return match ($request->user()?->role()) {
+            Role::TeamManager => 'manager.dashboard',
+            Role::Athlete => 'athlete.dashboard',
+            default => 'panel.dashboard',
+        };
     }
 }

@@ -21,7 +21,7 @@ class MemberController extends Controller
 {
     public function index(Request $request): Response
     {
-        $members = Membership::query()->where('role', '!=', Role::TeamManager)->with(['user:id,name,email', 'profile'])->get()
+        $members = Membership::query()->whereNotIn('role', Role::outsiders())->with(['user:id,name,email', 'profile'])->get()
             ->sortBy(fn (Membership $membership) => mb_strtolower($membership->user->name))
             ->values()
             ->map(fn (Membership $membership) => [
@@ -72,7 +72,7 @@ class MemberController extends Controller
             'profile_id' => ['required_without:role', 'nullable', Rule::exists('access_profiles', 'id')->where('organization_id', CurrentOrganization::id())],
         ]);
 
-        abort_if($membership->role === Role::TeamManager, 404);
+        abort_if(! $membership->role->usesPanel(), 404);
 
         $profile = ! empty($validated['profile_id']) ? AccessProfile::query()->findOrFail($validated['profile_id']) : null;
 
@@ -89,7 +89,7 @@ class MemberController extends Controller
 
     public function destroy(Membership $membership, ManageMembers $members): RedirectResponse
     {
-        abort_if($membership->role === Role::TeamManager, 404);
+        abort_if(! $membership->role->usesPanel(), 404);
 
         try {
             $members->remove($membership);
