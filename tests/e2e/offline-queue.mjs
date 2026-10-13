@@ -46,7 +46,7 @@ try {
 
     // Sem internet: lança um gol do mandante.
     await context.setOffline(true);
-    await page.getByText('Sem conexão').waitFor();
+    await page.getByText('Continue lançando').waitFor();
 
     const form = page.getByRole('form', { name: 'Novo lançamento' });
     const person = form.getByLabel('Pessoa');
