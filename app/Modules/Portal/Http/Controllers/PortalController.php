@@ -14,6 +14,7 @@ use App\Modules\Portal\Support\GamePresenter;
 use App\Modules\Portal\Support\IcsCalendar;
 use App\Modules\Portal\Support\PortalSettings;
 use App\Modules\Portal\Support\PublicTheme;
+use App\Modules\Portal\Support\SeasonExtras;
 use App\Modules\Portal\Support\SeasonPresenter;
 use App\Modules\Portal\Support\SeasonStats;
 use App\Modules\Portal\Support\TeamPage;
@@ -79,7 +80,7 @@ class PortalController extends Controller
         return redirect()->route('portal.season', [$competition->slug, $season->getKey()]);
     }
 
-    public function season(Competition $competition, Season $season, SeasonPresenter $presenter): Response
+    public function season(Competition $competition, Season $season, SeasonPresenter $presenter, SeasonExtras $extras): Response
     {
         abort_unless($season->competition_id === $competition->getKey() && $season->isPublished(), 404);
 
@@ -91,6 +92,7 @@ class PortalController extends Controller
             'theme' => $theme,
             'seo' => $this->seo("{$title} · {$theme['name']}", "Classificação, jogos, resultados e artilharia — {$title}.", route('portal.season', [$competition->slug, $season->getKey()])),
             ...$data,
+            'extras' => $extras->for($season),
             'stats_url' => route('portal.stats', [$competition->slug, $season->getKey()]),
             'registration_url' => CurrentOrganization::has(Feature::OnlineRegistration) && $season->registrationOpen() ? route('registration.apply', [$competition->slug, $season->getKey()]) : null,
             'other_seasons' => $competition->seasons()->published()->orderByDesc('year')->orderByDesc('name')->get()
