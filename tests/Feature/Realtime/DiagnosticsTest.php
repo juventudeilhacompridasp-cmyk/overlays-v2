@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Artisan;
 use Minishlink\WebPush\VAPID;
 
 describe('realtime:check', function () {
@@ -12,11 +13,14 @@ describe('realtime:check', function () {
     });
 
     it('lists the missing credentials', function () {
-        config(['broadcasting.default' => 'reverb', 'broadcasting.connections.reverb.key' => null, 'broadcasting.connections.reverb.options.host' => null]);
+        config([
+            'broadcasting.default' => 'reverb',
+            'broadcasting.connections.reverb.app_id' => '1', 'broadcasting.connections.reverb.secret' => 's',
+            'broadcasting.connections.reverb.key' => null, 'broadcasting.connections.reverb.options.host' => null,
+        ]);
 
         $this->artisan('realtime:check')
-            ->expectsOutputToContain('REVERB_APP_KEY')
-            ->expectsOutputToContain('REVERB_HOST')
+            ->expectsOutputToContain('faltam no .env: REVERB_APP_KEY, REVERB_HOST')
             ->assertExitCode(1);
     });
 
@@ -58,7 +62,11 @@ describe('push:check', function () {
         $keys = VAPID::createVapidKeys();
         config(['webpush.public_key' => $keys['publicKey'], 'webpush.private_key' => $keys['privateKey'], 'webpush.subject' => 'mailto:push@exemplo.com', 'app.url' => 'https://exemplo.com']);
 
-        $this->artisan('push:check')->expectsOutputToContain('chaves VAPID válidas')->assertExitCode(0);
+        $exit = Artisan::call('push:check');
+        $output = Artisan::output();
+
+        $this->assertSame(0, $exit, $output);
+        $this->assertStringContainsString('chaves VAPID válidas', $output);
     });
 
     it('fails on a site without https and on a subject that the push services reject', function () {

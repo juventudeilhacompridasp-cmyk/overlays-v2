@@ -40,8 +40,10 @@ class CheckWebPush extends Command
 
     private function keys(string $public, string $private): void
     {
-        $decodedPublic = base64_decode(strtr($public, '-_', '+/'), true);
-        $decodedPrivate = base64_decode(strtr($private, '-_', '+/'), true);
+        // base64 url-safe sem preenchimento (como o createVapidKeys entrega): completa o "=" antes de decodificar.
+        $decode = fn (string $value): string|false => base64_decode(strtr($value, '-_', '+/').str_repeat('=', (4 - strlen($value) % 4) % 4), true);
+        $decodedPublic = $decode($public);
+        $decodedPrivate = $decode($private);
 
         if ($decodedPublic === false || strlen($decodedPublic) !== 65 || $decodedPublic[0] !== "\x04") {
             $this->bad('VAPID_PUBLIC_KEY não é uma chave pública P-256 (65 bytes, base64 url-safe).');
