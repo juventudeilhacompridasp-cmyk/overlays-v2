@@ -41,7 +41,7 @@ function sheetFor(Game $game, UploadedFile $file): GameSheetUpload
 {
     test()->actingAs(panelUser(Role::Operator))->post(route('panel.games.uploads.store', $game), ['file' => $file])->assertSessionHas('success');
 
-    return GameSheetUpload::query()->latest('created_at')->firstOrFail();
+    return GameSheetUpload::query()->latest('id')->firstOrFail();
 }
 
 function requestRead(GameSheetUpload $upload, Role $role = Role::Operator)
@@ -109,7 +109,7 @@ describe('structured reading (CSV/XLSX, no AI)', function () {
             ->and(collect($data['events'])->pluck('type')->all())->toBe(['goal', 'goal', 'yellow_card', 'substitution'])
             ->and($data['events'][3])->toMatchArray(['name' => 'Beltrano', 'detail' => 'Fulano de Tal', 'minute' => '60'])
             ->and($data['notes'])->toBe('Jogo começou atrasado')
-            ->and($data['confidence'])->toBe(1.0);
+            ->and($data['confidence'])->toEqual(1.0);
 
         Http::assertNothingSent();
         expect(GameSheetRead::query()->where('reader', 'structured')->count())->toBe(1);
@@ -198,7 +198,7 @@ describe('reading a photo or PDF with AI', function () {
             ->and($data['away_score'])->toBe(1)
             ->and($data['lineups'])->toHaveCount(1)
             ->and($data['lineups'][0]['name'])->toBe('Fulano [removido]')
-            ->and($data['lineups'][0]['confidence'])->toBe(1.0)
+            ->and($data['lineups'][0]['confidence'])->toEqual(1.0)
             ->and($data['lineups'][0])->not->toHaveKey('cpf')
             ->and($data['events'][1])->toMatchArray(['type' => 'other', 'shirt' => null, 'minute' => '45+2'])
             ->and($data['notes'])->toBe('Telefone [removido] do árbitro')
@@ -343,7 +343,9 @@ describe('access', function () {
         $upload = sheetFor(Game::factory()->create(), UploadedFile::fake()->createWithContent('sumula.csv', READ_CSV));
         CurrentOrganization::get()->update(['plan' => Plan::Pro->value, 'features' => null, 'opt_in_features' => null]);
 
-        requestRead($upload, Role::Admin)->assertForbidden();
+        requestRead($upload, Role::Admin)->assertRedirect();
+
+        expect($upload->refresh()->status)->toBe(SheetUploadStatus::Uploaded);
     });
 
     it('lets the administrator save the AI switch and the per-game limit, and nobody else', function () {
