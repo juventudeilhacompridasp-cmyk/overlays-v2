@@ -17,6 +17,17 @@ toda IA recebe escopo, critérios de aceite e comandos de teste. Humano revisa m
 | **7 Multiesporte** | Futsal → vôlei → basquete | Novos `SportRuleset`, eventos e classificação por tipo de resultado, overlays por esporte |
 | **8 Extras** | Crescimento | PWA do mesário, push/WhatsApp, estatísticas avançadas, widgets embedáveis, escolinhas/reservas/editais (se houver demanda) |
 
+## Status (13/10/2026)
+| Fase | Situação |
+|---|---|
+| 0 Fundação · 1 Núcleo · 2 Súmula e disciplina · 3 Portal · 4 Tempo real e overlays | Entregues |
+| 5 Inscrição | Entregue: inscrição online, documentos, aprovação, carteirinha com QR, relatórios e CSV. **Financeiro/pagamentos online ficou de fora** (decisão: só se o painel mapeado exigir) |
+| 6 SaaS | Entregue: pacotes/recursos/limites por organização, área `/plataforma`, onboarding, domínio próprio/subdomínio, white-label, termos e privacidade com aceite. **Cobrança automática segue fora** |
+| 7 Multiesporte | Entregue: futsal, vôlei (sets) e basquete (pontos) — ver `docs/adr/0002-modelo-de-placar-por-esporte.md` |
+| 8 Extras | Entregue: estatísticas públicas, widgets embutíveis, app do mesário (PWA), avisos push e compartilhamento no WhatsApp. **Só se houver demanda:** escolinhas, reservas e editais |
+
+**Pendências conhecidas (sem ordem):** pedidos de tempo, faltas técnicas e relógio de posse no basquete; limite de substituições por set e rodízio/líbero no vôlei; fila de lançamentos offline no app do mesário; WhatsApp Business API (envio automático) e aviso por e-mail; teste real do Reverb e do push em HTTPS; deploy e escolha do nome da plataforma (ver ADR 0001).
+
 ## Divisão para múltiplas IAs (paralelizável após a Fase 0)
 | Trilha | Escopo (pasta) | Dependências |
 |---|---|---|
