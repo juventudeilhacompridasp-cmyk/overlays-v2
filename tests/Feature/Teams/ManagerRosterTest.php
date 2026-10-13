@@ -288,7 +288,8 @@ describe('supplement requests', function () {
     });
 
     it('goes through the organizer review and adds the approved people to the existing roster', function () {
-        ['entry' => $entry, 'manager' => $manager, 'hp' => $hp] = rosterSetup();
+        ['entry' => $entry, 'manager' => $manager, 'hp' => $hp, 'season' => $season] = rosterSetup();
+        setRegistrationSettings($season, []);
         $this->actingAs($manager)->post(route('manager.entries.supplement', $entry));
         $registration = Registration::query()->firstOrFail();
 
@@ -325,7 +326,8 @@ describe('supplement requests', function () {
     });
 
     it('refuses approval when a shirt number clashes, creating nobody', function () {
-        ['entry' => $entry, 'manager' => $manager] = rosterSetup();
+        ['entry' => $entry, 'manager' => $manager, 'season' => $season] = rosterSetup();
+        setRegistrationSettings($season, []);
         $this->actingAs($manager)->post(route('manager.entries.supplement', $entry));
         $registration = Registration::query()->firstOrFail();
 
