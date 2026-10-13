@@ -2,11 +2,13 @@
 
 namespace App\Modules\Matches\Models;
 
+use App\Modules\Competitions\Enums\Sport;
 use App\Modules\Competitions\Models\Division;
 use App\Modules\Competitions\Models\Entry;
 use App\Modules\Competitions\Models\Group;
 use App\Modules\Competitions\Models\Stage;
 use App\Modules\Matches\Enums\GameStatus;
+use App\Modules\Rules\Sheet\GameClock;
 use App\Modules\Tenancy\Concerns\BelongsToOrganization;
 use Database\Factories\GameFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
@@ -121,5 +123,17 @@ class Game extends Model
     public function lineups(): HasMany
     {
         return $this->hasMany(GameLineup::class);
+    }
+
+    /** Esporte do jogo (o da competição). */
+    public function sport(): Sport
+    {
+        return $this->division->season->competition->sport;
+    }
+
+    /** Cronômetro do jogo, com a duração dos períodos do esporte. */
+    public function clock(): GameClock
+    {
+        return $this->sport()->profile()->clock();
     }
 }

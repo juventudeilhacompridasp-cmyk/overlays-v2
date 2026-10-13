@@ -34,6 +34,7 @@ export interface Snapshot {
     division: string;
     stage: string;
     clock: GameClock;
+    fouls: { home: number; away: number; limit: number; period: number } | null;
     goals: Goal[];
     server_time_ms: number;
 }
@@ -151,6 +152,11 @@ export default function GameLive({ snapshot: initial, realtime }: { snapshot: Sn
                 <p className="mt-4 text-center text-lg font-semibold tabular-nums text-emerald-400" data-testid="live-clock" suppressHydrationWarning>
                     {ready || snapshot.clock.state !== 'running' ? clockText : '—'}
                 </p>
+                {snapshot.fouls && (
+                    <p className="mt-1 text-center text-sm text-gray-400" data-testid="live-fouls">
+                        Faltas: {snapshot.fouls.home} x {snapshot.fouls.away}
+                    </p>
+                )}
                 <div className="mt-6 grid grid-cols-2 gap-6">
                     <GoalList goals={snapshot.goals} side="home" />
                     <GoalList goals={snapshot.goals} side="away" />

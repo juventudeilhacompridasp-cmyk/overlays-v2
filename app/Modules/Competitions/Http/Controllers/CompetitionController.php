@@ -3,6 +3,7 @@
 namespace App\Modules\Competitions\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Competitions\Enums\Sport;
 use App\Modules\Competitions\Http\Requests\CompetitionRequest;
 use App\Modules\Competitions\Models\Competition;
 use App\Modules\Tenancy\CurrentOrganization;
@@ -33,7 +34,7 @@ class CompetitionController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Panel/Competitions/Form', ['competition' => null]);
+        return Inertia::render('Panel/Competitions/Form', ['competition' => null, 'sports' => $this->sports(), 'sport_locked' => false]);
     }
 
     public function store(CompetitionRequest $request): RedirectResponse
@@ -47,7 +48,7 @@ class CompetitionController extends Controller
         $competition = Competition::query()->create([
             ...$request->validated(),
             'slug' => $this->uniqueSlug($request->string('name')->toString()),
-            'sport' => 'football',
+            'sport' => $request->validated('sport', Sport::Football->value),
         ]);
 
         return to_route('panel.competitions.show', $competition)->with('success', 'Competição criada. Agora cadastre a primeira edição.');
@@ -69,19 +70,30 @@ class CompetitionController extends Controller
             ]);
 
         return Inertia::render('Panel/Competitions/Show', [
-            'competition' => $competition->only(['id', 'name', 'description']),
+            'competition' => [...$competition->only(['id', 'name', 'description']), 'sport_label' => $competition->sport->label()],
             'seasons' => $seasons,
         ]);
     }
 
     public function edit(Competition $competition): Response
     {
-        return Inertia::render('Panel/Competitions/Form', ['competition' => $competition->only(['id', 'name', 'description'])]);
+        return Inertia::render('Panel/Competitions/Form', [
+            'competition' => [...$competition->only(['id', 'name', 'description']), 'sport' => $competition->sport->value],
+            'sports' => $this->sports(),
+            // O esporte define cronômetro e regulamento padrão: só dá para trocar enquanto não há edições.
+            'sport_locked' => $competition->seasons()->exists(),
+        ]);
     }
 
     public function update(CompetitionRequest $request, Competition $competition): RedirectResponse
     {
-        $competition->update($request->validated());
+        $data = $request->validated();
+
+        if (isset($data['sport']) && $data['sport'] !== $competition->sport->value && $competition->seasons()->exists()) {
+            return back()->with('error', 'O esporte não pode mudar depois que a competição tem edições.');
+        }
+
+        $competition->update($data);
 
         return to_route('panel.competitions.show', $competition)->with('success', 'Competição atualizada.');
     }
@@ -91,6 +103,14 @@ class CompetitionController extends Controller
         $competition->delete();
 
         return to_route('panel.competitions.index')->with('success', 'Competição excluída, com suas edições, divisões, fases e jogos.');
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function sports(): array
+    {
+        return array_map(fn (Sport $sport) => ['value' => $sport->value, 'label' => $sport->label()], Sport::cases());
     }
 
     private function uniqueSlug(string $name): string

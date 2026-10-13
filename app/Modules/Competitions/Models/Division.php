@@ -84,6 +84,6 @@ class Division extends Model
             $rules['tiebreakers'] = $overrides['tiebreakers'];
         }
 
-        return RuleSet::fromArray($rules);
+        return RuleSet::fromArray($rules, $this->season->competition->sport->profile()->ruleDefaults);
     }
 }

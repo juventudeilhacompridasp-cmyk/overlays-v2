@@ -21,7 +21,7 @@ class GameEventRequest extends FormRequest
         return [
             'type' => ['required', Rule::in([
                 GameEventType::Goal->value, GameEventType::OwnGoal->value, GameEventType::YellowCard->value,
-                GameEventType::RedCard->value, GameEventType::BlueCard->value, GameEventType::Substitution->value,
+                GameEventType::RedCard->value, GameEventType::BlueCard->value, GameEventType::Substitution->value, GameEventType::Foul->value,
             ])],
             'entry_id' => ['required', 'string'],
             'person_id' => ['required', 'string'],

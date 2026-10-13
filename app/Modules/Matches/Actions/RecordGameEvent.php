@@ -5,6 +5,7 @@ namespace App\Modules\Matches\Actions;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Events\GameEventRecorded;
+use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Rules\Sheet\SheetEvent;
@@ -24,13 +25,17 @@ final class RecordGameEvent
 
     private const SHEET_TYPES = [
         GameEventType::Goal, GameEventType::OwnGoal, GameEventType::YellowCard, GameEventType::RedCard,
-        GameEventType::BlueCard, GameEventType::Substitution,
+        GameEventType::BlueCard, GameEventType::Substitution, GameEventType::Foul,
     ];
 
     public function handle(Game $game, GameEventType $type, string $entryId, ?string $personId, ?string $secondaryPersonId = null, int $period = 1, ?int $minute = null, ?int $recordedBy = null): GameEvent
     {
         if (! in_array($type, self::SHEET_TYPES, true)) {
             throw new InvalidArgumentException('Este tipo de lançamento não é suportado na súmula.');
+        }
+
+        if ($type === GameEventType::Foul && ! $game->sport()->profile()->tracksTeamFouls()) {
+            throw new InvalidArgumentException('Este esporte não registra faltas na súmula.');
         }
 
         if ($game->home_entry_id === null || $game->away_entry_id === null) {
@@ -72,6 +77,11 @@ final class RecordGameEvent
 
             return $event;
         });
+
+        // Falta não muda o placar: transmite o contador explicitamente.
+        if ($type === GameEventType::Foul) {
+            event(GameUpdated::for($game));
+        }
 
         GameEventRecorded::dispatch((string) $game->getKey(), (string) $event->getKey());
 

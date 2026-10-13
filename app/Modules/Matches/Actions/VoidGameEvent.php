@@ -72,7 +72,7 @@ final class VoidGameEvent
 
             $this->projectScore->handle($game);
 
-            if ($isMark) {
+            if ($isMark || $event->type === GameEventType::Foul) {
                 event(GameUpdated::for($game));
             }
 

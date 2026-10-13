@@ -68,6 +68,7 @@ interface Props {
     events: SheetEvent[];
     limits: { starters: number; bench: number; staff: number; substitutions: number; windows: number };
     event_types: Option[];
+    fouls: { home: number; away: number; limit: number; period: number } | null;
     clock: GameClock & { server_time_ms: number; max_period: number };
     public_url: string;
 }
@@ -83,6 +84,7 @@ const typeIcon: Record<string, string> = {
     substitution: '🔁',
     period_start: '▶️',
     period_end: '⏸️',
+    foul: '🚫',
 };
 
 function personName(team: Team, id: string): string {
@@ -405,7 +407,7 @@ function TeamCard({ game, team, limits }: { game: Props['game']; team: Team; lim
     );
 }
 
-export default function Sheet({ game: serverGame, home, away, events: serverEvents, limits, event_types, clock, public_url }: Props) {
+export default function Sheet({ game: serverGame, home, away, events: serverEvents, limits, event_types, fouls, clock, public_url }: Props) {
     // Quem não opera jogos só consulta a súmula: o servidor também recusa as ações, aqui só se escondem os controles.
     const canOperate = useCan('operate-games');
     const game = canOperate ? serverGame : { ...serverGame, open: false };
@@ -465,6 +467,22 @@ export default function Sheet({ game: serverGame, home, away, events: serverEven
             ) : (
                 <div className="space-y-6">
                     <ClockCard game={game} clock={clock} publicUrl={public_url} />
+                    {fouls && (
+                        <Card title={`Faltas acumuladas (${fouls.period}º tempo${fouls.period === 2 ? ' e prorrogação' : ''})`}>
+                            <div className="flex items-center justify-around text-center" data-testid="panel-fouls">
+                                {[
+                                    { name: home.name, value: fouls.home },
+                                    { name: away.name, value: fouls.away },
+                                ].map((side) => (
+                                    <div key={side.name}>
+                                        <div className={`text-3xl font-bold tabular-nums ${side.value >= fouls.limit ? 'text-amber-600' : ''}`}>{side.value}</div>
+                                        <div className="text-sm text-gray-500">{side.name}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="mt-2 text-xs text-gray-500">A partir da {fouls.limit}ª falta acumulada no tempo, cada nova falta é tiro livre direto sem barreira. Lance as faltas pelo formulário de lançamentos.</p>
+                        </Card>
+                    )}
 
                     <div className="grid gap-6 lg:grid-cols-2">
                         <TeamCard game={game} team={home} limits={limits} />

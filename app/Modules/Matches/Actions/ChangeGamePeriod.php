@@ -8,7 +8,6 @@ use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Rules\Sheet\ClockMark;
-use App\Modules\Rules\Sheet\GameClock;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -18,8 +17,6 @@ use InvalidArgumentException;
  */
 final class ChangeGamePeriod
 {
-    public function __construct(private readonly GameClock $clock = new GameClock) {}
-
     public function handle(Game $game, bool $start, int $period, ?int $recordedBy = null): GameEvent
     {
         if ($game->home_entry_id === null || $game->away_entry_id === null) {
@@ -31,7 +28,7 @@ final class ChangeGamePeriod
         }
 
         $event = DB::transaction(function () use ($game, $start, $period, $recordedBy): GameEvent {
-            $error = $this->clock->check(self::marks($game), new ClockMark($start, $period));
+            $error = $game->clock()->check(self::marks($game), new ClockMark($start, $period));
 
             if ($error !== null) {
                 throw new InvalidArgumentException($error);

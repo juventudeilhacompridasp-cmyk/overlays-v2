@@ -7,7 +7,7 @@ use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Portal\Support\PublicName;
-use App\Modules\Rules\Sheet\GameClock;
+use App\Modules\Rules\Sheet\ClockMark;
 use App\Modules\Teams\Models\Person;
 
 /**
@@ -52,7 +52,9 @@ final class PublicGameSnapshot
             'competition' => $game->division->season->competition->name,
             'division' => $game->division->name,
             'stage' => $game->stage->name,
-            'clock' => (new GameClock)->snapshot($marks),
+            'sport' => $game->sport()->value,
+            'clock' => $game->clock()->snapshot($marks),
+            'fouls' => self::fouls($game, $marks, $side),
             'goals' => $goals->map(function (GameEvent $event) use ($side, $names) {
                 $own = $event->type === GameEventType::OwnGoal;
                 $scoringSide = $side($event->entry_id);
@@ -68,5 +70,35 @@ final class PublicGameSnapshot
             })->values()->all(),
             'server_time_ms' => (int) (microtime(true) * 1000),
         ];
+    }
+
+    /**
+     * Faltas acumuladas por equipe no tempo em andamento (null se o esporte não conta faltas).
+     * Só números: quem cometeu a falta não é divulgado.
+     *
+     * @param  list<ClockMark>  $marks
+     * @return array{home: int, away: int, limit: int, period: int}|null
+     */
+    private static function fouls(Game $game, array $marks, \Closure $side): ?array
+    {
+        $profile = $game->sport()->profile();
+
+        if ($profile->teamFoulLimit === null) {
+            return null;
+        }
+
+        $current = $game->clock()->snapshot($marks)['period'] ?? 1;
+        $group = $profile->foulGroup((int) $current);
+        $counts = ['home' => 0, 'away' => 0];
+
+        $game->events()->effective()->where('type', GameEventType::Foul)->get()->each(function (GameEvent $event) use (&$counts, $side, $profile, $group): void {
+            $team = $side($event->entry_id);
+
+            if ($team !== null && $profile->foulGroup((int) $event->period) === $group) {
+                $counts[$team]++;
+            }
+        });
+
+        return ['home' => $counts['home'], 'away' => $counts['away'], 'limit' => $profile->teamFoulLimit, 'period' => $group];
     }
 }
