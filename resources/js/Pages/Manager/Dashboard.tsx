@@ -99,7 +99,14 @@ export function GameLine({ game }: { game: GameRow }) {
                     </div>
                 </div>
             </div>
-            <Badge tone={game.status === 'in_progress' ? 'red' : game.decided ? 'gray' : 'blue'}>{game.status_label}</Badge>
+            <div className="flex items-center gap-2">
+                {game.lineup && !game.decided && (
+                    <Badge tone={game.lineup === 'confirmed' ? 'green' : game.lineup === 'draft' ? 'amber' : 'gray'}>
+                        {game.lineup === 'confirmed' ? 'Escalação confirmada' : game.lineup === 'draft' ? 'Rascunho' : 'Sem escalação'}
+                    </Badge>
+                )}
+                <Badge tone={game.status === 'in_progress' ? 'red' : game.decided ? 'gray' : 'blue'}>{game.status_label}</Badge>
+            </div>
         </Link>
     );
 }

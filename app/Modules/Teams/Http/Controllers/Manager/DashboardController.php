@@ -41,7 +41,9 @@ class DashboardController extends Controller
             ->whereIn('status', [GameStatus::Finished, GameStatus::Walkover])
             ->orderByDesc('finished_at')->orderByDesc('id')->limit(5)->get();
 
-        $row = fn (Game $game): array => ManagerGameRow::of($game, $this->mine($game, $mine));
+        $mineIn = fn (Game $game): Entry => $this->mine($game, $mine);
+        $status = ManagerGameRow::lineupStatuses($upcoming, $mineIn);
+        $row = fn (Game $game): array => [...ManagerGameRow::of($game, $mineIn($game)), 'lineup' => $status[$game->getKey()] ?? null];
 
         return Inertia::render('Manager/Dashboard', [
             'teams' => $teams->map(fn (Team $team) => ['id' => $team->getKey(), 'name' => $team->name, 'logo_url' => $team->logoUrl(128)])->values(),

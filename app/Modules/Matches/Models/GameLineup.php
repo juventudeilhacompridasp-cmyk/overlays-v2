@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property LineupSlot $slot
+ * @property string|null $position
+ * @property bool $is_captain
  */
 #[Unguarded]
 #[UseFactory(GameLineupFactory::class)]
@@ -32,6 +34,7 @@ class GameLineup extends Model
     {
         return [
             'slot' => LineupSlot::class,
+            'is_captain' => 'boolean',
         ];
     }
 

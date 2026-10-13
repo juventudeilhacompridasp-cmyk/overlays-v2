@@ -21,6 +21,7 @@ use App\Modules\Matches\Http\Requests\GamePeriodRequest;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Support\PublicGameSnapshot;
+use App\Modules\Rules\Tactics\Formations;
 use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Enums\RosterStatus;
 use App\Modules\Teams\Models\RosterEntry;
@@ -34,7 +35,7 @@ class SheetController extends Controller
 {
     public function show(Game $game, BuildGameSheet $buildSheet, CalculateDiscipline $discipline): Response
     {
-        $game->load(['division.season.competition', 'stage', 'homeEntry.team', 'awayEntry.team', 'lineups']);
+        $game->load(['division.season.competition', 'stage', 'homeEntry.team', 'awayEntry.team', 'lineups', 'tactics']);
 
         $state = $buildSheet->handle($game);
         $open = ! $game->status->isDecided();
@@ -77,6 +78,12 @@ class SheetController extends Controller
                     'staff' => $ids(LineupSlot::Staff),
                 ],
                 'has_lineup' => $lineup->isNotEmpty(),
+                'tactic' => (function () use ($game, $entry): array {
+                    $tactic = $game->tactics->firstWhere('entry_id', $entry->getKey());
+                    $formation = $tactic?->formation !== null ? Formations::find($game->sport()->profile()->key, $tactic->formation) : null;
+
+                    return ['formation' => $formation?->label, 'confirmed' => $tactic?->isConfirmed() ?? false];
+                })(),
                 'has_events' => $game->events()->effective()->where('entry_id', $entry->getKey())->exists(),
                 'on_field' => $state->onField($entry->getKey()),
                 'available_bench' => $state->bench($entry->getKey()),

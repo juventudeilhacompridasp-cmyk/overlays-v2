@@ -69,7 +69,7 @@ Requisitos: o gestor tem **login e painel próprios**; define **escalação por 
   `lineup.manager_deadline_minutes` do regulamento (padrão 30; 0 = até o horário; jogo sem horário = até começar).
   Depois disso o gestor só **vê**; o mesário/organizador continua podendo ajustar pela súmula até o primeiro lançamento (inalterado).
 - Salvar rascunho é permitido (escalação parcial, desde que válida); "Confirmar escalação" grava `confirmed_at`. Qualquer alteração
-  depois da confirmação a limpa (volta a rascunho) — o organizador e o mesário veem, na lista de jogos e na súmula, quem já confirmou.
+  depois da confirmação a limpa (volta a rascunho): quem muda **quem joga** (o mesário pela súmula, por exemplo) desfaz a confirmação; reordenar ou mudar só a posição, não. O gestor vê a situação (`confirmed`/`draft`/`missing`) na lista de jogos e o mesário, na súmula.
 
 ### 6. Formações (esquema tático)
 - Pacote puro `Rules/Tactics` (sem banco): `Formation` (código, rótulo, esporte, **vagas** com `key`, rótulo, sigla, e coordenadas
@@ -80,8 +80,9 @@ Requisitos: o gestor tem **login e painel próprios**; define **escalação por 
   Posição **não é regra de jogo** (o servidor não impede um zagueiro na ponta): é informação tática. Só a consistência (vaga
   existente, sem repetição, formação do esporte) é validada.
 - Capitão: um atleta titular ou reserva (o regulamento do esporte pode exigir; hoje apenas validamos que é da escalação).
-- A formação, a posição e o capitão aparecem na súmula (atalho), no **overlay de escalação** (formação, sigla da posição, "C") e,
-  publicados, na página pública do jogo **depois que o jogo começa**. Dados pessoais e instruções privadas, nunca.
+- A formação e a confirmação aparecem na súmula e a formação, a sigla da posição e o capitão, no **overlay de escalação**. A página
+  pública do jogo **não** mostra escalação (decisão mantida: o snapshot público continua só com placar, relógio e gols). O adversário
+  vê a escalação do outro lado só depois que o jogo começa, com `PublicName`. Instruções privadas e dados pessoais, nunca.
 
 ### 7. LGPD
 - Menores: o gestor só vê elenco da **própria** equipe, com foto por URL assinada de curta duração e sem CPF/documentos. Nomes do

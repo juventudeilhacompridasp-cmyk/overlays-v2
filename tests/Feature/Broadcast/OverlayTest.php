@@ -66,10 +66,11 @@ it('only fills the lineup when the layer is on, with shirt numbers and nicknames
 
     expect($lineup['home']['starters'])->toHaveCount(11)
         ->and($lineup['home']['bench'])->toHaveCount(3)
-        ->and($lineup['home']['starters'][0])->toBe(['shirt' => 1, 'name' => 'Rafa'])
-        // Só camisa e nome (nada de cartões/documentos/nascimento). Confere as chaves: os nomes sorteados pela fábrica
-        // podem conter "card" (ex.: Ricardo), então buscar texto no JSON era instável.
-        ->and(collect([...$lineup['home']['starters'], ...$lineup['home']['bench'], ...$lineup['away']['starters'], ...$lineup['away']['bench']])->every(fn ($player) => array_keys($player) === ['shirt', 'name']))->toBeTrue();
+        ->and($lineup['home']['starters'][0])->toBe(['shirt' => 1, 'name' => 'Rafa', 'position' => null, 'captain' => false])
+        // Só camisa, nome, posição e capitão (nada de cartões/documentos/nascimento). Confere as chaves: os nomes sorteados
+        // pela fábrica podem conter "card" (ex.: Ricardo), então buscar texto no JSON era instável.
+        ->and(collect([...$lineup['home']['starters'], ...$lineup['away']['starters']])->every(fn ($player) => array_keys($player) === ['shirt', 'name', 'position', 'captain']))->toBeTrue()
+        ->and(collect([...$lineup['home']['bench'], ...$lineup['away']['bench']])->every(fn ($player) => array_keys($player) === ['shirt', 'name', 'captain']))->toBeTrue();
 });
 
 it('shows the standings of the league or group of the game and nothing for knockouts', function () {

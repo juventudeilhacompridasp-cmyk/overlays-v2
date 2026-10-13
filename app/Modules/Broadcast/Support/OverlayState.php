@@ -9,7 +9,9 @@ use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameLineup;
+use App\Modules\Matches\Models\GameTactic;
 use App\Modules\Matches\Support\PublicGameSnapshot;
+use App\Modules\Rules\Tactics\Formations;
 use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Models\RosterEntry;
 
@@ -48,9 +50,12 @@ final class OverlayState
             $rows = GameLineup::query()->where('game_id', $game->getKey())->where('entry_id', $entry->getKey())->get();
             $people = RosterEntry::query()->where('entry_id', $entry->getKey())->with('person:id,name,nickname')->get()->keyBy('person_id');
 
-            $named = function (string $slot) use ($rows, $people) {
+            $tactic = GameTactic::query()->where('game_id', $game->getKey())->where('entry_id', $entry->getKey())->first();
+            $formation = $tactic?->formation !== null ? Formations::find($game->sport()->profile()->key, $tactic->formation) : null;
+
+            $named = function (string $slot) use ($rows, $people, $formation) {
                 return $rows->where('slot', LineupSlot::from($slot))
-                    ->map(function (GameLineup $row) use ($people): array {
+                    ->map(function (GameLineup $row) use ($people, $formation): array {
                         $roster = $people->get($row->person_id);
                         $person = $roster?->person;
 
@@ -58,6 +63,8 @@ final class OverlayState
                             'shirt' => $row->shirt_number,
                             'name' => $person === null ? '—' : ($person->nickname ?: $person->name),
                             'role' => $roster?->role,
+                            'position' => $formation?->slot((string) $row->position)?->abbr,
+                            'captain' => $row->is_captain,
                         ];
                     })
                     ->sortBy(fn (array $item) => $item['shirt'] ?? 999)
@@ -70,8 +77,9 @@ final class OverlayState
                 'name' => $entry->team->name,
                 'logo_url' => $entry->team->logoUrl(128),
                 'color' => $entry->team->primary_color,
-                'starters' => $named('starter')->map(fn (array $i) => ['shirt' => $i['shirt'], 'name' => $i['name']])->all(),
-                'bench' => $named('bench')->map(fn (array $i) => ['shirt' => $i['shirt'], 'name' => $i['name']])->all(),
+                'formation' => $formation?->label,
+                'starters' => $named('starter')->map(fn (array $i) => ['shirt' => $i['shirt'], 'name' => $i['name'], 'position' => $i['position'], 'captain' => $i['captain']])->all(),
+                'bench' => $named('bench')->map(fn (array $i) => ['shirt' => $i['shirt'], 'name' => $i['name'], 'captain' => $i['captain']])->all(),
                 'coach' => $coach['name'] ?? null,
             ];
         };

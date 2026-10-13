@@ -45,6 +45,8 @@ final readonly class RuleSet
         public ?int $pointsWalkoverLoss = null,
         /** Faltas pessoais que eliminam o atleta (nulo = esporte sem esse controle). Basquete: 5. */
         public ?int $maxPlayerFouls = null,
+        /** Minutos antes do horário do jogo em que a escalação do gestor da equipe trava (0 = no horário do jogo). */
+        public int $managerLineupDeadlineMinutes = 30,
     ) {
         foreach (['setsToWin' => $setsToWin, 'setPoints' => $setPoints, 'decidingSetPoints' => $decidingSetPoints, 'setMinLead' => $setMinLead] as $name => $value) {
             if ($value < 1) {
@@ -62,7 +64,8 @@ final readonly class RuleSet
             'maxSubstitutions' => $maxSubstitutions, 'maxSubstitutionWindows' => $maxSubstitutionWindows,
             'maxStarters' => $maxStarters, 'maxBench' => $maxBench, 'maxStaff' => $maxStaff,
             'pointsNarrowWin' => $pointsNarrowWin ?? 0, 'pointsNarrowLoss' => $pointsNarrowLoss ?? 0,
-            'pointsWalkoverLoss' => $pointsWalkoverLoss ?? 0, 'maxPlayerFouls' => $maxPlayerFouls ?? 0] as $name => $value) {
+            'pointsWalkoverLoss' => $pointsWalkoverLoss ?? 0, 'maxPlayerFouls' => $maxPlayerFouls ?? 0,
+            'managerLineupDeadlineMinutes' => $managerLineupDeadlineMinutes] as $name => $value) {
             if ($value < 0) {
                 throw new InvalidArgumentException("O valor de {$name} não pode ser negativo.");
             }
@@ -147,6 +150,7 @@ final readonly class RuleSet
             pointsNarrowLoss: isset($merged['scoring']['points_narrow_loss']) ? (int) $merged['scoring']['points_narrow_loss'] : null,
             pointsWalkoverLoss: isset($merged['points']['walkover_loss']) ? (int) $merged['points']['walkover_loss'] : null,
             maxPlayerFouls: isset($merged['fouls']['max_player']) ? (int) $merged['fouls']['max_player'] : null,
+            managerLineupDeadlineMinutes: (int) $merged['lineup']['manager_deadline_minutes'],
         );
     }
 
@@ -168,7 +172,7 @@ final readonly class RuleSet
             ],
             'walkover' => ['winner_goals' => $this->walkoverWinnerGoals, 'loser_goals' => $this->walkoverLoserGoals],
             'substitutions' => ['max' => $this->maxSubstitutions, 'max_windows' => $this->maxSubstitutionWindows, 'allow_reentry' => $this->allowSubstitutionReentry],
-            'lineup' => ['max_starters' => $this->maxStarters, 'max_bench' => $this->maxBench, 'max_staff' => $this->maxStaff],
+            'lineup' => ['max_starters' => $this->maxStarters, 'max_bench' => $this->maxBench, 'max_staff' => $this->maxStaff, 'manager_deadline_minutes' => $this->managerLineupDeadlineMinutes],
             'scoring' => [
                 'model' => $this->scoreModel,
                 'sets_to_win' => $this->setsToWin,

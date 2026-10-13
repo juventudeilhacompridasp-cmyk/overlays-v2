@@ -33,8 +33,9 @@ export interface LineupSide {
     name: string;
     logo_url: string | null;
     color: string | null;
-    starters: { shirt: number | null; name: string }[];
-    bench: { shirt: number | null; name: string }[];
+    formation: string | null;
+    starters: { shirt: number | null; name: string; position: string | null; captain: boolean }[];
+    bench: { shirt: number | null; name: string; captain: boolean }[];
     coach: string | null;
 }
 

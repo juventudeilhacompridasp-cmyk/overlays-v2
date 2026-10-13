@@ -8,19 +8,24 @@ function Column({ side }: { side: LineupSide }) {
             <div className="flex items-center gap-3 px-5 py-3" style={{ borderBottom: `5px solid ${side.color ?? '#9ca3af'}` }}>
                 {side.logo_url && <img src={side.logo_url} alt="" className="h-10 w-10 object-contain" />}
                 <span className="truncate text-2xl font-extrabold uppercase">{side.name}</span>
+                {side.formation && <span className="ml-auto text-lg font-bold text-emerald-400">{side.formation}</span>}
             </div>
             <ol className="px-5 py-3 text-xl">
                 {side.starters.map((player, index) => (
                     <li key={index} className="flex gap-4 py-0.5">
                         <span className="w-8 text-right font-bold tabular-nums text-emerald-400">{player.shirt ?? ''}</span>
-                        <span className="truncate font-semibold">{player.name}</span>
+                        <span className="truncate font-semibold">
+                            {player.name}
+                            {player.captain && <span className="ml-2 text-base font-bold text-amber-300">(C)</span>}
+                        </span>
+                        {player.position && <span className="ml-auto text-sm font-semibold uppercase text-gray-300">{player.position}</span>}
                     </li>
                 ))}
             </ol>
             {side.bench.length > 0 && (
                 <div className="border-t border-white/10 px-5 py-2 text-sm text-gray-300">
                     <span className="font-semibold uppercase">Reservas: </span>
-                    {side.bench.map((player) => `${player.shirt ?? ''} ${player.name}`.trim()).join(' · ')}
+                    {side.bench.map((player) => `${player.shirt ?? ''} ${player.name}${player.captain ? ' (C)' : ''}`.trim()).join(' · ')}
                 </div>
             )}
             {side.coach && (

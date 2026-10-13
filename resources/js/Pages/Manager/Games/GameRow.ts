@@ -15,4 +15,5 @@ export interface GameRow {
     competition: string;
     stage: string;
     round: number | null;
+    lineup?: 'confirmed' | 'draft' | 'missing' | null;
 }
