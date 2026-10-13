@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\FrameOptions;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Modules\Market\Http\Middleware\EnsureAthlete;
 use App\Modules\Tenancy\Http\Middleware\EnsureFeature;
 use App\Modules\Tenancy\Http\Middleware\EnsureLegalAccepted;
 use App\Modules\Tenancy\Http\Middleware\EnsureMember;
@@ -47,6 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'panel.member' => EnsureMember::class,
             'manager.member' => EnsureTeamManager::class,
+            'athlete.member' => EnsureAthlete::class,
             'panel.can' => EnsurePanelAbility::class,
             'feature' => EnsureFeature::class,
             'legal.accepted' => EnsureLegalAccepted::class,

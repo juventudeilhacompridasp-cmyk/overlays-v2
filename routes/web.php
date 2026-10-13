@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Middleware\PrivateNoIndex;
 use App\Modules\Broadcast\Http\Controllers\OverlayController;
+use App\Modules\Market\Http\Controllers\SignupController;
 use App\Modules\Matches\Http\Controllers\PublicGameController;
 use App\Modules\Portal\Http\Controllers\CardVerifyController;
 use App\Modules\Portal\Http\Controllers\EmbedController;
@@ -67,8 +68,18 @@ Route::get('/overlay/{channel:token}/{overlay}', [OverlayController::class, 'sho
 Route::get('/jogos/{game}', [PublicGameController::class, 'show'])->name('public.games.show');
 Route::get('/jogos/{game}/estado', [PublicGameController::class, 'state'])->name('public.games.state');
 
+// Mercado de jogadores livres (ADR 0008): cadastro público do atleta; 404 sem o recurso, fora dos buscadores.
+Route::middleware(['guest', 'feature:market', PrivateNoIndex::class])->prefix('mercado')->group(function () {
+    Route::get('/cadastro', [SignupController::class, 'create'])->name('market.signup');
+    Route::post('/cadastro', [SignupController::class, 'store'])->middleware('throttle:6,1')->name('market.signup.store');
+});
+
 // Destino padrão depois do login: cada papel vai para o seu painel (o gestor de equipe tem o próprio).
-Route::get('/dashboard', fn () => redirect()->route(request()->user()?->role() === Role::TeamManager ? 'manager.dashboard' : 'panel.dashboard'))
+Route::get('/dashboard', fn () => redirect()->route(match (request()->user()?->role()) {
+    Role::TeamManager => 'manager.dashboard',
+    Role::Athlete => 'athlete.dashboard',
+    default => 'panel.dashboard',
+}))
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -86,5 +97,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/panel.php';
 require __DIR__.'/manager.php';
+require __DIR__.'/athlete.php';
 require __DIR__.'/platform.php';
 require __DIR__.'/auth.php';

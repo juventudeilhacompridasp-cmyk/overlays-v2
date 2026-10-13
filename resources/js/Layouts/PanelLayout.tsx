@@ -30,6 +30,11 @@ const managerNav: NavItem[] = [
     { label: 'Jogos e escalações', route: 'manager.games.index', match: 'manager.games.*', icon: 'M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z' },
 ];
 
+// Atleta do Mercado (ADR 0008): menu próprio, sem nada do painel do organizador.
+const athleteNav: NavItem[] = [
+    { label: 'Meu perfil', route: 'athlete.dashboard', match: 'athlete.dashboard', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1' },
+];
+
 const platformNav: NavItem = { label: 'Plataforma', route: 'platform.organizations.index', match: 'platform.*', icon: 'M4 7l8-4 8 4-8 4-8-4zM4 12l8 4 8-4M4 17l8 4 8-4' };
 
 const adminNav: NavItem[] = [
@@ -70,9 +75,9 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const withMesario = canOperate ? [nav[0], mesarioNav, ...base.slice(1)] : base;
     const all = canManageUsers ? [...withMesario, ...adminNav, usersNav, profilesNav] : withMesario;
     const withPlatform = auth.platform_admin ? [...all, platformNav, apiDocsNav] : all;
-    const items = auth.role === 'manager' ? managerNav : withPlatform.filter((item) => !item.feature || features.includes(item.feature));
+    const items = auth.role === 'manager' ? managerNav : auth.role === 'athlete' ? athleteNav : withPlatform.filter((item) => !item.feature || features.includes(item.feature));
     // Ajuda para todos: cada público tem a própria central (painel, gestor ou plataforma).
-    const helpArea = auth.role === 'manager' ? 'manager' : auth.role ? 'panel' : 'platform';
+    const helpArea = auth.role === 'manager' ? 'manager' : auth.role === 'athlete' ? 'athlete' : auth.role ? 'panel' : 'platform';
     const helpItem: NavItem = { label: 'Ajuda', route: `${helpArea}.help.index`, match: `${helpArea}.help.*`, icon: helpIcon };
     // Sem papel e sem ser Super Admin (ex.: só abriu o perfil) não há central de ajuda a abrir.
     const navItems = auth.role || auth.platform_admin ? [...items, helpItem] : items;

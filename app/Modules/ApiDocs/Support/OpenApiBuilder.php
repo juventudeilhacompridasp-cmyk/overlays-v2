@@ -119,7 +119,7 @@ final class OpenApiBuilder
      */
     public static function tagNames(): array
     {
-        return ['API pública v1', 'Tempo real e avisos', 'Portal público', 'Inscrição online', 'Widgets', 'Overlays (OBS)', 'Painel', 'Gestor de equipe', 'Plataforma', 'Autenticação e conta', 'Outras'];
+        return ['API pública v1', 'Tempo real e avisos', 'Portal público', 'Inscrição online', 'Widgets', 'Overlays (OBS)', 'Painel', 'Gestor de equipe', 'Atleta (Mercado)', 'Plataforma', 'Autenticação e conta', 'Outras'];
     }
 
     private function skip(LaravelRoute $route, string $uri): bool
@@ -208,6 +208,7 @@ final class OpenApiBuilder
             str_starts_with($name, 'overlay.') => 'Overlays (OBS)',
             str_starts_with($name, 'panel.') => 'Painel',
             str_starts_with($name, 'manager.') => 'Gestor de equipe',
+            str_starts_with($name, 'athlete.'), str_starts_with($name, 'market.') => 'Atleta (Mercado)',
             str_starts_with($name, 'platform.') => 'Plataforma',
             str_starts_with($name, 'registration.'), str_starts_with($trimmed, 'inscricoes'), str_starts_with($trimmed, 'minha-inscricao') => 'Inscrição online',
             str_starts_with($name, 'portal.'), str_starts_with($name, 'public.'), $trimmed === '' => 'Portal público',
@@ -226,6 +227,7 @@ final class OpenApiBuilder
             str_contains($uri, '{channel:token}') || str_contains($uri, '{channel}') => 'Token do canal na URL',
             str_contains($uri, 'minha-inscricao/{token}') => 'Link pessoal na URL',
             in_array('manager.member', $middleware, true) => 'Gestor de equipe (sessão)',
+            in_array('athlete.member', $middleware, true) => 'Atleta (sessão)',
             in_array('panel.member', $middleware, true) => 'Membro do painel (sessão)',
             (bool) array_filter($middleware, fn (string $item) => $item === 'auth' || str_starts_with($item, 'auth:')) => 'Usuário logado (sessão)',
             default => 'Pública',

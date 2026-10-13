@@ -11,6 +11,7 @@ namespace App\Modules\Tenancy\Enums;
  * - Consulta: apenas visualiza o painel.
  * - Gestor de equipe: NÃO usa o painel do organizador; tem o próprio painel (`/gestor`), restrito às equipes a que está vinculado
  *   (`team_managers`). Não tem nenhuma `Ability`: nada do painel se abre por engano (ADR 0003).
+ * - Atleta: jogador livre do Mercado (ADR 0008); painel próprio (`/atleta`), sem nenhuma `Ability`.
  */
 enum Role: string
 {
@@ -19,6 +20,7 @@ enum Role: string
     case Operator = 'operator';
     case Viewer = 'viewer';
     case TeamManager = 'manager';
+    case Athlete = 'athlete';
 
     public function label(): string
     {
@@ -28,6 +30,7 @@ enum Role: string
             self::Operator => 'Operador de jogo',
             self::Viewer => 'Consulta',
             self::TeamManager => 'Gestor de equipe',
+            self::Athlete => 'Atleta',
         };
     }
 
@@ -38,7 +41,7 @@ enum Role: string
             self::Admin => Ability::cases(),
             self::Organizer => [Ability::ManageCompetitions, Ability::ManageRegistry, Ability::OperateGames],
             self::Operator => [Ability::OperateGames],
-            self::Viewer, self::TeamManager => [],
+            self::Viewer, self::TeamManager, self::Athlete => [],
         };
     }
 
@@ -52,10 +55,21 @@ enum Role: string
         return array_map(Permission::forAbility(...), $this->abilities());
     }
 
-    /** Papéis da equipe interna da organização (usam `/painel`); o gestor de equipe tem painel próprio. */
+    /** Papéis da equipe interna da organização (usam `/painel`); gestor de equipe e atleta têm painel próprio. */
     public function usesPanel(): bool
     {
-        return $this !== self::TeamManager;
+        return ! in_array($this, self::outsiders(), true);
+    }
+
+    /**
+     * Papéis que não são da equipe interna (painel próprio, sem abilities). Não contam no limite de usuários e não aparecem
+     * em Painel > Usuários.
+     *
+     * @return list<self>
+     */
+    public static function outsiders(): array
+    {
+        return [self::TeamManager, self::Athlete];
     }
 
     public function can(Ability $ability): bool

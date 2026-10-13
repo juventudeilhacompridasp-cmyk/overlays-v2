@@ -22,7 +22,7 @@ final class ManageMembers
     {
         $max = CurrentOrganization::get()?->limit('max_users');
 
-        if ($max !== null && Membership::query()->where('role', '!=', Role::TeamManager)->count() >= $max) {
+        if ($max !== null && Membership::query()->whereNotIn('role', Role::outsiders())->count() >= $max) {
             throw new InvalidArgumentException("O pacote da organização permite no máximo {$max} usuários.");
         }
 
@@ -48,8 +48,8 @@ final class ManageMembers
     {
         $role ??= Role::Viewer;
 
-        if ($role === Role::TeamManager || $membership->role === Role::TeamManager) {
-            throw new InvalidArgumentException('O gestor de equipe é gerenciado na tela da equipe.');
+        if (! $role->usesPanel() || ! $membership->role->usesPanel()) {
+            throw new InvalidArgumentException('Gestor de equipe e atleta não são gerenciados aqui.');
         }
 
         $permissions = $profile !== null ? $profile->permissions() : $role->permissions();

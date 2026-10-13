@@ -56,6 +56,7 @@ TEXT;
 - CPF: não guardamos o número; guardamos apenas um código irreversível (hash) usado para localizar cadastros e evitar duplicidade.
 - Jogos: escalações, gols, cartões e suspensões.
 - Usuários do painel: nome, e-mail e papel.
+- Mercado de jogadores (se a organização o ativar): nome, e-mail, data de nascimento (só maiores de 18 anos), foto, posição, disponibilidade, região, apresentação e o contato que você escolher.
 
 # 3. Para que usamos
 Para organizar a competição: validar inscrições, montar elencos e tabelas, registrar súmulas, aplicar regras de disciplina, emitir carteirinhas e divulgar resultados. Não vendemos dados.
@@ -64,7 +65,7 @@ Para organizar a competição: validar inscrições, montar elencos e tabelas, r
 Execução da relação com a competição, cumprimento do regulamento e, quando necessário, consentimento — que você pode revogar. Para menores de 18 anos o tratamento depende do consentimento específico de pelo menos um dos pais ou do responsável legal (art. 14 da LGPD).
 
 # 5. O que é público
-O portal mostra equipes, placares, classificação e artilharia. Nomes de adultos aparecem como apelido ou nome; nomes de menores aparecem abreviados (ex.: "João S."). Fotos, documentos, data de nascimento, CPF, cartões e dados de disciplina individuais não são exibidos publicamente.
+No Mercado de jogadores, o seu perfil só é visível para os gestores de equipe da organização — nunca no portal público — e o seu telefone ou e-mail só é revelado à equipe cujo contato você aceitar; você pode pausar ou apagar o perfil a qualquer momento. O portal mostra equipes, placares, classificação e artilharia. Nomes de adultos aparecem como apelido ou nome; nomes de menores aparecem abreviados (ex.: "João S."). Fotos, documentos, data de nascimento, CPF, cartões e dados de disciplina individuais não são exibidos publicamente.
 
 # 6. Compartilhamento e segurança
 Documentos e fotos ficam em armazenamento privado e só são acessados por pessoas autorizadas, por links temporários. O acesso ao painel exige login e é limitado por papel. Podemos usar prestadores de infraestrutura (hospedagem e e-mail) que tratam dados em nosso nome. Se ativarmos a leitura de súmulas enviadas depois do jogo, a foto ou o PDF da súmula pode ser processado por um serviço externo de inteligência artificial, apenas para extrair o texto (sem documentos pessoais), com revisão humana do resultado; essa leitura pode ser desligada pela organização.

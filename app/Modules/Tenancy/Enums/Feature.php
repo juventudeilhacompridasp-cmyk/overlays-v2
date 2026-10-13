@@ -15,14 +15,16 @@ enum Feature: string
     case Push = 'push';
     case TeamPortal = 'team_portal';
     case SheetImport = 'sheet_import';
+    case Market = 'market';
 
     /**
      * Recurso sob demanda: fica DESLIGADO para todas as organizações, em qualquer pacote, até a plataforma liberá-lo
-     * (`organizations.opt_in_features`, em /plataforma). Hoje: o que envia dados a serviço externo de IA.
+     * (`organizations.opt_in_features`, em /plataforma). Hoje: o que envia dados a serviço externo de IA e o Mercado de
+     * jogadores livres (cadastro público de atletas, ADR 0008).
      */
     public function isOptIn(): bool
     {
-        return $this === self::SheetImport;
+        return $this === self::SheetImport || $this === self::Market;
     }
 
     /**
@@ -56,6 +58,7 @@ enum Feature: string
             self::Push => 'Avisos push (jogos e equipes)',
             self::TeamPortal => 'Área do gestor de equipe (escalação e esquema tático)',
             self::SheetImport => 'Súmulas enviadas depois do jogo (leitura e conferência)',
+            self::Market => 'Mercado de jogadores livres',
         };
     }
 }
