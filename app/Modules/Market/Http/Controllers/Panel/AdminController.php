@@ -40,7 +40,7 @@ class AdminController extends Controller
                 'status' => $profile->status->value,
                 'status_label' => $profile->status->label(),
                 'suspended_reason' => $profile->suspended_reason,
-                'open_reports' => $profile->open_reports_count,
+                'open_reports' => (int) $profile->getAttribute('open_reports_count'),
                 'published_at' => $profile->published_at?->format('d/m/Y'),
             ]);
 
@@ -50,7 +50,7 @@ class AdminController extends Controller
                 'id' => $report->getKey(),
                 'kind' => $report->reporter_kind,
                 'reporter' => $report->reporter_kind === MarketReport::ATHLETE ? $this->name($report->profile) : $report->reporter->name,
-                'about' => $report->reporter_kind === MarketReport::ATHLETE ? 'Equipe '.($report->team?->name ?? '—') : 'Jogador '.$this->name($report->profile),
+                'about' => $report->reporter_kind === MarketReport::ATHLETE ? 'Equipe '.($report->team->name ?? '—') : 'Jogador '.$this->name($report->profile),
                 'profile_id' => $report->profile_id,
                 'profile_status' => $report->profile->status->value,
                 'reason' => $report->reason,
