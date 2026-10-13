@@ -29,6 +29,7 @@ final class OverlayState
 
         return [
             'channel' => $channel->name,
+            'appearance' => OverlayAppearance::normalize($channel->appearance),
             'layers' => array_merge(array_fill_keys(OverlayChannel::LAYERS, false), array_map('boolval', $channel->layers ?? [])),
             'game' => $game ? PublicGameSnapshot::for($game) : null,
             'lineup' => $game && $channel->layerOn('lineup') ? self::lineup($game) : null,

@@ -39,6 +39,15 @@ it('builds the overlay state with the score, the clock and the logos', function 
     $state = OverlayState::for($channel);
 
     expect($state['channel'])->toBe($channel->name)
+        ->and($state['appearance'])->toBe([
+            'preset' => 'arena',
+            'accent_color' => '#14b8a6',
+            'background_color' => '#0f172a',
+            'text_color' => '#f8fafc',
+            'position' => 'top-left',
+            'scale' => 1.0,
+            'motion' => 'dynamic',
+        ])
         ->and($state['game']['id'])->toBe($game->id)
         ->and($state['game']['home']['color'])->toBe('#ff0000')
         ->and($state['game']['clock']['state'])->toBe('not_started')
@@ -177,13 +186,20 @@ describe('panel', function () {
         $channel = OverlayChannel::query()->where('name', 'Principal')->firstOrFail();
 
         expect(strlen($channel->token))->toBe(40);
+        expect($channel->control_token_hash)->toHaveLength(64);
 
         $this->get('/painel/broadcast')->assertOk()->assertInertia(fn ($page) => $page
             ->component('Panel/Broadcast/Index')
             ->has('channels', 1)
             ->where('channels.0.overlays.0.url', url("/overlay/{$channel->token}/placar"))
             ->has('channels.0.overlays', 4)
+            ->where('channels.0.appearance.preset', 'arena')
+            ->where('channels.0.has_control_token', true)
+            ->where('issued_control.channel_id', $channel->id)
+            ->has('issued_control.token')
             ->where('channels.0.layers', ['lineup' => false, 'standings' => false]));
+
+        $this->get('/painel/broadcast')->assertInertia(fn ($page) => $page->where('issued_control', null));
 
         $this->post('/painel/broadcast', ['name' => 'Principal'])->assertSessionHasErrors('name');
         $this->delete("/painel/broadcast/{$channel->id}")->assertSessionHas('success');
@@ -196,11 +212,18 @@ describe('panel', function () {
         $this->actingAs(panelUser(Role::Operator));
         Event::fake([OverlayUpdated::class]);
 
-        $this->patch("/painel/broadcast/{$channel->id}", ['game_id' => $game->id, 'layers' => ['lineup' => true, 'inventada' => true]])
+        $this->patch("/painel/broadcast/{$channel->id}", [
+            'game_id' => $game->id,
+            'layers' => ['lineup' => true, 'inventada' => true],
+            'appearance' => ['accent_color' => '#ff5500', 'position' => 'top-right', 'motion' => 'subtle'],
+        ])
             ->assertSessionHas('success');
 
         $channel->refresh();
-        expect($channel->game_id)->toBe($game->id)->and($channel->layers)->toBe(['lineup' => true]);
+        expect($channel->game_id)->toBe($game->id)
+            ->and($channel->layers)->toBe(['lineup' => true])
+            ->and($channel->appearance['accent_color'])->toBe('#ff5500')
+            ->and($channel->appearance['position'])->toBe('top-right');
         $this->get('/painel/broadcast')->assertInertia(fn ($page) => $page->where('channels.0.layers', ['lineup' => true, 'standings' => false]));
         Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['lineup'] !== null && $event->state['game']['id'] === $game->id);
 
@@ -232,6 +255,19 @@ describe('panel', function () {
         $this->get("/overlay/{$channel->fresh()->token}/placar")->assertOk();
     });
 
+    it('renews the api control key and only stores its hash', function () {
+        $channel = channelFor();
+        $this->actingAs(panelUser(Role::Organizer));
+
+        $this->post("/painel/broadcast/{$channel->id}/control-token")
+            ->assertSessionHas('success')
+            ->assertSessionHas('overlay_issued_control', fn (array $issued) => $issued['channel_id'] === $channel->id && strlen($issued['token']) === 64);
+
+        $issued = session('overlay_issued_control');
+        expect($channel->fresh()->control_token_hash)->toBe(OverlayChannel::controlTokenHash($issued['token']))
+            ->and($channel->fresh()->toArray())->not->toHaveKeys(['control_token', 'control_token_hash']);
+    });
+
     it('applies the permissions of each role', function () {
         $channel = channelFor();
 
@@ -246,5 +282,53 @@ describe('panel', function () {
         $this->post("/painel/broadcast/{$channel->id}/regenerate")->assertSessionHas('error');
 
         expect(OverlayChannel::query()->count())->toBe(1)->and($channel->fresh()->layers)->toBe([]);
+    });
+});
+
+describe('control api', function () {
+    it('updates the on-air state and appearance with the private bearer key', function () {
+        ['game' => $game] = sheetGame();
+        $token = OverlayChannel::newControlToken();
+        $channel = channelFor();
+        $channel->update(['control_token_hash' => OverlayChannel::controlTokenHash($token)]);
+        Event::fake([OverlayUpdated::class]);
+
+        $this->withToken($token)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", [
+            'game_id' => $game->id,
+            'layers' => ['lineup' => true],
+            'appearance' => ['accent_color' => '#AABBCC', 'scale' => 1.25, 'motion' => 'none'],
+        ])->assertOk()
+            ->assertJsonPath('data.game.id', $game->id)
+            ->assertJsonPath('data.layers.lineup', true)
+            ->assertJsonPath('data.appearance.accent_color', '#aabbcc')
+            ->assertJsonPath('data.appearance.scale', 1.25)
+            ->assertJsonMissingPath('data.control_token_hash');
+
+        Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['appearance']['motion'] === 'none');
+    });
+
+    it('refuses a missing, wrong or public viewing token', function () {
+        $controlToken = OverlayChannel::newControlToken();
+        $channel = channelFor();
+        $channel->update(['control_token_hash' => OverlayChannel::controlTokenHash($controlToken)]);
+
+        $this->patchJson("/api/v1/overlay-channels/{$channel->id}/state", ['layers' => ['lineup' => true]])->assertUnauthorized();
+        $this->withToken('wrong')->patchJson("/api/v1/overlay-channels/{$channel->id}/state", ['layers' => ['lineup' => true]])->assertUnauthorized();
+        $this->withToken($channel->token)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", ['layers' => ['lineup' => true]])->assertUnauthorized();
+
+        expect($channel->fresh()->layers)->toBe([]);
+    });
+
+    it('validates visual attributes and refuses games from another organization', function () {
+        $token = OverlayChannel::newControlToken();
+        $channel = channelFor();
+        $channel->update(['control_token_hash' => OverlayChannel::controlTokenHash($token)]);
+        $foreign = Game::factory()->create();
+        Game::query()->whereKey($foreign->id)->update(['organization_id' => Organization::factory()->create(['slug' => 'api-outra'])->id]);
+
+        $this->withToken($token)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", [
+            'game_id' => $foreign->id,
+            'appearance' => ['accent_color' => 'red', 'motion' => 'explosive', 'scale' => 4],
+        ])->assertUnprocessable()->assertJsonValidationErrors(['game_id', 'appearance.accent_color', 'appearance.motion', 'appearance.scale']);
     });
 });
