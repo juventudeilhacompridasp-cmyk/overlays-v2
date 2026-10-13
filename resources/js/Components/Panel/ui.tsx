@@ -6,6 +6,7 @@ import {
     ReactNode,
     SelectHTMLAttributes,
     TextareaHTMLAttributes,
+    forwardRef,
     useRef,
     useState,
 } from 'react';
@@ -93,9 +94,9 @@ export function Field({
     );
 }
 
-export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
-    return <input {...props} className={`${inputBase} ${props.className ?? ''}`} />;
-}
+export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input(props, ref) {
+    return <input {...props} ref={ref} className={`${inputBase} ${props.className ?? ''}`} />;
+});
 
 /** Select pesquisável padrão (busca a partir de 2 letras); mesma API do `<select>`. Ver `SearchSelect`. */
 export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {

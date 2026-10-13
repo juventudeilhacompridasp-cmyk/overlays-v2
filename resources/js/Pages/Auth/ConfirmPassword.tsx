@@ -20,18 +20,12 @@ export default function ConfirmPassword() {
     };
 
     return (
-        <GuestLayout>
-            <Head title="Confirm Password" />
+        <GuestLayout title="Confirme sua senha" subtitle="Esta é uma área protegida. Confirme a senha para continuar.">
+            <Head title="Confirmar senha" />
 
-            <div className="mb-4 text-sm text-gray-600">
-                This is a secure area of the application. Please confirm your
-                password before continuing.
-            </div>
-
-            <form onSubmit={submit}>
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
+            <form onSubmit={submit} className="space-y-4">
+                <div>
+                    <InputLabel htmlFor="password" value="Senha" />
                     <TextInput
                         id="password"
                         type="password"
@@ -41,15 +35,12 @@ export default function ConfirmPassword() {
                         isFocused={true}
                         onChange={(e) => setData('password', e.target.value)}
                     />
-
-                    <InputError message={errors.password} className="mt-2" />
+                    <InputError message={errors.password} className="mt-1" />
                 </div>
 
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Confirm
-                    </PrimaryButton>
-                </div>
+                <PrimaryButton className="w-full" disabled={processing}>
+                    Confirmar
+                </PrimaryButton>
             </form>
         </GuestLayout>
     );

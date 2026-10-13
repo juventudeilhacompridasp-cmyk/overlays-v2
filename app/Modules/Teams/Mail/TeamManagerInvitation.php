@@ -15,10 +15,14 @@ class TeamManagerInvitation extends Mailable
 {
     public string $organizationName;
 
+    public string $brandColor;
+
     /** Só textos (nada de modelos): na fila não há organização atual para reler registros com o escopo da organização. */
     public function __construct(public string $recipientName, public string $teamName, public string $link, public bool $newAccount)
     {
-        $this->organizationName = PublicTheme::current()['name'];
+        $theme = PublicTheme::current();
+        $this->organizationName = $theme['name'];
+        $this->brandColor = $theme['primary'];
     }
 
     public function envelope(): Envelope
@@ -34,6 +38,7 @@ class TeamManagerInvitation extends Mailable
             'organization' => $this->organizationName,
             'link' => $this->link,
             'newAccount' => $this->newAccount,
+            'color' => $this->brandColor,
         ]);
     }
 }

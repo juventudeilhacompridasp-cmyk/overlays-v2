@@ -1,13 +1,17 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<body style="font-family: Arial, Helvetica, sans-serif; color: #111827; line-height: 1.5;">
-    <p>Olá, {{ $registration->contact_name }}.</p>
-    <p>{{ $headline }}</p>
+@extends('mail.layout')
+
+@section('content')
+    <p style="margin: 0 0 16px;">Olá, {{ $registration->contact_name }}.</p>
+    <p style="margin: 0 0 16px;">{{ $headline }}</p>
     @if ($note)
-        <p style="background: #f3f4f6; padding: 12px; border-radius: 6px;"><strong>Mensagem da organização:</strong><br>{{ $note }}</p>
+        <div style="margin: 0 0 16px; padding: 12px 14px; background-color: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 4px; font-size: 14px;">
+            <strong>Mensagem da organização:</strong><br>{{ $note }}
+        </div>
     @endif
-    <p><strong>Equipe:</strong> {{ $registration->team_name }}</p>
-    <p><a href="{{ $link }}" style="color: #047857;">Abrir meu pedido de inscrição</a></p>
-    <p style="font-size: 12px; color: #6b7280;">Este link é pessoal e dá acesso aos dados do pedido. Não o compartilhe. — {{ $organization }}</p>
-</body>
-</html>
+    <p style="margin: 0;"><span style="color: #6b7280;">Equipe:</span> <strong>{{ $registration->team_name }}</strong></p>
+    @include('mail.button', ['url' => $link, 'label' => 'Abrir meu pedido de inscrição', 'color' => $color ?? null])
+@endsection
+
+@section('footer')
+    Este link é pessoal e dá acesso aos dados do pedido. Não o compartilhe.
+@endsection

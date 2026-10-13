@@ -1,22 +1,36 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
 import ThemeToggle from '@/Components/ThemeToggle';
-import { Link } from '@inertiajs/react';
-import { PropsWithChildren } from 'react';
+import { Link, usePage } from '@inertiajs/react';
+import { PropsWithChildren, ReactNode } from 'react';
 
-export default function Guest({ children }: PropsWithChildren) {
+/** Telas de acesso (entrar, recuperar senha...): cartão central com a marca da organização/plataforma. */
+export default function Guest({
+    children,
+    title,
+    subtitle,
+}: PropsWithChildren<{ title?: string; subtitle?: ReactNode }>) {
+    const { brand } = usePage().props;
+
     return (
-        <div className="relative flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0">
+        <div className="relative flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-10">
             <div className="absolute right-4 top-4">
                 <ThemeToggle />
             </div>
-            <div>
-                <Link href="/">
-                    <ApplicationLogo className="h-20 w-20 fill-current text-gray-500" />
-                </Link>
-            </div>
 
-            <div className="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg">
-                {children}
+            <Link href="/" className="mb-6 flex items-center gap-3 text-xl font-bold text-emerald-700">
+                {brand.logo_url ? (
+                    <img src={brand.logo_url} alt="" className="h-10 w-10 rounded bg-[#ffffff] object-contain p-0.5" />
+                ) : (
+                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 text-lg text-white">
+                        {brand.name.slice(0, 1).toUpperCase()}
+                    </span>
+                )}
+                <span>{brand.name}</span>
+            </Link>
+
+            <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200 sm:p-8">
+                {title && <h1 className="text-xl font-bold text-gray-900">{title}</h1>}
+                {subtitle && <p className="mt-1 text-sm text-gray-600">{subtitle}</p>}
+                <div className={title ? 'mt-6' : ''}>{children}</div>
             </div>
         </div>
     );

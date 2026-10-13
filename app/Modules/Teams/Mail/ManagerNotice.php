@@ -2,6 +2,7 @@
 
 namespace App\Modules\Teams\Mail;
 
+use App\Modules\Portal\Support\PublicTheme;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -12,6 +13,8 @@ use Illuminate\Mail\Mailables\Envelope;
  */
 class ManagerNotice extends Mailable
 {
+    public string $brandColor;
+
     /** @param  list<string>  $lines */
     public function __construct(
         public string $recipientName,
@@ -20,7 +23,9 @@ class ManagerNotice extends Mailable
         public array $lines,
         public string $link,
         public string $organizationName,
-    ) {}
+    ) {
+        $this->brandColor = PublicTheme::current()['primary'];
+    }
 
     public function envelope(): Envelope
     {
@@ -35,6 +40,7 @@ class ManagerNotice extends Mailable
             'lines' => $this->lines,
             'link' => $this->link,
             'organization' => $this->organizationName,
+            'color' => $this->brandColor,
         ]);
     }
 }

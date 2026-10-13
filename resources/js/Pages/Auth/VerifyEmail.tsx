@@ -13,38 +13,33 @@ export default function VerifyEmail({ status }: { status?: string }) {
     };
 
     return (
-        <GuestLayout>
-            <Head title="Email Verification" />
-
-            <div className="mb-4 text-sm text-gray-600">
-                Thanks for signing up! Before getting started, could you verify
-                your email address by clicking on the link we just emailed to
-                you? If you didn't receive the email, we will gladly send you
-                another.
-            </div>
+        <GuestLayout
+            title="Confirme seu e-mail"
+            subtitle="Enviamos um link de confirmação para o seu e-mail. Clique nele para continuar. Se não chegou, podemos enviar outro."
+        >
+            <Head title="Confirmar e-mail" />
 
             {status === 'verification-link-sent' && (
-                <div className="mb-4 text-sm font-medium text-green-600">
-                    A new verification link has been sent to the email address
-                    you provided during registration.
+                <div className="mb-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800 ring-1 ring-emerald-200">
+                    Enviamos um novo link de confirmação para o seu e-mail.
                 </div>
             )}
 
-            <form onSubmit={submit}>
-                <div className="mt-4 flex items-center justify-between">
-                    <PrimaryButton disabled={processing}>
-                        Resend Verification Email
-                    </PrimaryButton>
+            <form onSubmit={submit} className="space-y-4">
+                <PrimaryButton className="w-full" disabled={processing}>
+                    Reenviar e-mail de confirmação
+                </PrimaryButton>
 
+                <p className="text-center text-sm">
                     <Link
                         href={route('logout')}
                         method="post"
                         as="button"
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        className="text-gray-600 hover:text-emerald-700 hover:underline"
                     >
-                        Log Out
+                        Sair
                     </Link>
-                </div>
+                </p>
             </form>
         </GuestLayout>
     );

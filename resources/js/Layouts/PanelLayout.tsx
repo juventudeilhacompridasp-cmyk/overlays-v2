@@ -74,7 +74,8 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     // Ajuda para todos: cada público tem a própria central (painel, gestor ou plataforma).
     const helpArea = auth.role === 'manager' ? 'manager' : auth.role ? 'panel' : 'platform';
     const helpItem: NavItem = { label: 'Ajuda', route: `${helpArea}.help.index`, match: `${helpArea}.help.*`, icon: helpIcon };
-    const navItems = [...items, helpItem];
+    // Sem papel e sem ser Super Admin (ex.: só abriu o perfil) não há central de ajuda a abrir.
+    const navItems = auth.role || auth.platform_admin ? [...items, helpItem] : items;
 
     const menu = (
         <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 pb-2">

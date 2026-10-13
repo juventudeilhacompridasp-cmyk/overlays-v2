@@ -19,10 +19,15 @@ class RegistrationMail extends Mailable
 
     public string $organizationName;
 
+    /** Cor da organização, lida na requisição (na fila não há organização atual). */
+    public string $brandColor;
+
     public function __construct(public Registration $registration, public string $subjectLine, public string $headline, public ?string $note = null)
     {
         $this->link = $registration->manageUrl();
-        $this->organizationName = PublicTheme::current()['name'];
+        $theme = PublicTheme::current();
+        $this->organizationName = $theme['name'];
+        $this->brandColor = $theme['primary'];
     }
 
     public static function opened(Registration $registration): self
@@ -59,6 +64,7 @@ class RegistrationMail extends Mailable
         return new Content(view: 'mail.registration', with: [
             'organization' => $this->organizationName,
             'link' => $this->link,
+            'color' => $this->brandColor,
         ]);
     }
 }
