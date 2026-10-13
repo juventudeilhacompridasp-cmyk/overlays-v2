@@ -3,6 +3,7 @@
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Portal\Support\PortalSettings;
 use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Tenancy\Actions\ChangeOrganizationLogo;
 use App\Modules\Tenancy\CurrentOrganization;
@@ -22,6 +23,8 @@ class OrganizationController extends Controller
         return Inertia::render('Panel/Organization/Edit', [
             'theme' => PublicTheme::current(),
             'portal_url' => route('portal.home'),
+            'portal_settings' => PortalSettings::all(),
+            'portal_switches' => collect(PortalSettings::SWITCHES)->map(fn (array $item, string $key) => ['key' => $key, 'label' => $item['label'], 'hint' => $item['hint']])->values(),
             'white_label' => CurrentOrganization::has(Feature::WhiteLabel),
             'logo_url' => CurrentOrganization::get() ? ChangeOrganizationLogo::url(CurrentOrganization::get(), 128) : null,
         ]);
@@ -53,6 +56,25 @@ class OrganizationController extends Controller
         abort_if($organization === null, 404);
 
         return $organization;
+    }
+
+    /** O que a página pública do jogo mostra (`settings.portal`). */
+    public function updatePortal(Request $request): RedirectResponse
+    {
+        $rules = [];
+
+        foreach (array_keys(PortalSettings::SWITCHES) as $key) {
+            $rules[$key] = ['required', 'boolean'];
+        }
+
+        $validated = $request->validate($rules);
+
+        $organization = $this->organization();
+        $settings = $organization->settings ?? [];
+        $settings['portal'] = array_map(fn ($value) => (bool) $value, $validated);
+        $organization->update(['settings' => $settings]);
+
+        return back()->with('success', 'Opções da página do jogo salvas.');
     }
 
     public function update(Request $request): RedirectResponse

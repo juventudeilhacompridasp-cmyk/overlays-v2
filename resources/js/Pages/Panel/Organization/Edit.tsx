@@ -30,7 +30,51 @@ function LogoCard({ logoUrl }: { logoUrl: string | null }) {
     );
 }
 
-export default function Edit({ theme, portal_url, white_label, logo_url }: { theme: { name: string; primary: string; tagline: string | null }; portal_url: string; white_label: boolean; logo_url: string | null }) {
+function PortalOptionsCard({ settings, switches }: { settings: Record<string, boolean>; switches: { key: string; label: string; hint: string }[] }) {
+    const { data, setData, patch, processing } = useForm<Record<string, boolean>>(settings);
+
+    return (
+        <Card title="Página pública do jogo" className="mt-6 max-w-2xl">
+            <form
+                className="space-y-3"
+                onSubmit={(event: FormEvent) => {
+                    event.preventDefault();
+                    patch(route('panel.organization.portal'), { preserveScroll: true });
+                }}
+            >
+                {switches.map((item) => (
+                    <label key={item.key} className="flex items-start gap-2 text-sm text-gray-800">
+                        <input type="checkbox" className="mt-1" checked={data[item.key] ?? false} onChange={(e) => setData(item.key, e.target.checked)} />
+                        <span>
+                            <span className="font-medium">{item.label}</span>
+                            <span className="block text-xs text-gray-500">{item.hint}</span>
+                        </span>
+                    </label>
+                ))}
+                <Button type="submit" disabled={processing}>
+                    Salvar
+                </Button>
+            </form>
+            <p className="mt-3 text-xs text-gray-500">Nomes de atletas seguem a regra de privacidade do portal (menores aparecem abreviados). Escalações, fotos e documentos nunca aparecem.</p>
+        </Card>
+    );
+}
+
+export default function Edit({
+    theme,
+    portal_url,
+    white_label,
+    logo_url,
+    portal_settings,
+    portal_switches,
+}: {
+    theme: { name: string; primary: string; tagline: string | null };
+    portal_url: string;
+    white_label: boolean;
+    logo_url: string | null;
+    portal_settings: Record<string, boolean>;
+    portal_switches: { key: string; label: string; hint: string }[];
+}) {
     const { data, setData, patch, processing, errors } = useForm({ name: theme.name, primary: theme.primary, tagline: theme.tagline ?? '' });
 
     const submit = (event: FormEvent) => {
@@ -72,6 +116,7 @@ export default function Edit({ theme, portal_url, white_label, logo_url }: { the
                     </Button>
                 </form>
             </Card>
+            <PortalOptionsCard settings={portal_settings} switches={portal_switches} />
             {white_label && <LogoCard logoUrl={logo_url} />}
         </PanelLayout>
     );

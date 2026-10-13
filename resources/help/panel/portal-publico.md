@@ -17,4 +17,12 @@ Em [Portal público](route:panel.organization.edit) o administrador ajusta a apa
 - Nomes de **menores** aparecem abreviados ("João S."); adultos, pelo apelido ou nome.
 - Nunca aparecem cartões, disciplina, escalações, elenco, fotos, CPF ou documentos.
 
+## Página pública do jogo
+Em Portal público, o cartão **Página pública do jogo** liga ou desliga o que aparece abaixo do placar:
+- **Linha do tempo**: gols e substituições com minuto (futebol e futsal; vôlei e basquete não têm).
+- **Cartões** na linha do tempo: **desligado por padrão**, porque cartão é dado disciplinar. Ligue só se a organização quiser mostrar.
+- **Posição na tabela** das duas equipes, **forma recente** (últimos 5 jogos) e **confronto direto** (histórico entre as duas equipes).
+
+Os nomes seguem a regra de privacidade: menores aparecem abreviados. Escalações, fotos e documentos nunca aparecem.
+
 Cada página já sai pronta para buscadores e compartilhamento (título, descrição e imagem). O botão de impressão gera a tabela em A4.
