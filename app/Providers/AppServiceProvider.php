@@ -8,6 +8,9 @@ use App\Modules\Broadcast\Listeners\SyncOverlays;
 use App\Modules\Matches\Events\GameEventRecorded;
 use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Portal\Push\GamePushNotifier;
+use App\Modules\Portal\Push\PushSender;
+use App\Modules\Portal\Push\WebPushSender;
 use App\Modules\Tenancy\Actions\ManageMembers;
 use App\Modules\Tenancy\Enums\Ability;
 use Illuminate\Auth\Events\Registered;
@@ -23,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(PushSender::class, WebPushSender::class);
     }
 
     /**
@@ -53,6 +56,7 @@ class AppServiceProvider extends ServiceProvider
         Game::updated(function (Game $game): void {
             if ($game->wasChanged(['home_score', 'away_score', 'home_penalties', 'away_penalties', 'sets', 'status', 'started_at', 'finished_at'])) {
                 event(GameUpdated::for($game));
+                GamePushNotifier::afterUpdate($game);
             }
         });
     }

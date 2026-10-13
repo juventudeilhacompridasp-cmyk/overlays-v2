@@ -12,6 +12,7 @@ enum Feature: string
     case CustomDomain = 'custom_domain';
     case WhiteLabel = 'white_label';
     case Embeds = 'embeds';
+    case Push = 'push';
 
     public function label(): string
     {
@@ -23,6 +24,7 @@ enum Feature: string
             self::CustomDomain => 'Domínio próprio',
             self::WhiteLabel => 'Marca própria (white-label)',
             self::Embeds => 'Widgets para outros sites',
+            self::Push => 'Avisos push (jogos e equipes)',
         };
     }
 }

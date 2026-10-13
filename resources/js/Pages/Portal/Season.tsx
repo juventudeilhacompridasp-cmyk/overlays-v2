@@ -1,4 +1,5 @@
 import { GameList, PortalGame } from '@/Components/Portal/GameList';
+import ShareButtons from '@/Components/Portal/ShareButtons';
 import PortalLayout, { Seo, Theme } from '@/Components/Portal/PortalLayout';
 import { Link } from '@inertiajs/react';
 import { useState } from 'react';
@@ -146,7 +147,8 @@ export default function Season({ theme, seo, competition, season, divisions, sta
                         {season.name} · {season.status_label}
                     </p>
                 </div>
-                <div className="flex gap-2 print:hidden">
+                <div className="flex flex-wrap gap-2 print:hidden">
+                    <ShareButtons text={`${competition.name} ${season.name} — classificação e jogos:`} url={route('portal.season', [competition.slug, season.id])} />
                     <Link href={stats_url} className="rounded-md bg-white px-3 py-2 text-sm font-medium ring-1 ring-gray-300 hover:bg-gray-100">
                         Estatísticas
                     </Link>

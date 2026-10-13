@@ -8,6 +8,7 @@ use App\Modules\Portal\Http\Controllers\CardVerifyController;
 use App\Modules\Portal\Http\Controllers\EmbedController;
 use App\Modules\Portal\Http\Controllers\LegalPageController;
 use App\Modules\Portal\Http\Controllers\PortalController;
+use App\Modules\Portal\Http\Controllers\PushController;
 use App\Modules\Registration\Http\Controllers\ApplyController;
 use App\Modules\Registration\Http\Controllers\ManageController;
 use App\Modules\Tenancy\Http\Controllers\LegalAcceptController;
@@ -19,6 +20,12 @@ Route::get('/competicoes/{competition:slug}', [PortalController::class, 'competi
 Route::get('/competicoes/{competition:slug}/edicoes/{season}', [PortalController::class, 'season'])->name('portal.season');
 Route::get('/competicoes/{competition:slug}/edicoes/{season}/estatisticas', [PortalController::class, 'stats'])->name('portal.stats');
 Route::get('/equipes/{team}', [PortalController::class, 'team'])->name('portal.team');
+// Avisos push do público (jogo ou equipe); exigem o recurso `push` e as chaves VAPID.
+Route::middleware(['throttle:30,1', 'feature:push'])->prefix('push')->name('push.')->group(function () {
+    Route::post('assinar', [PushController::class, 'subscribe'])->name('subscribe');
+    Route::post('cancelar', [PushController::class, 'unsubscribe'])->name('unsubscribe');
+});
+
 // Widgets para outros sites (iframe): sem login, só edição publicada, liberados pelo recurso "embeds".
 Route::middleware(['throttle:120,1', 'feature:embeds'])->prefix('embed')->name('embed.')->group(function () {
     Route::get('jogo/{game}', [EmbedController::class, 'game'])->name('game');

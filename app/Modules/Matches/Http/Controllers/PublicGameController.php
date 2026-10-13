@@ -5,6 +5,7 @@ namespace App\Modules\Matches\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Support\PublicGameSnapshot;
+use App\Modules\Portal\Push\PushConfig;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,6 +21,7 @@ class PublicGameController extends Controller
 
         return Inertia::render('Public/GameLive', [
             'snapshot' => PublicGameSnapshot::for($game),
+            'push_key' => PushConfig::publicKeyFor(),
             'realtime' => [
                 'key' => $realtime['key'],
                 'host' => $realtime['host'],
