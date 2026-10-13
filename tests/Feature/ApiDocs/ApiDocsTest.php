@@ -144,7 +144,7 @@ describe('the catalog', function () {
             foreach ($methods as $method => $operation) {
                 expect($operation['x-documented'])->toBeTrue("{$method} {$path} sem descrição no catálogo");
                 expect($operation['summary'])->not->toBe('');
-                expect(array_keys($operation['responses']))->toContain('200');
+                expect(array_map('strval', array_keys($operation['responses'])))->toContain('200');
             }
         }
     });
@@ -170,7 +170,7 @@ describe('the catalog', function () {
 
         expect($syncOperation['x-documented'])->toBeTrue()
             ->and($syncOperation['requestBody']['content']['application/json']['example']['items'])->not->toBeEmpty()
-            ->and(array_keys($syncOperation['responses']))->toContain('200', '423');
+            ->and(array_map('strval', array_keys($syncOperation['responses'])))->toContain('200', '423');
     });
 });
 
