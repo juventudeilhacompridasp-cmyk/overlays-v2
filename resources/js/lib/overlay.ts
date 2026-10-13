@@ -44,14 +44,16 @@ export interface LineupSide {
     logo_url: string | null;
     color: string | null;
     formation: string | null;
-    starters: { shirt: number | null; name: string; position: string | null; captain: boolean }[];
-    bench: { shirt: number | null; name: string; captain: boolean }[];
+    formation_ready: boolean;
+    starters: { shirt: number | null; name: string; position: string | null; position_label: string | null; x: number | null; y: number | null; captain: boolean; photo_url: string | null }[];
+    bench: { shirt: number | null; name: string; captain: boolean; photo_url: string | null }[];
     coach: string | null;
 }
 
 export interface OverlayState {
     channel: string;
     appearance: OverlayAppearance;
+    lineup_settings: { presentation: 'sequence' | 'list' | 'formation'; list_seconds: number };
     layers: { lineup: boolean; standings: boolean };
     game: OverlayGame | null;
     lineup: { home: LineupSide; away: LineupSide } | null;

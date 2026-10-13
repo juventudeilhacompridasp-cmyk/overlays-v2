@@ -13,6 +13,8 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
   validação do Reverb e do Web Push de verdade no CI; **fila offline da súmula** (PR 33).
 - Overlays visuais v1: preset Arena com cores, posição, escala e nível de animação por canal; atualização ao vivo no OBS e
   API privada para trocar jogo, camadas e aparência com chave de controle separada da URL pública.
+- Overlay de escalação visual: lista com fotos opcionais por atleta, transição configurável para o esquema tático e atletas
+  desenhados nas posições definidas pelo gestor; controle pelo painel e pela API, com URLs privadas curtas e sem IDs no estado público.
 
 ## Em andamento
 - (entregue neste PR) Teste de navegador (Playwright) da fila offline no CI:
@@ -25,7 +27,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
   recarregada (o service worker não guarda páginas por causa da LGPD).
 - Gestor de equipe: avisos por push/WhatsApp (hoje só e-mail).
 - Overlays: novos presets e variações de layout, fontes próprias, patrocinadores e composição de cenas continuam para os
-  próximos PRs; a v1 entrega o contrato de aparência e o preset Arena.
+  próximos PRs; Arena agora cobre placar, lances, tabela e escalação tática.
 - Cobrança automática (fora do MVP).
 
 ## Limitações do ambiente de desenvolvimento do agente

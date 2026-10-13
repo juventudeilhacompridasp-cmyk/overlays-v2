@@ -26,6 +26,15 @@ Em cada canal, a seção **Visual do overlay** configura o preset Arena:
 Clique em **Aplicar visual**. As fontes que já estão abertas no OBS recebem a mudança por Reverb, sem recarregar. As animações
 usam somente opacidade e transformação para reduzir o trabalho de renderização do Chromium do OBS.
 
+### Escalação visual
+
+Na seção **Escalação visual**, escolha entre lista, esquema tático ou a sequência automática **lista → esquema** e defina de
+3 a 20 segundos para a transição. O desenho usa a formação e as posições que o gestor da equipe salvou; se uma das equipes
+ainda não tiver todas as posições, o overlay mantém a lista em vez de inventar um esquema.
+
+Fotos são desligadas por padrão e habilitadas atleta por atleta. Apenas quem já possui foto cadastrada pode ser selecionado.
+Ao aplicar, uma miniatura privada de curta duração passa a aparecer na lista e no campo para quem tiver a URL do overlay.
+
 ## 2. Configurar o OBS (uma vez)
 1. Em *Fontes*, adicione uma **Fonte de navegador** para cada tela e cole a URL.
 2. **Largura 1920 e altura 1080** (a tela é desenhada para esse quadro). Não precisa de CSS personalizado: o fundo já é transparente.
@@ -45,7 +54,10 @@ usam somente opacidade e transformação para reduzir o trabalho de renderizaç�
 - Em produção, o endereço público do Reverb vem de `REVERB_PUBLIC_HOST/PORT/SCHEME` (ver `docs/03-infra-cicd.md`).
 
 ## 5. Privacidade
-Os overlays mostram **o que o operador coloca no ar**: placar, relógio, gols, lances e, sob demanda, escalação (nome/apelido e camisa) e tabela. Fotos, documentos e disciplina acumulada nunca são enviados. A decisão de exibir atletas menores de idade na transmissão é da organização.
+Os overlays mostram **o que o operador coloca no ar**: placar, relógio, gols, lances e, sob demanda, escalação e tabela.
+Documentos, nascimento, disciplina, notas táticas e IDs pessoais nunca são enviados. Fotos só entram quando o operador habilita
+o atleta explicitamente; a URL vem assinada do disco privado, vale por cinco minutos e a resposta da imagem usa `no-store`. A decisão
+de exibir nomes e fotos de atletas menores de idade na transmissão é da organização.
 
 ## 6. Controle por API
 
@@ -67,6 +79,11 @@ curl -X PATCH 'https://seu-dominio/api/v1/overlay-channels/ID_DO_CANAL/state' \
       "position": "top-right",
       "scale": 1.1,
       "motion": "dynamic"
+    },
+    "lineup_settings": {
+      "presentation": "sequence",
+      "list_seconds": 6,
+      "photo_person_ids": ["ID_DO_ATLETA_NA_ESCALACAO"]
     }
   }'
 ```
@@ -81,6 +98,10 @@ Todos os campos são opcionais; envie apenas o que quer mudar. Valores aceitos:
 | `position` | `top-left`, `top-center`, `top-right` |
 | `scale` | `0.75` a `1.5` |
 | `motion` | `dynamic`, `subtle`, `none` |
+| `lineup_settings.presentation` | `sequence`, `list`, `formation` |
+| `lineup_settings.list_seconds` | inteiro de `3` a `20` |
+| `lineup_settings.photo_person_ids` | até 40 IDs sem repetição; cada pessoa precisa estar entre titulares ou reservas do jogo no ar |
 
-A resposta contém o estado completo aplicado. A chave e seu hash nunca são devolvidos. O token que aparece na URL pública do
-overlay serve somente para visualização e não funciona como chave da API.
+A resposta contém o estado público completo aplicado. A chave, o hash e `photo_person_ids` nunca são devolvidos. Ao trocar o
+jogo, a seleção de fotos anterior é limpa; envie IDs do novo jogo no mesmo pedido se quiser habilitá-las imediatamente. O token
+que aparece na URL pública do overlay serve somente para visualização e não funciona como chave da API.

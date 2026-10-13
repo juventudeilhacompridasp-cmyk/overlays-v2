@@ -44,8 +44,8 @@ class Person extends Model
     }
 
     /** URL temporária assinada da foto (disco privado); `$size` = 400 (completa) ou 96 (miniatura). */
-    public function photoUrl(int $size = 96): ?string
+    public function photoUrl(int $size = 96, int $minutes = 30): ?string
     {
-        return ImageStore::privateUrl($this->photo_path, $size);
+        return ImageStore::privateUrl($this->photo_path, $size, $minutes);
     }
 }

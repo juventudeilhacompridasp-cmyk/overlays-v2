@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 /**
  * @property array<string, bool>|null $layers
  * @property array<string, mixed>|null $appearance
+ * @property array<string, mixed>|null $lineup_settings
  * @property string|null $control_token_hash
  */
 #[Unguarded]
@@ -39,7 +40,7 @@ class OverlayChannel extends Model
      */
     protected function casts(): array
     {
-        return ['layers' => 'array', 'appearance' => 'array'];
+        return ['layers' => 'array', 'appearance' => 'array', 'lineup_settings' => 'array'];
     }
 
     public static function newToken(): string

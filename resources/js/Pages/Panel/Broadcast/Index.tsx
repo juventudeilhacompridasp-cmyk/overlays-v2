@@ -2,7 +2,7 @@ import { Badge, Button, Card, Empty, Field, Input, PageHeader, Select } from '@/
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
 import { Head, router, useForm } from '@inertiajs/react';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 
 interface Appearance {
     preset: 'arena';
@@ -14,6 +14,21 @@ interface Appearance {
     motion: 'dynamic' | 'subtle' | 'none';
 }
 
+interface LineupSettings {
+    presentation: 'sequence' | 'list' | 'formation';
+    list_seconds: number;
+    photo_person_ids: string[];
+}
+
+interface LineupPerson {
+    id: string;
+    name: string;
+    shirt: number | null;
+    team: string;
+    has_photo: boolean;
+    photo_url: string | null;
+}
+
 interface Channel {
     id: string;
     name: string;
@@ -21,6 +36,8 @@ interface Channel {
     game_label: string | null;
     layers: { lineup: boolean; standings: boolean };
     appearance: Appearance;
+    lineup_settings: LineupSettings;
+    lineup_people: LineupPerson[];
     has_control_token: boolean;
     control_url: string;
     overlays: { slug: string; title: string; url: string }[];
@@ -62,9 +79,23 @@ function CopyButton({ text }: { text: string }) {
 
 function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: { channel: Channel; games: GameOption[]; canManage: boolean; canOperate: boolean; issuedControl?: IssuedControl }) {
     const [appearance, setAppearance] = useState(channel.appearance);
-    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; appearance?: Partial<Appearance> }) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true });
+    const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
+    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings> }) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true });
     // O jogo atual pode já ter saído da lista de candidatos (ex.: encerrado): mantém a opção para o select refletir o estado real.
     const options = channel.game_id && !games.some((game) => game.id === channel.game_id) ? [{ id: channel.game_id, label: channel.game_label ?? 'Jogo atual' }, ...games] : games;
+
+    useEffect(() => {
+        setAppearance(channel.appearance);
+        setLineupSettings(channel.lineup_settings);
+    }, [channel.appearance, channel.lineup_settings]);
+
+    const togglePhoto = (personId: string) => {
+        const selected = lineupSettings.photo_person_ids.includes(personId);
+        setLineupSettings({
+            ...lineupSettings,
+            photo_person_ids: selected ? lineupSettings.photo_person_ids.filter((id) => id !== personId) : [...lineupSettings.photo_person_ids, personId],
+        });
+    };
 
     return (
         <Card
@@ -146,6 +177,53 @@ function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: {
                         </Field>
                     </div>
                     {canOperate && <Button small className="mt-3" onClick={() => patch({ appearance })}>Aplicar visual</Button>}
+                </div>
+
+                <div className="rounded-lg border border-gray-200 p-4">
+                    <div className="mb-3">
+                        <div className="font-medium text-gray-900">Escalação visual</div>
+                        <p className="text-xs text-gray-500">Apresente a lista e transicione para as posições definidas pelo gestor no esquema tático.</p>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <Field label="Apresentação" htmlFor={`lineup-presentation-${channel.id}`}>
+                            <Select id={`lineup-presentation-${channel.id}`} disabled={!canOperate} value={lineupSettings.presentation} onChange={(event) => setLineupSettings({ ...lineupSettings, presentation: event.target.value as LineupSettings['presentation'] })}>
+                                <option value="sequence">Lista e depois esquema tático</option>
+                                <option value="list">Somente lista</option>
+                                <option value="formation">Somente esquema tático</option>
+                            </Select>
+                        </Field>
+                        <Field label={`Lista antes da transição · ${lineupSettings.list_seconds} s`} htmlFor={`lineup-seconds-${channel.id}`}>
+                            <Input id={`lineup-seconds-${channel.id}`} type="range" min="3" max="20" step="1" disabled={!canOperate || lineupSettings.presentation !== 'sequence'} value={lineupSettings.list_seconds} onChange={(event) => setLineupSettings({ ...lineupSettings, list_seconds: Number(event.target.value) })} />
+                        </Field>
+                    </div>
+
+                    <div className="mt-4 border-t border-gray-100 pt-4">
+                        <div className="text-sm font-medium text-gray-800">Fotos no ar</div>
+                        <p className="mt-1 text-xs text-amber-700">Ative individualmente. A foto selecionada ficará visível para quem tiver a URL secreta do overlay.</p>
+                        {!channel.game_id && <p className="mt-2 text-sm text-gray-500">Escolha o jogo no ar para selecionar atletas.</p>}
+                        {channel.game_id && channel.lineup_people.length === 0 && <p className="mt-2 text-sm text-gray-500">A escalação deste jogo ainda não foi salva.</p>}
+                        {channel.lineup_people.length > 0 && (
+                            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                                {channel.lineup_people.map((person) => {
+                                    const checked = lineupSettings.photo_person_ids.includes(person.id);
+
+                                    return (
+                                        <label key={person.id} className={`flex items-center gap-3 rounded-lg border p-2 ${checked ? 'border-teal-400 bg-teal-50' : 'border-gray-200'} ${person.has_photo ? 'cursor-pointer' : 'opacity-60'}`}>
+                                            <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" checked={checked} disabled={!canOperate || !person.has_photo} onChange={() => togglePhoto(person.id)} />
+                                            <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-gray-200 text-xs font-bold text-gray-600">
+                                                {person.photo_url ? <img src={person.photo_url} alt="" className="h-full w-full object-cover" /> : (person.shirt ?? '—')}
+                                            </span>
+                                            <span className="min-w-0">
+                                                <span className="block truncate text-sm font-medium text-gray-900">{person.shirt ? `${person.shirt} · ` : ''}{person.name}</span>
+                                                <span className="block truncate text-xs text-gray-500">{person.team}{person.has_photo ? '' : ' · sem foto cadastrada'}</span>
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                    {canOperate && <Button small className="mt-4" onClick={() => patch({ lineup_settings: lineupSettings })}>Aplicar escalação</Button>}
                 </div>
 
                 <div>

@@ -7,8 +7,11 @@ use App\Modules\Broadcast\Actions\UpdateOverlayChannel;
 use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Support\OverlayAppearance;
 use App\Modules\Broadcast\Support\OverlayControlRules;
+use App\Modules\Broadcast\Support\OverlayLineupSettings;
 use App\Modules\Matches\Enums\GameStatus;
+use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Matches\Models\GameLineup;
 use App\Modules\Tenancy\CurrentOrganization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +24,11 @@ class ChannelController extends Controller
 {
     public function index(): Response
     {
-        $channels = OverlayChannel::query()->with('game.homeEntry.team', 'game.awayEntry.team')->orderBy('name')->get();
+        $channels = OverlayChannel::query()->with([
+            'game.homeEntry.team',
+            'game.awayEntry.team',
+            'game.lineups.person',
+        ])->orderBy('name')->get();
 
         $label = fn (Game $game) => ($game->homeEntry?->team->name ?? 'A definir').' x '.($game->awayEntry?->team->name ?? 'A definir')
             .($game->scheduled_at ? ' · '.$game->scheduled_at->format('d/m H:i') : '');
@@ -34,19 +41,42 @@ class ChannelController extends Controller
             ->limit(60)->get();
 
         return Inertia::render('Panel/Broadcast/Index', [
-            'channels' => $channels->map(fn (OverlayChannel $channel) => [
-                'id' => $channel->id,
-                'name' => $channel->name,
-                'game_id' => $channel->game_id,
-                'game_label' => $channel->game ? $label($channel->game) : null,
-                'layers' => array_merge(array_fill_keys(OverlayChannel::LAYERS, false), array_map('boolval', $channel->layers ?? [])),
-                'appearance' => OverlayAppearance::normalize($channel->appearance),
-                'has_control_token' => $channel->control_token_hash !== null,
-                'control_url' => route('api.v1.overlay-channels.state.update', ['channel' => $channel]),
-                'overlays' => collect(OverlayChannel::OVERLAYS)->map(fn (string $title, string $slug) => [
-                    'slug' => $slug, 'title' => $title, 'url' => $channel->overlayUrl($slug),
-                ])->values(),
-            ])->values(),
+            'channels' => $channels->map(function (OverlayChannel $channel) use ($label): array {
+                $game = $channel->game;
+                $people = $game?->lineups
+                    ->whereIn('slot', [LineupSlot::Starter, LineupSlot::Bench])
+                    ->map(function (GameLineup $lineup) use ($game): array {
+                        $person = $lineup->person;
+                        $team = $lineup->entry_id === $game?->home_entry_id ? $game->homeEntry?->team : $game?->awayEntry?->team;
+
+                        return [
+                            'id' => $person->id,
+                            'name' => $person->nickname ?: $person->name,
+                            'shirt' => $lineup->shirt_number,
+                            'team' => $team->name,
+                            'has_photo' => $person->photo_path !== null,
+                            'photo_url' => $person->photoUrl(96),
+                        ];
+                    })
+                    ->sortBy(fn (array $person) => ($person['team'].'|'.str_pad((string) ($person['shirt'] ?? 999), 3, '0', STR_PAD_LEFT)))
+                    ->values() ?? collect();
+
+                return [
+                    'id' => $channel->id,
+                    'name' => $channel->name,
+                    'game_id' => $channel->game_id,
+                    'game_label' => $game ? $label($game) : null,
+                    'layers' => array_merge(array_fill_keys(OverlayChannel::LAYERS, false), array_map('boolval', $channel->layers ?? [])),
+                    'appearance' => OverlayAppearance::normalize($channel->appearance),
+                    'lineup_settings' => OverlayLineupSettings::normalize($channel->lineup_settings),
+                    'lineup_people' => $people,
+                    'has_control_token' => $channel->control_token_hash !== null,
+                    'control_url' => route('api.v1.overlay-channels.state.update', ['channel' => $channel]),
+                    'overlays' => collect(OverlayChannel::OVERLAYS)->map(fn (string $title, string $slug) => [
+                        'slug' => $slug, 'title' => $title, 'url' => $channel->overlayUrl($slug),
+                    ])->values(),
+                ];
+            })->values(),
             'games' => $candidates->map(fn (Game $game) => ['id' => $game->id, 'label' => $label($game)])->values(),
             'issued_control' => session()->pull('overlay_issued_control'),
         ]);
@@ -65,6 +95,7 @@ class ChannelController extends Controller
             'control_token_hash' => OverlayChannel::controlTokenHash($controlToken),
             'layers' => [],
             'appearance' => OverlayAppearance::defaults(),
+            'lineup_settings' => OverlayLineupSettings::defaults(),
         ]);
 
         return back()
@@ -75,7 +106,11 @@ class ChannelController extends Controller
     /** Operação ao vivo: escolhe o jogo no ar e liga/desliga camadas. */
     public function update(Request $request, OverlayChannel $channel, UpdateOverlayChannel $update): RedirectResponse
     {
-        $update->handle($channel, $request->validate(OverlayControlRules::for($channel)));
+        $gameId = $request->exists('game_id')
+            ? (is_string($request->input('game_id')) ? $request->input('game_id') : null)
+            : $channel->game_id;
+
+        $update->handle($channel, $request->validate(OverlayControlRules::for($channel, $gameId)));
 
         return back()->with('success', 'Transmissão atualizada.');
     }
