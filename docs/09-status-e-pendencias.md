@@ -14,6 +14,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 
 ## Em andamento
 - **Leitura de súmulas enviadas depois do jogo (ADR 0004)**: partes 1 (envio e guarda), 2 (leitura) e 3 (conferência) entregues — leitor estruturado CSV/XLSX sem IA, leitor por IA com visão (Claude, `ANTHROPIC_API_KEY`), `ExtractedSheet`, job em fila, interruptor e limite por jogo da organização, limite mensal da plataforma, aviso de privacidade e texto nos Termos; **recurso segue sob demanda (desligado para todos até o Super Admin liberar)**. Parte 3 entregue (revisão humana da leitura com registro das correções, relatório de conferência na tela e em CSV, sem alterar o jogo). Falta a parte 4 (notificação ao terminar a leitura e métricas de uso na área da plataforma).
+- **Mercado de jogadores livres (ADR 0008)**: decisão e desenho aceitos (13/10/2026); **nenhuma parte implementada**. Por organização, só maiores de 18 com e-mail verificado, vídeo só por link, perfil visível ao gestor antes do aceite (contato só depois), recurso **sob demanda**. Próximo passo: parte 1 (papel `Athlete`, `/atleta`, cadastro, perfil e foto).
 - (entregue neste PR) Teste de navegador (Playwright) da fila offline no CI:
   "Fila offline no navegador".
 

@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import FlashToasts from '@/Components/FlashToasts';
 import ThemeToggle from '@/Components/ThemeToggle';
 import { FeatureKey, useCan } from '@/lib/can';
 import { registerServiceWorker, useOnline } from '@/lib/pwa';
@@ -54,7 +55,7 @@ function Icon({ path }: { path: string }) {
 }
 
 export default function PanelLayout({ children }: PropsWithChildren) {
-    const { auth, flash, brand } = usePage().props;
+    const { auth, brand } = usePage().props;
     const [open, setOpen] = useState(false);
     const canManageUsers = useCan('manage-users');
     const online = useOnline();
@@ -140,16 +141,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
                     </div>
                 )}
                 <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-                    {flash?.success && (
-                        <div role="status" className="mb-4 rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200">
-                            {flash.success}
-                        </div>
-                    )}
-                    {flash?.error && (
-                        <div role="alert" className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-200">
-                            {flash.error}
-                        </div>
-                    )}
+                    <FlashToasts />
                     {children}
                 </main>
             </div>

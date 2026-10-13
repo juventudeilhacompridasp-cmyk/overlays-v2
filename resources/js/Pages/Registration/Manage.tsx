@@ -1,6 +1,8 @@
+import SearchSelect from '@/Components/SearchSelect';
+import FlashToasts from '@/Components/FlashToasts';
 import PortalLayout, { Seo, Theme } from '@/Components/Portal/PortalLayout';
 import { maskCpf } from '@/Components/Panel/cpf';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent, ReactNode, useState } from 'react';
 
 interface Doc {
@@ -106,13 +108,13 @@ function PersonForm({ token, roles, person, onDone, minAthletes }: { token: stri
         <form onSubmit={submit} className="space-y-3 rounded-md bg-gray-50 p-4 ring-1 ring-gray-200">
             <div className="grid gap-3 sm:grid-cols-3">
                 <Row label="Função" error={errors.role}>
-                    <select className={field} value={data.role} onChange={(e) => setData('role', e.target.value)}>
+                    <SearchSelect className={field} value={data.role} onChange={(e) => setData('role', e.target.value)}>
                         {roles.map((role) => (
                             <option key={role.value} value={role.value}>
                                 {role.label}
                             </option>
                         ))}
-                    </select>
+                    </SearchSelect>
                 </Row>
                 <Row label="Nome completo" error={errors.name}>
                     <input className={field} value={data.name} onChange={(e) => setData('name', e.target.value)} required />
@@ -184,13 +186,13 @@ function Documents({ token, person, types, editable }: { token: string; person: 
             ))}
             {editable && (
                 <form onSubmit={upload} className="flex flex-wrap items-center gap-2 pt-1">
-                    <select className="rounded-md border-gray-300 text-sm" value={data.type} onChange={(e) => setData('type', e.target.value)}>
+                    <SearchSelect className="!w-auto" value={data.type} onChange={(e) => setData('type', e.target.value)}>
                         {types.map((type) => (
                             <option key={type.value} value={type.value}>
                                 {type.label}
                             </option>
                         ))}
-                    </select>
+                    </SearchSelect>
                     <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" key={processing ? 'a' : 'b'} onChange={(e) => setData('file', e.target.files?.[0] ?? null)} className="text-sm" />
                     <button type="submit" disabled={processing || !data.file} className={`${btn} bg-white text-gray-700 ring-1 ring-gray-300`}>
                         Enviar documento
@@ -203,7 +205,6 @@ function Documents({ token, person, types, editable }: { token: string; person: 
 }
 
 export default function Manage({ theme, seo, registration, people, problems, requirements, options }: Props) {
-    const { flash } = usePage().props as { flash?: { success?: string; error?: string } };
     const token = window.location.pathname.split('/').filter(Boolean).pop() ?? '';
     const [adding, setAdding] = useState(false);
     const [editing, setEditing] = useState<string | null>(null);
@@ -241,8 +242,7 @@ export default function Manage({ theme, seo, registration, people, problems, req
                 <span className="rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-800">{registration.status_label}</span>
             </p>
 
-            {flash?.success && <div className="mt-4 rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{flash.success}</div>}
-            {flash?.error && <div className="mt-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{flash.error}</div>}
+            <FlashToasts />
             {registration.review_note && (
                 <div className="mt-4 rounded bg-amber-50 px-3 py-2 text-sm text-amber-900">
                     <strong>Recado da organização:</strong> {registration.review_note}

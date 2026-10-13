@@ -1,10 +1,11 @@
+import FlashToasts from '@/Components/FlashToasts';
 import ThemeToggle from '@/Components/ThemeToggle';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren } from 'react';
 
 /** Layout da área da plataforma (/plataforma): independe de papel em uma organização. */
 export default function PlatformLayout({ children }: PropsWithChildren) {
-    const { auth, flash } = usePage().props;
+    const { auth } = usePage().props;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -26,16 +27,7 @@ export default function PlatformLayout({ children }: PropsWithChildren) {
                 </div>
             </header>
             <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-                {flash?.success && (
-                    <div role="status" className="mb-4 rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200">
-                        {flash.success}
-                    </div>
-                )}
-                {flash?.error && (
-                    <div role="alert" className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-200">
-                        {flash.error}
-                    </div>
-                )}
+                <FlashToasts />
                 {children}
             </main>
         </div>

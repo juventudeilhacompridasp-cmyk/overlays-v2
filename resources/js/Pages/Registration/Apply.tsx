@@ -1,5 +1,7 @@
+import SearchSelect from '@/Components/SearchSelect';
+import FlashToasts from '@/Components/FlashToasts';
 import PortalLayout, { Seo, Theme } from '@/Components/Portal/PortalLayout';
-import { Link, useForm, usePage } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
 interface Props {
@@ -27,7 +29,6 @@ function Row({ label, error, children }: { label: string; error?: string; childr
 }
 
 export default function Apply({ theme, seo, competition, season, open, deadline, instructions, requirements, divisions }: Props) {
-    const { flash } = usePage().props as { flash?: { error?: string } };
     const { data, setData, post, processing, errors } = useForm({
         division_id: divisions.length === 1 ? divisions[0].id : '',
         team_name: '',
@@ -61,7 +62,7 @@ export default function Apply({ theme, seo, competition, season, open, deadline,
                 </div>
             ) : (
                 <form onSubmit={submit} className="mt-6 space-y-5 rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
-                    {flash?.error && <div className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{flash.error}</div>}
+                    <FlashToasts />
                     {instructions && <p className="whitespace-pre-line rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-900">{instructions}</p>}
                     <ul className="list-inside list-disc text-sm text-gray-600">
                         <li>
@@ -73,14 +74,14 @@ export default function Apply({ theme, seo, competition, season, open, deadline,
                     </ul>
 
                     <Row label="Divisão" error={errors.division_id}>
-                        <select className={field} value={data.division_id} onChange={(e) => setData('division_id', e.target.value)} required>
+                        <SearchSelect className={field} value={data.division_id} onChange={(e) => setData('division_id', e.target.value)} required>
                             <option value="">Escolha…</option>
                             {divisions.map((division) => (
                                 <option key={division.id} value={division.id}>
                                     {division.name}
                                 </option>
                             ))}
-                        </select>
+                        </SearchSelect>
                     </Row>
                     <div className="grid gap-4 sm:grid-cols-3">
                         <div className="sm:col-span-2">

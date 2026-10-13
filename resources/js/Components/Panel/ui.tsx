@@ -9,6 +9,7 @@ import {
     useRef,
     useState,
 } from 'react';
+import SearchSelect from '@/Components/SearchSelect';
 import { PaginationLink } from '@/types/panel';
 
 const inputBase =
@@ -96,12 +97,9 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
     return <input {...props} className={`${inputBase} ${props.className ?? ''}`} />;
 }
 
-export function Select({ children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
-    return (
-        <select {...props} className={`${inputBase} ${props.className ?? ''}`}>
-            {children}
-        </select>
-    );
+/** Select pesquisável padrão (busca a partir de 2 letras); mesma API do `<select>`. Ver `SearchSelect`. */
+export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
+    return <SearchSelect {...props} />;
 }
 
 export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
