@@ -16,7 +16,7 @@ class EnsureFeature
         $resource = Feature::from($feature);
 
         if (! CurrentOrganization::has($resource)) {
-            abort($request->is('painel/*', 'gestor/*') ? 403 : 404, "O recurso “{$resource->label()}” não está incluído no pacote da sua organização.");
+            abort($request->is('painel', 'painel/*', 'gestor', 'gestor/*') ? 403 : 404, "O recurso “{$resource->label()}” não está incluído no pacote da sua organização.");
         }
 
         return $next($request);
