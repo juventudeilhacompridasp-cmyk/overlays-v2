@@ -1,7 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import ThemeToggle from '@/Components/ThemeToggle';
 import { FeatureKey, useCan } from '@/lib/can';
-import { PropsWithChildren, useState } from 'react';
+import { registerServiceWorker, useOnline } from '@/lib/pwa';
+import { PropsWithChildren, useEffect, useState } from 'react';
 
 type NavItem = { label: string; route: string; match: string; icon: string; feature?: FeatureKey };
 
@@ -19,6 +20,8 @@ const registrationsNav: NavItem = { feature: 'online_registration', label: 'Insc
 const reportsNav: NavItem = { feature: 'reports', label: 'Relatórios', route: 'panel.reports.index', match: 'panel.reports.*', icon: 'M9 17v-6M13 17V7M17 17v-4M4 4v16h16' };
 
 const widgetsNav: NavItem = { label: 'Widgets', route: 'panel.widgets.index', match: 'panel.widgets.*', feature: 'embeds', icon: 'M8 9l-4 3 4 3M16 9l4 3-4 3M13 6l-2 12' };
+
+const mesarioNav: NavItem = { label: 'Mesário', route: 'panel.mesario', match: 'panel.mesario', icon: 'M12 18h.01M8 3h8a2 2 0 012 2v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2z' };
 
 const platformNav: NavItem = { label: 'Plataforma', route: 'platform.organizations.index', match: 'platform.*', icon: 'M4 7l8-4 8 4-8 4-8-4zM4 12l8 4 8-4M4 17l8 4 8-4' };
 
@@ -41,10 +44,17 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const { auth, flash, brand } = usePage().props;
     const [open, setOpen] = useState(false);
     const canManageUsers = useCan('manage-users');
+    const online = useOnline();
+
+    useEffect(() => {
+        registerServiceWorker();
+    }, []);
     const canManageCompetitions = useCan('manage-competitions');
+    const canOperate = useCan('operate-games');
     const base = canManageCompetitions ? [...nav.slice(0, 2), registrationsNav, ...nav.slice(2), reportsNav, widgetsNav] : nav;
     const { features } = usePage().props;
-    const all = canManageUsers ? [...base, ...adminNav, usersNav] : base;
+    const withMesario = canOperate ? [nav[0], mesarioNav, ...base.slice(1)] : base;
+    const all = canManageUsers ? [...withMesario, ...adminNav, usersNav] : withMesario;
     const withPlatform = auth.platform_admin ? [...all, platformNav] : all;
     const items = withPlatform.filter((item) => !item.feature || features.includes(item.feature));
 
@@ -107,6 +117,11 @@ export default function PanelLayout({ children }: PropsWithChildren) {
                 </header>
                 {open && <div className="border-b border-gray-200 bg-white py-3 lg:hidden">{menu}</div>}
 
+                {!online && (
+                    <div role="alert" className="bg-amber-500 px-4 py-2 text-center text-sm font-medium text-black print:hidden" data-testid="offline-banner">
+                        Sem conexão. O que você lançar agora não será salvo: espere a internet voltar antes de continuar.
+                    </div>
+                )}
                 <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
                     {flash?.success && (
                         <div role="status" className="mb-4 rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200">
