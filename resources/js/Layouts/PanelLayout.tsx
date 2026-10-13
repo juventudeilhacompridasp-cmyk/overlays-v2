@@ -23,6 +23,12 @@ const widgetsNav: NavItem = { label: 'Widgets', route: 'panel.widgets.index', ma
 
 const mesarioNav: NavItem = { label: 'Mesário', route: 'panel.mesario', match: 'panel.mesario', icon: 'M12 18h.01M8 3h8a2 2 0 012 2v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2z' };
 
+// Gestor de equipe (ADR 0003): menu próprio, sem nada do painel do organizador.
+const managerNav: NavItem[] = [
+    { label: 'Início', route: 'manager.dashboard', match: 'manager.dashboard', icon: 'M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10' },
+    { label: 'Jogos e escalações', route: 'manager.games.index', match: 'manager.games.*', icon: 'M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z' },
+];
+
 const platformNav: NavItem = { label: 'Plataforma', route: 'platform.organizations.index', match: 'platform.*', icon: 'M4 7l8-4 8 4-8 4-8-4zM4 12l8 4 8-4M4 17l8 4 8-4' };
 
 const adminNav: NavItem[] = [
@@ -56,7 +62,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const withMesario = canOperate ? [nav[0], mesarioNav, ...base.slice(1)] : base;
     const all = canManageUsers ? [...withMesario, ...adminNav, usersNav] : withMesario;
     const withPlatform = auth.platform_admin ? [...all, platformNav] : all;
-    const items = withPlatform.filter((item) => !item.feature || features.includes(item.feature));
+    const items = auth.role === 'manager' ? managerNav : withPlatform.filter((item) => !item.feature || features.includes(item.feature));
 
     const menu = (
         <nav className="flex flex-col gap-1 px-3">

@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Modules\Teams\Actions\ChangeTeamLogo;
 use App\Modules\Teams\Http\Requests\TeamRequest;
 use App\Modules\Teams\Models\Team;
+use App\Modules\Teams\Models\TeamManager;
+use App\Modules\Tenancy\CurrentOrganization;
+use App\Modules\Tenancy\Enums\Feature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -36,7 +39,7 @@ class TeamController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Panel/Teams/Form', ['team' => null]);
+        return Inertia::render('Panel/Teams/Form', ['team' => null, 'managers' => null]);
     }
 
     public function store(TeamRequest $request): RedirectResponse
@@ -48,7 +51,16 @@ class TeamController extends Controller
 
     public function edit(Team $team): Response
     {
-        return Inertia::render('Panel/Teams/Form', ['team' => [...$team->only(['id', 'name', 'short_name', 'city', 'primary_color']), 'logo_url' => $team->logoUrl(512)]]);
+        $managers = CurrentOrganization::has(Feature::TeamPortal)
+            ? TeamManager::query()->where('team_id', $team->getKey())->with('user:id,name,email')->get()
+                ->map(fn (TeamManager $link) => ['id' => $link->getKey(), 'name' => $link->user->name, 'email' => $link->user->email])->values()
+            : null;
+
+        return Inertia::render('Panel/Teams/Form', [
+            'team' => [...$team->only(['id', 'name', 'short_name', 'city', 'primary_color']), 'logo_url' => $team->logoUrl(512)],
+            // null = o pacote da organização não inclui a área do gestor (a tela esconde a seção).
+            'managers' => $managers,
+        ]);
     }
 
     public function update(TeamRequest $request, Team $team): RedirectResponse

@@ -1,6 +1,6 @@
-import { Button, Card, Field, ImageUpload, Input, LinkButton, PageHeader } from '@/Components/Panel/ui';
+import { Button, Card, DeleteButton, Field, ImageUpload, Input, LinkButton, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
 interface Team {
@@ -12,7 +12,13 @@ interface Team {
     logo_url: string | null;
 }
 
-export default function Form({ team }: { team: Team | null }) {
+interface Manager {
+    id: string;
+    name: string;
+    email: string;
+}
+
+export default function Form({ team, managers }: { team: Team | null; managers: Manager[] | null }) {
     const { data, setData, post, put, processing, errors } = useForm({
         name: team?.name ?? '',
         short_name: team?.short_name ?? '',
@@ -53,6 +59,8 @@ export default function Form({ team }: { team: Team | null }) {
             ) : (
                 <p className="mb-4 max-w-2xl text-sm text-gray-500">Salve a equipe para poder enviar o escudo.</p>
             )}
+
+            {team && managers !== null && <ManagersCard team={team} managers={managers} />}
 
             <Card className="max-w-2xl">
                 <form onSubmit={submit} className="space-y-4">
@@ -95,5 +103,54 @@ export default function Form({ team }: { team: Team | null }) {
                 </form>
             </Card>
         </PanelLayout>
+    );
+}
+
+function ManagersCard({ team, managers }: { team: Team; managers: Manager[] }) {
+    const { data, setData, post, processing, errors, reset } = useForm({ name: '', email: '' });
+
+    return (
+        <Card title="Gestores da equipe" className="mb-6 max-w-2xl">
+            <p className="mb-4 text-sm text-gray-600">
+                O gestor entra com o próprio login na área do gestor e define a escalação e o esquema tático dos jogos desta equipe. Ele recebe um e-mail para criar a senha.
+            </p>
+
+            {managers.length > 0 && (
+                <ul className="mb-4 divide-y divide-gray-100 rounded-md ring-1 ring-gray-200">
+                    {managers.map((manager) => (
+                        <li key={manager.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+                            <div>
+                                <div className="text-sm font-medium text-gray-900">{manager.name}</div>
+                                <div className="text-xs text-gray-500">{manager.email}</div>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button small variant="secondary" onClick={() => router.post(route('panel.teams.managers.resend', manager.id))}>
+                                    Reenviar convite
+                                </Button>
+                                <DeleteButton href={route('panel.teams.managers.destroy', manager.id)} message={`Remover ${manager.name} da gestão desta equipe?`} label="Remover" />
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
+
+            <form
+                onSubmit={(event) => {
+                    event.preventDefault();
+                    post(route('panel.teams.managers.store', team.id), { preserveScroll: true, onSuccess: () => reset() });
+                }}
+                className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+            >
+                <Field label="Nome do gestor" htmlFor="manager_name" error={errors.name}>
+                    <Input id="manager_name" value={data.name} onChange={(e) => setData('name', e.target.value)} required />
+                </Field>
+                <Field label="E-mail" htmlFor="manager_email" error={errors.email}>
+                    <Input id="manager_email" type="email" value={data.email} onChange={(e) => setData('email', e.target.value)} required />
+                </Field>
+                <Button type="submit" disabled={processing}>
+                    Convidar
+                </Button>
+            </form>
+        </Card>
     );
 }

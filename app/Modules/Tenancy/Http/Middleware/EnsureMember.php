@@ -12,7 +12,10 @@ class EnsureMember
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user()?->role() === null) {
+        $role = $request->user()?->role();
+
+        // O gestor de equipe tem o próprio painel (/gestor); o painel do organizador nem para consulta.
+        if ($role === null || ! $role->usesPanel()) {
             return Inertia::render('Panel/NoAccess')->toResponse($request)->setStatusCode(403);
         }
 

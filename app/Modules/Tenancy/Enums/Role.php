@@ -9,6 +9,8 @@ namespace App\Modules\Tenancy\Enums;
  * - Organizador: competições, cadastros e operação de jogos.
  * - Operador (mesário): só opera os jogos (súmula, cronômetro...); o resto ele apenas consulta.
  * - Consulta: apenas visualiza o painel.
+ * - Gestor de equipe: NÃO usa o painel do organizador; tem o próprio painel (`/gestor`), restrito às equipes a que está vinculado
+ *   (`team_managers`). Não tem nenhuma `Ability`: nada do painel se abre por engano (ADR 0003).
  */
 enum Role: string
 {
@@ -16,6 +18,7 @@ enum Role: string
     case Organizer = 'organizer';
     case Operator = 'operator';
     case Viewer = 'viewer';
+    case TeamManager = 'manager';
 
     public function label(): string
     {
@@ -24,6 +27,7 @@ enum Role: string
             self::Organizer => 'Organizador',
             self::Operator => 'Operador de jogo',
             self::Viewer => 'Consulta',
+            self::TeamManager => 'Gestor de equipe',
         };
     }
 
@@ -34,8 +38,14 @@ enum Role: string
             self::Admin => Ability::cases(),
             self::Organizer => [Ability::ManageCompetitions, Ability::ManageRegistry, Ability::OperateGames],
             self::Operator => [Ability::OperateGames],
-            self::Viewer => [],
+            self::Viewer, self::TeamManager => [],
         };
+    }
+
+    /** Papéis da equipe interna da organização (usam `/painel`); o gestor de equipe tem painel próprio. */
+    public function usesPanel(): bool
+    {
+        return $this !== self::TeamManager;
     }
 
     public function can(Ability $ability): bool

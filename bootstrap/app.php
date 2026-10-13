@@ -7,6 +7,7 @@ use App\Modules\Tenancy\Http\Middleware\EnsureLegalAccepted;
 use App\Modules\Tenancy\Http\Middleware\EnsureMember;
 use App\Modules\Tenancy\Http\Middleware\EnsurePanelAbility;
 use App\Modules\Tenancy\Http\Middleware\EnsurePlatformAdmin;
+use App\Modules\Tenancy\Http\Middleware\EnsureTeamManager;
 use App\Modules\Tenancy\Http\Middleware\ResolveOrganization;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -45,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'panel.member' => EnsureMember::class,
+            'manager.member' => EnsureTeamManager::class,
             'panel.can' => EnsurePanelAbility::class,
             'feature' => EnsureFeature::class,
             'legal.accepted' => EnsureLegalAccepted::class,

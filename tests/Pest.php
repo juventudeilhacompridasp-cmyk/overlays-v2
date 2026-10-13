@@ -12,6 +12,8 @@ use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Actions\SaveGameLineup;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Teams\Models\RosterEntry;
+use App\Modules\Teams\Models\Team;
+use App\Modules\Teams\Models\TeamManager;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Membership;
@@ -118,4 +120,14 @@ function publishSeason(object $model): void
     $seasonId = Division::query()->findOrFail($divisionId)->season_id;
 
     Season::query()->whereKey($seasonId)->update(['status' => SeasonStatus::Active]);
+}
+
+/** Gestor de equipe (papel `manager` + vínculo com a equipe) na organização atual. */
+function managerFor(Team $team, ?User $user = null): User
+{
+    $user ??= panelUser(Role::TeamManager);
+
+    TeamManager::query()->create(['user_id' => $user->getKey(), 'team_id' => $team->getKey()]);
+
+    return $user;
 }

@@ -13,6 +13,7 @@ enum Feature: string
     case WhiteLabel = 'white_label';
     case Embeds = 'embeds';
     case Push = 'push';
+    case TeamPortal = 'team_portal';
 
     public function label(): string
     {
@@ -25,6 +26,7 @@ enum Feature: string
             self::WhiteLabel => 'Marca própria (white-label)',
             self::Embeds => 'Widgets para outros sites',
             self::Push => 'Avisos push (jogos e equipes)',
+            self::TeamPortal => 'Área do gestor de equipe (escalação e esquema tático)',
         };
     }
 }
