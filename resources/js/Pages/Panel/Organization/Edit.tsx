@@ -30,11 +30,13 @@ function LogoCard({ logoUrl }: { logoUrl: string | null }) {
     );
 }
 
-function PortalOptionsCard({ settings, switches }: { settings: Record<string, boolean>; switches: { key: string; label: string; hint: string }[] }) {
+type Switch = { key: string; group: string; label: string; hint: string };
+
+function PortalOptionsCard({ settings, switches }: { settings: Record<string, boolean>; switches: Switch[] }) {
     const { data, setData, patch, processing } = useForm<Record<string, boolean>>(settings);
 
     return (
-        <Card title="Página pública do jogo" className="mt-6 max-w-2xl">
+        <Card title="O que as páginas públicas mostram" className="mt-6 max-w-2xl">
             <form
                 className="space-y-3"
                 onSubmit={(event: FormEvent) => {
@@ -42,14 +44,21 @@ function PortalOptionsCard({ settings, switches }: { settings: Record<string, bo
                     patch(route('panel.organization.portal'), { preserveScroll: true });
                 }}
             >
-                {switches.map((item) => (
-                    <label key={item.key} className="flex items-start gap-2 text-sm text-gray-800">
-                        <input type="checkbox" className="mt-1" checked={data[item.key] ?? false} onChange={(e) => setData(item.key, e.target.checked)} />
-                        <span>
-                            <span className="font-medium">{item.label}</span>
-                            <span className="block text-xs text-gray-500">{item.hint}</span>
-                        </span>
-                    </label>
+                {Array.from(new Set(switches.map((item) => item.group))).map((group) => (
+                    <fieldset key={group} className="space-y-3">
+                        <legend className="mb-1 text-sm font-semibold text-gray-900">{group}</legend>
+                        {switches
+                            .filter((item) => item.group === group)
+                            .map((item) => (
+                                <label key={item.key} className="flex items-start gap-2 text-sm text-gray-800">
+                                    <input type="checkbox" className="mt-1" checked={data[item.key] ?? false} onChange={(e) => setData(item.key, e.target.checked)} />
+                                    <span>
+                                        <span className="font-medium">{item.label}</span>
+                                        <span className="block text-xs text-gray-500">{item.hint}</span>
+                                    </span>
+                                </label>
+                            ))}
+                    </fieldset>
                 ))}
                 <Button type="submit" disabled={processing}>
                     Salvar
@@ -73,7 +82,7 @@ export default function Edit({
     white_label: boolean;
     logo_url: string | null;
     portal_settings: Record<string, boolean>;
-    portal_switches: { key: string; label: string; hint: string }[];
+    portal_switches: Switch[];
 }) {
     const { data, setData, patch, processing, errors } = useForm({ name: theme.name, primary: theme.primary, tagline: theme.tagline ?? '' });
 

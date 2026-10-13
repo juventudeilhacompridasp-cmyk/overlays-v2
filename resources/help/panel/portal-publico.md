@@ -18,10 +18,16 @@ Em [Portal público](route:panel.organization.edit) o administrador ajusta a apa
 - Nunca aparecem cartões, disciplina, escalações, elenco, fotos, CPF ou documentos.
 
 ## Página pública do jogo
-Em Portal público, o cartão **Página pública do jogo** liga ou desliga o que aparece abaixo do placar:
+Em Portal público, o cartão **O que as páginas públicas mostram** liga ou desliga o que aparece abaixo do placar:
 - **Linha do tempo**: gols e substituições com minuto (futebol e futsal; vôlei e basquete não têm).
 - **Cartões** na linha do tempo: **desligado por padrão**, porque cartão é dado disciplinar. Ligue só se a organização quiser mostrar.
 - **Posição na tabela** das duas equipes, **forma recente** (últimos 5 jogos) e **confronto direto** (histórico entre as duas equipes).
+
+## Página pública da equipe
+No mesmo cartão (agora "O que as páginas públicas mostram") há as opções da página da equipe:
+- **Campanha por edição**: jogos, vitórias, empates, derrotas, gols e colocação na tabela.
+- **Forma recente**, **artilheiros da equipe** (nome público, 5 maiores) e **calendário (.ics)**, para a pessoa adicionar os jogos à agenda do celular.
+- **Elenco público**: atletas (nome público e camisa) e técnico da edição mais recente. **Desligado por padrão**; nunca traz foto, nascimento ou documento.
 
 Os nomes seguem a regra de privacidade: menores aparecem abreviados. Escalações, fotos e documentos nunca aparecem.
 
