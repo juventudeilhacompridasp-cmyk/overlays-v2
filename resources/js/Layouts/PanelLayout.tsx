@@ -28,6 +28,7 @@ const mesarioNav: NavItem = { label: 'Mesário', route: 'panel.mesario', match: 
 const managerNav: NavItem[] = [
     { label: 'Início', route: 'manager.dashboard', match: 'manager.dashboard', icon: 'M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10' },
     { label: 'Jogos e escalações', route: 'manager.games.index', match: 'manager.games.*', icon: 'M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z' },
+    { label: 'Mercado de jogadores', route: 'manager.market.index', match: 'manager.market.*', feature: 'market', icon: 'M17 20h5v-2a4 4 0 00-5-3.9M9 11a4 4 0 100-8 4 4 0 000 8zM2 20v-2a4 4 0 014-4h6a4 4 0 014 4v2' },
 ];
 
 // Atleta do Mercado (ADR 0008): menu próprio, sem nada do painel do organizador.
@@ -75,7 +76,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const withMesario = canOperate ? [nav[0], mesarioNav, ...base.slice(1)] : base;
     const all = canManageUsers ? [...withMesario, ...adminNav, usersNav, profilesNav] : withMesario;
     const withPlatform = auth.platform_admin ? [...all, platformNav, apiDocsNav] : all;
-    const items = auth.role === 'manager' ? managerNav : auth.role === 'athlete' ? athleteNav : withPlatform.filter((item) => !item.feature || features.includes(item.feature));
+    const items = auth.role === 'manager' ? managerNav.filter((item) => !item.feature || features.includes(item.feature)) : auth.role === 'athlete' ? athleteNav : withPlatform.filter((item) => !item.feature || features.includes(item.feature));
     // Ajuda para todos: cada público tem a própria central (painel, gestor ou plataforma).
     const helpArea = auth.role === 'manager' ? 'manager' : auth.role === 'athlete' ? 'athlete' : auth.role ? 'panel' : 'platform';
     const helpItem: NavItem = { label: 'Ajuda', route: `${helpArea}.help.index`, match: `${helpArea}.help.*`, icon: helpIcon };

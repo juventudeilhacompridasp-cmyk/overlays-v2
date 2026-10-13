@@ -31,7 +31,7 @@ try {
     await page.fill('#password', seed.password);
     const [loginResponse] = await Promise.all([
         page.waitForResponse((response) => response.request().method() === 'POST' && new URL(response.url()).pathname === '/login'),
-        page.getByRole('button', { name: /log in/i }).click(),
+        page.getByRole('button', { name: /entrar|log in/i }).click(),
     ]);
     console.log(`POST /login -> ${loginResponse.status()}`);
     await page.waitForURL((url) => !url.pathname.endsWith('/login'), { waitUntil: 'commit' });
