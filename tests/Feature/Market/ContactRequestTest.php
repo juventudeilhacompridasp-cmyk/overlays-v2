@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use App\Modules\Market\Enums\ProfileStatus;
 use App\Modules\Market\Enums\RequestStatus;
 use App\Modules\Market\Mail\MarketNotice;
@@ -10,6 +11,7 @@ use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
+use Closure;
 use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
@@ -17,7 +19,7 @@ beforeEach(function () {
     Mail::fake();
 });
 
-/** @return array{0: App\Models\User, 1: MarketProfile} atleta com perfil publicado */
+/** @return array{0: User, 1: MarketProfile} atleta com perfil publicado */
 function contactTarget(array $profile = []): array
 {
     $athlete = panelUser(Role::Athlete);
@@ -41,7 +43,7 @@ function contactTarget(array $profile = []): array
     return [$athlete, $record];
 }
 
-function askContact($test, $manager, MarketProfile $profile, Team $team, string $message = 'Queremos você no time!')
+function askContact($test, User $manager, MarketProfile $profile, Team $team, string $message = 'Queremos você no time!')
 {
     return $test->actingAs($manager)->post(route('manager.market.requests.store', $profile), ['team_id' => $team->getKey(), 'message' => $message]);
 }
