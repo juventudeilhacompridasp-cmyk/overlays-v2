@@ -56,7 +56,7 @@ final class GameNotices
     private static function notifyChange(Organization $organization, Game $game): void
     {
         $when = $game->scheduled_at?->format('d/m/Y H:i') ?? 'a definir';
-        $where = $game->venue?->name ?? 'a definir';
+        $where = $game->venue_id === null ? 'a definir' : $game->venue->name;
         $state = md5($when.'|'.$where.'|'.$game->status->value);
 
         foreach ([[$game->homeEntry, $game->awayEntry], [$game->awayEntry, $game->homeEntry]] as [$mine, $other]) {
