@@ -25,6 +25,12 @@ final readonly class SportProfile
         public ?int $teamFoulLimit = null,
         /** goals | sets | points (ver ADR 0002). */
         public string $scoreModel = 'goals',
+        /** up = relógio corrido (futebol); down = tempo restante do período (basquete). */
+        public string $clockDirection = 'up',
+        /** O relógio para e volta dentro do período (basquete). */
+        public bool $pausableClock = false,
+        /** Grupo de faltas de cada período, na ordem; períodos além da lista ficam no último grupo. */
+        public array $foulGroups = [1, 2],
     ) {}
 
     public function clock(): GameClock
@@ -55,6 +61,8 @@ final readonly class SportProfile
      */
     public function foulGroup(int $period): int
     {
-        return $period <= 1 ? 1 : 2;
+        $groups = $this->foulGroups === [] ? [1] : $this->foulGroups;
+
+        return $groups[min(max($period, 1), count($groups)) - 1];
     }
 }

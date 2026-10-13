@@ -32,6 +32,12 @@ final class GameSheetState
     /** @var array<string, array<string, true>> */
     private array $expelled = [];
 
+    /** @var array<string, array<string, int>> faltas pessoais */
+    private array $fouls = [];
+
+    /** @var array<string, array<string, true>> eliminados por faltas (ainda em quadra até a troca) */
+    private array $fouledOut = [];
+
     /** @var array<string, int> */
     private array $substitutions = [];
 
@@ -55,6 +61,8 @@ final class GameSheetState
         $this->staff[$teamId] = $staff;
         $this->yellows[$teamId] ??= [];
         $this->expelled[$teamId] ??= [];
+        $this->fouls[$teamId] ??= [];
+        $this->fouledOut[$teamId] ??= [];
         $this->substitutions[$teamId] ??= 0;
         $this->windows[$teamId] ??= [];
         $this->used[$teamId] ??= [];
@@ -73,10 +81,12 @@ final class GameSheetState
 
         return match ($event->type) {
             GameEventType::Goal, GameEventType::OwnGoal => $this->checkOnField($event, 'marcar gol'),
-            GameEventType::YellowCard, GameEventType::RedCard, GameEventType::BlueCard, GameEventType::Warning, GameEventType::Foul => $this->checkInLineup($event),
+            GameEventType::FreeThrow, GameEventType::FieldGoal, GameEventType::ThreePointer => $this->checkOnField($event, 'pontuar') ?? $this->checkNotFouledOut($event),
+            GameEventType::Foul => $this->checkInLineup($event) ?? $this->checkNotFouledOut($event),
+            GameEventType::YellowCard, GameEventType::RedCard, GameEventType::BlueCard, GameEventType::Warning => $this->checkInLineup($event),
             GameEventType::Substitution => $this->checkSubstitution($event),
             GameEventType::PenaltyKick => $this->checkOnField($event, 'cobrar pênalti'),
-            GameEventType::PeriodStart, GameEventType::PeriodEnd, GameEventType::Point => null,
+            GameEventType::PeriodStart, GameEventType::PeriodEnd, GameEventType::Point, GameEventType::ClockPause, GameEventType::ClockResume => null,
         };
     }
 
@@ -99,6 +109,15 @@ final class GameSheetState
 
             case GameEventType::RedCard:
                 $this->expel($team, (string) $person);
+                break;
+
+            case GameEventType::Foul:
+                $this->fouls[$team][$person] = ($this->fouls[$team][$person] ?? 0) + 1;
+
+                // Basquete: a falta que completa o limite elimina o atleta (ele segue em quadra até ser substituído).
+                if ($this->rules->maxPlayerFouls !== null && $this->fouls[$team][$person] >= $this->rules->maxPlayerFouls) {
+                    $this->fouledOut[$team][(string) $person] = true;
+                }
                 break;
 
             case GameEventType::Substitution:
@@ -144,6 +163,26 @@ final class GameSheetState
     public function bench(string $teamId): array
     {
         return $this->bench[$teamId] ?? [];
+    }
+
+    /**
+     * Faltas pessoais por atleta.
+     *
+     * @return array<string, int>
+     */
+    public function foulsOf(string $teamId): array
+    {
+        return $this->fouls[$teamId] ?? [];
+    }
+
+    /**
+     * Eliminados por faltas (basquete) que ainda estão em quadra.
+     *
+     * @return list<string>
+     */
+    public function fouledOut(string $teamId): array
+    {
+        return array_map('strval', array_keys($this->fouledOut[$teamId] ?? []));
     }
 
     /** @return list<string> */
@@ -197,6 +236,11 @@ final class GameSheetState
         return $inLineup ? null : 'Esta pessoa não está na escalação do jogo.';
     }
 
+    private function checkNotFouledOut(SheetEvent $event): ?string
+    {
+        return isset($this->fouledOut[$event->teamId][(string) $event->personId]) ? 'O atleta foi eliminado por faltas.' : null;
+    }
+
     private function checkSubstitution(SheetEvent $event): ?string
     {
         $team = $event->teamId;
@@ -217,6 +261,10 @@ final class GameSheetState
 
         if (! $this->rules->allowSubstitutionReentry && isset($this->used[$team][$in])) {
             return 'Quem já jogou e saiu não pode voltar ao jogo.';
+        }
+
+        if (isset($this->fouledOut[$team][$in])) {
+            return 'O atleta foi eliminado por faltas e não pode entrar.';
         }
 
         if (! in_array($in, $this->bench[$team], true)) {

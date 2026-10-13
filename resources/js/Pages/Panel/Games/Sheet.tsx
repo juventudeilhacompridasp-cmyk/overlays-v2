@@ -1,7 +1,7 @@
 import { Badge, Button, Card, Field, Input, Logo, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
-import { GameClock, formatClock, periodLabel, useGameClock } from '@/lib/clock';
+import { GameClock, formatClock, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
 import { Option } from '@/types/panel';
 import { Head, router } from '@inertiajs/react';
 import { FormEvent, useMemo, useState } from 'react';
@@ -29,6 +29,8 @@ interface Team {
     expelled: string[];
     substitutions_used: number;
     windows_used: number;
+    fouled_out: string[];
+    player_fouls: Record<string, number>;
 }
 
 interface SheetEvent {
@@ -68,7 +70,9 @@ interface Props {
     events: SheetEvent[];
     limits: { starters: number; bench: number; staff: number; substitutions: number; windows: number };
     event_types: Option[];
+    sport: string;
     score_model: string;
+    quarters: { period: number; home: number; away: number }[] | null;
     sets: SetScore[] | null;
     sets_to_win: number;
     fouls: { home: number; away: number; limit: number; period: number } | null;
@@ -96,6 +100,11 @@ const typeIcon: Record<string, string> = {
     period_end: '⏸️',
     foul: '🚫',
     point: '🏐',
+    free_throw: '🏀 (1)',
+    field_goal: '🏀 (2)',
+    three_pointer: '🏀 (3)',
+    clock_pause: '⏱️⏸️',
+    clock_resume: '⏱️▶️',
 };
 
 function personName(team: Team, id: string): string {
@@ -195,13 +204,15 @@ function LineupEditor({ game, team, limits, locked, onSaved }: { game: Props['ga
     );
 }
 
-function ClockCard({ game, clock, publicUrl }: { game: Props['game']; clock: Props['clock']; publicUrl: string }) {
+function ClockCard({ game, clock, publicUrl, sport }: { game: Props['game']; clock: Props['clock']; publicUrl: string; sport: string }) {
     const skew = useMemo(() => Date.now() - clock.server_time_ms, [clock.server_time_ms]);
-    const seconds = useGameClock(clock, skew);
+    const seconds = shownSeconds(clock, useGameClock(clock, skew));
     const post = (action: 'start' | 'end', period: number) =>
         router.post(route('panel.games.periods.store', game.id), { action, period }, { preserveScroll: true });
+    const pause = (value: boolean) => router.post(route('panel.games.clock.pause', game.id), { pause: value }, { preserveScroll: true });
 
     const next = clock.period === null ? 1 : clock.period + 1;
+    const live = clock.state === 'running' || clock.state === 'paused';
 
     return (
         <Card title="Cronômetro">
@@ -212,20 +223,21 @@ function ClockCard({ game, clock, publicUrl }: { game: Props['game']; clock: Pro
                     </div>
                     <div className="text-sm text-gray-500">
                         {clock.state === 'not_started' && 'Não iniciado'}
-                        {clock.state === 'running' && `${periodLabel(clock.period)} em andamento`}
-                        {clock.state === 'stopped' && `${periodLabel(clock.period)} encerrado`}
+                        {clock.state === 'running' && `${periodLabel(clock.period, sport)} em andamento`}
+                        {clock.state === 'paused' && `${periodLabel(clock.period, sport)} · relógio parado`}
+                        {clock.state === 'stopped' && `${periodLabel(clock.period, sport)} encerrado`}
                     </div>
                 </div>
                 {game.open && (
                     <div className="flex flex-wrap gap-2">
-                        {clock.state === 'running' && clock.period !== null && (
+                        {clock.pausable && clock.state === 'running' && <Button onClick={() => pause(true)}>Parar relógio</Button>}
+                        {clock.pausable && clock.state === 'paused' && <Button onClick={() => pause(false)}>Retomar relógio</Button>}
+                        {live && clock.period !== null && (
                             <Button variant="secondary" onClick={() => post('end', clock.period as number)}>
-                                Encerrar {periodLabel(clock.period)}
+                                Encerrar {periodLabel(clock.period, sport)}
                             </Button>
                         )}
-                        {clock.state !== 'running' && next <= clock.max_period && (
-                            <Button onClick={() => post('start', next)}>Iniciar {periodLabel(next)}</Button>
-                        )}
+                        {!live && next <= clock.max_period && <Button onClick={() => post('start', next)}>Iniciar {periodLabel(next, sport)}</Button>}
                     </div>
                 )}
             </div>
@@ -235,6 +247,45 @@ function ClockCard({ game, clock, publicUrl }: { game: Props['game']; clock: Pro
                     {publicUrl}
                 </a>
             </p>
+        </Card>
+    );
+}
+
+/** Basquete: toque rápido por atleta em quadra (+1, +2, +3 e falta). Quem foi eliminado por faltas não pontua nem comete falta. */
+function BasketPad({ game, team, period }: { game: Props['game']; team: Team; period: number }) {
+    const send = (type: string, personId: string) =>
+        router.post(route('panel.games.events.store', game.id), { type, entry_id: team.id, person_id: personId, period }, { preserveScroll: true });
+
+    return (
+        <Card title={team.name}>
+            <ul className="divide-y divide-gray-100" data-testid={`basket-pad-${team.id}`}>
+                {team.on_field.map((id) => {
+                    const out = team.fouled_out.includes(id);
+                    const fouls = team.player_fouls[id] ?? 0;
+
+                    return (
+                        <li key={id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                            <span className={out ? 'text-gray-400 line-through' : ''}>
+                                {personName(team, id)} <span className="ml-1 text-xs text-gray-500">F{fouls}</span>
+                                {out && <span className="ml-1 text-xs text-red-600">eliminado</span>}
+                            </span>
+                            {game.open && (
+                                <span className="flex gap-1">
+                                    {[['free_throw', '+1'], ['field_goal', '+2'], ['three_pointer', '+3']].map(([type, label]) => (
+                                        <Button key={type} small disabled={out} onClick={() => send(type, id)}>
+                                            {label}
+                                        </Button>
+                                    ))}
+                                    <Button small variant="secondary" disabled={out} onClick={() => send('foul', id)}>
+                                        Falta
+                                    </Button>
+                                </span>
+                            )}
+                        </li>
+                    );
+                })}
+                {team.on_field.length === 0 && <li className="py-2 text-sm text-gray-500">Salve a escalação para ver os atletas em quadra.</li>}
+            </ul>
         </Card>
     );
 }
@@ -460,7 +511,7 @@ function TeamCard({ game, team, limits }: { game: Props['game']; team: Team; lim
     );
 }
 
-export default function Sheet({ game: serverGame, home, away, events: serverEvents, limits, event_types, score_model, sets, fouls, clock, public_url }: Props) {
+export default function Sheet({ game: serverGame, home, away, events: serverEvents, limits, event_types, sport, score_model, quarters, sets, fouls, clock, public_url }: Props) {
     // Quem não opera jogos só consulta a súmula: o servidor também recusa as ações, aqui só se escondem os controles.
     const canOperate = useCan('operate-games');
     const game = canOperate ? serverGame : { ...serverGame, open: false };
@@ -522,7 +573,18 @@ export default function Sheet({ game: serverGame, home, away, events: serverEven
                     {score_model === 'sets' ? (
                         <PointsCard game={game} sets={sets ?? []} home={home} away={away} lastPoint={[...events].reverse().find((event) => event.type === 'point' && event.voidable)} />
                     ) : (
-                        <ClockCard game={game} clock={clock} publicUrl={public_url} />
+                        <ClockCard game={game} clock={clock} publicUrl={public_url} sport={sport} />
+                    )}
+                    {score_model === 'points' && quarters && quarters.length > 0 && (
+                        <p className="text-center text-sm tabular-nums text-gray-600" data-testid="panel-quarters">
+                            {quarters.map((quarter) => `${periodLabel(quarter.period, sport)}: ${quarter.home}-${quarter.away}`).join(' · ')}
+                        </p>
+                    )}
+                    {score_model === 'points' && home.has_lineup && away.has_lineup && (
+                        <div className="grid gap-6 lg:grid-cols-2">
+                            <BasketPad game={game} team={home} period={clock.period ?? 1} />
+                            <BasketPad game={game} team={away} period={clock.period ?? 1} />
+                        </div>
                     )}
                     {fouls && (
                         <Card title={`Faltas acumuladas (${fouls.period}º tempo${fouls.period === 2 ? ' e prorrogação' : ''})`}>
@@ -571,7 +633,7 @@ export default function Sheet({ game: serverGame, home, away, events: serverEven
                                                     {event.minute !== null ? `${event.minute}'` : '—'} · {event.period}T
                                                 </span>
                                                 <span className="mr-2">{typeIcon[event.type] ?? event.type}</span>
-                                                <strong>{event.type === 'point' ? 'Ponto' : event.type === 'period_start' || event.type === 'period_end' ? `${event.type === 'period_start' ? 'Início do' : 'Fim do'} ${periodLabel(event.period)}` : (event.person ?? 'Anônimo')}</strong>
+                                                <strong>{event.type === 'point' ? 'Ponto' : event.type === 'clock_pause' ? 'Relógio parado' : event.type === 'clock_resume' ? 'Relógio em andamento' : event.type === 'period_start' || event.type === 'period_end' ? `${event.type === 'period_start' ? 'Início do' : 'Fim do'} ${periodLabel(event.period, sport)}` : (event.person ?? 'Anônimo')}</strong>
                                                 {event.secondary_person && <span> ⇄ {event.secondary_person}</span>}
                                                 {team && <span className="ml-2 text-gray-500">({team.name})</span>}
                                                 {event.quick && <span className="ml-2"><Badge>Resultado rápido</Badge></span>}

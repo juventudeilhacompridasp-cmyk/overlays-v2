@@ -36,6 +36,10 @@ final class FinishGame
             }
         }
 
+        if ($game->sport()->profile()->scoreModel === 'points' && $game->home_score === $game->away_score) {
+            throw new InvalidArgumentException('O jogo está empatado: lance a prorrogação até haver um vencedor.');
+        }
+
         $this->knockout->assertResolvable($game);
 
         $game->forceFill([

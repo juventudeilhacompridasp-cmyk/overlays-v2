@@ -37,8 +37,8 @@ final class StandingsCalculator
             }
 
             $results[] = $game;
-            $this->register($stats, $game->homeId, $game->homeGoals, $game->awayGoals, $rules, $game->homePoints, $game->awayPoints);
-            $this->register($stats, $game->awayId, $game->awayGoals, $game->homeGoals, $rules, $game->awayPoints, $game->homePoints);
+            $this->register($stats, $game->homeId, $game->homeGoals, $game->awayGoals, $rules, $game->homePoints, $game->awayPoints, $game->walkover);
+            $this->register($stats, $game->awayId, $game->awayGoals, $game->homeGoals, $rules, $game->awayPoints, $game->homePoints, $game->walkover);
         }
 
         $ordered = $this->order($teamIds, $stats, $results, $cards, $rules);
@@ -71,7 +71,7 @@ final class StandingsCalculator
     /**
      * @param  array<string, array<string, int>>  $stats
      */
-    private function register(array &$stats, string $teamId, int $goalsFor, int $goalsAgainst, RuleSet $rules, int $pointsFor = 0, int $pointsAgainst = 0): void
+    private function register(array &$stats, string $teamId, int $goalsFor, int $goalsAgainst, RuleSet $rules, int $pointsFor = 0, int $pointsAgainst = 0, bool $walkover = false): void
     {
         $stats[$teamId]['played']++;
         $stats[$teamId]['gf'] += $goalsFor;
@@ -90,7 +90,7 @@ final class StandingsCalculator
             $stats[$teamId]['points'] += $rules->pointsDraw;
         } else {
             $stats[$teamId]['losses']++;
-            $stats[$teamId]['points'] += $narrow ? ($rules->pointsNarrowLoss ?? $rules->pointsLoss) : $rules->pointsLoss;
+            $stats[$teamId]['points'] += $walkover && $rules->pointsWalkoverLoss !== null ? $rules->pointsWalkoverLoss : ($narrow ? ($rules->pointsNarrowLoss ?? $rules->pointsLoss) : $rules->pointsLoss);
         }
     }
 

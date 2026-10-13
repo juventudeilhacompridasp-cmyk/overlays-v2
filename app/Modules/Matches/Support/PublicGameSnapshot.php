@@ -55,7 +55,8 @@ final class PublicGameSnapshot
             'sport' => $game->sport()->value,
             'score_model' => $game->sport()->profile()->scoreModel,
             'sets' => $game->sport()->profile()->scoreModel === 'sets' ? ($game->sets ?? []) : null,
-            'clock' => $game->clock()->snapshot($marks),
+            'clock' => $game->clock()->snapshot($marks) + self::clockDisplay($game, $marks),
+            'quarters' => self::quarters($game),
             'fouls' => self::fouls($game, $marks, $side),
             'goals' => $goals->map(function (GameEvent $event) use ($side, $names) {
                 $own = $event->type === GameEventType::OwnGoal;
@@ -102,5 +103,61 @@ final class PublicGameSnapshot
         });
 
         return ['home' => $counts['home'], 'away' => $counts['away'], 'limit' => $profile->teamFoulLimit, 'period' => $group];
+    }
+
+    /**
+     * Como mostrar o relógio quando ele é regressivo (basquete): o cliente calcula o tempo restante do período.
+     * Esportes de relógio corrido não acrescentam nada.
+     *
+     * @param  list<ClockMark>  $marks
+     * @return array<string, mixed>
+     */
+    private static function clockDisplay(Game $game, array $marks): array
+    {
+        $profile = $game->sport()->profile();
+
+        if ($profile->clockDirection !== 'down') {
+            return [];
+        }
+
+        $clock = $game->clock();
+        $period = $clock->snapshot($marks)['period'] ?? 1;
+
+        return [
+            'direction' => 'down',
+            'pausable' => $profile->pausableClock,
+            'offset_seconds' => $clock->offsetSeconds($period),
+            'period_seconds' => $clock->periodMinutes($period) * 60,
+        ];
+    }
+
+    /**
+     * Pontos por período (esportes de pontos); null nos demais.
+     *
+     * @return list<array{period: int, home: int, away: int}>|null
+     */
+    private static function quarters(Game $game): ?array
+    {
+        if ($game->sport()->profile()->scoreModel !== 'points') {
+            return null;
+        }
+
+        $byPeriod = [];
+
+        foreach ($game->events()->effective()->whereIn('type', GameEventType::scoring())->get() as $event) {
+            $side = $event->entry_id === $game->home_entry_id ? 'home' : ($event->entry_id === $game->away_entry_id ? 'away' : null);
+
+            if ($side === null) {
+                continue;
+            }
+
+            $period = (int) $event->period;
+            $byPeriod[$period] ??= ['period' => $period, 'home' => 0, 'away' => 0];
+            $byPeriod[$period][$side] += (int) ($event->payload['points'] ?? $event->type->pointValue() ?? 0);
+        }
+
+        ksort($byPeriod);
+
+        return array_values($byPeriod);
     }
 }

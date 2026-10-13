@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
 
 export interface GameClock {
-    state: 'not_started' | 'running' | 'stopped';
+    state: 'not_started' | 'running' | 'paused' | 'stopped';
     period: number | null;
     base_seconds: number;
     running_since_ms: number | null;
+    /** Basquete: o relógio mostra o tempo restante do período e para/volta dentro dele. */
+    direction?: 'down';
+    pausable?: boolean;
+    offset_seconds?: number;
+    period_seconds?: number;
 }
 
 /** Segundos decorridos no relógio do jogo. `skewMs` = relógio do cliente menos o do servidor. */
@@ -16,6 +21,18 @@ export function elapsedSeconds(clock: GameClock, nowMs: number, skewMs: number):
     return clock.base_seconds + Math.max(0, Math.floor((nowMs - skewMs - clock.running_since_ms) / 1000));
 }
 
+/** Depois deste período vem um intervalo (e não o fim do jogo ou de uma prorrogação)? */
+export const isInterval = (period: number | null, sport?: string): boolean => (sport === 'basketball' ? period !== null && period < 4 : period === 1);
+
+/** O que o relógio mostra: o tempo decorrido (futebol) ou o restante do período (basquete). */
+export function shownSeconds(clock: GameClock, elapsed: number): number {
+    if (clock.direction === 'down' && clock.period_seconds !== undefined) {
+        return Math.max(0, clock.period_seconds - (elapsed - (clock.offset_seconds ?? 0)));
+    }
+
+    return elapsed;
+}
+
 export function formatClock(seconds: number): string {
     const minutes = Math.floor(seconds / 60);
     const rest = seconds % 60;
@@ -23,8 +40,9 @@ export function formatClock(seconds: number): string {
     return `${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`;
 }
 
-export const periodLabel = (period: number | null): string => {
+export const periodLabel = (period: number | null, sport?: string): string => {
     if (period === null) return '';
+    if (sport === 'basketball') return period <= 4 ? `${period}º quarto` : `Prorrogação ${period - 4}`;
     if (period <= 2) return `${period}º tempo`;
 
     return `Prorrogação ${period - 2}`;

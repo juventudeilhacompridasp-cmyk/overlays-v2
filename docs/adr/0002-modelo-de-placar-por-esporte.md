@@ -21,3 +21,9 @@ Status: aceito (13/10/2026). Contexto: o futsal reaproveitou o modelo do futebol
 - Acrescentar esporte = enum `Sport` + `SportProfile` + (se o placar não for gols) um modelo de placar puro e testado.
 - `home_score`/`away_score` significam coisas diferentes por esporte; o rótulo vem do perfil (`scoreModel`) nas telas.
 - Mata-mata e classificação continuam funcionando porque só dependem de `home_score`/`away_score` e do `GameResult`.
+
+## Adendo — basquete (parte 3, 13/10/2026)
+- Modelo `points` implementado: três eventos (`free_throw`, `field_goal`, `three_pointer`) em vez de um evento com payload, para manter a trilha de auditoria legível e a súmula com tipos explícitos; o resultado rápido usa um lançamento anônimo com `payload.points`.
+- O relógio ganhou **pausa/retomada** (`clock_pause`/`clock_resume`) e sentido regressivo apenas na exibição; o servidor continua guardando o decorrido.
+- Sem empate: encerrar um jogo de pontos empatado é recusado (prorrogação).
+- Fora desta etapa: pedidos de tempo, faltas técnicas/antidesportivas e relógio de posse.

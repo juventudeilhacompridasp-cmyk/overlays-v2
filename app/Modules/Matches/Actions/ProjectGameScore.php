@@ -23,8 +23,14 @@ final class ProjectGameScore
             throw new InvalidArgumentException('O jogo ainda não tem os dois confrontantes definidos.');
         }
 
-        if ($game->sport()->profile()->scoreModel === 'sets') {
+        $model = $game->sport()->profile()->scoreModel;
+
+        if ($model === 'sets') {
             return $this->projectSets($game);
+        }
+
+        if ($model === 'points') {
+            return $this->projectPoints($game);
         }
 
         $events = $game->events()
@@ -82,6 +88,30 @@ final class ProjectGameScore
             'home_penalties' => null,
             'away_penalties' => null,
             'sets' => $state['sets'],
+        ])->save();
+
+        return $game;
+    }
+
+    /**
+     * Esportes de pontos (basquete): o placar é a soma dos lances (1/2/3). Um resultado rápido guarda o total
+     * no `payload.points` de um único lançamento anônimo.
+     */
+    private function projectPoints(Game $game): Game
+    {
+        $totals = [(string) $game->home_entry_id => 0, (string) $game->away_entry_id => 0];
+
+        foreach ($game->events()->effective()->whereIn('type', GameEventType::scoring())->get() as $event) {
+            if (isset($totals[(string) $event->entry_id])) {
+                $totals[(string) $event->entry_id] += (int) ($event->payload['points'] ?? $event->type->pointValue() ?? 0);
+            }
+        }
+
+        $game->forceFill([
+            'home_score' => $totals[(string) $game->home_entry_id],
+            'away_score' => $totals[(string) $game->away_entry_id],
+            'home_penalties' => null,
+            'away_penalties' => null,
         ])->save();
 
         return $game;

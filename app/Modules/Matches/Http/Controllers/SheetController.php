@@ -81,6 +81,8 @@ class SheetController extends Controller
                 'on_field' => $state->onField($entry->getKey()),
                 'available_bench' => $state->bench($entry->getKey()),
                 'expelled' => $state->expelled($entry->getKey()),
+                'fouled_out' => $state->fouledOut($entry->getKey()),
+                'player_fouls' => (object) $state->foulsOf($entry->getKey()),
                 'substitutions_used' => $state->substitutionsUsed($entry->getKey()),
                 'windows_used' => $state->windowsUsed($entry->getKey()),
             ];
@@ -93,7 +95,7 @@ class SheetController extends Controller
 
         $effectiveIds = $game->events()->effective()->pluck('id')->all();
         $lastMarkId = $game->events()->effective()
-            ->whereIn('type', [GameEventType::PeriodStart, GameEventType::PeriodEnd])
+            ->whereIn('type', GameEventType::clockMarks())
             ->orderByDesc('id')->value('id');
 
         $lastPointId = $game->events()->effective()->where('type', GameEventType::Point)->orderByDesc('id')->value('id');
@@ -109,7 +111,7 @@ class SheetController extends Controller
             'minute' => $event->minute,
             'quick' => ($event->payload['quick'] ?? false) === true,
             'voidable' => $open && in_array($event->id, $effectiveIds, true) && ($event->payload['quick'] ?? false) !== true
-                && (! in_array($event->type, [GameEventType::PeriodStart, GameEventType::PeriodEnd], true) || $event->id === $lastMarkId)
+                && (! $event->type->isClockMark() || $event->id === $lastMarkId)
                 && ($event->type !== GameEventType::Point || $event->id === $lastPointId),
         ]);
 
@@ -153,13 +155,16 @@ class SheetController extends Controller
             'sets' => $game->sport()->profile()->scoreModel === 'sets' ? ($game->sets ?? []) : null,
             'sets_to_win' => $rules->setsToWin,
             'fouls' => PublicGameSnapshot::for($game)['fouls'],
-            'event_types' => collect($game->sport()->profile()->scoreModel === 'sets'
-                ? [GameEventType::Substitution, GameEventType::YellowCard, GameEventType::RedCard]
-                : [
+            'quarters' => PublicGameSnapshot::for($game)['quarters'],
+            'event_types' => collect(match ($game->sport()->profile()->scoreModel) {
+                'sets' => [GameEventType::Substitution, GameEventType::YellowCard, GameEventType::RedCard],
+                'points' => [GameEventType::FieldGoal, GameEventType::ThreePointer, GameEventType::FreeThrow, GameEventType::Foul, GameEventType::Substitution],
+                default => [
                     GameEventType::Goal, GameEventType::OwnGoal, GameEventType::YellowCard, GameEventType::RedCard,
                     GameEventType::BlueCard, GameEventType::Substitution,
                     ...($game->sport()->profile()->tracksTeamFouls() ? [GameEventType::Foul] : []),
-                ])->map(fn (GameEventType $type) => ['value' => $type->value, 'label' => $type->label()])->values(),
+                ],
+            })->map(fn (GameEventType $type) => ['value' => $type->value, 'label' => $type->label()])->values(),
         ]);
     }
 
@@ -233,6 +238,19 @@ class SheetController extends Controller
         }
 
         return back()->with('success', 'Cronômetro atualizado.');
+    }
+
+    public function clockPause(Request $request, Game $game, ChangeGamePeriod $change): RedirectResponse
+    {
+        $validated = $request->validate(['pause' => ['required', 'boolean']]);
+
+        try {
+            $change->pause($game, (bool) $validated['pause'], $request->user()?->getAuthIdentifier());
+        } catch (InvalidArgumentException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return back();
     }
 
     public function shootout(Request $request, Game $game, RecordShootout $record): RedirectResponse
