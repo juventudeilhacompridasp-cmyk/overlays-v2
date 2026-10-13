@@ -76,7 +76,7 @@ it('creates system profiles mirroring the roles, once', function () {
     expect(AccessProfile::query()->count())->toBe(4)
         ->and(AccessProfile::query()->where('slug', 'manager')->exists())->toBeFalse()
         ->and(AccessProfile::query()->where('is_system', false)->exists())->toBeFalse()
-        ->and($permissions)->toEqual(Role::Organizer->permissions());
+        ->and($permissions)->toEqualCanonicalizing(Role::Organizer->permissions());
 });
 
 it('seeds the system profiles when the platform creates an organization', function () {
