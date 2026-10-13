@@ -1,4 +1,5 @@
 import { Badge, Button, Card, Field, ImageUpload, Input, PageHeader, Select, Textarea } from '@/Components/Panel/ui';
+import type { MarketVideo } from '@/Components/Market/VideoEmbed';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
@@ -27,6 +28,7 @@ interface Props {
     };
     requests: { id: string; team: string; message: string; status: string; status_label: string; created_at: string; expires_at: string }[];
     blocks: { id: string; team: string }[];
+    videos: MarketVideo[];
     email_verified: boolean;
     options: {
         sports: (Option & { positions: Option[] })[];
@@ -41,7 +43,7 @@ interface Props {
 
 const tone = (status: string) => (status === 'published' ? 'green' : status === 'suspended' ? 'red' : status === 'signed' ? 'blue' : 'amber');
 
-export default function Dashboard({ profile, requests, blocks, email_verified, options, revalidate_days }: Props) {
+export default function Dashboard({ profile, requests, blocks, videos, email_verified, options, revalidate_days }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         sport: profile.sport ?? '',
         positions: profile.positions,
@@ -58,6 +60,7 @@ export default function Dashboard({ profile, requests, blocks, email_verified, o
     });
     const [password, setPassword] = useState('');
     const [confirming, setConfirming] = useState(false);
+    const videoForm = useForm({ url: '' });
 
     const positions = options.sports.find((sport) => sport.value === data.sport)?.positions ?? [];
     const published = profile.status === 'published';
@@ -190,6 +193,49 @@ export default function Dashboard({ profile, requests, blocks, email_verified, o
                         hint="JPG, PNG ou WebP. Só os gestores de equipe da organização veem, por link temporário."
                         round
                     />
+                </Card>
+
+                <Card title="Vídeos de jogadas">
+                    <p className="mb-3 text-sm text-gray-600">
+                        Cole até 3 links de vídeos do YouTube, Vimeo ou Instagram. Nós não guardamos o vídeo: os gestores assistem direto no site de origem, e só quando clicam.
+                    </p>
+                    {videos.length > 0 && (
+                        <ul className="mb-3 space-y-2">
+                            {videos.map((video) => (
+                                <li key={video.id} className="flex items-center justify-between gap-2 text-sm">
+                                    <a href={video.url} target="_blank" rel="noreferrer noopener" className="truncate text-emerald-700 hover:underline">
+                                        {video.provider_label}: {video.url}
+                                    </a>
+                                    <Button small variant="ghost" onClick={() => router.delete(route('athlete.videos.destroy', video.id), { preserveScroll: true })}>
+                                        Remover
+                                    </Button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    {videos.length < 3 && (
+                        <form
+                            className="flex flex-wrap items-start gap-2"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                videoForm.post(route('athlete.videos.store'), { preserveScroll: true, onSuccess: () => videoForm.reset() });
+                            }}
+                        >
+                            <div className="min-w-0 flex-1">
+                                <Input
+                                    aria-label="Link do vídeo"
+                                    placeholder="https://www.youtube.com/watch?v=..."
+                                    value={videoForm.data.url}
+                                    onChange={(event) => videoForm.setData('url', event.target.value)}
+                                    maxLength={300}
+                                />
+                                {videoForm.errors.url && <p className="mt-1 text-sm text-red-600">{videoForm.errors.url}</p>}
+                            </div>
+                            <Button type="submit" disabled={videoForm.processing || videoForm.data.url.trim() === ''}>
+                                Adicionar
+                            </Button>
+                        </form>
+                    )}
                 </Card>
 
                 <form onSubmit={submit} className="space-y-6">

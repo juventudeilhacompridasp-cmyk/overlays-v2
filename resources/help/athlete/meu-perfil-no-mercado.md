@@ -31,6 +31,11 @@ Nome (o apelido, se você informar um), foto, posições, faixa de idade, regiã
 - **Pausar perfil** tira você da busca na hora.
 - **Apagar meu cadastro** remove o perfil, a foto e o seu acesso. Não dá para desfazer.
 
+## Vídeos de jogadas
+Cole até **3 links** de vídeos do **YouTube, Vimeo ou Instagram** (post, reel ou tv). Só links `https` desses sites são aceitos.
+- O vídeo **não é enviado nem guardado aqui**: os gestores assistem direto no site de origem, e só quando clicam em **Assistir**.
+- Para trocar um vídeo, remova-o e adicione outro. Vídeos privados ou apagados no site de origem não abrem para os gestores.
+
 ## Pedidos de contato
 Quando uma equipe quer falar com você, chega um e-mail e o pedido aparece em **Pedidos de contato**, com a equipe e a mensagem.
 - **Aceitar** mostra o contato que você escolheu **só àquela equipe**.

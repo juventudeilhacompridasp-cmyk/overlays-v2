@@ -3,6 +3,7 @@
 use App\Modules\Help\Http\Controllers\HelpController;
 use App\Modules\Market\Http\Controllers\AthleteController;
 use App\Modules\Market\Http\Controllers\AthleteRequestController;
+use App\Modules\Market\Http\Controllers\AthleteVideoController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,6 +15,8 @@ Route::middleware(['auth', 'athlete.member', 'legal.accepted', 'feature:market']
     Route::put('perfil', [AthleteController::class, 'update'])->name('profile.update');
     Route::post('foto', [AthleteController::class, 'photo'])->name('photo.store');
     Route::delete('foto', [AthleteController::class, 'removePhoto'])->name('photo.destroy');
+    Route::post('videos', [AthleteVideoController::class, 'store'])->name('videos.store');
+    Route::delete('videos/{video}', [AthleteVideoController::class, 'destroy'])->name('videos.destroy');
     Route::post('publicar', [AthleteController::class, 'publish'])->name('publish');
     Route::post('pausar', [AthleteController::class, 'pause'])->name('pause');
     Route::post('pedidos/{contactRequest}/aceitar', [AthleteRequestController::class, 'accept'])->name('requests.accept');
