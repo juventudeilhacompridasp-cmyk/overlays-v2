@@ -13,6 +13,7 @@ use App\Modules\Registration\Models\RegistrationDocument;
 use App\Modules\Registration\Models\RegistrationPerson;
 use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Models\Team;
+use App\Modules\Tenancy\Models\LegalDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -79,6 +80,7 @@ class ReviewController extends Controller
                 'contact_email' => $registration->contact_email,
                 'contact_phone' => $registration->contact_phone,
                 'consent_at' => $registration->consent_at?->format('d/m/Y H:i'),
+                'consent_version' => $registration->consent_document_id !== null ? LegalDocument::query()->whereKey($registration->consent_document_id)->value('version') : null,
                 'submitted_at' => $registration->submitted_at?->format('d/m/Y H:i'),
                 'competition' => $registration->season->competition->name,
                 'season' => $registration->season->name,

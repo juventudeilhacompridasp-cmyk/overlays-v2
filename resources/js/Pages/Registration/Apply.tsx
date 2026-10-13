@@ -110,7 +110,15 @@ export default function Apply({ theme, seo, competition, season, open, deadline,
                         <input type="checkbox" className="mt-0.5 rounded border-gray-300 text-emerald-600" checked={data.consent} onChange={(e) => setData('consent', e.target.checked)} />
                         <span>
                             Concordo que os dados e documentos informados (inclusive de menores, com autorização do responsável) sejam usados pela organização apenas para
-                            validar a inscrição e gerir a competição.
+                            validar a inscrição e gerir a competição, conforme a{' '}
+                            <a href={route('portal.privacy')} target="_blank" rel="noreferrer" className="text-emerald-700 underline">
+                                política de privacidade
+                            </a>{' '}
+                            e os{' '}
+                            <a href={route('portal.terms')} target="_blank" rel="noreferrer" className="text-emerald-700 underline">
+                                termos de uso
+                            </a>
+                            .
                         </span>
                     </label>
                     {errors.consent && <p className="text-sm text-red-600">{errors.consent}</p>}

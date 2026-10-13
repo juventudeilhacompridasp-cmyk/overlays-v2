@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\Tenancy\Http\Middleware\EnsureFeature;
+use App\Modules\Tenancy\Http\Middleware\EnsureLegalAccepted;
 use App\Modules\Tenancy\Http\Middleware\EnsureMember;
 use App\Modules\Tenancy\Http\Middleware\EnsurePanelAbility;
 use App\Modules\Tenancy\Http\Middleware\EnsurePlatformAdmin;
@@ -44,6 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'panel.member' => EnsureMember::class,
             'panel.can' => EnsurePanelAbility::class,
             'feature' => EnsureFeature::class,
+            'legal.accepted' => EnsureLegalAccepted::class,
             'platform.admin' => EnsurePlatformAdmin::class,
         ]);
     })

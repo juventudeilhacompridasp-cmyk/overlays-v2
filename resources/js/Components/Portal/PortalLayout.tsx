@@ -68,6 +68,14 @@ export default function PortalLayout({ theme, seo, children }: PropsWithChildren
             <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
             <footer className="mx-auto max-w-5xl px-4 pb-10 text-xs text-gray-500 print:hidden">
                 {theme.name} · Resultados e classificações atualizados pela organização.{!theme.white_label && ` · Feito com ${theme.platform_name}`}
+                {' · '}
+                <Link href={route('portal.terms')} className="hover:underline">
+                    Termos de uso
+                </Link>
+                {' · '}
+                <Link href={route('portal.privacy')} className="hover:underline">
+                    Privacidade
+                </Link>
             </footer>
         </div>
     );
