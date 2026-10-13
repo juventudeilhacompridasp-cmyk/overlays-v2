@@ -10,6 +10,7 @@ enum ArtKind: string
     case Lineup = 'lineup';
     case Round = 'round';
     case Cover = 'cover';
+    case Standings = 'standings';
 
     public function label(): string
     {
@@ -19,6 +20,7 @@ enum ArtKind: string
             self::Lineup => 'Escalação',
             self::Round => 'Rodada / dia',
             self::Cover => 'Capa / anúncio',
+            self::Standings => 'Classificação',
         };
     }
 }

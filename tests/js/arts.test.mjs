@@ -52,6 +52,7 @@ const data = (overrides = {}) => ({
     lineup: null,
     scope: 'day',
     games: [],
+    standings: null,
     ...overrides,
 });
 
@@ -363,4 +364,29 @@ test('the chosen logo replaces the organization logo', () => {
 
     assert.ok(logo);
     assert.ok(logo.w > 0);
+});
+
+const table = (n = 6) => ({
+    title: 'Grupo A',
+    unit: 'gols',
+    highlight: ['e2'],
+    rows: Array.from({ length: n }, (_, i) => ({ entry: `e${i + 1}`, position: i + 1, name: `Equipe ${i + 1}`, short: null, crest: null, played: 3, wins: 3 - Math.min(i, 3), draws: 0, losses: Math.min(i, 3), diff: 4 - i * 2, points: 9 - i * 2 })),
+});
+
+test('standings lists every team with points, highlighting the teams of the game', () => {
+    const ops = buildArt(style(), data({ kind: 'standings', standings: table() }), 1080, 1350);
+    const all = texts(ops);
+
+    for (let i = 1; i <= 6; i++) assert.ok(all.includes(`Equipe ${i}`));
+    assert.ok(all.includes('Grupo A'));
+    assert.ok(all.includes('+4') && all.includes('-6'));
+    assert.ok(ops.some((op) => op.t === 'rect' && op.alpha === 0.2));
+});
+
+test('standings without a table says so, and a long table stays inside the art', () => {
+    assert.ok(texts(buildArt(style(), data({ kind: 'standings' }), 1080, 1350)).some((t) => t.includes('indisponível')));
+
+    const ops = buildArt(style(), data({ kind: 'standings', standings: table(20) }), 1080, 1350);
+    assert.ok(!texts(ops).includes('Equipe 17'));
+    assert.ok(ops.filter((op) => op.t === 'text').every((op) => op.y <= 1350));
 });

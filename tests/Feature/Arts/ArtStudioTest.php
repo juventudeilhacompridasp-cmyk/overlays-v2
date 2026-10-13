@@ -3,6 +3,7 @@
 use App\Modules\Arts\Models\ArtAsset;
 use App\Modules\Arts\Models\ArtTemplate;
 use App\Modules\Arts\Support\ArtStyle;
+use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
@@ -59,7 +60,7 @@ describe('game list', function () {
             ->and(collect($props['recent'])->pluck('id'))->toContain($finished->id)
             ->and($props['presets'])->not->toBeEmpty()
             ->and($props['formats'])->toHaveCount(6)
-            ->and(collect($props['kinds'])->pluck('value')->all())->toBe(['preview', 'result', 'lineup', 'round', 'cover']);
+            ->and(collect($props['kinds'])->pluck('value')->all())->toBe(['preview', 'result', 'lineup', 'round', 'cover', 'standings']);
     });
 });
 
@@ -227,6 +228,33 @@ describe('round and cover data', function () {
             ->and($cover['division'])->toBeString()
             ->and($cover['games'])->toBe([])
             ->and($cover['lineup'])->toBeNull();
+    });
+});
+
+describe('standings data', function () {
+    it('sends the table of the stage with the teams of the game highlighted, and no discipline data', function () {
+        ['game' => $game, 'home' => $home, 'away' => $away] = sheetGame();
+
+        $data = artProps(test()->actingAs(panelUser())->get(route('panel.arts.editor', ['game' => $game->id, 'kind' => 'standings'])))['data'];
+
+        expect($data['kind'])->toBe('standings')
+            ->and($data['standings']['unit'])->toBe('gols')
+            ->and($data['standings']['rows'])->toHaveCount(2)
+            ->and($data['standings']['highlight'])->toEqualCanonicalizing([$home->id, $away->id])
+            ->and($data['standings']['rows'][0])->toHaveKeys(['position', 'name', 'crest', 'played', 'wins', 'diff', 'points'])
+            ->and(array_keys($data['standings']['rows'][0]))->not->toContain('yellow_cards', 'red_cards');
+    });
+
+    it('has no table in a knockout stage and sends none for the other kinds', function () {
+        ['stage' => $stage] = fixtureDivision(4, StageType::Knockout);
+        app(GenerateStageFixtures::class)->handle($stage);
+        $game = Game::query()->where('stage_id', $stage->id)->firstOrFail();
+        $admin = panelUser();
+
+        expect(artProps(test()->actingAs($admin)->get(route('panel.arts.editor', ['game' => $game->id, 'kind' => 'standings'])))['data']['standings'])->toBeNull();
+
+        ['game' => $other] = sheetGame();
+        expect(artProps(test()->actingAs($admin)->get(route('panel.arts.editor', ['game' => $other->id, 'kind' => 'preview'])))['data']['standings'])->toBeNull();
     });
 });
 

@@ -3,6 +3,9 @@
 namespace App\Modules\Arts\Support;
 
 use App\Modules\Arts\Enums\ArtKind;
+use App\Modules\Competitions\Actions\CalculateStandings;
+use App\Modules\Competitions\Data\StandingEntry;
+use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Competitions\Models\Entry;
 use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Models\Game;
@@ -56,6 +59,7 @@ final class ArtData
             'lineup' => $kind === ArtKind::Lineup ? self::lineup($game) : null,
             'scope' => $scope === 'round' ? 'round' : 'day',
             'games' => $kind === ArtKind::Round ? self::games($game, $scope === 'round') : [],
+            'standings' => $kind === ArtKind::Standings ? self::standings($game) : null,
         ];
     }
 
@@ -88,6 +92,52 @@ final class ArtData
                 'home' => self::side($item->homeEntry, $item->home_score, $item->home_penalties),
                 'away' => self::side($item->awayEntry, $item->away_score, $item->away_penalties),
             ])->values()->all();
+    }
+
+    /**
+     * Tabela do grupo do jogo (ou da fase de pontos corridos): só posição, equipe e números da campanha — nada de cartões
+     * nem disciplina. `null` em mata-mata. Em esportes de sets, gols pró/contra são sets.
+     *
+     * @return array{title: string, unit: string, rows: list<array<string, mixed>>, highlight: list<string>}|null
+     */
+    private static function standings(Game $game): ?array
+    {
+        $calculator = new CalculateStandings;
+
+        if ($game->group_id !== null) {
+            $rows = $calculator->forGroup($game->group);
+            $title = $game->group->name;
+        } elseif ($game->stage->type === StageType::League) {
+            $rows = $calculator->forStage($game->stage);
+            $title = $game->stage->name;
+        } else {
+            return null;
+        }
+
+        $sets = $game->sport()->profile()->scoreModel === 'sets';
+
+        return [
+            'title' => $title,
+            'unit' => $sets ? 'sets' : ($game->sport()->profile()->scoreModel === 'points' ? 'pontos' : 'gols'),
+            'highlight' => array_values(array_filter([$game->home_entry_id, $game->away_entry_id])),
+            'rows' => array_map(function (StandingEntry $item): array {
+                $team = $item->entry->team;
+
+                return [
+                    'entry' => $item->entry->getKey(),
+                    'position' => $item->row->position,
+                    'name' => $team->name ?? 'A definir',
+                    'short' => $team->short_name ?? null,
+                    'crest' => $team !== null ? ImageStore::publicDataUri($team->logo_path, 128) : null,
+                    'played' => $item->row->played,
+                    'wins' => $item->row->wins,
+                    'draws' => $item->row->draws,
+                    'losses' => $item->row->losses,
+                    'diff' => $item->row->goalDifference(),
+                    'points' => $item->row->points,
+                ];
+            }, $rows),
+        ];
     }
 
     /** @return array<string, mixed> */
