@@ -29,6 +29,7 @@ final class SportProfiles
             ], scoreModel: 'sets'),
             // Basquete (FIBA): 4 quartos de 10 min + prorrogações de 5 min, relógio regressivo que para e volta,
             // pontos de 1/2/3, 5 faltas por atleta (eliminado) e 5 faltas de equipe por quarto (prorrogação segue o 4º).
+            // Pedidos de tempo por equipe: 2 na 1ª metade (quartos 1-2), 3 na 2ª (quartos 3-4) e 1 por prorrogação.
             // Tabela: vitória 2, derrota 1, derrota por W.O. 0 (W.O. = 20-0); sem empate (prorrogação até desempatar).
             'basketball' => new SportProfile('basketball', 'Basquete', [10, 10, 10, 10, 5, 5, 5, 5], [
                 'points' => ['win' => 2, 'draw' => 0, 'loss' => 1, 'walkover_loss' => 0],
@@ -38,7 +39,7 @@ final class SportProfiles
                 'substitutions' => ['max' => 99, 'max_windows' => 99, 'allow_reentry' => true],
                 'lineup' => ['max_starters' => 5, 'max_bench' => 7, 'max_staff' => 3],
                 'fouls' => ['max_player' => 5],
-            ], teamFoulLimit: 5, scoreModel: 'points', clockDirection: 'down', pausableClock: true, foulGroups: [1, 2, 3, 4]),
+            ], teamFoulLimit: 5, scoreModel: 'points', clockDirection: 'down', pausableClock: true, foulGroups: [1, 2, 3, 4], timeoutGroups: [1, 1, 2, 2, 5, 6, 7, 8], timeoutLimits: [1 => 2, 2 => 3, 5 => 1, 6 => 1, 7 => 1, 8 => 1]),
             default => throw new InvalidArgumentException("Esporte sem perfil: {$sport}."),
         };
     }

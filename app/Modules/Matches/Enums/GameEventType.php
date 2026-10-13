@@ -24,6 +24,8 @@ enum GameEventType: string
     /** Basquete: o relógio para / volta dentro do período. */
     case ClockPause = 'clock_pause';
     case ClockResume = 'clock_resume';
+    /** Basquete: pedido de tempo da equipe (sem atleta). */
+    case Timeout = 'timeout';
 
     public function label(): string
     {
@@ -45,6 +47,7 @@ enum GameEventType: string
             self::ThreePointer => 'Cesta de 3',
             self::ClockPause => 'Relógio parado',
             self::ClockResume => 'Relógio em andamento',
+            self::Timeout => 'Pedido de tempo',
         };
     }
 

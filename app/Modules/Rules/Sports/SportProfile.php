@@ -31,6 +31,10 @@ final readonly class SportProfile
         public bool $pausableClock = false,
         /** Grupo de faltas de cada período, na ordem; períodos além da lista ficam no último grupo. */
         public array $foulGroups = [1, 2],
+        /** Grupo de pedidos de tempo de cada período (vazio = o esporte não conta pedidos de tempo na súmula). */
+        public array $timeoutGroups = [],
+        /** @var array<int, int> pedidos de tempo permitidos por equipe em cada grupo */
+        public array $timeoutLimits = [],
     ) {}
 
     public function clock(): GameClock
@@ -47,6 +51,23 @@ final readonly class SportProfile
     public function tracksTeamFouls(): bool
     {
         return $this->teamFoulLimit !== null;
+    }
+
+    public function tracksTimeouts(): bool
+    {
+        return $this->timeoutGroups !== [];
+    }
+
+    /** Grupo de pedidos de tempo de um período (períodos além da lista ficam no último grupo). */
+    public function timeoutGroup(int $period): int
+    {
+        return $this->timeoutGroups[min(max($period, 1), count($this->timeoutGroups)) - 1];
+    }
+
+    /** Quantos pedidos de tempo cada equipe tem no grupo do período. */
+    public function timeoutLimit(int $period): int
+    {
+        return $this->timeoutLimits[$this->timeoutGroup($period)] ?? 0;
     }
 
     /** Regulamento inicial do esporte (padrões gerais com as sobrescritas do perfil). */

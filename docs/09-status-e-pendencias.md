@@ -17,7 +17,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
   "Fila offline no navegador".
 
 ## Pendências conhecidas (por ordem sugerida)
-- Basquete: pedidos de tempo, faltas técnicas/antidesportivas, relógio de posse (24 s).
+- Basquete: faltas técnicas/antidesportivas e relógio de posse (24 s). Pedidos de tempo entregues (ainda sem mostrar no overlay/página pública e sem parar o relógio sozinho).
 - Vôlei: limite de substituições por set, rodízio/líbero, pedidos de tempo.
 - Fila offline: escalação, pênaltis e resultado rápido ainda exigem internet; a página não abre sem internet se for
   recarregada (o service worker não guarda páginas por causa da LGPD).

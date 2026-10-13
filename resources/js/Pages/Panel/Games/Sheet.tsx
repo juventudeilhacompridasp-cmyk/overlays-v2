@@ -38,6 +38,8 @@ interface Team {
     fouled_out: string[];
     player_fouls: Record<string, number>;
     yellows: Record<string, number>;
+    /** Basquete: pedidos de tempo usados no período atual e o limite (nulo = o esporte não conta). */
+    timeouts: { used: number; limit: number } | null;
 }
 
 interface SheetEvent {
@@ -108,6 +110,7 @@ const typeIcon: Record<string, string> = {
     period_start: '▶️',
     period_end: '⏸️',
     foul: '🚫',
+    timeout: '⏱️',
     point: '🏐',
     free_throw: '🏀 (1)',
     field_goal: '🏀 (2)',
@@ -260,7 +263,7 @@ function ClockCard({ game, clock, publicUrl, sport, send }: { game: Props['game'
     );
 }
 
-const basketLabel: Record<string, string> = { free_throw: 'Lance livre (+1)', field_goal: 'Cesta de 2', three_pointer: 'Cesta de 3', foul: 'Falta' };
+const basketLabel: Record<string, string> = { free_throw: 'Lance livre (+1)', field_goal: 'Cesta de 2', three_pointer: 'Cesta de 3', foul: 'Falta', timeout: 'Pedido de tempo' };
 
 /** Basquete: toque rápido por atleta em quadra (+1, +2, +3 e falta). Quem foi eliminado por faltas não pontua nem comete falta. */
 function BasketPad({ game, team, period, send: enqueue }: { game: Props['game']; team: Team; period: number; send: Send }) {
@@ -269,6 +272,16 @@ function BasketPad({ game, team, period, send: enqueue }: { game: Props['game'];
 
     return (
         <Card title={team.name}>
+            {team.timeouts && game.open && (
+                <div className="mb-3 flex items-center justify-between text-sm" data-testid={`timeouts-${team.id}`}>
+                    <span className="text-gray-600">
+                        Pedidos de tempo: {team.timeouts.used}/{team.timeouts.limit}
+                    </span>
+                    <Button small variant="secondary" disabled={team.timeouts.used >= team.timeouts.limit} onClick={() => enqueue('event', { type: 'timeout', entry_id: team.id, person_id: null, period }, `Pedido de tempo (${team.name})`)}>
+                        Pedir tempo
+                    </Button>
+                </div>
+            )}
             <ul className="divide-y divide-gray-100" data-testid={`basket-pad-${team.id}`}>
                 {team.on_field.map((id) => {
                     const out = team.fouled_out.includes(id);
@@ -609,6 +622,7 @@ const teamFields = (team: Team) => ({
     player_fouls: team.player_fouls,
     yellows: team.yellows,
     substitutions_used: team.substitutions_used,
+    timeouts: team.timeouts,
 });
 
 export default function Sheet({ game: serverGame, home: serverHome, away: serverAway, events: serverEvents, limits, clock_offsets, event_types, sport, score_model, quarters, sets, fouls, clock: serverClock, public_url }: Props) {
@@ -764,7 +778,7 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
                                                     {event.minute !== null ? `${event.minute}'` : '—'} · {event.period}T
                                                 </span>
                                                 <span className="mr-2">{typeIcon[event.type] ?? event.type}</span>
-                                                <strong>{event.type === 'point' ? 'Ponto' : event.type === 'clock_pause' ? 'Relógio parado' : event.type === 'clock_resume' ? 'Relógio em andamento' : event.type === 'period_start' || event.type === 'period_end' ? `${event.type === 'period_start' ? 'Início do' : 'Fim do'} ${periodLabel(event.period, sport)}` : (event.person ?? 'Anônimo')}</strong>
+                                                <strong>{event.type === 'point' ? 'Ponto' : event.type === 'clock_pause' ? 'Relógio parado' : event.type === 'clock_resume' ? 'Relógio em andamento' : event.type === 'timeout' ? 'Pedido de tempo' : event.type === 'period_start' || event.type === 'period_end' ? `${event.type === 'period_start' ? 'Início do' : 'Fim do'} ${periodLabel(event.period, sport)}` : (event.person ?? 'Anônimo')}</strong>
                                                 {event.secondary_person && <span> ⇄ {event.secondary_person}</span>}
                                                 {team && <span className="ml-2 text-gray-500">({team.name})</span>}
                                                 {event.quick && <span className="ml-2"><Badge>Resultado rápido</Badge></span>}

@@ -37,6 +37,7 @@ export interface TeamView {
     player_fouls: Record<string, number>;
     yellows: Record<string, number>;
     substitutions_used: number;
+    timeouts?: { used: number; limit: number } | null;
 }
 
 export interface SheetView<C extends ClockView = ClockView> {
@@ -131,6 +132,9 @@ function applyEvent(view: SheetView, item: QueueItem, rules: ProjectionRules): v
             break;
         case 'red_card':
             if (team && personId) expel(team, personId);
+            break;
+        case 'timeout':
+            if (team?.timeouts) team.timeouts = { ...team.timeouts, used: team.timeouts.used + 1 };
             break;
         case 'foul': {
             // Faltas acumuladas da equipe (contador por tempo) só o servidor calcula.
