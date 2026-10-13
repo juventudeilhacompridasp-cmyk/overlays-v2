@@ -21,56 +21,65 @@ final class HelpMarkdown
         $paragraph = [];
         $list = null;
 
-        $flush = function () use (&$blocks, &$paragraph, &$list, $resolveLink): void {
-            if ($paragraph !== []) {
-                $blocks[] = ['type' => 'p', 'inline' => self::inline(implode(' ', $paragraph), $resolveLink)];
-                $paragraph = [];
-            }
-
-            if ($list !== null) {
-                $blocks[] = ['type' => $list['type'], 'items' => array_map(fn (string $item) => self::inline($item, $resolveLink), $list['items'])];
-                $list = null;
-            }
-        };
-
         foreach (preg_split('/\R/', $markdown) ?: [] as $line) {
             $line = rtrim($line);
 
             if ($line === '') {
-                $flush();
+                self::flush($blocks, $paragraph, $list, $resolveLink);
 
                 continue;
             }
 
             if (preg_match('/^(#{2,3})\s+(.+)$/', $line, $m)) {
-                $flush();
+                self::flush($blocks, $paragraph, $list, $resolveLink);
                 $blocks[] = ['type' => strlen($m[1]) === 2 ? 'h2' : 'h3', 'text' => trim($m[2])];
             } elseif (preg_match('/^>\s?(.*)$/', $line, $m)) {
-                $flush();
+                self::flush($blocks, $paragraph, $list, $resolveLink);
                 $blocks[] = ['type' => 'note', 'inline' => self::inline($m[1], $resolveLink)];
             } elseif (preg_match('/^[-*]\s+(.+)$/', $line, $m)) {
                 if ($list === null || $list['type'] !== 'ul') {
-                    $flush();
+                    self::flush($blocks, $paragraph, $list, $resolveLink);
                     $list = ['type' => 'ul', 'items' => []];
                 }
                 $list['items'][] = $m[1];
             } elseif (preg_match('/^\d+\.\s+(.+)$/', $line, $m)) {
                 if ($list === null || $list['type'] !== 'ol') {
-                    $flush();
+                    self::flush($blocks, $paragraph, $list, $resolveLink);
                     $list = ['type' => 'ol', 'items' => []];
                 }
                 $list['items'][] = $m[1];
             } else {
                 if ($list !== null) {
-                    $flush();
+                    self::flush($blocks, $paragraph, $list, $resolveLink);
                 }
                 $paragraph[] = trim($line);
             }
         }
 
-        $flush();
+        self::flush($blocks, $paragraph, $list, $resolveLink);
 
         return $blocks;
+    }
+
+    /**
+     * Fecha o parágrafo ou a lista em andamento e põe nos blocos.
+     *
+     * @param  list<array<string, mixed>>  $blocks
+     * @param  list<string>  $paragraph
+     * @param  array{type: string, items: list<string>}|null  $list
+     * @param  Closure(string): ?string  $resolveLink
+     */
+    private static function flush(array &$blocks, array &$paragraph, ?array &$list, Closure $resolveLink): void
+    {
+        if ($paragraph !== []) {
+            $blocks[] = ['type' => 'p', 'inline' => self::inline(implode(' ', $paragraph), $resolveLink)];
+            $paragraph = [];
+        }
+
+        if ($list !== null) {
+            $blocks[] = ['type' => $list['type'], 'items' => array_map(fn (string $item) => self::inline($item, $resolveLink), $list['items'])];
+            $list = null;
+        }
     }
 
     /** Texto puro de um trecho (sem símbolos de Markdown), para busca e resumo. */
@@ -100,9 +109,9 @@ final class HelpMarkdown
                 $parts[] = ['t' => 'text', 'v' => substr($text, $offset, $start - $offset)];
             }
 
-            if (($match[1][1] ?? -1) >= 0 && $match[1][0] !== '') {
+            if (isset($match[1]) && $match[1][1] >= 0) {
                 $parts[] = ['t' => 'b', 'v' => $match[1][0]];
-            } elseif (($match[2][1] ?? -1) >= 0 && $match[2][0] !== '') {
+            } elseif (isset($match[2]) && $match[2][1] >= 0) {
                 $parts[] = ['t' => 'code', 'v' => $match[2][0]];
             } else {
                 $href = $resolveLink($match[4][0]);
