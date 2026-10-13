@@ -17,6 +17,13 @@ enum GameEventType: string
     case Foul = 'foul';
     /** Ponto de rally (esportes de sets); o período é o número do set. */
     case Point = 'point';
+    /** Basquete: lance livre (1), cesta de quadra (2) e cesta de três (3). */
+    case FreeThrow = 'free_throw';
+    case FieldGoal = 'field_goal';
+    case ThreePointer = 'three_pointer';
+    /** Basquete: o relógio para / volta dentro do período. */
+    case ClockPause = 'clock_pause';
+    case ClockResume = 'clock_resume';
 
     public function label(): string
     {
@@ -33,6 +40,44 @@ enum GameEventType: string
             self::Warning => 'Advertência',
             self::Foul => 'Falta',
             self::Point => 'Ponto',
+            self::FreeThrow => 'Lance livre (1)',
+            self::FieldGoal => 'Cesta de 2',
+            self::ThreePointer => 'Cesta de 3',
+            self::ClockPause => 'Relógio parado',
+            self::ClockResume => 'Relógio em andamento',
         };
+    }
+
+    /** Pontos que o lance vale (esportes de pontos); null se o evento não pontua. */
+    public function pointValue(): ?int
+    {
+        return match ($this) {
+            self::FreeThrow => 1,
+            self::FieldGoal => 2,
+            self::ThreePointer => 3,
+            default => null,
+        };
+    }
+
+    /** Eventos que só movem o relógio (não passam pela súmula). */
+    public function isClockMark(): bool
+    {
+        return in_array($this, [self::PeriodStart, self::PeriodEnd, self::ClockPause, self::ClockResume], true);
+    }
+
+    /**
+     * @return list<self>
+     */
+    public static function clockMarks(): array
+    {
+        return [self::PeriodStart, self::PeriodEnd, self::ClockPause, self::ClockResume];
+    }
+
+    /**
+     * @return list<self>
+     */
+    public static function scoring(): array
+    {
+        return [self::FreeThrow, self::FieldGoal, self::ThreePointer];
     }
 }

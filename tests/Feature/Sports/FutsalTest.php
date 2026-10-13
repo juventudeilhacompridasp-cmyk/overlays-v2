@@ -60,7 +60,7 @@ describe('competition sport', function () {
         $this->actingAs(panelUser(Role::Organizer));
         $competition = Competition::factory()->create(['sport' => Sport::Futsal]);
 
-        $this->get('/painel/competitions/create')->assertInertia(fn ($page) => $page->has('sports', 3)->where('sport_locked', false));
+        $this->get('/painel/competitions/create')->assertInertia(fn ($page) => $page->has('sports', count(Sport::cases()))->where('sport_locked', false));
         $this->get("/painel/competitions/{$competition->id}")->assertInertia(fn ($page) => $page->where('competition.sport_label', 'Futsal'));
     });
 

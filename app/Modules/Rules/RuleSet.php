@@ -41,6 +41,10 @@ final readonly class RuleSet
         /** Pontos na tabela para vitória/derrota por placar apertado de sets (ex.: 3-2 no vôlei). Nulo = igual a vitória/derrota. */
         public ?int $pointsNarrowWin = null,
         public ?int $pointsNarrowLoss = null,
+        /** Pontos na tabela da equipe que perde por W.O. (nulo = igual à derrota normal). Basquete: 0. */
+        public ?int $pointsWalkoverLoss = null,
+        /** Faltas pessoais que eliminam o atleta (nulo = esporte sem esse controle). Basquete: 5. */
+        public ?int $maxPlayerFouls = null,
     ) {
         foreach (['setsToWin' => $setsToWin, 'setPoints' => $setPoints, 'decidingSetPoints' => $decidingSetPoints, 'setMinLead' => $setMinLead] as $name => $value) {
             if ($value < 1) {
@@ -57,7 +61,8 @@ final readonly class RuleSet
             'walkoverWinnerGoals' => $walkoverWinnerGoals, 'walkoverLoserGoals' => $walkoverLoserGoals,
             'maxSubstitutions' => $maxSubstitutions, 'maxSubstitutionWindows' => $maxSubstitutionWindows,
             'maxStarters' => $maxStarters, 'maxBench' => $maxBench, 'maxStaff' => $maxStaff,
-            'pointsNarrowWin' => $pointsNarrowWin ?? 0, 'pointsNarrowLoss' => $pointsNarrowLoss ?? 0] as $name => $value) {
+            'pointsNarrowWin' => $pointsNarrowWin ?? 0, 'pointsNarrowLoss' => $pointsNarrowLoss ?? 0,
+            'pointsWalkoverLoss' => $pointsWalkoverLoss ?? 0, 'maxPlayerFouls' => $maxPlayerFouls ?? 0] as $name => $value) {
             if ($value < 0) {
                 throw new InvalidArgumentException("O valor de {$name} não pode ser negativo.");
             }
@@ -140,6 +145,8 @@ final readonly class RuleSet
             setMinLead: (int) $merged['scoring']['min_lead'],
             pointsNarrowWin: isset($merged['scoring']['points_narrow_win']) ? (int) $merged['scoring']['points_narrow_win'] : null,
             pointsNarrowLoss: isset($merged['scoring']['points_narrow_loss']) ? (int) $merged['scoring']['points_narrow_loss'] : null,
+            pointsWalkoverLoss: isset($merged['points']['walkover_loss']) ? (int) $merged['points']['walkover_loss'] : null,
+            maxPlayerFouls: isset($merged['fouls']['max_player']) ? (int) $merged['fouls']['max_player'] : null,
         );
     }
 
@@ -149,7 +156,8 @@ final readonly class RuleSet
     public function toArray(): array
     {
         return [
-            'points' => ['win' => $this->pointsWin, 'draw' => $this->pointsDraw, 'loss' => $this->pointsLoss],
+            'points' => ['win' => $this->pointsWin, 'draw' => $this->pointsDraw, 'loss' => $this->pointsLoss, 'walkover_loss' => $this->pointsWalkoverLoss],
+            'fouls' => ['max_player' => $this->maxPlayerFouls],
             'tiebreakers' => array_map(fn (Tiebreaker $t) => $t->value, $this->tiebreakers),
             'cards' => [
                 'yellow_for_suspension' => $this->yellowCardsForSuspension,

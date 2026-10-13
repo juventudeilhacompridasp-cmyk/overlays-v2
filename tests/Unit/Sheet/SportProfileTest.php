@@ -50,3 +50,31 @@ it('uses the futsal clock to validate periods', function () {
 it('refuses a sport without profile', function () {
     expect(fn () => SportProfiles::for('curling'))->toThrow(InvalidArgumentException::class);
 });
+
+it('defines basketball with FIBA-style quarters, fouls and table points', function () {
+    $profile = Sport::Basketball->profile();
+    $rules = $profile->defaultRules();
+
+    expect($profile->scoreModel)->toBe('points')
+        ->and($profile->pausableClock)->toBeTrue()
+        ->and($profile->clockDirection)->toBe('down')
+        ->and($profile->clock()->maxPeriod())->toBe(8)
+        ->and($profile->clock()->periodMinutes(1))->toBe(10)
+        ->and($profile->clock()->periodMinutes(5))->toBe(5)
+        ->and($profile->teamFoulLimit)->toBe(5)
+        ->and($rules->maxPlayerFouls)->toBe(5)
+        ->and($rules->maxStarters)->toBe(5)
+        ->and($rules->maxBench)->toBe(7)
+        ->and($rules->pointsWin)->toBe(2)
+        ->and($rules->pointsLoss)->toBe(1)
+        ->and($rules->pointsWalkoverLoss)->toBe(0)
+        ->and($rules->walkoverWinnerGoals)->toBe(20)
+        ->and($rules->scoreModel)->toBe('points')
+        ->and(array_map(fn ($t) => $t->value, $rules->tiebreakers))->toBe(['head_to_head', 'goal_difference', 'goals_for', 'draw']);
+});
+
+it('groups basketball fouls by quarter and carries overtime into the fourth', function () {
+    $profile = Sport::Basketball->profile();
+
+    expect(array_map($profile->foulGroup(...), [1, 2, 3, 4, 5, 8]))->toBe([1, 2, 3, 4, 4, 4]);
+});

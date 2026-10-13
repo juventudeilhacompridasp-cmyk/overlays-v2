@@ -1,4 +1,4 @@
-import { formatClock, periodLabel, useGameClock } from '@/lib/clock';
+import { formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
 import { Realtime } from '@/lib/echo';
 import { OverlayState, OverlayTeam, useOverlay } from '@/lib/overlay';
 import { Head } from '@inertiajs/react';
@@ -19,7 +19,8 @@ function Side({ team, align }: { team: OverlayTeam; align: 'left' | 'right' }) {
 export default function Scoreboard({ token, state: initial, realtime }: { token: string; state: OverlayState; realtime: Realtime }) {
     const { state, skew } = useOverlay(token, initial, realtime);
     const game = state.game;
-    const seconds = useGameClock(game?.clock ?? { state: 'not_started', period: null, base_seconds: 0, running_since_ms: null }, skew);
+    const elapsed = useGameClock(game?.clock ?? { state: 'not_started', period: null, base_seconds: 0, running_since_ms: null }, skew);
+    const seconds = game ? shownSeconds(game.clock, elapsed) : elapsed;
 
     if (!game || !game.home || !game.away) {
         return <Head title="Placar" />;
@@ -32,7 +33,7 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
     if (sets) clock = game.finished ? 'FIM' : currentSet ? `${currentSet.home} - ${currentSet.away}` : game.status === 'scheduled' ? 'EM BREVE' : game.status_label.toUpperCase();
     else if (game.finished) clock = 'FIM';
     else if (game.clock.state === 'not_started') clock = game.status === 'scheduled' ? 'EM BREVE' : game.status_label.toUpperCase();
-    else if (game.clock.state === 'stopped') clock = game.clock.period === 1 ? 'INTERVALO' : 'FIM DO TEMPO';
+    else if (game.clock.state === 'stopped') clock = isInterval(game.clock.period, game.sport) ? 'INTERVALO' : 'FIM DO TEMPO';
     else clock = formatClock(seconds);
 
     return (
@@ -49,7 +50,12 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
                 <div className="flex min-w-[7.5rem] flex-col items-center justify-center bg-emerald-600 px-4 py-1 text-center" data-testid="overlay-clock">
                     <span className="text-xl font-bold tabular-nums">{clock}</span>
                     {sets && currentSet && !game.finished && <span className="text-[10px] uppercase tracking-wider">Set {sets.length}</span>}
-                    {!sets && game.clock.state === 'running' && <span className="text-[10px] uppercase tracking-wider">{periodLabel(game.clock.period)}</span>}
+                    {!sets && (game.clock.state === 'running' || game.clock.state === 'paused') && (
+                        <span className="text-[10px] uppercase tracking-wider">
+                            {periodLabel(game.clock.period, game.sport)}
+                            {game.clock.state === 'paused' && ' · parado'}
+                        </span>
+                    )}
                 </div>
             </div>
             {sets && sets.some((set) => set.finished) && (

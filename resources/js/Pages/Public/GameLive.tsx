@@ -1,5 +1,5 @@
 import { ConnectionState, Realtime, subscribeToGame } from '@/lib/echo';
-import { GameClock, formatClock, periodLabel, useGameClock } from '@/lib/clock';
+import { GameClock, formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
 import { Head, Link } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -34,7 +34,9 @@ export interface Snapshot {
     division: string;
     stage: string;
     clock: GameClock;
+    sport: string;
     score_model: string;
+    quarters: { period: number; home: number; away: number }[] | null;
     sets: { home: number; away: number; winner: 'home' | 'away' | null; finished: boolean }[] | null;
     fouls: { home: number; away: number; limit: number; period: number } | null;
     goals: Goal[];
@@ -103,7 +105,7 @@ export default function GameLive({ snapshot: initial, realtime }: { snapshot: Sn
         return () => window.clearInterval(timer);
     }, [connection, snapshot.finished, initial.id]);
 
-    const seconds = useGameClock(snapshot.clock, skew.current);
+    const seconds = shownSeconds(snapshot.clock, useGameClock(snapshot.clock, skew.current));
     const home = snapshot.home?.name ?? 'A definir';
     const away = snapshot.away?.name ?? 'A definir';
 
@@ -111,8 +113,8 @@ export default function GameLive({ snapshot: initial, realtime }: { snapshot: Sn
     if (snapshot.finished) clockText = 'Encerrado';
     else if (snapshot.sets) clockText = snapshot.sets.length > 0 && snapshot.status !== 'scheduled' ? `Set ${snapshot.sets.length} em andamento` : snapshot.status === 'scheduled' ? 'Em breve' : snapshot.status_label;
     else if (snapshot.clock.state === 'not_started') clockText = snapshot.status === 'scheduled' ? 'Em breve' : snapshot.status_label;
-    else if (snapshot.clock.state === 'stopped') clockText = snapshot.clock.period === 1 ? 'Intervalo' : `Fim do ${periodLabel(snapshot.clock.period)}`;
-    else clockText = `${formatClock(seconds)} · ${periodLabel(snapshot.clock.period)}`;
+    else if (snapshot.clock.state === 'stopped') clockText = isInterval(snapshot.clock.period, snapshot.sport) ? 'Intervalo' : `Fim do ${periodLabel(snapshot.clock.period, snapshot.sport)}`;
+    else clockText = `${formatClock(seconds)} · ${periodLabel(snapshot.clock.period, snapshot.sport)}${snapshot.clock.state === 'paused' ? ' (parado)' : ''}`;
 
     return (
         <div className="min-h-screen bg-gray-900 px-4 py-8 text-white">
@@ -158,6 +160,11 @@ export default function GameLive({ snapshot: initial, realtime }: { snapshot: Sn
                 {snapshot.sets && snapshot.sets.length > 0 && (
                     <p className="mt-1 text-center text-sm tabular-nums text-gray-400" data-testid="live-sets">
                         {snapshot.sets.map((set) => `${set.home}-${set.away}${set.finished ? '' : ' (em andamento)'}`).join(' · ')}
+                    </p>
+                )}
+                {snapshot.quarters && snapshot.quarters.length > 0 && (
+                    <p className="mt-1 text-center text-sm tabular-nums text-gray-400" data-testid="live-quarters">
+                        {snapshot.quarters.map((quarter) => `${periodLabel(quarter.period, snapshot.sport)}: ${quarter.home}-${quarter.away}`).join(' · ')}
                     </p>
                 )}
                 {snapshot.fouls && (

@@ -27,6 +27,7 @@ final class RecordGameEvent
     private const SHEET_TYPES = [
         GameEventType::Goal, GameEventType::OwnGoal, GameEventType::YellowCard, GameEventType::RedCard,
         GameEventType::BlueCard, GameEventType::Substitution, GameEventType::Foul, GameEventType::Point,
+        GameEventType::FreeThrow, GameEventType::FieldGoal, GameEventType::ThreePointer,
     ];
 
     public function handle(Game $game, GameEventType $type, string $entryId, ?string $personId, ?string $secondaryPersonId = null, int $period = 1, ?int $minute = null, ?int $recordedBy = null): GameEvent
@@ -37,6 +38,14 @@ final class RecordGameEvent
 
         if ($type === GameEventType::Foul && ! $game->sport()->profile()->tracksTeamFouls()) {
             throw new InvalidArgumentException('Este esporte não registra faltas na súmula.');
+        }
+
+        if (in_array($type, [GameEventType::Goal, GameEventType::OwnGoal], true) && $game->sport()->profile()->scoreModel !== 'goals') {
+            throw new InvalidArgumentException('Este esporte não usa gols.');
+        }
+
+        if ($type->pointValue() !== null && $game->sport()->profile()->scoreModel !== 'points') {
+            throw new InvalidArgumentException('Este esporte não tem lances de 1, 2 ou 3 pontos.');
         }
 
         if ($game->home_entry_id === null || $game->away_entry_id === null) {

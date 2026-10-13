@@ -16,8 +16,17 @@ final class GameClock
 
     public const STOPPED = 'stopped';
 
+    /** Relógio parado no meio do período (basquete). */
+    public const PAUSED = 'paused';
+
     /** @param  list<int>  $periodMinutes duração nominal de cada período, em minutos */
     public function __construct(private readonly array $periodMinutes = [45, 45, 15, 15]) {}
+
+    /** Duração nominal do período, em minutos (0 se o período não existe). */
+    public function periodMinutes(int $period): int
+    {
+        return $this->periodMinutes[$period - 1] ?? 0;
+    }
 
     public function maxPeriod(): int
     {
@@ -43,13 +52,36 @@ final class GameClock
 
         $started = [];
         $ended = [];
+        $paused = false;
 
         foreach ($marks as $mark) {
+            if ($mark->isPause()) {
+                $paused = ! $mark->start;
+
+                continue;
+            }
+
+            $paused = false;
+
             if ($mark->start) {
                 $started[$mark->period] = true;
             } else {
                 $ended[$mark->period] = true;
             }
+        }
+
+        if ($next->isPause()) {
+            $running = isset($started[$next->period]) && ! isset($ended[$next->period]);
+
+            if (! $running) {
+                return 'O período não está em andamento.';
+            }
+
+            if ($next->start) {
+                return $paused ? null : 'O relógio não está parado.';
+            }
+
+            return $paused ? 'O relógio já está parado.' : null;
         }
 
         if ($next->start) {
@@ -78,34 +110,55 @@ final class GameClock
     public function snapshot(array $marks): array
     {
         $current = null;
-        $startMs = null;
-        $endMs = null;
+        $runningSince = null;
+        $accumulatedMs = 0;
+        $ended = false;
 
         foreach ($marks as $mark) {
+            if ($mark->isPause()) {
+                if ($mark->period !== $current || $ended) {
+                    continue;
+                }
+
+                if ($mark->start) {
+                    $runningSince ??= $mark->atMs; // retomada
+                } elseif ($runningSince !== null) {
+                    $accumulatedMs += max(0, $mark->atMs - $runningSince); // pausa
+                    $runningSince = null;
+                }
+
+                continue;
+            }
+
             if ($mark->start) {
                 $current = $mark->period;
-                $startMs = $mark->atMs;
-                $endMs = null;
+                $runningSince = $mark->atMs;
+                $accumulatedMs = 0;
+                $ended = false;
             } elseif ($mark->period === $current) {
-                $endMs = $mark->atMs;
+                if ($runningSince !== null) {
+                    $accumulatedMs += max(0, $mark->atMs - $runningSince);
+                    $runningSince = null;
+                }
+
+                $ended = true;
             }
         }
 
-        if ($current === null || $startMs === null) {
+        if ($current === null) {
             return ['state' => self::NOT_STARTED, 'period' => null, 'base_seconds' => 0, 'running_since_ms' => null];
         }
 
-        $offset = $this->offsetSeconds($current);
+        $base = $this->offsetSeconds($current) + intdiv($accumulatedMs, 1000);
 
-        if ($endMs === null) {
-            return ['state' => self::RUNNING, 'period' => $current, 'base_seconds' => $offset, 'running_since_ms' => $startMs];
+        if ($ended) {
+            return ['state' => self::STOPPED, 'period' => $current, 'base_seconds' => $base, 'running_since_ms' => null];
         }
 
-        return [
-            'state' => self::STOPPED,
-            'period' => $current,
-            'base_seconds' => $offset + max(0, intdiv($endMs - $startMs, 1000)),
-            'running_since_ms' => null,
-        ];
+        if ($runningSince === null) {
+            return ['state' => self::PAUSED, 'period' => $current, 'base_seconds' => $base, 'running_since_ms' => null];
+        }
+
+        return ['state' => self::RUNNING, 'period' => $current, 'base_seconds' => $base, 'running_since_ms' => $runningSince];
     }
 }

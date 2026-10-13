@@ -38,8 +38,14 @@ final class RecordQuickResult
             throw new InvalidArgumentException('O placar não pode ser negativo.');
         }
 
-        return DB::transaction(function () use ($game, $homeGoals, $awayGoals, $recordedBy, $homePenalties, $awayPenalties): Game {
-            $goalTypes = [GameEventType::Goal, GameEventType::OwnGoal];
+        $points = $game->sport()->profile()->scoreModel === 'points';
+
+        if ($points && $homeGoals === $awayGoals) {
+            throw new InvalidArgumentException('O basquete não termina empatado: lance o placar depois da prorrogação.');
+        }
+
+        return DB::transaction(function () use ($game, $homeGoals, $awayGoals, $recordedBy, $homePenalties, $awayPenalties, $points): Game {
+            $goalTypes = $points ? GameEventType::scoring() : [GameEventType::Goal, GameEventType::OwnGoal];
 
             $effective = $game->events()->effective()->whereIn('type', $goalTypes)->get();
 
@@ -52,6 +58,15 @@ final class RecordQuickResult
             }
 
             foreach ([[$game->home_entry_id, $homeGoals], [$game->away_entry_id, $awayGoals]] as [$entryId, $goals]) {
+                if ($points) {
+                    // Um único lançamento anônimo carrega o total da equipe.
+                    if ($goals > 0) {
+                        $this->event($game, GameEventType::FieldGoal, $entryId, $recordedBy, ['quick' => true, 'points' => $goals]);
+                    }
+
+                    continue;
+                }
+
                 for ($i = 0; $i < $goals; $i++) {
                     $this->event($game, GameEventType::Goal, $entryId, $recordedBy, ['quick' => true]);
                 }

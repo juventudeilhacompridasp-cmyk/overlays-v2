@@ -49,3 +49,51 @@ it('validates the order of period marks', function (array $marks, ClockMark $nex
     'encerrar duas vezes' => [[new ClockMark(true, 1), new ClockMark(false, 1)], new ClockMark(false, 1), 'Este período já foi encerrado.'],
     'período inexistente' => [[], new ClockMark(true, 9), 'Período inválido.'],
 ]);
+
+describe('pausable clock (basketball)', function () {
+    it('accumulates only the time the clock was running', function () {
+        $snapshot = (new GameClock([10, 10]))->snapshot([
+            new ClockMark(true, 1, 0),
+            new ClockMark(false, 1, 120_000, ClockMark::PAUSE),
+            new ClockMark(true, 1, 300_000, ClockMark::PAUSE),
+        ]);
+
+        expect($snapshot)->toBe(['state' => 'running', 'period' => 1, 'base_seconds' => 120, 'running_since_ms' => 300_000]);
+    });
+
+    it('freezes while paused and keeps the time when the period ends', function () {
+        $clock = new GameClock([10, 10]);
+        $paused = $clock->snapshot([new ClockMark(true, 1, 0), new ClockMark(false, 1, 90_000, ClockMark::PAUSE)]);
+        $ended = $clock->snapshot([new ClockMark(true, 1, 0), new ClockMark(false, 1, 90_000, ClockMark::PAUSE), new ClockMark(false, 1, 400_000)]);
+
+        expect($paused)->toBe(['state' => 'paused', 'period' => 1, 'base_seconds' => 90, 'running_since_ms' => null])
+            ->and($ended)->toBe(['state' => 'stopped', 'period' => 1, 'base_seconds' => 90, 'running_since_ms' => null]);
+    });
+
+    it('starts each period at its nominal offset and forgets pauses of the previous one', function () {
+        $snapshot = (new GameClock([10, 10]))->snapshot([
+            new ClockMark(true, 1, 0), new ClockMark(false, 1, 30_000, ClockMark::PAUSE), new ClockMark(false, 1, 40_000),
+            new ClockMark(true, 2, 100_000),
+        ]);
+
+        expect($snapshot)->toBe(['state' => 'running', 'period' => 2, 'base_seconds' => 600, 'running_since_ms' => 100_000]);
+    });
+
+    it('validates pauses and resumes', function (array $marks, ClockMark $next, ?string $error) {
+        expect((new GameClock([10, 10]))->check($marks, $next))->toBe($error);
+    })->with([
+        'pausar em andamento' => [[new ClockMark(true, 1)], new ClockMark(false, 1, 0, ClockMark::PAUSE), null],
+        'pausar sem iniciar' => [[], new ClockMark(false, 1, 0, ClockMark::PAUSE), 'O período não está em andamento.'],
+        'pausar duas vezes' => [[new ClockMark(true, 1), new ClockMark(false, 1, 0, ClockMark::PAUSE)], new ClockMark(false, 1, 0, ClockMark::PAUSE), 'O relógio já está parado.'],
+        'retomar parado' => [[new ClockMark(true, 1), new ClockMark(false, 1, 0, ClockMark::PAUSE)], new ClockMark(true, 1, 0, ClockMark::PAUSE), null],
+        'retomar correndo' => [[new ClockMark(true, 1)], new ClockMark(true, 1, 0, ClockMark::PAUSE), 'O relógio não está parado.'],
+        'pausar período encerrado' => [[new ClockMark(true, 1), new ClockMark(false, 1)], new ClockMark(false, 1, 0, ClockMark::PAUSE), 'O período não está em andamento.'],
+        'iniciar o próximo com o relógio parado' => [[new ClockMark(true, 1), new ClockMark(false, 1, 0, ClockMark::PAUSE)], new ClockMark(true, 2), 'Encerre o período anterior antes de iniciar o próximo.'],
+    ]);
+
+    it('knows the length of each period', function () {
+        $clock = new GameClock([10, 10, 5]);
+
+        expect($clock->periodMinutes(1))->toBe(10)->and($clock->periodMinutes(3))->toBe(5)->and($clock->periodMinutes(9))->toBe(0);
+    });
+});

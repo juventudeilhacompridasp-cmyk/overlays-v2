@@ -34,14 +34,14 @@ final class VoidGameEvent
             throw new InvalidArgumentException('Este gol faz parte de um resultado rápido; reabra o jogo para corrigir.');
         }
 
-        $isMark = in_array($event->type, [GameEventType::PeriodStart, GameEventType::PeriodEnd], true);
+        $isMark = $event->type->isClockMark();
 
         return DB::transaction(function () use ($game, $event, $recordedBy, $isMark): GameEvent {
             if ($isMark) {
-                $last = $game->events()->effective()->whereIn('type', [GameEventType::PeriodStart, GameEventType::PeriodEnd])->orderByDesc('id')->first();
+                $last = $game->events()->effective()->whereIn('type', GameEventType::clockMarks())->orderByDesc('id')->first();
 
                 if ($last?->getKey() !== $event->getKey()) {
-                    throw new InvalidArgumentException('Só o último marco de período pode ser desfeito.');
+                    throw new InvalidArgumentException('Só o último marco do relógio pode ser desfeito.');
                 }
             }
 
