@@ -23,4 +23,3 @@ class OverlayApiController extends Controller
         return response()->json(['data' => OverlayState::for($channel)])->header('Cache-Control', 'no-store');
     }
 }
-
