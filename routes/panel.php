@@ -121,8 +121,11 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
     Route::middleware('feature:sheet_import')->group(function () {
         Route::get('games/{game}/uploads', [SheetUploadController::class, 'index'])->name('games.uploads');
         Route::get('game-sheet-uploads/{upload}', [SheetUploadController::class, 'show'])->name('games.uploads.show');
+        Route::get('sheet-import/template.csv', [SheetUploadController::class, 'template'])->name('sheet-import.template');
+        Route::patch('sheet-import/settings', [SheetUploadController::class, 'settings'])->middleware('panel.can:manage-users')->name('sheet-import.settings');
         Route::middleware('panel.can:operate-games')->group(function () {
             Route::post('games/{game}/uploads', [SheetUploadController::class, 'store'])->name('games.uploads.store');
+            Route::post('game-sheet-uploads/{upload}/read', [SheetUploadController::class, 'read'])->name('games.uploads.read');
             Route::delete('game-sheet-uploads/{upload}', [SheetUploadController::class, 'destroy'])->name('games.uploads.destroy');
         });
     });

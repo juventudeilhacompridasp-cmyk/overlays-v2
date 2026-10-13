@@ -13,7 +13,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
   validação do Reverb e do Web Push de verdade no CI; **fila offline da súmula** (PR 33).
 
 ## Em andamento
-- **Leitura de súmulas enviadas depois do jogo (ADR 0004)**: parte 1 (envio e guarda) entregue; faltam a leitura (estruturada + IA com visão, interruptor/limites, texto nos Termos) e a conferência/revisão (relatório sem alterar o jogo).
+- **Leitura de súmulas enviadas depois do jogo (ADR 0004)**: partes 1 (envio e guarda) e 2 (leitura) entregues — leitor estruturado CSV/XLSX sem IA, leitor por IA com visão (Claude, `ANTHROPIC_API_KEY`), `ExtractedSheet`, job em fila, interruptor e limite por jogo da organização, limite mensal da plataforma, aviso de privacidade e texto nos Termos; **recurso segue sob demanda (desligado para todos até o Super Admin liberar)**. Falta a parte 3 (conferência com o jogo, tela de revisão humana e relatório, sem alterar o jogo) e a 4 (notificação ao terminar e métricas de uso).
 - (entregue neste PR) Teste de navegador (Playwright) da fila offline no CI:
   "Fila offline no navegador".
 

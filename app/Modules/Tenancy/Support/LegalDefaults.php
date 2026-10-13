@@ -67,7 +67,7 @@ Execução da relação com a competição, cumprimento do regulamento e, quando
 O portal mostra equipes, placares, classificação e artilharia. Nomes de adultos aparecem como apelido ou nome; nomes de menores aparecem abreviados (ex.: "João S."). Fotos, documentos, data de nascimento, CPF, cartões e dados de disciplina individuais não são exibidos publicamente.
 
 # 6. Compartilhamento e segurança
-Documentos e fotos ficam em armazenamento privado e só são acessados por pessoas autorizadas, por links temporários. O acesso ao painel exige login e é limitado por papel. Podemos usar prestadores de infraestrutura (hospedagem e e-mail) que tratam dados em nosso nome.
+Documentos e fotos ficam em armazenamento privado e só são acessados por pessoas autorizadas, por links temporários. O acesso ao painel exige login e é limitado por papel. Podemos usar prestadores de infraestrutura (hospedagem e e-mail) que tratam dados em nosso nome. Se ativarmos a leitura de súmulas enviadas depois do jogo, a foto ou o PDF da súmula pode ser processado por um serviço externo de inteligência artificial, apenas para extrair o texto (sem documentos pessoais), com revisão humana do resultado; essa leitura pode ser desligada pela organização.
 
 # 7. Por quanto tempo
 Mantemos os dados enquanto forem necessários para a competição e para obrigações legais ou de histórico esportivo. Pedidos de inscrição recusados ou não concluídos podem ser excluídos.

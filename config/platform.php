@@ -37,4 +37,14 @@ return [
         'scheme' => env('REVERB_PUBLIC_SCHEME', 'http'),
     ],
 
+    /*
+    | Leitura de súmulas enviadas (ADR 0004). Limites de custo da leitura por IA (a estruturada CSV/XLSX é gratuita):
+    | teto de leituras por jogo (a organização pode baixar) e leituras por organização por mês.
+    */
+    'sheet_import' => [
+        'max_reads_per_game' => (int) env('SHEET_IMPORT_MAX_READS_PER_GAME', 3),
+        'max_reads_per_game_ceiling' => 10,
+        'monthly_reads' => (int) env('SHEET_IMPORT_MONTHLY_READS', 200),
+    ],
+
 ];
