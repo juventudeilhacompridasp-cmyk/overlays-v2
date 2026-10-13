@@ -53,6 +53,7 @@ const data = (overrides = {}) => ({
     scope: 'day',
     games: [],
     standings: null,
+    scorers: null,
     ...overrides,
 });
 
@@ -389,4 +390,16 @@ test('standings without a table says so, and a long table stays inside the art',
     const ops = buildArt(style(), data({ kind: 'standings', standings: table(20) }), 1080, 1350);
     assert.ok(!texts(ops).includes('Equipe 17'));
     assert.ok(ops.filter((op) => op.t === 'text').every((op) => op.y <= 1350));
+});
+
+test('scorers shows name, team and goals, and warns when nobody scored', () => {
+    const rows = [
+        { position: 1, name: 'Zé', team: 'Ilha FC', crest: null, goals: 7 },
+        { position: 2, name: 'João S.', team: 'Registro EC', crest: null, goals: 5 },
+        { position: 2, name: 'Cadu', team: 'Ilha FC', crest: null, goals: 5 },
+    ];
+    const all = texts(buildArt(style(), data({ kind: 'scorers', scorers: { title: 'Primeira divisão', rows } }), 1080, 1350));
+
+    for (const wanted of ['Artilharia', 'Zé', 'João S.', 'Registro EC', '7', '5']) assert.ok(all.includes(wanted), wanted);
+    assert.ok(texts(buildArt(style(), data({ kind: 'scorers' }), 1080, 1350)).some((t) => t.includes('Ainda não')));
 });

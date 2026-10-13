@@ -5,8 +5,10 @@ use App\Modules\Arts\Models\ArtTemplate;
 use App\Modules\Arts\Support\ArtStyle;
 use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Matches\Actions\GenerateStageFixtures;
+use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Models\GameLineup;
 use App\Modules\Teams\Models\Person;
 use App\Modules\Teams\Models\Team;
@@ -60,7 +62,7 @@ describe('game list', function () {
             ->and(collect($props['recent'])->pluck('id'))->toContain($finished->id)
             ->and($props['presets'])->not->toBeEmpty()
             ->and($props['formats'])->toHaveCount(6)
-            ->and(collect($props['kinds'])->pluck('value')->all())->toBe(['preview', 'result', 'lineup', 'round', 'cover', 'standings']);
+            ->and(collect($props['kinds'])->pluck('value')->all())->toBe(['preview', 'result', 'lineup', 'round', 'cover', 'standings', 'scorers']);
     });
 });
 
@@ -255,6 +257,36 @@ describe('standings data', function () {
 
         ['game' => $other] = sheetGame();
         expect(artProps(test()->actingAs($admin)->get(route('panel.arts.editor', ['game' => $other->id, 'kind' => 'preview'])))['data']['standings'])->toBeNull();
+    });
+});
+
+describe('scorers data', function () {
+    it('ranks the goals of the division with public names, ties sharing the position, ignoring voided goals', function () {
+        ['game' => $game, 'home' => $home, 'away' => $away] = sheetGame();
+        $adult = Person::factory()->create(['name' => 'João Silva', 'nickname' => 'Joãozinho', 'birth_date' => '1990-01-01']);
+        $minor = Person::factory()->create(['name' => 'Pedro Santos', 'nickname' => 'Pepê', 'birth_date' => now()->subYears(12)->toDateString()]);
+        $goal = fn (Person $person, $entry) => GameEvent::factory()->create(['game_id' => $game->id, 'type' => GameEventType::Goal, 'entry_id' => $entry->id, 'person_id' => $person->id]);
+
+        $goal($adult, $home);
+        $goal($adult, $home);
+        $goal($minor, $away);
+        $goal($minor, $away);
+        $voided = $goal($minor, $away);
+        GameEvent::factory()->create(['game_id' => $game->id, 'type' => GameEventType::Goal, 'entry_id' => $away->id, 'compensates_event_id' => $voided->getKey()]);
+
+        $rows = artProps(test()->actingAs(panelUser())->get(route('panel.arts.editor', ['game' => $game->id, 'kind' => 'scorers'])))['data']['scorers']['rows'];
+
+        expect($rows)->toHaveCount(2)
+            ->and(collect($rows)->pluck('goals')->all())->toBe([2, 2])
+            ->and(collect($rows)->pluck('position')->all())->toBe([1, 1])
+            ->and(collect($rows)->pluck('name')->all())->toContain('Joãozinho', 'Pedro S.')
+            ->and(collect($rows)->pluck('name')->implode(' '))->not->toContain('Pepê');
+    });
+
+    it('has no scorers table for the other kinds', function () {
+        ['game' => $game] = sheetGame();
+
+        expect(artProps(test()->actingAs(panelUser())->get(route('panel.arts.editor', ['game' => $game->id, 'kind' => 'preview'])))['data']['scorers'])->toBeNull();
     });
 });
 

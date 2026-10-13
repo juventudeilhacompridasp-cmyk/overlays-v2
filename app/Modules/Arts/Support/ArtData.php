@@ -6,14 +6,17 @@ use App\Modules\Arts\Enums\ArtKind;
 use App\Modules\Competitions\Actions\CalculateStandings;
 use App\Modules\Competitions\Data\StandingEntry;
 use App\Modules\Competitions\Enums\StageType;
+use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Competitions\Models\Entry;
 use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Models\GameLineup;
 use App\Modules\Matches\Models\GameTactic;
 use App\Modules\Portal\Support\PublicName;
 use App\Modules\Rules\Tactics\Formations;
 use App\Modules\Teams\Enums\RosterRole;
+use App\Modules\Teams\Models\Person;
 use App\Modules\Teams\Models\RosterEntry;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Support\Images\ImageStore;
@@ -60,6 +63,7 @@ final class ArtData
             'scope' => $scope === 'round' ? 'round' : 'day',
             'games' => $kind === ArtKind::Round ? self::games($game, $scope === 'round') : [],
             'standings' => $kind === ArtKind::Standings ? self::standings($game) : null,
+            'scorers' => $kind === ArtKind::Scorers ? self::scorers($game) : null,
         ];
     }
 
@@ -138,6 +142,55 @@ final class ArtData
                 ];
             }, $rows),
         ];
+    }
+
+    /**
+     * Artilharia da divisão do jogo (gols válidos, nome público — menor vira "João S."): até 10 atletas, empates dividem a
+     * posição. Só esportes de modelo `goals`; nunca cartões nem dados pessoais. `null` fora disso.
+     *
+     * @return array{title: string, rows: list<array<string, mixed>>}|null
+     */
+    private static function scorers(Game $game): ?array
+    {
+        if ($game->sport()->profile()->scoreModel !== 'goals') {
+            return null;
+        }
+
+        $counts = GameEvent::query()->effective()
+            ->where('type', GameEventType::Goal->value)
+            ->whereNotNull('person_id')
+            ->whereHas('game', fn ($query) => $query->where('division_id', $game->division_id))
+            ->get(['id', 'person_id', 'entry_id'])
+            ->groupBy('person_id')
+            ->map(fn ($events) => ['goals' => $events->count(), 'entry' => $events->first()->entry_id])
+            ->sortByDesc('goals')->take(10);
+
+        $people = Person::query()->whereIn('id', $counts->keys())->get(['id', 'name', 'nickname', 'birth_date'])->keyBy('id');
+        $entries = Entry::query()->whereIn('id', $counts->pluck('entry'))->with('team')->get()->keyBy('id');
+
+        $rows = [];
+        $position = 0;
+        $previous = null;
+
+        foreach ($counts as $personId => $item) {
+            $name = (string) PublicName::of($people[$personId] ?? null);
+            if ($name === '') {
+                continue;
+            }
+
+            $position++;
+            $team = $entries[$item['entry']]->team ?? null;
+            $rows[] = [
+                'position' => $item['goals'] === $previous ? $rows[array_key_last($rows)]['position'] : $position,
+                'name' => $name,
+                'team' => $team->name ?? '—',
+                'crest' => $team !== null ? ImageStore::publicDataUri($team->logo_path, 128) : null,
+                'goals' => $item['goals'],
+            ];
+            $previous = $item['goals'];
+        }
+
+        return ['title' => $game->division->name, 'rows' => $rows];
     }
 
     /** @return array<string, mixed> */
