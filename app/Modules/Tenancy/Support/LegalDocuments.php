@@ -27,7 +27,7 @@ final class LegalDocuments
         return [
             'type' => $type->value,
             'title' => $type->label(),
-            'body' => $document?->body ?? self::defaultBody($type),
+            'body' => $document->body ?? self::defaultBody($type),
             'version' => $document?->version,
             'published_at' => $document?->published_at->format('d/m/Y'),
             'is_default' => $document === null,
@@ -40,7 +40,7 @@ final class LegalDocuments
         $organization = CurrentOrganization::get();
         $settings = self::settings();
 
-        return LegalDefaults::body($type, $organization?->name ?? (string) config('app.name'), $settings['controller_name'], $settings['contact_email']);
+        return LegalDefaults::body($type, $organization->name ?? (string) config('app.name'), $settings['controller_name'], $settings['contact_email']);
     }
 
     /**
