@@ -97,11 +97,11 @@ it('has the broadcast footer off by default and sanitizes its settings', functio
     $defaults = ArtStyle::defaults();
 
     expect($defaults['elements']['broadcast'])->toBeFalse()
-        ->and($defaults['broadcast'])->toBe(['platform' => 'youtube', 'label' => 'Transmissão ao vivo', 'channel' => ''])
+        ->and($defaults['broadcast'])->toBe(['platform' => 'youtube', 'label' => 'Transmissão ao vivo', 'channel' => '', 'badge' => null])
         ->and(ArtStyle::sanitize(['elements' => ['broadcast' => true]])['elements']['broadcast'])->toBeTrue();
 
     $style = ArtStyle::sanitize(['broadcast' => ['platform' => 'kick', 'label' => '', 'channel' => "  Canal\nda Liga  "]]);
-    expect($style['broadcast'])->toBe(['platform' => 'kick', 'label' => '', 'channel' => 'Canal da Liga'])
+    expect($style['broadcast'])->toBe(['platform' => 'kick', 'label' => '', 'channel' => 'Canal da Liga', 'badge' => null])
         ->and(ArtStyle::sanitize(['broadcast' => ['platform' => 'tiktok']])['broadcast']['platform'])->toBe('youtube')
         ->and(mb_strlen(ArtStyle::sanitize(['broadcast' => ['label' => str_repeat('x', 200)]])['broadcast']['label']))->toBe(40);
 });
