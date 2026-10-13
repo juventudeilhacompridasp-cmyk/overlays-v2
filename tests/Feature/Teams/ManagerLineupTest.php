@@ -339,8 +339,10 @@ describe('overlay and sheet', function () {
         $starters = collect($state['lineup']['home']['starters']);
 
         expect($state['lineup']['home']['formation'])->toBe('4-4-2')
+            ->and($state['lineup']['home']['formation_ready'])->toBeTrue()
             ->and($starters->firstWhere('captain', true))->not->toBeNull()
             ->and($starters->pluck('position')->filter()->all())->toContain('GOL')
+            ->and($starters->firstWhere('position', 'GOL'))->toMatchArray(['x' => 50, 'y' => 92, 'position_label' => 'Goleiro'])
             ->and(json_encode($state))->not->toContain('segredo-tático-xyz');
     });
 

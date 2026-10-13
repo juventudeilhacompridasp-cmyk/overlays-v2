@@ -21,9 +21,10 @@ final class ImageStore
     {
         $variants = ImageVariants::make((string) file_get_contents($file->getRealPath()), $specs);
         $base = trim($directory, '/').'/'.$prefix.'-'.bin2hex(random_bytes(5));
+        $cacheControl = $disk === 's3-private' ? 'private, no-store' : 'public, max-age=31536000, immutable';
 
         foreach ($variants as $name => $webp) {
-            Storage::disk($disk)->put(self::path($base, $specs[$name]['size']), $webp, ['ContentType' => 'image/webp', 'CacheControl' => 'public, max-age=31536000, immutable']);
+            Storage::disk($disk)->put(self::path($base, $specs[$name]['size']), $webp, ['ContentType' => 'image/webp', 'CacheControl' => $cacheControl]);
         }
 
         return $base;
@@ -70,14 +71,14 @@ final class ImageStore
     }
 
     /** URL temporária assinada (disco privado: dados pessoais). */
-    public static function privateUrl(?string $base, int $size): ?string
+    public static function privateUrl(?string $base, int $size, int $minutes = 30): ?string
     {
         if (! $base) {
             return null;
         }
 
         try {
-            return Storage::disk('s3-private')->temporaryUrl(self::path($base, $size), now()->addMinutes(30));
+            return Storage::disk('s3-private')->temporaryUrl(self::path($base, $size), now()->addMinutes($minutes));
         } catch (Throwable) {
             return null;
         }

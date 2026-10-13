@@ -13,6 +13,8 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
   validação do Reverb e do Web Push de verdade no CI; **fila offline da súmula** (PR 33).
 - Overlays visuais v1: preset Arena com cores, posição, escala e nível de animação por canal; atualização ao vivo no OBS e
   API privada para trocar jogo, camadas e aparência com chave de controle separada da URL pública.
+- Overlay de escalação visual: lista com fotos opcionais por atleta, transição configurável para o esquema tático e atletas
+  desenhados nas posições definidas pelo gestor; controle pelo painel e pela API, com URLs privadas curtas e sem IDs no estado público.
 
 ## Em andamento
 - **Leitura de súmulas enviadas depois do jogo (ADR 0004)**: partes 1 (envio e guarda), 2 (leitura) e 3 (conferência) entregues — leitor estruturado CSV/XLSX sem IA, leitor por IA com visão (Claude, `ANTHROPIC_API_KEY`), `ExtractedSheet`, job em fila, interruptor e limite por jogo da organização, limite mensal da plataforma, aviso de privacidade e texto nos Termos; **recurso segue sob demanda (desligado para todos até o Super Admin liberar)**. Parte 3 entregue (revisão humana da leitura com registro das correções, relatório de conferência na tela e em CSV, sem alterar o jogo). Falta a parte 4 (notificação ao terminar a leitura e métricas de uso na área da plataforma).
@@ -31,7 +33,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
   recarregada (o service worker não guarda páginas por causa da LGPD).
 - Gestor de equipe: avisos por push/WhatsApp (hoje só e-mail).
 - Overlays: novos presets e variações de layout, fontes próprias, patrocinadores e composição de cenas continuam para os
-  próximos PRs; a v1 entrega o contrato de aparência e o preset Arena.
+  próximos PRs; Arena agora cobre placar, lances, tabela e escalação tática.
 - Cobrança automática (fora do MVP).
 
 ## Limitações do ambiente de desenvolvimento do agente

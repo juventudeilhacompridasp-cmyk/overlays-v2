@@ -3,12 +3,13 @@
 namespace App\Modules\Broadcast\Support;
 
 use App\Modules\Broadcast\Models\OverlayChannel;
+use App\Modules\Matches\Enums\LineupSlot;
 use Illuminate\Validation\Rule;
 
 final class OverlayControlRules
 {
     /** @return array<string, list<mixed>> */
-    public static function for(OverlayChannel $channel): array
+    public static function for(OverlayChannel $channel, ?string $gameId = null): array
     {
         return [
             'game_id' => ['sometimes', 'nullable', 'string', Rule::exists('games', 'id')->where('organization_id', $channel->organization_id)],
@@ -22,6 +23,18 @@ final class OverlayControlRules
             'appearance.position' => ['sometimes', 'string', Rule::in(OverlayAppearance::POSITIONS)],
             'appearance.scale' => ['sometimes', 'numeric', 'between:0.75,1.5'],
             'appearance.motion' => ['sometimes', 'string', Rule::in(OverlayAppearance::MOTIONS)],
+            'lineup_settings' => ['sometimes', 'array'],
+            'lineup_settings.presentation' => ['sometimes', 'string', Rule::in(OverlayLineupSettings::PRESENTATIONS)],
+            'lineup_settings.list_seconds' => ['sometimes', 'integer', 'between:3,20'],
+            'lineup_settings.photo_person_ids' => ['sometimes', 'array', 'max:40'],
+            'lineup_settings.photo_person_ids.*' => [
+                'string',
+                'distinct',
+                Rule::exists('game_lineups', 'person_id')->where(fn ($query) => $query
+                    ->where('organization_id', $channel->organization_id)
+                    ->where('game_id', $gameId ?? '')
+                    ->whereIn('slot', [LineupSlot::Starter->value, LineupSlot::Bench->value])),
+            ],
         ];
     }
 }

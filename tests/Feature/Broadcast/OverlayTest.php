@@ -16,6 +16,7 @@ use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug')]));
@@ -48,6 +49,7 @@ it('builds the overlay state with the score, the clock and the logos', function 
             'scale' => 1.0,
             'motion' => 'dynamic',
         ])
+        ->and($state['lineup_settings'])->toBe(['presentation' => 'sequence', 'list_seconds' => 6])
         ->and($state['game']['id'])->toBe($game->id)
         ->and($state['game']['home']['color'])->toBe('#ff0000')
         ->and($state['game']['clock']['state'])->toBe('not_started')
@@ -64,7 +66,7 @@ it('has no game and no layers on an idle channel', function () {
 
 it('only fills the lineup when the layer is on, with shirt numbers and nicknames, never cards', function () {
     ['game' => $game, 'hp' => $hp] = sheetGame();
-    Person::query()->whereKey($hp[0])->update(['nickname' => 'Rafa']);
+    Person::query()->whereKey($hp[0])->update(['nickname' => 'Rafa', 'birth_date' => now()->subYears(20)]);
     app(RecordGameEvent::class)->handle($game, GameEventType::RedCard, $game->home_entry_id, $hp[1]);
 
     expect(OverlayState::for(channelFor($game))['lineup'])->toBeNull();
@@ -75,11 +77,30 @@ it('only fills the lineup when the layer is on, with shirt numbers and nicknames
 
     expect($lineup['home']['starters'])->toHaveCount(11)
         ->and($lineup['home']['bench'])->toHaveCount(3)
-        ->and($lineup['home']['starters'][0])->toBe(['shirt' => 1, 'name' => 'Rafa', 'position' => null, 'captain' => false])
-        // Só camisa, nome, posição e capitão (nada de cartões/documentos/nascimento). Confere as chaves: os nomes sorteados
+        ->and($lineup['home']['starters'][0])->toBe([
+            'shirt' => 1, 'name' => 'Rafa', 'position' => null, 'position_label' => null, 'x' => null, 'y' => null,
+            'captain' => false, 'photo_url' => null,
+        ])
+        // Só dados visuais indispensáveis (nada de IDs, cartões, documentos ou nascimento). Confere as chaves: os nomes sorteados
         // pela fábrica podem conter "card" (ex.: Ricardo), então buscar texto no JSON era instável.
-        ->and(collect([...$lineup['home']['starters'], ...$lineup['away']['starters']])->every(fn ($player) => array_keys($player) === ['shirt', 'name', 'position', 'captain']))->toBeTrue()
-        ->and(collect([...$lineup['home']['bench'], ...$lineup['away']['bench']])->every(fn ($player) => array_keys($player) === ['shirt', 'name', 'captain']))->toBeTrue();
+        ->and(collect([...$lineup['home']['starters'], ...$lineup['away']['starters']])->every(fn ($player) => array_keys($player) === ['shirt', 'name', 'position', 'position_label', 'x', 'y', 'captain', 'photo_url']))->toBeTrue()
+        ->and(collect([...$lineup['home']['bench'], ...$lineup['away']['bench']])->every(fn ($player) => array_keys($player) === ['shirt', 'name', 'captain', 'photo_url']))->toBeTrue();
+});
+
+it('only publishes a short signed photo url for athletes explicitly enabled on the channel', function () {
+    ['game' => $game, 'hp' => $hp] = sheetGame();
+    Storage::fake('s3-private');
+    Storage::disk('s3-private')->buildTemporaryUrlsUsing(fn (string $path) => "https://private.test/{$path}");
+    Person::query()->whereIn('id', [$hp[0], $hp[1]])->update(['photo_path' => 'people/test/photo']);
+
+    $channel = channelFor($game, ['lineup' => true]);
+    $channel->update(['lineup_settings' => ['presentation' => 'formation', 'list_seconds' => 8, 'photo_person_ids' => [$hp[0]]]]);
+    $state = OverlayState::for($channel->fresh());
+
+    expect($state['lineup_settings'])->toBe(['presentation' => 'formation', 'list_seconds' => 8])
+        ->and($state['lineup']['home']['starters'][0]['photo_url'])->toStartWith('https://private.test/')
+        ->and($state['lineup']['home']['starters'][1]['photo_url'])->toBeNull()
+        ->and(json_encode($state))->not->toContain($hp[0])->not->toContain('photo_person_ids');
 });
 
 it('shows the standings of the league or group of the game and nothing for knockouts', function () {
@@ -194,6 +215,8 @@ describe('panel', function () {
             ->where('channels.0.overlays.0.url', url("/overlay/{$channel->token}/placar"))
             ->has('channels.0.overlays', 4)
             ->where('channels.0.appearance.preset', 'arena')
+            ->where('channels.0.lineup_settings.presentation', 'sequence')
+            ->where('channels.0.lineup_settings.photo_person_ids', [])
             ->where('channels.0.has_control_token', true)
             ->where('issued_control.channel_id', $channel->id)
             ->has('issued_control.token')
@@ -207,7 +230,7 @@ describe('panel', function () {
     });
 
     it('lets the operator put a game on air and toggle layers, and broadcasts the new state', function () {
-        ['game' => $game] = sheetGame();
+        ['game' => $game, 'hp' => $hp] = sheetGame();
         $channel = channelFor();
         $this->actingAs(panelUser(Role::Operator));
         Event::fake([OverlayUpdated::class]);
@@ -216,6 +239,7 @@ describe('panel', function () {
             'game_id' => $game->id,
             'layers' => ['lineup' => true, 'inventada' => true],
             'appearance' => ['accent_color' => '#ff5500', 'position' => 'top-right', 'motion' => 'subtle'],
+            'lineup_settings' => ['presentation' => 'formation', 'list_seconds' => 9, 'photo_person_ids' => [$hp[0]]],
         ])
             ->assertSessionHas('success');
 
@@ -223,14 +247,17 @@ describe('panel', function () {
         expect($channel->game_id)->toBe($game->id)
             ->and($channel->layers)->toBe(['lineup' => true])
             ->and($channel->appearance['accent_color'])->toBe('#ff5500')
-            ->and($channel->appearance['position'])->toBe('top-right');
+            ->and($channel->appearance['position'])->toBe('top-right')
+            ->and($channel->lineup_settings)->toBe(['presentation' => 'formation', 'list_seconds' => 9, 'photo_person_ids' => [$hp[0]]]);
         $this->get('/painel/broadcast')->assertInertia(fn ($page) => $page->where('channels.0.layers', ['lineup' => true, 'standings' => false]));
         Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['lineup'] !== null && $event->state['game']['id'] === $game->id);
 
         $this->patch("/painel/broadcast/{$channel->id}", ['layers' => ['lineup' => false]]);
         $this->patch("/painel/broadcast/{$channel->id}", ['game_id' => null]);
 
-        expect($channel->fresh()->layers)->toBe(['lineup' => false])->and($channel->fresh()->game_id)->toBeNull();
+        expect($channel->fresh()->layers)->toBe(['lineup' => false])
+            ->and($channel->fresh()->game_id)->toBeNull()
+            ->and($channel->fresh()->lineup_settings['photo_person_ids'])->toBe([]);
     });
 
     it('refuses games from another organization', function () {
@@ -287,7 +314,7 @@ describe('panel', function () {
 
 describe('control api', function () {
     it('updates the on-air state and appearance with the private bearer key', function () {
-        ['game' => $game] = sheetGame();
+        ['game' => $game, 'hp' => $hp] = sheetGame();
         $token = OverlayChannel::newControlToken();
         $channel = channelFor();
         $channel->update(['control_token_hash' => OverlayChannel::controlTokenHash($token)]);
@@ -297,11 +324,15 @@ describe('control api', function () {
             'game_id' => $game->id,
             'layers' => ['lineup' => true],
             'appearance' => ['accent_color' => '#AABBCC', 'scale' => 1.25, 'motion' => 'none'],
+            'lineup_settings' => ['presentation' => 'sequence', 'list_seconds' => 5, 'photo_person_ids' => [$hp[0]]],
         ])->assertOk()
             ->assertJsonPath('data.game.id', $game->id)
             ->assertJsonPath('data.layers.lineup', true)
             ->assertJsonPath('data.appearance.accent_color', '#aabbcc')
             ->assertJsonPath('data.appearance.scale', 1.25)
+            ->assertJsonPath('data.lineup_settings.presentation', 'sequence')
+            ->assertJsonPath('data.lineup_settings.list_seconds', 5)
+            ->assertJsonMissingPath('data.lineup_settings.photo_person_ids')
             ->assertJsonMissingPath('data.control_token_hash');
 
         Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['appearance']['motion'] === 'none');
@@ -329,6 +360,19 @@ describe('control api', function () {
         $this->withToken($token)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", [
             'game_id' => $foreign->id,
             'appearance' => ['accent_color' => 'red', 'motion' => 'explosive', 'scale' => 4],
-        ])->assertUnprocessable()->assertJsonValidationErrors(['game_id', 'appearance.accent_color', 'appearance.motion', 'appearance.scale']);
+            'lineup_settings' => ['presentation' => 'carousel', 'list_seconds' => 30],
+        ])->assertUnprocessable()->assertJsonValidationErrors(['game_id', 'appearance.accent_color', 'appearance.motion', 'appearance.scale', 'lineup_settings.presentation', 'lineup_settings.list_seconds']);
+    });
+
+    it('refuses photo ids that are not in the game lineup', function () {
+        ['game' => $game] = sheetGame();
+        $token = OverlayChannel::newControlToken();
+        $channel = channelFor($game);
+        $channel->update(['control_token_hash' => OverlayChannel::controlTokenHash($token)]);
+        $person = Person::factory()->create();
+
+        $this->withToken($token)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", [
+            'lineup_settings' => ['photo_person_ids' => [$person->id]],
+        ])->assertUnprocessable()->assertJsonValidationErrors('lineup_settings.photo_person_ids.0');
     });
 });
