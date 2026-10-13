@@ -12,7 +12,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PAT
 const context = await browser.newContext();
 const page = await context.newPage();
 page.on('pageerror', (error) => console.error(`[pageerror] ${error.message}`));
-page.on('requestfailed', (request) => console.error(`[requestfailed] ${request.url()} ${request.failure()?.errorText}`));
+page.on('requestfailed', (request) => !request.url().includes('/build/') && console.error(`[requestfailed] ${request.url()} ${request.failure()?.errorText}`));
 page.on('response', (response) => response.status() >= 400 && console.error(`[http ${response.status()}] ${response.url()}`));
 page.setDefaultTimeout(20000);
 
@@ -49,7 +49,7 @@ try {
     await page.getByText('Continue lançando').waitFor();
 
     const form = page.getByRole('form', { name: 'Novo lançamento' });
-    const person = form.getByLabel('Pessoa');
+    const person = form.locator('select').nth(2); // Tipo, Equipe, Pessoa
     await person.selectOption({ index: 1 });
     await form.getByRole('button', { name: 'Lançar' }).click();
 
