@@ -21,6 +21,7 @@ Route::get('/competicoes/{competition:slug}', [PortalController::class, 'competi
 Route::get('/competicoes/{competition:slug}/edicoes/{season}', [PortalController::class, 'season'])->name('portal.season');
 Route::get('/competicoes/{competition:slug}/edicoes/{season}/estatisticas', [PortalController::class, 'stats'])->name('portal.stats');
 Route::get('/equipes/{team}', [PortalController::class, 'team'])->name('portal.team');
+Route::get('/equipes/{team}/calendario.ics', [PortalController::class, 'teamCalendar'])->name('portal.team.calendar');
 // Avisos push do público (jogo ou equipe); exigem o recurso `push` e as chaves VAPID.
 Route::middleware(['throttle:30,1', 'feature:push'])->prefix('push')->name('push.')->group(function () {
     Route::post('assinar', [PushController::class, 'subscribe'])->name('subscribe');

@@ -4,6 +4,16 @@ import ShareButtons from '@/Components/Portal/ShareButtons';
 import PortalLayout, { Seo, Theme } from '@/Components/Portal/PortalLayout';
 import { Link } from '@inertiajs/react';
 
+interface Extras {
+    campaigns: { competition: string; season: string; division: string; status: string; url: string; played: number; wins: number; draws: number; losses: number; for: number; against: number; position: { title: string; position: number; of: number; points: number } | null }[] | null;
+    form: { result: 'V' | 'E' | 'D'; score: string; opponent: string | null; home: boolean; url: string }[] | null;
+    scorers: { player: string; goals: number }[] | null;
+    calendar_url: string | null;
+    roster?: { name: string | null; shirt: number | null; role: string }[];
+}
+
+const pill = { V: 'bg-emerald-600', E: 'bg-gray-500', D: 'bg-red-600' } as const;
+
 interface Props {
     theme: Theme;
     seo: Seo;
@@ -11,9 +21,10 @@ interface Props {
     participations: { competition: string; season: string; division: string; url: string }[];
     games: PortalGame[];
     push_key: string | null;
+    extras: Extras;
 }
 
-export default function Team({ theme, seo, team, participations, games, push_key }: Props) {
+export default function Team({ theme, seo, team, participations, games, push_key, extras }: Props) {
     const upcoming = games.filter((game) => !game.decided);
     const results = games.filter((game) => game.decided);
 
@@ -27,7 +38,22 @@ export default function Team({ theme, seo, team, participations, games, push_key
                     <div className="mt-2 flex flex-wrap gap-2">
                         <PushButton kind="team" id={team.id} publicKey={push_key} label="Seguir esta equipe" />
                         <ShareButtons text={`${team.name} — jogos e resultados:`} url={route('portal.team', team.id)} />
+                        {extras.calendar_url && (
+                            <a href={extras.calendar_url} className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-800 hover:bg-gray-50" data-testid="team-calendar">
+                                📅 Adicionar à agenda
+                            </a>
+                        )}
                     </div>
+                    {extras.form && extras.form.length > 0 && (
+                        <div className="mt-3 flex items-center gap-1" data-testid="team-form" aria-label="Forma recente">
+                            <span className="mr-1 text-xs text-gray-500">Forma:</span>
+                            {extras.form.map((item, index) => (
+                                <a key={index} href={item.url} title={`${item.home ? 'em casa' : 'fora'} contra ${item.opponent ?? '—'}: ${item.score}`} className={`flex h-6 w-6 items-center justify-center rounded text-xs font-bold text-white ${pill[item.result]}`}>
+                                    {item.result}
+                                </a>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -43,6 +69,71 @@ export default function Team({ theme, seo, team, participations, games, push_key
                         ))}
                     </ul>
                 </section>
+                {extras.campaigns && extras.campaigns.length > 0 && (
+                    <section className="overflow-x-auto rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200" data-testid="team-campaigns">
+                        <h2 className="mb-2 text-lg font-bold">Campanhas</h2>
+                        <table className="w-full text-left text-sm">
+                            <thead className="text-xs uppercase text-gray-500">
+                                <tr>
+                                    <th className="py-1 pr-3">Edição</th>
+                                    <th className="px-2 text-center">Pos.</th>
+                                    <th className="px-2 text-center">J</th>
+                                    <th className="px-2 text-center">V</th>
+                                    <th className="px-2 text-center">E</th>
+                                    <th className="px-2 text-center">D</th>
+                                    <th className="px-2 text-center">Gols</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {extras.campaigns.map((item) => (
+                                    <tr key={item.url + item.division} className="border-t border-gray-100">
+                                        <td className="py-1.5 pr-3">
+                                            <Link href={item.url} className="font-medium hover:underline">{item.competition} {item.season}</Link>
+                                            <span className="block text-xs text-gray-500">{item.division} · {item.status}</span>
+                                        </td>
+                                        <td className="px-2 text-center tabular-nums">{item.position ? `${item.position.position}º/${item.position.of}` : '—'}</td>
+                                        <td className="px-2 text-center tabular-nums">{item.played}</td>
+                                        <td className="px-2 text-center tabular-nums">{item.wins}</td>
+                                        <td className="px-2 text-center tabular-nums">{item.draws}</td>
+                                        <td className="px-2 text-center tabular-nums">{item.losses}</td>
+                                        <td className="px-2 text-center tabular-nums">{item.for}:{item.against}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </section>
+                )}
+                {extras.scorers && extras.scorers.length > 0 && (
+                    <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200" data-testid="team-scorers">
+                        <h2 className="mb-2 text-lg font-bold">Artilheiros</h2>
+                        <ol className="space-y-1 text-sm">
+                            {extras.scorers.map((item, index) => (
+                                <li key={index} className="flex justify-between">
+                                    <span>{index + 1}. {item.player}</span>
+                                    <span className="font-semibold tabular-nums">{item.goals}</span>
+                                </li>
+                            ))}
+                        </ol>
+                    </section>
+                )}
+                {extras.roster && (
+                    <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200" data-testid="team-roster">
+                        <h2 className="mb-2 text-lg font-bold">Elenco</h2>
+                        {extras.roster.length === 0 ? (
+                            <p className="text-sm text-gray-500">Elenco ainda não divulgado.</p>
+                        ) : (
+                            <ul className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+                                {extras.roster.map((item, index) => (
+                                    <li key={index} className="flex gap-2">
+                                        <span className="w-7 text-right tabular-nums text-gray-500">{item.shirt ?? ''}</span>
+                                        <span>{item.name}</span>
+                                        {item.shirt === null && <span className="text-xs text-gray-500">{item.role}</span>}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </section>
+                )}
                 <div className="grid gap-6 md:grid-cols-2">
                     <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200">
                         <h2 className="mb-2 text-lg font-bold">Próximos jogos</h2>

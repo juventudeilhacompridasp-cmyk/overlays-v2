@@ -24,7 +24,7 @@ class OrganizationController extends Controller
             'theme' => PublicTheme::current(),
             'portal_url' => route('portal.home'),
             'portal_settings' => PortalSettings::all(),
-            'portal_switches' => collect(PortalSettings::SWITCHES)->map(fn (array $item, string $key) => ['key' => $key, 'label' => $item['label'], 'hint' => $item['hint']])->values(),
+            'portal_switches' => collect(PortalSettings::SWITCHES)->map(fn (array $item, string $key) => ['key' => $key, 'group' => $item['group'], 'label' => $item['label'], 'hint' => $item['hint']])->values(),
             'white_label' => CurrentOrganization::has(Feature::WhiteLabel),
             'logo_url' => CurrentOrganization::get() ? ChangeOrganizationLogo::url(CurrentOrganization::get(), 128) : null,
         ]);

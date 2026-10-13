@@ -11,15 +11,19 @@ use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Portal\Push\PushConfig;
 use App\Modules\Portal\Support\GamePresenter;
+use App\Modules\Portal\Support\IcsCalendar;
+use App\Modules\Portal\Support\PortalSettings;
 use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Portal\Support\SeasonPresenter;
 use App\Modules\Portal\Support\SeasonStats;
+use App\Modules\Portal\Support\TeamPage;
 use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -110,7 +114,7 @@ class PortalController extends Controller
         ]);
     }
 
-    public function team(Team $team): Response
+    public function team(Team $team, TeamPage $page): Response
     {
         $entries = Entry::query()->where('team_id', $team->getKey())->where('status', EntryStatus::Confirmed)
             ->whereHas('division.season', fn ($season) => $season->published())
@@ -139,6 +143,42 @@ class PortalController extends Controller
                 'url' => route('portal.season', [$entry->division->season->competition->slug, $entry->division->season->getKey()]),
             ])->values(),
             'games' => $games->map(fn (Game $game) => GamePresenter::game($game) + ['competition' => $game->division->season->competition->name])->values(),
+            'extras' => $page->for($team, $entries),
+        ]);
+    }
+
+    /** Calendário dos jogos da equipe (.ics), para assinar na agenda. Só edições publicadas; some se o interruptor estiver desligado. */
+    public function teamCalendar(Team $team): HttpResponse
+    {
+        abort_unless(PortalSettings::enabled('team_calendar'), 404);
+
+        $entries = Entry::query()->where('team_id', $team->getKey())->where('status', EntryStatus::Confirmed)
+            ->whereHas('division.season', fn ($season) => $season->published())->get();
+
+        abort_if($entries->isEmpty(), 404);
+
+        $host = parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'portal';
+
+        $games = Game::query()
+            ->where(fn (Builder $query) => $query->whereIn('home_entry_id', $entries->pluck('id'))->orWhereIn('away_entry_id', $entries->pluck('id')))
+            ->whereIn('division_id', $entries->pluck('division_id'))
+            ->whereNotNull('scheduled_at')->whereNotIn('status', [GameStatus::Cancelled])
+            ->with(['homeEntry.team', 'awayEntry.team', 'venue', 'division.season.competition'])
+            ->orderBy('scheduled_at')->limit(300)->get();
+
+        $events = $games->map(fn (Game $game) => [
+            'uid' => $game->getKey().'@'.$host,
+            'start' => $game->scheduled_at,
+            'minutes' => 120,
+            'summary' => ($game->homeEntry?->team->name ?? 'A definir').' x '.($game->awayEntry?->team->name ?? 'A definir'),
+            'location' => $game->venue?->name,
+            'url' => route('public.games.show', $game->getKey()),
+            'description' => $game->division->season->competition->name.' · '.$game->division->name,
+        ])->values()->all();
+
+        return response(IcsCalendar::render("{$team->name} — jogos", $events), 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => 'inline; filename="'.Str::slug($team->name).'.ics"',
         ]);
     }
 
