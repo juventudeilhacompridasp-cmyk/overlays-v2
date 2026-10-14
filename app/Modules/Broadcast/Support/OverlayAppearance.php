@@ -49,11 +49,11 @@ final class OverlayAppearance
         ];
     }
 
-    /** Fonte do catálogo ou ID (ULID) de fonte própria; qualquer outra coisa volta à fonte padrão. */
+    /** Fonte do catálogo ou ID (ULID, em minúsculas como o Laravel gera) de fonte própria; qualquer outra coisa volta à fonte padrão. */
     public static function font(mixed $value): string
     {
         if (is_string($value) && (in_array($value, self::FONTS, true) || preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/i', $value) === 1)) {
-            return in_array($value, self::FONTS, true) ? $value : strtoupper($value);
+            return in_array($value, self::FONTS, true) ? $value : strtolower($value);
         }
 
         return 'system';

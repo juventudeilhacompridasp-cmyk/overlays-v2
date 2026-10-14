@@ -26,7 +26,7 @@ final class OverlayControlRules
             'appearance.motion' => ['sometimes', 'string', Rule::in(OverlayAppearance::MOTIONS)],
             'appearance.font' => ['sometimes', 'string', function (string $attribute, mixed $value, \Closure $fail) use ($channel): void {
                 $known = in_array($value, OverlayAppearance::FONTS, true)
-                    || OverlayFont::query()->where('organization_id', $channel->organization_id)->whereKey(is_string($value) ? strtoupper($value) : '')->exists();
+                    || OverlayFont::query()->where('organization_id', $channel->organization_id)->whereKey(is_string($value) ? strtolower($value) : '')->exists();
 
                 if (! $known) {
                     $fail('A fonte escolhida não existe.');
