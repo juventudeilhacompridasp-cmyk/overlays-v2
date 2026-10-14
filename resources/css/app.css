@@ -29,7 +29,6 @@
 
 .overlay-motion-dynamic {
     animation: overlay-slide-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    will-change: transform, opacity;
 }
 
 .overlay-motion-subtle {
@@ -41,11 +40,19 @@
     will-change: transform;
 }
 
+.overlay-stage {
+    contain: layout paint style;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .overlay-motion-dynamic,
     .overlay-motion-subtle,
     .overlay-score-pulse {
         animation: none;
+    }
+
+    .overlay-phase-transition {
+        transition-duration: 0ms !important;
     }
 }
 
