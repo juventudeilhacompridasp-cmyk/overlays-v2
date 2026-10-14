@@ -201,3 +201,17 @@ describe('on air', function () {
         $this->withToken($key)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", ['custom_live' => [$item->id => true]])->assertOk()->assertJsonPath("data.custom_live.{$item->id}", true);
     });
 });
+
+it('sends the standings rows for the table tokens only while a free overlay is live, without ids or logos', function () {
+    ['game' => $game] = sheetGame();
+    $item = OverlayCustomItem::query()->create(['name' => 'Tabela', 'width' => 1200, 'height' => 400, 'elements' => []]);
+    $channel = OverlayChannel::query()->create(['name' => 'Canal', 'token' => OverlayChannel::newToken(), 'game_id' => $game->id, 'layers' => []]);
+
+    expect(OverlayState::for($channel)['custom_table'])->toBeNull();
+
+    $channel->update(['layers' => ['custom' => [$item->id => true]]]);
+    $rows = OverlayState::for($channel->fresh())['custom_table'];
+
+    expect($rows)->toBeArray()->toHaveCount(2)
+        ->and(array_keys($rows[0]))->toBe(['position', 'team', 'points', 'played', 'won', 'drawn', 'lost', 'goal_difference']);
+});
