@@ -5,6 +5,7 @@ namespace App\Modules\Broadcast\Actions;
 use App\Modules\Broadcast\Events\OverlayLowerThird;
 use App\Modules\Broadcast\Events\OverlayUpdated;
 use App\Modules\Broadcast\Models\OverlayChannel;
+use App\Modules\Broadcast\Models\OverlayCustomItem;
 use App\Modules\Broadcast\Models\OverlayScene;
 use App\Modules\Broadcast\Support\LowerThirdBanner;
 use App\Modules\Broadcast\Support\OverlayAppearance;
@@ -78,6 +79,13 @@ final class UpdateOverlayChannel
 
         if (isset($data['screen_settings']) && is_array($data['screen_settings'])) {
             $channel->screen_settings = OverlayScreenSettings::apply($channel->screen_settings, $data['screen_settings'], (int) (microtime(true) * 1000));
+        }
+
+        // Overlays livres (Builder): liga/desliga por ID; só vale para overlays que existem na organização.
+        if (isset($data['custom_live']) && is_array($data['custom_live'])) {
+            $known = OverlayCustomItem::query()->whereIn('id', array_keys($data['custom_live']))->pluck('id')->all();
+            $custom = array_merge($channel->customLive(), array_intersect_key(array_map('boolval', $data['custom_live']), array_flip($known)));
+            $channel->layers = array_merge($channel->layers ?? [], ['custom' => array_filter($custom)]);
         }
 
         if (isset($data['championship_live']) && is_array($data['championship_live'])) {

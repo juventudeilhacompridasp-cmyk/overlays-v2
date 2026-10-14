@@ -5,7 +5,9 @@ namespace App\Modules\Broadcast\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Broadcast\Actions\SaveOverlayFont;
 use App\Modules\Broadcast\Models\OverlayChannel;
+use App\Modules\Broadcast\Models\OverlayCustomItem;
 use App\Modules\Broadcast\Models\OverlayFont;
+use App\Modules\Broadcast\Support\OverlayCustomElements;
 use App\Modules\Broadcast\Support\OverlayState;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response as PlainResponse;
@@ -40,6 +42,19 @@ class OverlayController extends Controller
         return Inertia::render(self::PAGES[$overlay], [
             'token' => $channel->token,
             'state' => OverlayState::for($channel),
+            'realtime' => ['key' => $realtime['key'], 'host' => $realtime['host'], 'port' => $realtime['port'], 'scheme' => $realtime['scheme']],
+        ]);
+    }
+
+    /** Overlay livre (Builder): o desenho vai saneado e com as imagens de patrocinador já resolvidas; ligar e desligar é pelo canal. */
+    public function custom(OverlayChannel $channel, OverlayCustomItem $item): Response
+    {
+        $realtime = config('platform.realtime');
+
+        return Inertia::render('Overlay/Custom', [
+            'token' => $channel->token,
+            'state' => OverlayState::for($channel),
+            'item' => ['id' => $item->getKey(), 'name' => $item->name, 'width' => $item->width, 'height' => $item->height, 'elements' => OverlayCustomElements::resolve($item->elements)],
             'realtime' => ['key' => $realtime['key'], 'host' => $realtime['host'], 'port' => $realtime['port'], 'scheme' => $realtime['scheme']],
         ]);
     }

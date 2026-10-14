@@ -124,6 +124,19 @@ class OverlayChannel extends Model
         return array_combine(self::CHAMPIONSHIP_VIEWS, array_map(fn (string $view) => ($saved[$view] ?? false) === true, self::CHAMPIONSHIP_VIEWS));
     }
 
+    /** @return array<string, bool> overlays livres (Builder) no ar neste canal: ID => true */
+    public function customLive(): array
+    {
+        $saved = is_array($this->layers['custom'] ?? null) ? $this->layers['custom'] : [];
+
+        return array_filter(array_map('boolval', $saved));
+    }
+
+    public function customUrl(string $item): string
+    {
+        return route('overlay.custom', ['channel' => $this->token, 'item' => $item]);
+    }
+
     public function overlayUrl(string $overlay): string
     {
         return route('overlay.show', ['channel' => $this->token, 'overlay' => $overlay]);

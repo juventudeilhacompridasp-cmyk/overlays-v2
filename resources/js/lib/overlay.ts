@@ -138,6 +138,7 @@ export interface OverlayState {
     social: { items: { label: string; value: string }[]; url: string | null };
     screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean; social: boolean; sponsor_bar: boolean; stats: boolean };
     stats: StatsState | null;
+    custom_live: Record<string, boolean>;
     cartela: { title: string; subtitle: string; until_ms: number | null };
     summary: {
         headline: string;

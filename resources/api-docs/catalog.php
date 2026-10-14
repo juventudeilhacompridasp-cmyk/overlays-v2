@@ -240,6 +240,7 @@ return [
                     ]],
                     'mvp_person_id' => ['type' => ['string', 'null'], 'description' => 'Craque do jogo (atleta da escalação) mostrado no resumo; vale só para o jogo no ar.'],
                 ]],
+                'custom_live' => ['type' => 'object', 'description' => 'Mostra (true) ou oculta (false) ao vivo os overlays livres (Builder) da organização, por ID. IDs que não existem são ignorados.', 'additionalProperties' => ['type' => 'boolean']],
                 'championship_live' => ['type' => 'object', 'description' => 'Mostra (true) ou oculta (false) ao vivo as telas de campeonato abertas com `live=1` na URL. Chaves: standings, fixtures, results, scorers, discipline, matchcard, ticker, champion.', 'additionalProperties' => ['type' => 'boolean']],
                 'appearance' => ['type' => 'object', 'properties' => [
                     'preset' => ['type' => 'string', 'enum' => ['arena', 'classic', 'minimal', 'glass', 'contrast', 'neon', 'ribbon', 'gradient']],

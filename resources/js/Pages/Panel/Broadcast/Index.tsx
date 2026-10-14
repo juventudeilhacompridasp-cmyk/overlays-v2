@@ -8,6 +8,7 @@ import { LowerThirdSettings } from '@/lib/lowerThird';
 import { BAR_TRANSITIONS, BarTransition, SPONSOR_ANIMATIONS, SPONSOR_FORMATS, SPONSOR_STYLES, SponsorAnimation, SponsorFormat, SponsorStyle } from '@/lib/sponsorLook';
 import { OBS_VIEWS } from '@/lib/obsChampionship';
 import ChampionshipStudio, { ChampionshipSeason, StyleModel } from './ChampionshipStudio';
+import { ChannelCustom, CustomEditorCard, CustomItem, CustomLiveList } from './CustomStudio';
 import ExtraScreensStudio from './ExtraScreensStudio';
 import LowerThirdStudio from './LowerThirdStudio';
 import OverlayPreviewStudio from './OverlayPreviewStudio';
@@ -149,6 +150,7 @@ interface Channel {
     lineup_steps: number;
     sponsor_settings: SponsorSettings;
     stats_settings: StatsSettings;
+    custom_overlays: ChannelCustom[];
     lower_third_settings: LowerThirdSettings;
     has_control_token: boolean;
     control_url: string;
@@ -243,7 +245,7 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
-    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; championship_live?: Record<string, boolean>; stoppage_minutes?: number; screens_live?: Record<string, boolean>; screen_settings?: { title?: string; subtitle?: string; minutes?: number; mvp_person_id?: string | null; social?: { items: { label: string; value: string }[]; url: string | null } }; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings>; lower_third_settings?: Partial<LowerThirdSettings>; stats_settings?: Partial<StatsSettings>; lower_third_show?: { kind: string; title?: string; subtitle?: string; person_id?: string } }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
+    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; championship_live?: Record<string, boolean>; stoppage_minutes?: number; screens_live?: Record<string, boolean>; screen_settings?: { title?: string; subtitle?: string; minutes?: number; mvp_person_id?: string | null; social?: { items: { label: string; value: string }[]; url: string | null } }; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings>; lower_third_settings?: Partial<LowerThirdSettings>; stats_settings?: Partial<StatsSettings>; custom_live?: Record<string, boolean>; lower_third_show?: { kind: string; title?: string; subtitle?: string; person_id?: string } }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
 
     // Comandos de exibir/ocultar: o botão muda no clique e a mudança segue direto para o OBS; se o servidor recusar, volta ao estado real.
     const [layers, setLayers] = useState(channel.layers);
@@ -705,6 +707,10 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                         <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Estatísticas da partida</h3>
                         <StatsStudio channelId={channel.id} settings={channel.stats_settings} people={channel.lineup_people} hasGame={channel.game_id !== null} live={channel.screens_live.stats === true} canOperate={canOperate} patch={patch} />
                     </section>
+                    <section className="w-[26rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Overlays livres">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Overlays livres (Builder)</h3>
+                        <div className="rounded-lg border border-gray-200 p-4"><CustomLiveList overlays={channel.custom_overlays} canOperate={canOperate} patch={patch} /></div>
+                    </section>
                     <section className="w-[34rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Campeonato">
                         <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Campeonato (tabela, jogos, artilharia…)</h3>
                         <ChampionshipStudio channelId={channel.id} base={channel.championship_base} seasons={seasons} models={styleModels} modelLimit={styleModelLimit} canManage={canManage} />
@@ -967,7 +973,7 @@ function FontsCard({ fonts, limit, canManage }: { fonts: CustomFont[]; limit: nu
     );
 }
 
-export default function Index({ channels, games, issued_control, sponsors, sponsor_limit, fonts, font_limit, scenes, scene_limit, style_models, style_model_limit, championship_seasons }: { channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl; sponsors: Sponsor[]; sponsor_limit: number; fonts: CustomFont[]; font_limit: number; scenes: Scene[]; scene_limit: number; style_models: StyleModel[]; style_model_limit: number; championship_seasons: ChampionshipSeason[] }) {
+export default function Index({ channels, games, issued_control, sponsors, sponsor_limit, custom_items, custom_limit, fonts, font_limit, scenes, scene_limit, style_models, style_model_limit, championship_seasons }: { channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl; sponsors: Sponsor[]; sponsor_limit: number; custom_items: CustomItem[]; custom_limit: number; fonts: CustomFont[]; font_limit: number; scenes: Scene[]; scene_limit: number; style_models: StyleModel[]; style_model_limit: number; championship_seasons: ChampionshipSeason[] }) {
     const canManage = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
     const { data, setData, post, processing, errors, reset } = useForm({ name: '' });
@@ -990,6 +996,7 @@ export default function Index({ channels, games, issued_control, sponsors, spons
                 ))}
 
                 <SponsorsCard sponsors={sponsors} limit={sponsor_limit} canManage={canManage} />
+                <CustomEditorCard items={custom_items} limit={custom_limit} sponsors={sponsors.map((sponsor) => ({ id: sponsor.id, name: sponsor.name }))} canManage={canManage} />
 
                 <FontsCard fonts={fonts} limit={font_limit} canManage={canManage} />
 
