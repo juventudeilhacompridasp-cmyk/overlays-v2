@@ -46,6 +46,7 @@ $snapshotSchema = [
         'clock' => ['type' => 'object', 'description' => 'Marcos do relógio; o cliente conta o tempo sozinho a partir de `server_time_ms`.'],
         'quarters' => ['type' => ['array', 'object', 'null']],
         'fouls' => ['type' => ['object', 'null']],
+        'timeouts' => ['type' => ['object', 'null'], 'description' => 'Pedidos de tempo que restam a cada equipe no grupo de períodos em andamento (`home`, `away`, `limit`, `period`); null nos esportes que não contam pedidos.'],
         'goals' => [
             'type' => 'array',
             'items' => [
@@ -86,6 +87,7 @@ $snapshotExample = [
     'clock' => ['period' => 1],
     'quarters' => null,
     'fouls' => null,
+    'timeouts' => null,
     'goals' => [['side' => 'home', 'player' => 'Fulano', 'minute' => 23, 'period' => 1, 'own_goal' => false]],
     'server_time_ms' => 1792000000000,
 ];

@@ -118,7 +118,8 @@ it('shows the standings of the league or group of the game and nothing for knock
     $state = OverlayState::for(channelFor($game, ['standings' => true]));
 
     expect($state['standings']['rows'])->toHaveCount(2)
-        ->and(collect($state['standings']['rows'])->every(fn (array $row) => $row['highlight']))->toBeTrue();
+        ->and(collect($state['standings']['rows'])->every(fn (array $row) => $row['highlight']))->toBeTrue()
+        ->and(array_keys($state['standings']['rows'][0]))->toBe(['position', 'team', 'logo_url', 'points', 'played', 'goal_difference', 'won', 'drawn', 'lost', 'color', 'highlight']);
 
     ['stage' => $stage] = fixtureDivision(4, StageType::Knockout);
     app(GenerateStageFixtures::class)->handle($stage);

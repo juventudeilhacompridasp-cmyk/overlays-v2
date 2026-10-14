@@ -41,6 +41,7 @@ export interface Snapshot {
     quarters: { period: number; home: number; away: number }[] | null;
     sets: { home: number; away: number; winner: 'home' | 'away' | null; finished: boolean }[] | null;
     fouls: { home: number; away: number; limit: number; period: number } | null;
+    timeouts: { home: number; away: number; limit: number; period: number } | null;
     goals: Goal[];
     server_time_ms: number;
 }
@@ -262,6 +263,11 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
                 {snapshot.fouls && (
                     <p className="mt-1 text-center text-sm text-gray-400" data-testid="live-fouls">
                         Faltas: {snapshot.fouls.home} x {snapshot.fouls.away}
+                    </p>
+                )}
+                {snapshot.timeouts && (
+                    <p className="mt-1 text-center text-sm text-gray-400" data-testid="live-timeouts">
+                        Pedidos de tempo restantes: {snapshot.timeouts.home} x {snapshot.timeouts.away}
                     </p>
                 )}
                 {insights?.timeline ? (

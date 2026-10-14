@@ -175,6 +175,10 @@ final class OverlayState
                 'points' => $item->row->points,
                 'played' => $item->row->played,
                 'goal_difference' => $item->row->goalDifference(),
+                'won' => $item->row->wins,
+                'drawn' => $item->row->draws,
+                'lost' => $item->row->losses,
+                'color' => $item->entry->team->primary_color,
                 'highlight' => in_array($item->entry->getKey(), [$game->home_entry_id, $game->away_entry_id], true),
             ], $entries),
         ];

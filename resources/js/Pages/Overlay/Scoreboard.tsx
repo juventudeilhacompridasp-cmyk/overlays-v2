@@ -132,6 +132,14 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
                             <span className={game.fouls.away >= game.fouls.limit ? 'font-bold text-amber-300' : ''}>{game.fouls.away}</span>
                         </div>
                     )}
+                    {game.timeouts && (
+                        <div className="mt-1 inline-flex items-center gap-3 rounded-lg border border-white/10 px-3 py-1 text-sm shadow-lg" style={{ backgroundColor: `${appearance.background_color}e6` }} data-testid="overlay-timeouts">
+                            <span className="text-white/60">TEMPOS</span>
+                            <span className={game.timeouts.home === 0 ? 'text-white/40' : 'font-bold'}>{game.timeouts.home}</span>
+                            <span className="text-white/30">×</span>
+                            <span className={game.timeouts.away === 0 ? 'text-white/40' : 'font-bold'}>{game.timeouts.away}</span>
+                        </div>
+                    )}
                     {game.home_penalties !== null && game.away_penalties !== null && (
                         <div className="mt-1 inline-block rounded-lg border border-white/10 px-3 py-1 text-sm shadow-lg" style={{ backgroundColor: `${appearance.background_color}e6` }}>
                             Pênaltis: {game.home_penalties} x {game.away_penalties}

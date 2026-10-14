@@ -46,6 +46,7 @@ export interface OverlayGame {
     quarters: { period: number; home: number; away: number }[] | null;
     sets: { home: number; away: number; winner: 'home' | 'away' | null; finished: boolean }[] | null;
     fouls: { home: number; away: number; limit: number; period: number } | null;
+    timeouts: { home: number; away: number; limit: number; period: number } | null;
     goals: { side: 'home' | 'away' | null; player: string | null; minute: number | null; own_goal: boolean }[];
 }
 
@@ -85,7 +86,7 @@ export interface OverlayState {
     lineup: { home: LineupSide; away: LineupSide } | null;
     standings: {
         title: string;
-        rows: { position: number; team: string; logo_url: string | null; points: number; played: number; goal_difference: number; highlight: boolean }[];
+        rows: { position: number; team: string; logo_url: string | null; points: number; played: number; goal_difference: number; won: number; drawn: number; lost: number; color: string | null; highlight: boolean }[];
     } | null;
     server_time_ms: number;
 }

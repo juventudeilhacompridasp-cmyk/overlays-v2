@@ -28,6 +28,11 @@ Em cada canal, a seção **Visual do overlay** configura o placar:
 Clique em **Aplicar visual**. As fontes que já estão abertas no OBS recebem a mudança por Reverb, sem recarregar. As animações
 usam somente opacidade e transformação para reduzir o trabalho de renderização do Chromium do OBS.
 
+### Tabela e pedidos de tempo
+A tela **Tabela** segue a posição, a escala e o movimento do canal, mostra V/E/D e saldo, destaca as duas equipes do jogo, usa a cor
+de cada equipe e reduz o espaçamento quando passa de 10 linhas. No basquete o placar mostra, abaixo, os **pedidos de tempo que restam** a
+cada equipe na metade em andamento.
+
 ### Lower thirds (faixas de lance)
 Na coluna **Lances (lower thirds)** escolha entre seis estilos — Arena, Barra de TV, Cartão do jogador, Minimal, Esportivo e Flash de
 gol — e sete animações, o tempo no ar (3 a 15 s) e quais lances aparecem (gol, gol contra, cartões, substituição). A faixa traz o jogador
