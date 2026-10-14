@@ -4,16 +4,47 @@ import { OverlayState, OverlayTeam, useOverlay } from '@/lib/overlay';
 import { overlayMotion, overlayOrigin, overlayPosition, overlayStyle, scoreboardFrame } from '@/lib/overlayVisual';
 import { Head } from '@inertiajs/react';
 
-function Side({ team, align }: { team: OverlayTeam; align: 'left' | 'right' }) {
-    const label = (team.short_name || team.name).toUpperCase();
-    const logo = team.logo_url ? <img src={team.logo_url} alt="" className="h-9 w-9 object-contain" /> : null;
+function Crest({ team, size }: { team: OverlayTeam; size: 'sm' | 'md' }) {
+    if (!team.logo_url) return null;
+    const box = size === 'sm' ? 'h-7 w-7 p-0.5' : 'h-11 w-11 p-1';
 
     return (
-        <div className="relative flex min-w-[13rem] items-center gap-3 px-4 py-2">
+        <span className={`grid ${box} flex-none place-items-center rounded-full bg-white/95 shadow-inner`}>
+            <img src={team.logo_url} alt="" className="h-full w-full object-contain" />
+        </span>
+    );
+}
+
+function Side({ team, align, wide = false }: { team: OverlayTeam; align: 'left' | 'right'; wide?: boolean }) {
+    const label = (team.short_name || team.name).toUpperCase();
+
+    return (
+        <div className={`relative flex items-center gap-3 px-4 py-2 ${wide ? 'min-w-0 flex-1 gap-5 px-8 py-3' : 'min-w-[13rem]'}`}>
             <span className="absolute inset-x-0 bottom-0 h-1" style={{ backgroundColor: team.color ?? 'var(--overlay-accent)' }} />
-            {align === 'left' && logo && <span className="grid h-11 w-11 place-items-center rounded-full bg-white/95 p-1 shadow-inner">{logo}</span>}
-            <span className={`max-w-[12rem] flex-1 truncate text-xl font-black tracking-[0.08em] ${align === 'right' ? 'text-right' : ''}`}>{label}</span>
-            {align === 'right' && logo && <span className="grid h-11 w-11 place-items-center rounded-full bg-white/95 p-1 shadow-inner">{logo}</span>}
+            {align === 'left' && <Crest team={team} size="md" />}
+            <span className={`flex-1 truncate font-black tracking-[0.08em] ${wide ? 'text-3xl' : 'max-w-[12rem] text-xl'} ${align === 'right' ? 'text-right' : ''}`}>{wide ? (team.name).toUpperCase() : label}</span>
+            {align === 'right' && <Crest team={team} size="md" />}
+        </div>
+    );
+}
+
+/** Equipes em duas linhas (escudo, sigla, gols): placar estreito, bom para o canto da tela. */
+function StackedTeams({ game, pulse }: { game: NonNullable<OverlayState['game']>; pulse: boolean }) {
+    const rows = [
+        { team: game.home!, score: game.home_score },
+        { team: game.away!, score: game.away_score },
+    ];
+
+    return (
+        <div className="flex min-w-[14rem] flex-col justify-center divide-y divide-white/10" data-testid="overlay-score">
+            {rows.map(({ team, score }, index) => (
+                <div key={index} className="relative flex items-center gap-3 px-4 py-2">
+                    <span className="absolute inset-y-1 left-0 w-1 rounded-r" style={{ backgroundColor: team.color ?? 'var(--overlay-accent)' }} />
+                    <Crest team={team} size="sm" />
+                    <span className="flex-1 truncate text-lg font-black tracking-[0.08em]">{(team.short_name || team.name).toUpperCase()}</span>
+                    <span key={score} className={`min-w-[2rem] text-right text-3xl font-black tabular-nums ${pulse ? 'overlay-score-pulse' : ''}`}>{score}</span>
+                </div>
+            ))}
         </div>
     );
 }
@@ -40,6 +71,7 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
     else clock = formatClock(seconds);
 
     const appearance = state.appearance;
+    const layout = appearance.layout;
     const hasMotion = appearance.motion !== 'none';
     const frame = scoreboardFrame(appearance);
     const clockStyle = appearance.preset === 'minimal' ? { color: appearance.accent_color } : { background: `linear-gradient(145deg, ${appearance.accent_color}, ${appearance.accent_color}cc)` };
@@ -47,21 +79,37 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
     return (
         <div className={`fixed inset-0 flex p-8 font-sans ${overlayPosition(appearance.position)}`} style={{ ...overlayStyle(appearance), color: appearance.text_color, textShadow: '0 1px 2px rgba(0,0,0,.65)' }}>
             <Head title="Placar" />
-            <div style={{ transform: `scale(${appearance.scale})`, transformOrigin: overlayOrigin(appearance.position) }}>
+            <div className={layout === 'wide' ? 'w-full' : undefined} style={{ transform: `scale(${appearance.scale})`, transformOrigin: layout === 'wide' ? 'center' : overlayOrigin(appearance.position) }}>
                 <div className={overlayMotion(appearance.motion)}>
-                    <div className={frame.className} style={frame.style} data-testid="overlay-scoreboard" data-preset={appearance.preset} data-motion={appearance.motion}>
+                    <div className={frame.className} style={frame.style} data-testid="overlay-scoreboard" data-preset={appearance.preset} data-layout={layout} data-motion={appearance.motion}>
                         {appearance.preset === 'arena' && <div className="absolute inset-x-0 top-0 h-0.5" style={{ background: `linear-gradient(90deg, transparent, ${appearance.accent_color}, transparent)` }} />}
-                        <Side team={game.home} align="left" />
-                        <div key={`${game.home_score}-${game.away_score}`} className={`flex items-center gap-3 border-x border-white/10 bg-black/30 px-6 text-4xl font-black tabular-nums ${hasMotion ? 'overlay-score-pulse' : ''}`} data-testid="overlay-score">
-                            <span>{game.home_score}</span>
-                            <span className="text-xl text-white/35">×</span>
-                            <span>{game.away_score}</span>
-                        </div>
-                        <Side team={game.away} align="right" />
-                        <div className="flex min-w-[8.5rem] flex-col items-center justify-center px-5 py-1 text-center" style={clockStyle} data-testid="overlay-clock">
-                            <span className="text-xl font-black tabular-nums">{clock}</span>
-                            {sets && currentSet && !game.finished && <span className="text-[10px] font-bold uppercase tracking-[0.18em]">Set {sets.length}</span>}
-                            {!sets && (game.clock.state === 'running' || game.clock.state === 'paused') && (
+                        {layout === 'stacked' && <StackedTeams game={game} pulse={hasMotion} />}
+                        {layout === 'compact' && (
+                            <div key={`${game.home_score}-${game.away_score}`} className={`flex items-center gap-2 px-4 py-1.5 ${hasMotion ? 'overlay-score-pulse' : ''}`} data-testid="overlay-score">
+                                <Crest team={game.home} size="sm" />
+                                <span className="text-sm font-black tracking-[0.08em]">{(game.home.short_name || game.home.name).slice(0, 3).toUpperCase()}</span>
+                                <span className="text-2xl font-black tabular-nums">{game.home_score}</span>
+                                <span className="text-sm text-white/40">×</span>
+                                <span className="text-2xl font-black tabular-nums">{game.away_score}</span>
+                                <span className="text-sm font-black tracking-[0.08em]">{(game.away.short_name || game.away.name).slice(0, 3).toUpperCase()}</span>
+                                <Crest team={game.away} size="sm" />
+                            </div>
+                        )}
+                        {(layout === 'bar' || layout === 'wide') && (
+                            <>
+                                <Side team={game.home} align="left" wide={layout === 'wide'} />
+                                <div key={`${game.home_score}-${game.away_score}`} className={`flex items-center gap-3 border-x border-white/10 bg-black/30 font-black tabular-nums ${layout === 'wide' ? 'px-12 text-6xl' : 'px-6 text-4xl'} ${hasMotion ? 'overlay-score-pulse' : ''}`} data-testid="overlay-score">
+                                    <span>{game.home_score}</span>
+                                    <span className="text-xl text-white/35">×</span>
+                                    <span>{game.away_score}</span>
+                                </div>
+                                <Side team={game.away} align="right" wide={layout === 'wide'} />
+                            </>
+                        )}
+                        <div className={`flex flex-col items-center justify-center text-center ${layout === 'compact' ? 'min-w-[5.5rem] px-3 py-0.5' : layout === 'wide' ? 'min-w-[12rem] px-8 py-1' : 'min-w-[8.5rem] px-5 py-1'}`} style={clockStyle} data-testid="overlay-clock">
+                            <span className={`${layout === 'compact' ? 'text-base' : layout === 'wide' ? 'text-3xl' : 'text-xl'} font-black tabular-nums`}>{clock}</span>
+                            {layout !== 'compact' && sets && currentSet && !game.finished && <span className="text-[10px] font-bold uppercase tracking-[0.18em]">Set {sets.length}</span>}
+                            {layout !== 'compact' && !sets && (game.clock.state === 'running' || game.clock.state === 'paused') && (
                                 <span className="text-[10px] font-bold uppercase tracking-[0.16em]">
                                     {periodLabel(game.clock.period, game.sport)}
                                     {game.clock.state === 'paused' && ' · parado'}

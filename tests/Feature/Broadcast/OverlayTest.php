@@ -57,6 +57,7 @@ it('builds the overlay state with the score, the clock and the logos', function 
             'scale' => 1.0,
             'motion' => 'dynamic',
             'font' => 'system',
+            'layout' => 'bar',
         ])
         ->and($state['lineup_settings'])->toBe(['presentation' => 'sequence', 'list_seconds' => 6, 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'step' => 0, 'anchor_ms' => 0])
         ->and($state['game']['id'])->toBe($game->id)
@@ -323,6 +324,38 @@ describe('panel', function () {
 
         $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['preset' => 'neon']])->assertSessionHasErrors('appearance.preset');
         $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['position' => 'center']])->assertSessionHasErrors('appearance.position');
+    });
+
+    it('lets the operator pick the scoreboard layout, tells the OBS and refuses unknown ones', function () {
+        $channel = channelFor();
+        $this->actingAs(panelUser(Role::Operator));
+        Event::fake([OverlayUpdated::class]);
+
+        expect(OverlayState::for($channel)['appearance']['layout'])->toBe('bar');
+
+        foreach (['stacked', 'compact', 'wide', 'bar'] as $layout) {
+            $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['layout' => $layout]])->assertSessionHasNoErrors();
+            expect($channel->fresh()->appearance['layout'])->toBe($layout);
+        }
+        Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['appearance']['layout'] === 'wide');
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['layout' => 'gigante']])->assertSessionHasErrors('appearance.layout');
+        expect($channel->fresh()->appearance['layout'])->toBe('bar');
+
+        $channel->update(['appearance' => ['layout' => 'gigante']]);
+        expect(OverlayState::for($channel->fresh())['appearance']['layout'])->toBe('bar');
+    });
+
+    it('keeps the layout in a saved scene', function () {
+        $this->actingAs(panelUser(Role::Organizer));
+        $channel = channelFor();
+        $channel->update(['appearance' => ['layout' => 'stacked']]);
+
+        $this->post(route('panel.broadcast.scenes.store'), ['name' => 'Canto', 'channel_id' => $channel->id])->assertSessionHas('success');
+        $target = channelFor();
+        $this->patch(route('panel.broadcast.scenes.apply', ['channel' => $target, 'scene' => OverlayScene::query()->firstOrFail()]))->assertSessionHas('success');
+
+        expect($target->fresh()->appearance['layout'])->toBe('stacked');
     });
 
     it('refuses games from another organization', function () {

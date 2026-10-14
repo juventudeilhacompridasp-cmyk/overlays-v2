@@ -10,11 +10,14 @@ final class OverlayAppearance
     /** Fontes embutidas no sistema (CSS próprio, sem CDN) além da padrão; uma fonte própria é escolhida pelo ID (ULID). */
     public const FONTS = ['system', 'inter', 'montserrat', 'oswald', 'bebas', 'anton', 'barlow', 'roboto-condensed', 'archivo', 'playfair', 'marker'];
 
+    /** bar = barra horizontal clássica; stacked = equipes empilhadas; compact = pílula pequena; wide = faixa de ponta a ponta. */
+    public const LAYOUTS = ['bar', 'stacked', 'compact', 'wide'];
+
     public const POSITIONS = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'];
 
     public const MOTIONS = ['dynamic', 'subtle', 'none'];
 
-    /** @return array{preset: string, accent_color: string, background_color: string, text_color: string, position: string, scale: float, motion: string, font: string} */
+    /** @return array{preset: string, accent_color: string, background_color: string, text_color: string, position: string, scale: float, motion: string, font: string, layout: string} */
     public static function defaults(): array
     {
         return [
@@ -26,12 +29,13 @@ final class OverlayAppearance
             'scale' => 1.0,
             'motion' => 'dynamic',
             'font' => 'system',
+            'layout' => 'bar',
         ];
     }
 
     /**
      * @param  array<string, mixed>|null  $appearance
-     * @return array{preset: string, accent_color: string, background_color: string, text_color: string, position: string, scale: float, motion: string, font: string}
+     * @return array{preset: string, accent_color: string, background_color: string, text_color: string, position: string, scale: float, motion: string, font: string, layout: string}
      */
     public static function normalize(?array $appearance): array
     {
@@ -46,6 +50,7 @@ final class OverlayAppearance
             'scale' => (float) $values['scale'],
             'motion' => (string) $values['motion'],
             'font' => self::font($values['font']),
+            'layout' => in_array($values['layout'], self::LAYOUTS, true) ? (string) $values['layout'] : 'bar',
         ];
     }
 

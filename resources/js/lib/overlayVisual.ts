@@ -19,17 +19,19 @@ export function overlayOrigin(position: OverlayAppearance['position']): string {
 
 /** Aparência de cada preset (moldura do placar). O contrato de dados é o mesmo; só muda a apresentação. */
 export function scoreboardFrame(appearance: OverlayAppearance): { className: string; style: CSSProperties } {
-    const { preset, background_color: bg } = appearance;
+    const { preset, background_color: bg, layout } = appearance;
+    const rounded = layout === 'compact' ? 'rounded-full' : layout === 'wide' ? 'rounded-none' : layout === 'stacked' ? 'rounded-xl' : null;
+    const display = layout === 'wide' ? 'flex w-[1840px] max-w-full' : 'inline-flex';
 
     if (preset === 'classic') {
-        return { className: 'relative inline-flex items-stretch overflow-hidden rounded-md shadow-xl', style: { backgroundColor: bg } };
+        return { className: `relative ${display} items-stretch overflow-hidden ${rounded ?? 'rounded-md'} shadow-xl`, style: { backgroundColor: bg } };
     }
 
     if (preset === 'minimal') {
-        return { className: 'relative inline-flex items-stretch overflow-hidden rounded-full border border-white/10 shadow-lg', style: { backgroundColor: `${bg}b3` } };
+        return { className: `relative ${display} items-stretch overflow-hidden ${rounded ?? 'rounded-full'} border border-white/10 shadow-lg`, style: { backgroundColor: `${bg}b3` } };
     }
 
-    return { className: 'relative inline-flex items-stretch overflow-hidden rounded-2xl border border-white/15 shadow-2xl', style: { background: `linear-gradient(135deg, ${bg}f2, ${bg}d9)` } };
+    return { className: `relative ${display} items-stretch overflow-hidden ${rounded ?? 'rounded-2xl'} border border-white/15 shadow-2xl`, style: { background: `linear-gradient(135deg, ${bg}f2, ${bg}d9)` } };
 }
 
 export function overlayMotion(motion: OverlayAppearance['motion']): string {

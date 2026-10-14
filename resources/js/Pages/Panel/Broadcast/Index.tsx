@@ -14,6 +14,7 @@ interface Appearance {
     position: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
     scale: number;
     motion: 'dynamic' | 'subtle' | 'none';
+    layout: 'bar' | 'stacked' | 'compact' | 'wide';
     font: string;
 }
 
@@ -292,6 +293,14 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                                 <option value="arena">Arena (alto contraste)</option>
                                 <option value="classic">Clássico (barra de TV)</option>
                                 <option value="minimal">Minimal (pílula translúcida)</option>
+                            </Select>
+                        </Field>
+                        <Field label="Formato do placar" htmlFor={`layout-${channel.id}`}>
+                            <Select id={`layout-${channel.id}`} disabled={!canOperate} value={appearance.layout} onChange={(event) => setAppearance({ ...appearance, layout: event.target.value as Appearance['layout'] })}>
+                                <option value="bar">Barra horizontal</option>
+                                <option value="stacked">Equipes empilhadas</option>
+                                <option value="compact">Compacto (pílula pequena)</option>
+                                <option value="wide">Faixa larga (ponta a ponta)</option>
                             </Select>
                         </Field>
                         <Field label="Fonte" htmlFor={`font-${channel.id}`}>

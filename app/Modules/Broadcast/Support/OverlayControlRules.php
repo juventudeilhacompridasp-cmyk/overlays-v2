@@ -24,6 +24,7 @@ final class OverlayControlRules
             'appearance.text_color' => ['sometimes', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'appearance.position' => ['sometimes', 'string', Rule::in(OverlayAppearance::POSITIONS)],
             'appearance.scale' => ['sometimes', 'numeric', 'between:0.75,1.5'],
+            'appearance.layout' => ['sometimes', 'string', Rule::in(OverlayAppearance::LAYOUTS)],
             'appearance.motion' => ['sometimes', 'string', Rule::in(OverlayAppearance::MOTIONS)],
             'appearance.font' => ['sometimes', 'string', function (string $attribute, mixed $value, \Closure $fail) use ($channel): void {
                 $known = in_array($value, OverlayAppearance::FONTS, true)

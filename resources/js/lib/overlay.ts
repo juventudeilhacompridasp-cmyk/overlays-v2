@@ -18,6 +18,7 @@ export interface OverlayAppearance {
     position: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
     scale: number;
     motion: 'dynamic' | 'subtle' | 'none';
+    layout: 'bar' | 'stacked' | 'compact' | 'wide';
     font: string;
 }
 

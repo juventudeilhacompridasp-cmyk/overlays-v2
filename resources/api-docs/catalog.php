@@ -215,6 +215,7 @@ return [
                     'text_color' => ['type' => 'string'],
                     'position' => ['type' => 'string', 'enum' => ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right']],
                     'scale' => ['type' => 'number'],
+                    'layout' => ['type' => 'string', 'enum' => ['bar', 'stacked', 'compact', 'wide'], 'description' => 'Formato do placar: barra, equipes empilhadas, pílula compacta ou faixa de ponta a ponta.'],
                     'motion' => ['type' => 'string', 'enum' => ['dynamic', 'subtle', 'none']],
                     'font' => ['type' => 'string', 'description' => 'Fonte do catálogo (system, inter, montserrat, oswald, bebas, anton, barlow, roboto-condensed, archivo, playfair, marker) ou ID de uma fonte própria da organização.'],
                 ]],

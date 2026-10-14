@@ -90,3 +90,10 @@ integrações com controladores externos sem dar poder de escrita a quem apenas 
 - A API de controle (`layers.scoreboard`, `layers.lower_third`) e as cenas já aceitam as novas camadas.
 
 - Preset novo = entrada em `PRESETS` + moldura em `scoreboardFrame` + opção na tela de transmissão + teste.
+
+## Adendo — formato do placar (`appearance.layout`)
+
+`appearance.layout` (`bar`, `stacked`, `compact`, `wide`; padrão `bar`, valor desconhecido volta a `bar`) escolhe a disposição do placar
+independentemente do preset (`arena`/`classic`/`minimal`): barra horizontal, equipes empilhadas em duas linhas, pílula compacta com
+siglas ou faixa de ponta a ponta. Vale no painel, na API de controle e nas cenas; o contrato de dados do estado não muda. Formato novo =
+entrada em `OverlayAppearance::LAYOUTS` + desenho em `Overlay/Scoreboard.tsx` + opção em `Panel/Broadcast/Index.tsx` + teste.
