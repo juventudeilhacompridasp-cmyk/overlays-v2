@@ -24,38 +24,77 @@ export function individuals(side: LineupSide, scope: LineupPublicSettings['indiv
     return players;
 }
 
-/** Etapas: em `show` a 0 é a grade e 1..n os jogadores; em `individual` 0..n-1 são os jogadores; nas demais, uma só. Mesma regra de `OverlayLineupTimeline`. */
-export function stepCount(presentation: LineupPublicSettings['presentation'], count: number): number {
-    return presentation === 'show' ? count + 1 : presentation === 'individual' ? Math.max(1, count) : 1;
+export type StepKind = 'grid' | 'formation' | 'individual';
+
+export interface PlannedStep {
+    kind: StepKind;
+    ms: number;
 }
 
-export function stepStarts(settings: Pick<LineupPublicSettings, 'presentation' | 'list_seconds' | 'individual_seconds'>, count: number): number[] {
-    const starts: number[] = [];
+type PlanSettings = Pick<LineupPublicSettings, 'presentation' | 'list_seconds' | 'individual_seconds'> & Partial<Pick<LineupPublicSettings, 'formation_seconds' | 'full_individuals'>>;
+
+/**
+ * Etapas da apresentação por equipe, na ordem: `show` = grade e cada jogador; `individual` = só os jogadores; `full` = grade,
+ * esquema tático (só se a equipe tem formação) e (opcional) cada jogador; as demais, uma só etapa (a grade). Mesma regra de
+ * `OverlayLineupTimeline::plan`.
+ */
+export function lineupPlan(settings: PlanSettings, count: number, formation = false): PlannedStep[] {
+    const list = settings.list_seconds * 1000;
+    const each = settings.individual_seconds * 1000;
+    const people = (): PlannedStep[] => Array.from({ length: count }, () => ({ kind: 'individual' as const, ms: each }));
+
+    switch (settings.presentation) {
+        case 'show': return [{ kind: 'grid', ms: list }, ...people()];
+        case 'individual': return count > 0 ? people() : [{ kind: 'individual', ms: each }];
+        case 'full': return [{ kind: 'grid', ms: list }, ...(formation ? [{ kind: 'formation' as const, ms: (settings.formation_seconds ?? 8) * 1000 }] : []), ...(settings.full_individuals === false ? [] : people())];
+        default: return [{ kind: 'grid', ms: list }];
+    }
+}
+
+/** Depois da última etapa `show` e `full` voltam à grade; `individual` fica no último jogador. */
+const wraps = (presentation: LineupPublicSettings['presentation']) => presentation === 'show' || presentation === 'full';
+
+/** Número de etapas. Para `full` informe também as opções (esquema pronto e jogador a jogador). */
+export function stepCount(presentation: LineupPublicSettings['presentation'], count: number, options: { formation?: boolean; individuals?: boolean } = {}): number {
+    return lineupPlan({ presentation, list_seconds: 1, individual_seconds: 1, full_individuals: options.individuals ?? true }, count, options.formation ?? false).length;
+}
+
+export function stepStarts(settings: PlanSettings, count: number, formation = false): number[] {
     let at = 0;
 
-    for (let step = 0; step < stepCount(settings.presentation, count); step++) {
-        starts.push(at);
-        at += (settings.presentation === 'show' && step === 0 ? settings.list_seconds : settings.individual_seconds) * 1000;
-    }
+    return lineupPlan(settings, count, formation).map((step) => {
+        const start = at;
+        at += step.ms;
 
-    return starts;
+        return start;
+    });
+}
+
+/** O que a etapa mostra: grade, esquema tático ou o jogador de `index` (posição na lista de `individuals`). */
+export function stepContent(settings: PlanSettings, count: number, step: number, formation = false): { kind: StepKind; index: number } {
+    const plan = lineupPlan(settings, count, formation);
+    const kind = plan[Math.min(Math.max(0, step), plan.length - 1)]?.kind ?? 'grid';
+    const index = kind === 'individual' ? plan.slice(0, Math.min(Math.max(0, step), plan.length - 1)).filter((item) => item.kind === 'individual').length : 0;
+
+    return { kind, index };
 }
 
 /**
  * Etapa mostrada agora. Automático: sai do relógio do servidor (`anchor_ms`), então todas as telas abertas concordam; ao
- * terminar, `show` volta à grade e `individual` fica no último jogador. Manual: vale `step`, sempre dentro do limite.
+ * terminar, `show` e `full` voltam à grade e `individual` fica no último jogador. Manual: vale `step`, sempre dentro do limite.
  */
-export function currentStep(settings: LineupPublicSettings, count: number, serverNowMs: number): number {
-    const total = stepCount(settings.presentation, count);
+export function currentStep(settings: LineupPublicSettings, count: number, serverNowMs: number, formation = false): number {
+    const plan = lineupPlan(settings, count, formation);
+    const total = plan.length;
 
-    if (settings.presentation !== 'show' && settings.presentation !== 'individual') return 0;
+    if (!['show', 'individual', 'full'].includes(settings.presentation)) return 0;
     if (settings.individual_mode === 'manual') return Math.min(Math.max(0, settings.step), total - 1);
 
-    const starts = stepStarts(settings, count);
+    const starts = stepStarts(settings, count, formation);
     const elapsed = Math.max(0, serverNowMs - settings.anchor_ms);
-    const last = starts[total - 1] + (settings.presentation === 'show' && total === 1 ? settings.list_seconds : settings.individual_seconds) * 1000;
+    const last = starts[total - 1] + plan[total - 1].ms;
 
-    if (elapsed >= last) return settings.presentation === 'show' ? 0 : total - 1;
+    if (elapsed >= last) return wraps(settings.presentation) ? 0 : total - 1;
 
     let step = 0;
     starts.forEach((start, index) => {
@@ -66,14 +105,14 @@ export function currentStep(settings: LineupPublicSettings, count: number, serve
 }
 
 /** Quando a etapa atual acaba (ms de relógio do servidor), para o cliente agendar a próxima atualização; null = nada a agendar. */
-export function nextChangeAt(settings: LineupPublicSettings, count: number, serverNowMs: number): number | null {
-    if ((settings.presentation !== 'show' && settings.presentation !== 'individual') || settings.individual_mode === 'manual') return null;
+export function nextChangeAt(settings: LineupPublicSettings, count: number, serverNowMs: number, formation = false): number | null {
+    if (!['show', 'individual', 'full'].includes(settings.presentation) || settings.individual_mode === 'manual') return null;
 
-    const starts = stepStarts(settings, count);
+    const plan = lineupPlan(settings, count, formation);
+    const starts = stepStarts(settings, count, formation);
     const elapsed = Math.max(0, serverNowMs - settings.anchor_ms);
     const next = starts.find((start) => start > elapsed);
-    const total = stepCount(settings.presentation, count);
-    const end = starts[total - 1] + settings.individual_seconds * 1000;
+    const end = starts[plan.length - 1] + plan[plan.length - 1].ms;
 
     if (next !== undefined) return settings.anchor_ms + next;
 

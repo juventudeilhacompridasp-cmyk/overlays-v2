@@ -1,22 +1,14 @@
-import { CardsGrid, IndividualCard, lineupLook } from '@/Components/Overlay/LineupShow';
+import { AthletePhoto, FormationPitch } from '@/Components/Overlay/Formation';
+import { CardsGrid, FormationCard, IndividualCard, lineupLook, SponsorBanner } from '@/Components/Overlay/LineupShow';
+import { LineupStage } from '@/Components/Overlay/LineupStage';
+import { lineupSkin } from '@/lib/lineupSkin';
+import { stageKey } from '@/lib/lineupStage';
 import { Realtime } from '@/lib/echo';
 import { LineupSide, OverlayState, useOverlay } from '@/lib/overlay';
-import { currentStep, individuals, nextChangeAt } from '@/lib/overlayLineup';
+import { currentStep, individuals, nextChangeAt, stepContent } from '@/lib/overlayLineup';
 import { overlayMotion, overlayOrigin, overlayPosition, overlayStyle } from '@/lib/overlayVisual';
 import { Head } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-
-type Player = LineupSide['starters'][number];
-
-function AthletePhoto({ player, size = 'large', numberOnly = false, zoom = 100 }: { player: Pick<Player, 'photo_url' | 'shirt'>; size?: 'small' | 'large'; numberOnly?: boolean; zoom?: number }) {
-    const dimension = size === 'large' ? 'h-[4.6rem] w-[4.6rem]' : 'h-11 w-11';
-
-    return (
-        <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white/80 bg-slate-900 font-black shadow-lg ${dimension}`} style={zoom === 100 ? undefined : { zoom: zoom / 100 }}>
-            {player.photo_url && !numberOnly ? <img src={player.photo_url} alt="" className="h-full w-full object-cover" /> : <span className={size === 'large' ? 'text-2xl' : 'text-base'}>{player.shirt ?? '—'}</span>}
-        </span>
-    );
-}
 
 function TeamHeader({ side, accent }: { side: LineupSide; accent: string }) {
     return (
@@ -55,84 +47,69 @@ function ListColumn({ side, background, accent }: { side: LineupSide; background
     );
 }
 
-function SurfaceMarkings({ sport }: { sport: string }) {
-    if (sport === 'basketball') {
-        return <><span className="absolute inset-y-0 left-1/2 border-l-2 border-white/30" /><span className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/30" /><span className="absolute inset-x-[18%] top-0 h-[24%] border-x-2 border-b-2 border-white/30" /><span className="absolute inset-x-[18%] bottom-0 h-[24%] border-x-2 border-t-2 border-white/30" /></>;
-    }
-
-    if (sport === 'volleyball') {
-        return <><span className="absolute inset-y-0 left-1/2 border-l-[3px] border-white/60" /><span className="absolute inset-y-0 left-[33%] border-l-2 border-white/30" /><span className="absolute inset-y-0 left-[67%] border-l-2 border-white/30" /></>;
-    }
-
-    return <><span className="absolute inset-x-0 top-1/2 border-t-2 border-white/30" /><span className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/30" /><span className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40" /><span className="absolute inset-x-[22%] top-0 h-[17%] border-x-2 border-b-2 border-white/30" /><span className="absolute inset-x-[22%] bottom-0 h-[17%] border-x-2 border-t-2 border-white/30" /></>;
-}
-
-function TacticalPlayer({ player, accent, numberOnly, zoom }: { player: Player; accent: string; numberOnly: boolean; zoom: number }) {
-    if (player.x === null || player.y === null) return null;
-    const x = Math.min(90, Math.max(10, player.x));
-    const y = Math.min(84, Math.max(12, player.y));
-
-    return (
-        <div className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center" style={{ left: `${x}%`, top: `${y}%` }}>
-            <div className="relative">
-                <AthletePhoto player={player} numberOnly={numberOnly} zoom={zoom} />
-                {player.captain && <span className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-amber-300 text-xs font-black text-slate-900 shadow">C</span>}
-            </div>
-            <span className="mt-1 max-w-40 truncate rounded-full border border-white/20 bg-slate-950/90 px-3 py-1 text-sm font-black shadow-lg">{player.name}</span>
-            {player.position && <span className="mt-0.5 text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: accent }}>{player.position}</span>}
-        </div>
-    );
-}
-
 function TacticalSide({ side, sport, background, accent, numberOnly, zoom }: { side: LineupSide; sport: string; background: string; accent: string; numberOnly: boolean; zoom: number }) {
-    const court = sport === 'basketball' || sport === 'volleyball';
-
     return (
         <section className="overflow-hidden rounded-3xl border border-white/15 shadow-2xl" style={{ background: `linear-gradient(160deg, ${background}f7, ${background}e8)` }}>
             <TeamHeader side={side} accent={accent} />
-            <div className={`relative m-4 overflow-hidden rounded-2xl border-2 border-white/45 ${court ? 'h-[31rem] w-[36rem]' : 'h-[43rem] w-[31rem]'}`} style={{ background: sport === 'basketball' ? 'linear-gradient(90deg,#a85f2d,#c77a3b,#a85f2d)' : sport === 'volleyball' ? 'linear-gradient(90deg,#d1943d 0 50%,#3b82a0 50%)' : 'linear-gradient(90deg,#087443,#0a8150,#087443)' }}>
-                <div className="absolute inset-3 border-2 border-white/35" />
-                <SurfaceMarkings sport={sport} />
-                {side.starters.map((player, index) => <TacticalPlayer key={`${player.shirt}-${player.name}-${index}`} player={player} accent={accent} numberOnly={numberOnly} zoom={zoom} />)}
-            </div>
+            <div className="m-4"><FormationPitch side={side} sport={sport} accent={accent} numberOnly={numberOnly} zoom={zoom} /></div>
         </section>
     );
 }
 
-/** Apresentação de uma equipe por vez: grade de cartões e/ou um jogador por vez (automática pelo relógio do servidor, ou manual). */
+/** Apresentações por equipe: cartões, jogador a jogador, cartões + jogadores e a completa (cartões, esquema tático e jogadores). */
+const TEAM_PRESENTATIONS = ['cards', 'individual', 'show', 'full'];
+
+/**
+ * Apresentação de uma equipe por vez. A etapa (grade, esquema tático ou jogador) sai do relógio do servidor (ou do passo manual)
+ * e a troca entre etapas é animada pelo palco; a faixa de patrocinadores fica fixa por baixo e não reinicia a cada etapa.
+ */
 function TeamShow({ state, skew }: { state: OverlayState; skew: number }) {
     const settings = state.lineup_settings;
     const side = state.lineup?.[settings.team];
     const [, tick] = useState(0);
     const players = side ? individuals(side, settings.individual_scope) : [];
+    const formationReady = Boolean(side?.formation_ready);
     const serverNow = () => Date.now() - skew;
 
     // Automático: acorda exatamente quando a etapa muda (todas as telas abertas concordam porque o relógio é o do servidor).
     useEffect(() => {
-        const at = nextChangeAt(settings, players.length, serverNow());
+        const at = nextChangeAt(settings, players.length, serverNow(), formationReady);
         if (at === null) return;
         const timer = window.setTimeout(() => tick((value) => value + 1), Math.max(50, at - serverNow() + 30));
 
         return () => window.clearTimeout(timer);
     }); // eslint-disable-line react-hooks/exhaustive-deps
 
-    if (!side) return null;
+    if (!side || !state.game) return null;
 
-    const step = currentStep(settings, players.length, serverNow());
-    const showCards = settings.presentation === 'cards' || (settings.presentation === 'show' && step === 0);
-    const player = settings.presentation === 'individual' ? players[step] : players[step - 1];
+    const step = currentStep(settings, players.length, serverNow(), formationReady);
+    const content = stepContent(settings, players.length, step, formationReady);
     const appearance = state.appearance;
     const look = lineupLook(settings);
+    const skin = lineupSkin(look, appearance.background_color, appearance.accent_color);
     const free = typeof settings.x === 'number' && typeof settings.y === 'number';
+    const sport = state.game.sport;
+    const transition = settings.transition ?? 'slide';
 
     return (
-        <div className={`absolute inset-0 ${free ? '' : `flex p-12 ${overlayPosition(appearance.position)}`}`} data-step={step}>
+        <div className={`absolute inset-0 ${free ? '' : `flex p-12 ${overlayPosition(appearance.position)}`}`} data-step={step} data-kind={content.kind} data-presentation={settings.presentation}>
             <div style={{ ...(free ? { position: 'absolute', left: `${settings.x}%`, top: `${settings.y}%` } : {}), transform: `scale(${appearance.scale})`, transformOrigin: free ? 'top left' : overlayOrigin(appearance.position) }}>
-                {showCards ? (
-                    <CardsGrid side={side} players={players} appearance={appearance} sponsors={state.sponsors} showSponsor={settings.sponsor_banner} look={look} sponsorSize={settings.sponsor_size} />
-                ) : player ? (
-                    <IndividualCard side={side} player={player} appearance={appearance} sponsors={state.sponsors} showSponsor={settings.sponsor_banner} look={look} sponsorSize={settings.sponsor_size} />
-                ) : null}
+                <div className="flex flex-col gap-3">
+                    <LineupStage id={stageKey(content, settings.team)} transition={transition} motion={appearance.motion}>
+                        {(first) => content.kind === 'formation' ? (
+                            <FormationCard side={side} sport={sport} appearance={appearance} look={look} numberOnly={settings.formation_mark === 'number'} zoom={settings.formation_photo_size ?? 100} entrance={first} />
+                        ) : content.kind === 'individual' && players[content.index] ? (
+                            <IndividualCard side={side} player={players[content.index]} appearance={appearance} sponsors={state.sponsors} showSponsor={false} look={look} entrance={first} />
+                        ) : (
+                            <CardsGrid side={side} players={players} appearance={appearance} sponsors={state.sponsors} showSponsor={false} look={look} entrance={first} />
+                        )}
+                    </LineupStage>
+                    {settings.sponsor_banner && state.sponsors.items.length > 0 && (
+                        <div className={`${skin.panel.className} ${overlayMotion(appearance.motion === 'dynamic' ? 'subtle' : appearance.motion)}`} style={{ ...skin.panel.style, background: 'transparent' }} data-testid="lineup-sponsor-bar">
+                            <SponsorBanner sponsors={state.sponsors} appearance={appearance} size={settings.sponsor_size} />
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -155,26 +132,36 @@ export default function Lineup({ token, state: initial, realtime }: { token: str
         return () => window.clearTimeout(timer);
     }, [formationAvailable, requested, state.game?.id, state.lineup_settings.list_seconds, visible]);
 
-    const transition = state.appearance.motion === 'none' ? 'duration-0' : state.appearance.motion === 'subtle' ? 'duration-300' : 'duration-700';
-    const common = `absolute inset-0 flex items-center justify-center gap-8 transition-[opacity,transform] ${transition}`;
+    const appearance = state.appearance;
+    const skin = lineupSkin(lineupLook(state.lineup_settings), appearance.background_color, appearance.accent_color);
+    const numberOnly = state.lineup_settings.formation_mark === 'number';
+    const zoom = state.lineup_settings.formation_photo_size ?? 100;
 
     return (
-        <div className="fixed inset-0 overflow-hidden font-sans transition-opacity duration-500" style={{ ...overlayStyle(state.appearance), color: state.appearance.text_color, opacity: visible ? 1 : 0, textShadow: '0 1px 2px rgba(0,0,0,.55)' }} data-testid="overlay-lineup" data-visible={visible} data-phase={phase}>
+        <div className="fixed inset-0 overflow-hidden font-sans transition-opacity duration-500" style={{ ...overlayStyle(appearance), color: appearance.text_color, opacity: visible ? 1 : 0, textShadow: '0 1px 2px rgba(0,0,0,.55)' }} data-testid="overlay-lineup" data-visible={visible} data-phase={phase}>
             <Head title="Escalação" />
-            {state.lineup && state.game && ['cards', 'individual', 'show'].includes(requested) && <TeamShow state={state} skew={skew} />}
-            {state.lineup && state.game && !['cards', 'individual', 'show'].includes(requested) && (
-                <div className="absolute inset-0" style={{ transform: `scale(${state.appearance.scale})` }}>
-                    <div className={`${common} ${phase === 'list' ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0 pointer-events-none'}`}>
-                        <div className={`flex gap-8 ${phase === 'list' ? overlayMotion(state.appearance.motion) : ''}`}>
-                            <ListColumn side={state.lineup.home} background={state.appearance.background_color} accent={state.appearance.accent_color} />
-                            <ListColumn side={state.lineup.away} background={state.appearance.background_color} accent={state.appearance.accent_color} />
-                        </div>
-                    </div>
-                    <div className={`${common} ${phase === 'formation' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0 pointer-events-none'}`}>
-                        <div className={`flex gap-8 ${phase === 'formation' ? overlayMotion(state.appearance.motion) : ''}`}>
-                            <TacticalSide side={state.lineup.home} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} numberOnly={state.lineup_settings.formation_mark === 'number'} zoom={state.lineup_settings.formation_photo_size ?? 100} />
-                            <TacticalSide side={state.lineup.away} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} numberOnly={state.lineup_settings.formation_mark === 'number'} zoom={state.lineup_settings.formation_photo_size ?? 100} />
-                        </div>
+            {state.lineup && state.game && TEAM_PRESENTATIONS.includes(requested) && <TeamShow state={state} skew={skew} />}
+            {state.lineup && state.game && !TEAM_PRESENTATIONS.includes(requested) && (
+                <div className="absolute inset-0 flex items-center justify-center" style={{ transform: `scale(${appearance.scale})` }}>
+                    <div className="flex flex-col gap-3">
+                        <LineupStage id={phase} transition={state.lineup_settings.transition ?? 'slide'} motion={appearance.motion}>
+                            {() => phase === 'list' ? (
+                                <div className="flex gap-8">
+                                    <ListColumn side={state.lineup!.home} background={appearance.background_color} accent={appearance.accent_color} />
+                                    <ListColumn side={state.lineup!.away} background={appearance.background_color} accent={appearance.accent_color} />
+                                </div>
+                            ) : (
+                                <div className="flex gap-8">
+                                    <TacticalSide side={state.lineup!.home} sport={state.game!.sport} background={appearance.background_color} accent={appearance.accent_color} numberOnly={numberOnly} zoom={zoom} />
+                                    <TacticalSide side={state.lineup!.away} sport={state.game!.sport} background={appearance.background_color} accent={appearance.accent_color} numberOnly={numberOnly} zoom={zoom} />
+                                </div>
+                            )}
+                        </LineupStage>
+                        {state.lineup_settings.sponsor_banner && state.sponsors.items.length > 0 && (
+                            <div className={skin.panel.className} style={{ ...skin.panel.style, background: 'transparent' }} data-testid="lineup-sponsor-bar">
+                                <SponsorBanner sponsors={state.sponsors} appearance={appearance} size={state.lineup_settings.sponsor_size} />
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

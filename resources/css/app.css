@@ -269,3 +269,27 @@
 
 /* Overlay livre (Builder): texto rolante. */
 @keyframes custom-marquee { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
+/* Troca de etapa da escalação por equipe: a que sai e a que entra (só transform, opacity e clip-path). */
+.lineup-stage { display: grid; }
+.lineup-stage > * { grid-area: 1 / 1; }
+@keyframes lstage-in-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lstage-out-fade { from { opacity: 1; } to { opacity: 0; } }
+@keyframes lstage-in-slide { from { opacity: 0; transform: translateX(72px); } to { opacity: 1; transform: none; } }
+@keyframes lstage-out-slide { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(-72px); } }
+@keyframes lstage-in-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes lstage-out-wipe { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 0 0 100%); } }
+@keyframes lstage-in-zoom { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes lstage-out-zoom { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(1.08); } }
+@keyframes lstage-in-flip { from { opacity: 0; transform: perspective(1400px) rotateY(-70deg); } to { opacity: 1; transform: none; } }
+@keyframes lstage-out-flip { from { opacity: 1; transform: none; } to { opacity: 0; transform: perspective(1400px) rotateY(70deg); } }
+.lineup-stage-in-fade { animation: lstage-in-fade var(--lineup-in, 350ms) ease-out both; }
+.lineup-stage-out-fade { animation: lstage-out-fade var(--lineup-out, 280ms) ease-in both; pointer-events: none; }
+.lineup-stage-in-slide { animation: lstage-in-slide var(--lineup-in, 450ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.lineup-stage-out-slide { animation: lstage-out-slide var(--lineup-out, 360ms) ease-in both; pointer-events: none; }
+.lineup-stage-in-wipe { animation: lstage-in-wipe var(--lineup-in, 500ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.lineup-stage-out-wipe { animation: lstage-out-wipe var(--lineup-out, 400ms) ease-in both; pointer-events: none; }
+.lineup-stage-in-zoom { animation: lstage-in-zoom var(--lineup-in, 450ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.lineup-stage-out-zoom { animation: lstage-out-zoom var(--lineup-out, 360ms) ease-in both; pointer-events: none; }
+.lineup-stage-in-flip { animation: lstage-in-flip var(--lineup-in, 550ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.lineup-stage-out-flip { animation: lstage-out-flip var(--lineup-out, 440ms) ease-in both; pointer-events: none; }

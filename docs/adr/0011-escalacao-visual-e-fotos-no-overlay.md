@@ -38,6 +38,16 @@ depois o esquema tático, com escolha explícita de quais fotos podem aparecer, 
 - Mudanças de formação e posição feitas pelo gestor chegam ao overlay pelo estado já existente; notas privadas continuam fora.
 - Novos modos de apresentação devem ampliar `lineup_settings` de forma compatível e manter um fallback sem fotos.
 
+## Adendo — apresentação completa e palco com transições
+
+`lineup_settings.presentation = full` junta, para a equipe escolhida, a grade de cartões, o esquema tático (`FormationCard`: campo/quadra e
+lista dos titulares no mesmo conceito visual) e, com `full_individuals`, cada jogador. As etapas e durações saem de
+`OverlayLineupTimeline::plan` (espelhada em `lineupPlan` no front): grade (`list_seconds`), esquema (`formation_seconds`, só se a equipe
+tem `formation_ready`; o servidor calcula isso em `OverlayState::lineupPlan`) e jogadores (`individual_seconds`). Depois da última etapa `show` e
+`full` voltam à grade. A troca entre etapas é do `LineupStage`: a etapa que sai e a que entra ficam sobrepostas e usam `lineup_settings.transition`
+(`fade|slide|wipe|zoom|flip`, só transform/opacity/clip-path); a entrada própria de cada cartão (`animation`) só toca na primeira etapa. A faixa de
+patrocinadores (`sponsor_banner`) é UMA só, fora do palco, e não reinicia a rotação nas trocas; vale também para `sequence`/`list`/`formation`.
+
 ## Adendo — apresentação individual e grade de cartões
 
 `lineup_settings` ganhou as apresentações `cards` (grade de cartões da equipe com o técnico), `individual` (um jogador por

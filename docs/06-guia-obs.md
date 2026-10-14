@@ -108,6 +108,16 @@ As apresentações **Cartões**, **Jogador a jogador** e **Show completo** (grad
 **automático** troca de jogador a cada *x* segundos (3 a 30) e **manual** avança com **Anterior / Próximo / Reiniciar**, que
 valem na hora no OBS (também pela API, com `lineup_command`). Mudar jogo, equipe ou modo reinicia a apresentação.
 
+#### Apresentação completa (cartões → esquema tático → jogadores)
+
+A apresentação **Completa** reúne tudo numa sequência de uma equipe: os **cartões** da equipe, o **esquema tático** (campo ou quadra com as
+posições que o gestor salvou, ao lado da lista dos titulares) e, se quiser, **cada jogador** em seguida. Defina o tempo dos cartões
+(*Lista/cartões antes da transição*), o do esquema (3 a 30 s) e o de cada jogador. Se a equipe não tem esquema tático pronto, a etapa do
+esquema é pulada. A troca entre as etapas é animada (deslize, fusão, cortina, zoom ou virada de página, em *Visual da apresentação*): a
+etapa que sai e a que entra se sobrepõem, sem piscar. A **faixa de patrocinadores** fica fixa por baixo durante todas as etapas e
+continua a rotação sem reiniciar a cada troca; ela também acompanha a sequência *Lista → esquema* (as duas equipes). No modo manual,
+**Anterior / Próximo** percorrem as etapas (ao fim, voltam aos cartões).
+
 Fotos são desligadas por padrão e habilitadas atleta por atleta. Apenas quem já possui foto cadastrada pode ser selecionado.
 Ao aplicar, uma miniatura privada de curta duração passa a aparecer na lista e no campo para quem tiver a URL do overlay.
 

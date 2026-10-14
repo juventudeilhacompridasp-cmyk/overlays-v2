@@ -3,6 +3,7 @@ import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
 import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent, useEffect, useState } from 'react';
+import { LINEUP_TRANSITIONS, LineupTransition } from '@/lib/lineupStage';
 import { LINEUP_ANIMATIONS, LINEUP_LAYOUTS, LINEUP_STYLES, LineupAnimation, LineupLayout, LineupStyle } from '@/lib/lineupSkin';
 import { LowerThirdSettings } from '@/lib/lowerThird';
 import { BAR_TRANSITIONS, BarTransition, SPONSOR_ANIMATIONS, SPONSOR_FORMATS, SPONSOR_STYLES, SponsorAnimation, SponsorFormat, SponsorStyle } from '@/lib/sponsorLook';
@@ -70,8 +71,11 @@ const catalogFonts: { value: string; label: string }[] = [
 ];
 
 interface LineupSettings {
-    presentation: 'sequence' | 'list' | 'formation' | 'cards' | 'individual' | 'show';
+    presentation: 'sequence' | 'list' | 'formation' | 'cards' | 'individual' | 'show' | 'full';
     list_seconds: number;
+    formation_seconds: number;
+    full_individuals: boolean;
+    transition: LineupTransition;
     photo_person_ids: string[];
     team: 'home' | 'away';
     individual_mode: 'auto' | 'manual';
@@ -568,14 +572,22 @@ function ChannelCard({ channel, defaults, games, fonts, scenes, sceneLimit, seas
                                 <option value="cards">Cartões da equipe (titulares + comissão)</option>
                                 <option value="individual">Jogador por jogador</option>
                                 <option value="show">Cartões e depois jogador por jogador</option>
+                                <option value="full">Completa: cartões, esquema tático e jogador por jogador</option>
                             </Select>
                         </Field>
-                        <Field label={`Lista antes da transição · ${lineupSettings.list_seconds} s`} htmlFor={`lineup-seconds-${channel.id}`}>
-                            <Input id={`lineup-seconds-${channel.id}`} type="range" min="3" max="20" step="1" disabled={!canOperate || lineupSettings.presentation !== 'sequence'} value={lineupSettings.list_seconds} onChange={(event) => setLineupSettings({ ...lineupSettings, list_seconds: Number(event.target.value) })} />
+                        <Field label={`Lista/cartões antes da transição · ${lineupSettings.list_seconds} s`} htmlFor={`lineup-seconds-${channel.id}`}>
+                            <Input id={`lineup-seconds-${channel.id}`} type="range" min="3" max="20" step="1" disabled={!canOperate || !['sequence', 'show', 'full'].includes(lineupSettings.presentation)} value={lineupSettings.list_seconds} onChange={(event) => setLineupSettings({ ...lineupSettings, list_seconds: Number(event.target.value) })} />
                         </Field>
                     </div>
 
-                    {['cards', 'individual', 'show'].includes(lineupSettings.presentation) && (
+                    {!['cards', 'individual', 'show', 'full'].includes(lineupSettings.presentation) && (
+                        <label className="mt-3 flex items-center gap-2 text-sm text-gray-700">
+                            <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={lineupSettings.sponsor_banner} onChange={(event) => setLineupSettings({ ...lineupSettings, sponsor_banner: event.target.checked })} />
+                            Mostrar a faixa de patrocinador integrada (fixa por baixo da lista e do esquema)
+                        </label>
+                    )}
+
+                    {['cards', 'individual', 'show', 'full'].includes(lineupSettings.presentation) && (
                         <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
                             <div className="text-sm font-medium text-gray-800">Apresentação por equipe</div>
                             <div className="grid gap-3 sm:grid-cols-2">
@@ -605,7 +617,19 @@ function ChannelCard({ channel, defaults, games, fonts, scenes, sceneLimit, seas
                                     </>
                                 )}
                             </div>
-                            {lineupSettings.presentation === 'show' && <p className="text-xs text-gray-500">Os cartões ficam {lineupSettings.list_seconds} s no ar antes do primeiro jogador (ajuste em "Lista antes da transição").</p>}
+                            {lineupSettings.presentation === 'show' && <p className="text-xs text-gray-500">Os cartões ficam {lineupSettings.list_seconds} s no ar antes do primeiro jogador (ajuste em "Lista/cartões antes da transição").</p>}
+                            {lineupSettings.presentation === 'full' && (
+                                <div className="grid gap-3 rounded-md bg-gray-50 p-3 sm:grid-cols-2" data-testid="lineup-full-settings">
+                                    <Field label={`Esquema tático no ar · ${lineupSettings.formation_seconds} s`} htmlFor={`lineup-formation-seconds-${channel.id}`}>
+                                        <Input id={`lineup-formation-seconds-${channel.id}`} type="range" min="3" max="30" step="1" disabled={!canOperate} value={lineupSettings.formation_seconds} onChange={(event) => setLineupSettings({ ...lineupSettings, formation_seconds: Number(event.target.value) })} />
+                                    </Field>
+                                    <label className="flex items-center gap-2 self-end text-sm text-gray-700">
+                                        <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={lineupSettings.full_individuals} onChange={(event) => setLineupSettings({ ...lineupSettings, full_individuals: event.target.checked })} />
+                                        Passar também jogador por jogador depois do esquema
+                                    </label>
+                                    <p className="text-xs text-gray-500 sm:col-span-2">Ordem: cartões ({lineupSettings.list_seconds} s) → esquema tático ({lineupSettings.formation_seconds} s){lineupSettings.full_individuals ? ` → cada jogador (${lineupSettings.individual_seconds} s)` : ''}. Sem esquema tático lançado pelo gestor, a etapa do esquema é pulada. A faixa de patrocinadores fica fixa por baixo durante todas as etapas.</p>
+                                </div>
+                            )}
                             <label className="flex items-center gap-2 text-sm text-gray-700">
                                 <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={lineupSettings.sponsor_banner} onChange={(event) => setLineupSettings({ ...lineupSettings, sponsor_banner: event.target.checked })} />
                                 Mostrar a faixa de patrocinador no rodapé
@@ -668,6 +692,11 @@ function ChannelCard({ channel, defaults, games, fonts, scenes, sceneLimit, seas
                             <Field label="Estilo (conceito Clássico)" htmlFor={`lineup-style-${channel.id}`}>
                                 <Select id={`lineup-style-${channel.id}`} disabled={!canOperate || lineupSettings.layout !== 'classic'} value={lineupSettings.style} onChange={(event) => setLineupSettings({ ...lineupSettings, style: event.target.value as LineupStyle })}>
                                     {LINEUP_STYLES.map((item) => <option key={item.key} value={item.key}>{item.label} — {item.hint}</option>)}
+                                </Select>
+                            </Field>
+                            <Field label="Animação entre as etapas (cartões → esquema → jogadores)" htmlFor={`lineup-transition-${channel.id}`}>
+                                <Select id={`lineup-transition-${channel.id}`} disabled={!canOperate} value={lineupSettings.transition} onChange={(event) => setLineupSettings({ ...lineupSettings, transition: event.target.value as LineupTransition })}>
+                                    {LINEUP_TRANSITIONS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
                                 </Select>
                             </Field>
                             <Field label="Animação de entrada" htmlFor={`lineup-animation-${channel.id}`}>

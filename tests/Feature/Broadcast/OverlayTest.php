@@ -878,8 +878,8 @@ describe('lineup presentation', function () {
             ->and(OverlayLineupTimeline::steps('individual', 11))->toBe(11)
             ->and(OverlayLineupTimeline::steps('individual', 0))->toBe(1)
             ->and(OverlayLineupTimeline::steps('cards', 11))->toBe(1)
-            ->and(OverlayLineupTimeline::starts('show', 5, 6, 3))->toBe([0, 5000, 11000, 17000])
-            ->and(OverlayLineupTimeline::starts('individual', 5, 6, 3))->toBe([0, 6000, 12000]);
+            ->and(OverlayLineupTimeline::starts(OverlayLineupSettings::normalize(['presentation' => 'show', 'list_seconds' => 5, 'individual_seconds' => 6]), 3))->toBe([0, 5000, 11000, 17000])
+            ->and(OverlayLineupTimeline::starts(OverlayLineupSettings::normalize(['presentation' => 'individual', 'list_seconds' => 5, 'individual_seconds' => 6]), 3))->toBe([0, 6000, 12000]);
 
         $manual = OverlayLineupSettings::normalize(['presentation' => 'show', 'individual_mode' => 'manual', 'step' => 2]);
         expect(OverlayLineupTimeline::apply('next', $manual, 3, 50_000)['step'])->toBe(3)
@@ -893,6 +893,52 @@ describe('lineup presentation', function () {
         // 100_000 + 5_500 está na etapa 1: próximo leva o relógio para o início da etapa 2 (11 s), anterior para o início da 0.
         expect(OverlayLineupTimeline::apply('next', $auto, 3, 105_500)['anchor_ms'])->toBe(105_500 - 11_000)
             ->and(OverlayLineupTimeline::apply('previous', $auto, 3, 105_500)['anchor_ms'])->toBe(105_500);
+    });
+
+    it('plans the complete presentation: grid, tactical formation (only when the team has one) and each player', function () {
+        $full = OverlayLineupSettings::normalize(['presentation' => 'full', 'list_seconds' => 5, 'formation_seconds' => 9, 'individual_seconds' => 4]);
+
+        expect(OverlayLineupTimeline::steps($full, 3, true))->toBe(5)
+            ->and(OverlayLineupTimeline::steps($full, 3, false))->toBe(4)
+            ->and(OverlayLineupTimeline::starts($full, 3, true))->toBe([0, 5000, 14000, 18000, 22000])
+            ->and(OverlayLineupTimeline::starts($full, 3, false))->toBe([0, 5000, 9000, 13000])
+            ->and(array_column(OverlayLineupTimeline::plan($full, 2, true), 'kind'))->toBe(['grid', 'formation', 'individual', 'individual'])
+            ->and(OverlayLineupTimeline::steps([...$full, 'full_individuals' => false], 3, true))->toBe(2);
+
+        // Manual: depois da última etapa volta à grade (como em `show`).
+        $manual = [...$full, 'individual_mode' => 'manual', 'step' => 4];
+        expect(OverlayLineupTimeline::apply('next', $manual, 3, 1_000, true)['step'])->toBe(0)
+            ->and(OverlayLineupTimeline::apply('previous', [...$manual, 'step' => 2], 3, 1_000, true)['step'])->toBe(1);
+
+        // Automático: o comando pula para o início da etapa do esquema (5 s).
+        $auto = [...$full, 'anchor_ms' => 100_000];
+        expect(OverlayLineupTimeline::apply('next', $auto, 3, 101_000, true)['anchor_ms'])->toBe(101_000 - 5_000);
+    });
+
+    it('runs the complete presentation: validates its settings, skips the formation without a tactic and restarts when its times change', function () {
+        [$channel] = showChannel(['presentation' => 'full', 'individual_mode' => 'manual']);
+        $this->actingAs(panelUser(Role::Operator));
+
+        // sheetGame não tem esquema tático: grade + 11 jogadores, sem a etapa do esquema.
+        expect(OverlayState::lineupPlan($channel))->toBe(['individuals' => 11, 'formation' => false]);
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['lineup_settings' => ['formation_seconds' => 12, 'transition' => 'flip', 'full_individuals' => false]])->assertSessionHasNoErrors();
+        $saved = $channel->fresh()->lineup_settings;
+        expect($saved)->toMatchArray(['presentation' => 'full', 'formation_seconds' => 12, 'transition' => 'flip', 'full_individuals' => false])
+            ->and(OverlayLineupTimeline::steps(OverlayLineupSettings::normalize($saved), 11, false))->toBe(1);
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['lineup_settings' => ['transition' => 'explodir']])->assertSessionHasErrors('lineup_settings.transition');
+        $this->patch("/painel/broadcast/{$channel->id}", ['lineup_settings' => ['formation_seconds' => 2]])->assertSessionHasErrors('lineup_settings.formation_seconds');
+        expect(OverlayLineupSettings::normalize(['transition' => 'x', 'formation_seconds' => 99]))->toMatchArray(['transition' => 'slide', 'formation_seconds' => 30]);
+
+        // Mudar o tempo do esquema reinicia a apresentação na etapa 0.
+        $channel->update(['lineup_settings' => [...$saved, 'step' => 1]]);
+        $this->patch("/painel/broadcast/{$channel->id}", ['lineup_settings' => ['formation_seconds' => 5]]);
+        expect($channel->fresh()->lineup_settings['step'])->toBe(0);
+
+        // O estado público leva as opções (sem os IDs das fotos).
+        $state = OverlayState::for($channel->fresh());
+        expect($state['lineup_settings'])->toMatchArray(['presentation' => 'full', 'transition' => 'flip', 'formation_seconds' => 5])->not->toHaveKey('photo_person_ids');
     });
 
     it('moves the manual presentation with the operator commands, in real time, and tells the OBS', function () {
