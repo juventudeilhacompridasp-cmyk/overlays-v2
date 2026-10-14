@@ -8,6 +8,7 @@ use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Portal\Support\PublicName;
 use App\Modules\Rules\Sheet\ClockMark;
+use App\Modules\Rules\Sheet\ShotClock;
 use App\Modules\Teams\Models\Person;
 
 /**
@@ -56,6 +57,7 @@ final class PublicGameSnapshot
             'score_model' => $game->sport()->profile()->scoreModel,
             'sets' => $game->sport()->profile()->scoreModel === 'sets' ? ($game->sets ?? []) : null,
             'clock' => $game->clock()->snapshot($marks) + self::clockDisplay($game, $marks),
+            'shot_clock' => self::shotClock($game),
             'quarters' => self::quarters($game),
             'fouls' => self::fouls($game, $marks, $side),
             'timeouts' => self::timeouts($game, $marks, $side),
@@ -162,6 +164,26 @@ final class PublicGameSnapshot
             'offset_seconds' => $clock->offsetSeconds($period),
             'period_seconds' => $clock->periodMinutes($period) * 60,
         ];
+    }
+
+    /** @return array<string, mixed>|null */
+    private static function shotClock(Game $game): ?array
+    {
+        if ($game->sport()->value !== 'basketball') {
+            return null;
+        }
+
+        $events = $game->events()->effective()
+            ->whereIn('type', [GameEventType::PeriodStart, GameEventType::PeriodEnd, GameEventType::ClockPause, GameEventType::ClockResume, GameEventType::ShotClockReset])
+            ->orderBy('id')->get()
+            ->map(fn (GameEvent $event): array => [
+                'type' => $event->type->value,
+                'period' => (int) $event->period,
+                'at_ms' => $event->created_at->getTimestampMs(),
+                'seconds' => isset($event->payload['seconds']) ? (int) $event->payload['seconds'] : null,
+            ])->all();
+
+        return (new ShotClock)->snapshot($events);
     }
 
     /**

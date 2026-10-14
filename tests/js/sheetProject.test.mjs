@@ -95,11 +95,20 @@ test('the scorer of a goal can be the player who just came in on a queued substi
 });
 
 test('personal fouls eliminate at the limit and mark the view as partial', () => {
-    const view = project(base(), [event({ type: 'foul', entry_id: HOME, person_id: 'a' }), event({ type: 'foul', entry_id: HOME, person_id: 'a' })], { ...rules, maxPlayerFouls: 2 });
+    const view = project(base(), [event({ type: 'technical_foul', entry_id: HOME, person_id: 'a' }), event({ type: 'unsportsmanlike_foul', entry_id: HOME, person_id: 'a' })], { ...rules, maxPlayerFouls: 2 });
 
     assert.equal(view.teams[HOME].player_fouls.a, 2);
     assert.deepEqual(view.teams[HOME].fouled_out, ['a']);
     assert.equal(view.partial, true);
+});
+
+test('the shot clock follows the main clock and queued resets', () => {
+    const view = base();
+    view.shot_clock = { state: 'not_started', period: null, base_seconds: 0, running_since_ms: null };
+
+    const result = project(view, [item('period', { start: true, period: 1 }, 1_000), item('shot_clock', { seconds: 14 }, 6_000), item('clock', { pause: true }, 11_000)], rules);
+
+    assert.deepEqual(result.shot_clock, { state: 'paused', period: 1, base_seconds: 9, running_since_ms: null });
 });
 
 test('the clock follows the periods and pauses like the server does', () => {

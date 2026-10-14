@@ -29,6 +29,8 @@ enum GameEventType: string
     /** Basquete: falta técnica (não conta como falta de equipe) e antidesportiva (conta); ambas contam na falta pessoal e desqualificam na segunda. */
     case TechnicalFoul = 'technical_foul';
     case UnsportsmanlikeFoul = 'unsportsmanlike_foul';
+    /** Basquete: reinício do relógio de posse; duração (14 ou 24) fica no payload. */
+    case ShotClockReset = 'shot_clock_reset';
 
     public function label(): string
     {
@@ -53,6 +55,7 @@ enum GameEventType: string
             self::Timeout => 'Pedido de tempo',
             self::TechnicalFoul => 'Falta técnica',
             self::UnsportsmanlikeFoul => 'Falta antidesportiva',
+            self::ShotClockReset => 'Reinício do relógio de posse',
         };
     }
 

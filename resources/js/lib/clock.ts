@@ -12,6 +12,8 @@ export interface GameClock {
     period_seconds?: number;
 }
 
+export type ShotClock = Pick<GameClock, 'state' | 'period' | 'base_seconds' | 'running_since_ms'>;
+
 /** Segundos decorridos no relógio do jogo. `skewMs` = relógio do cliente menos o do servidor. */
 export function elapsedSeconds(clock: GameClock, nowMs: number, skewMs: number): number {
     if (clock.state !== 'running' || clock.running_since_ms === null) {
@@ -65,4 +67,28 @@ export function useGameClock(clock: GameClock, skewMs: number): number {
     }, [clock.state, clock.running_since_ms, clock.base_seconds]);
 
     return elapsedSeconds(clock, now, skewMs);
+}
+
+/** Segundos restantes da posse; a animação é local e para em zero. */
+export function shotClockSeconds(clock: ShotClock, nowMs: number, skewMs: number): number {
+    if (clock.state !== 'running' || clock.running_since_ms === null) return clock.base_seconds;
+
+    return Math.max(0, clock.base_seconds - Math.floor((nowMs - skewMs - clock.running_since_ms) / 1000));
+}
+
+export function useShotClock(clock: ShotClock, skewMs: number): number {
+    const [now, setNow] = useState(() => Date.now());
+
+    useEffect(() => {
+        setNow(Date.now());
+        if (clock.state !== 'running' || clock.base_seconds <= 0) return;
+        const timer = window.setInterval(() => {
+            const current = Date.now();
+            setNow(current);
+            if (shotClockSeconds(clock, current, skewMs) === 0) window.clearInterval(timer);
+        }, 250);
+        return () => window.clearInterval(timer);
+    }, [clock.state, clock.running_since_ms, clock.base_seconds, skewMs]);
+
+    return shotClockSeconds(clock, now, skewMs);
 }

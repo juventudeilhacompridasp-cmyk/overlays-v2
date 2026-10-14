@@ -11,6 +11,7 @@ use App\Modules\Matches\Actions\ChangeGamePeriod;
 use App\Modules\Matches\Actions\FinishGame;
 use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Actions\RecordShootout;
+use App\Modules\Matches\Actions\ResetShotClock;
 use App\Modules\Matches\Actions\SaveGameLineup;
 use App\Modules\Matches\Actions\SyncSheetCommands;
 use App\Modules\Matches\Actions\VoidGameEvent;
@@ -44,7 +45,8 @@ class SheetController extends Controller
 
         $state = $buildSheet->handle($game);
         $open = ! $game->status->isDecided();
-        $currentPeriod = max(1, (int) (PublicGameSnapshot::for($game)['clock']['period'] ?? 1));
+        $snapshot = PublicGameSnapshot::for($game);
+        $currentPeriod = max(1, (int) ($snapshot['clock']['period'] ?? 1));
 
         $team = function (?Entry $entry) use ($game, $state, $discipline, $currentPeriod): ?array {
             if ($entry === null) {
@@ -116,6 +118,7 @@ class SheetController extends Controller
             ->orderByDesc('id')->value('id');
 
         $lastPointId = $game->events()->effective()->where('type', GameEventType::Point)->orderByDesc('id')->value('id');
+        $lastShotClockId = $game->events()->effective()->where('type', GameEventType::ShotClockReset)->orderByDesc('id')->value('id');
 
         // A disputa de pênaltis aparece como placar (home/away_penalties), não como uma linha por cobrança.
         $events = $game->events()->effective()->where('type', '!=', GameEventType::PenaltyKick)->orderBy('id')->get()->map(fn (GameEvent $event) => [
@@ -127,10 +130,12 @@ class SheetController extends Controller
             'secondary_person' => $event->secondary_person_id ? ($names[$event->secondary_person_id] ?? null) : null,
             'period' => $event->period,
             'minute' => $event->minute,
+            'seconds' => $event->type === GameEventType::ShotClockReset ? (int) ($event->payload['seconds'] ?? 24) : null,
             'quick' => ($event->payload['quick'] ?? false) === true,
             'voidable' => $open && in_array($event->id, $effectiveIds, true) && ($event->payload['quick'] ?? false) !== true
                 && (! $event->type->isClockMark() || $event->id === $lastMarkId)
-                && ($event->type !== GameEventType::Point || $event->id === $lastPointId),
+                && ($event->type !== GameEventType::Point || $event->id === $lastPointId)
+                && ($event->type !== GameEventType::ShotClockReset || $event->id === $lastShotClockId),
         ]);
 
         $division = $game->division;
@@ -159,7 +164,8 @@ class SheetController extends Controller
             'home' => $team($game->homeEntry),
             'away' => $team($game->awayEntry),
             'events' => $events,
-            'clock' => PublicGameSnapshot::for($game)['clock'] + ['server_time_ms' => (int) (microtime(true) * 1000), 'max_period' => $game->clock()->maxPeriod()],
+            'clock' => $snapshot['clock'] + ['server_time_ms' => (int) (microtime(true) * 1000), 'max_period' => $game->clock()->maxPeriod()],
+            'shot_clock' => $snapshot['shot_clock'],
             'public_url' => route('public.games.show', $game->id),
             // Para a projeção local da fila offline (relógio e regras que o navegador reaplica enquanto não há conexão).
             'clock_offsets' => array_map(fn (int $period) => $game->clock()->offsetSeconds($period), range(1, max(1, $game->clock()->maxPeriod()))),
@@ -176,8 +182,8 @@ class SheetController extends Controller
             'score_model' => $game->sport()->profile()->scoreModel,
             'sets' => $game->sport()->profile()->scoreModel === 'sets' ? ($game->sets ?? []) : null,
             'sets_to_win' => $rules->setsToWin,
-            'fouls' => PublicGameSnapshot::for($game)['fouls'],
-            'quarters' => PublicGameSnapshot::for($game)['quarters'],
+            'fouls' => $snapshot['fouls'],
+            'quarters' => $snapshot['quarters'],
             'event_types' => collect(match ($game->sport()->profile()->scoreModel) {
                 'sets' => [GameEventType::Substitution, GameEventType::YellowCard, GameEventType::RedCard],
                 'points' => [GameEventType::FieldGoal, GameEventType::ThreePointer, GameEventType::FreeThrow, GameEventType::Foul, GameEventType::TechnicalFoul, GameEventType::UnsportsmanlikeFoul, GameEventType::Substitution],
@@ -292,6 +298,19 @@ class SheetController extends Controller
 
         try {
             $change->pause($game, (bool) $validated['pause'], $request->user()?->getAuthIdentifier());
+        } catch (InvalidArgumentException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return back();
+    }
+
+    public function shotClock(Request $request, Game $game, ResetShotClock $reset): RedirectResponse
+    {
+        $validated = $request->validate(['seconds' => ['required', 'integer', Rule::in([14, 24])]]);
+
+        try {
+            $reset->handle($game, (int) $validated['seconds'], $request->user()?->getAuthIdentifier());
         } catch (InvalidArgumentException $exception) {
             return back()->with('error', $exception->getMessage());
         }

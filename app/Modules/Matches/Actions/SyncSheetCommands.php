@@ -21,11 +21,12 @@ use InvalidArgumentException;
  */
 final class SyncSheetCommands
 {
-    public const KINDS = ['event', 'point', 'period', 'clock', 'void', 'finish'];
+    public const KINDS = ['event', 'point', 'period', 'clock', 'shot_clock', 'void', 'finish'];
 
     public function __construct(
         private readonly RecordGameEvent $record = new RecordGameEvent,
         private readonly ChangeGamePeriod $period = new ChangeGamePeriod,
+        private readonly ResetShotClock $shotClock = new ResetShotClock,
         private readonly VoidGameEvent $void = new VoidGameEvent,
         private readonly FinishGame $finish = new FinishGame,
     ) {}
@@ -101,6 +102,7 @@ final class SyncSheetCommands
             'point' => $this->point($game, $payload, $userId, $at),
             'period' => $this->period->handle($game, (bool) ($payload['start'] ?? false), (int) ($payload['period'] ?? 0), $userId, $at),
             'clock' => $this->period->pause($game, (bool) ($payload['pause'] ?? false), $userId, $at),
+            'shot_clock' => $this->shotClock->handle($game, (int) ($payload['seconds'] ?? 0), $userId, $at),
             'void' => $this->voidEvent($game, $payload, $userId, $at),
             'finish' => $this->finish->handle($game, $at),
             default => throw new InvalidArgumentException('Tipo de lançamento desconhecido.'),

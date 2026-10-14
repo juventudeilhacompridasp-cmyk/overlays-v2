@@ -5,7 +5,7 @@
  * cada item com a validação do regulamento quando a conexão volta. Código puro (sem React) para poder ser testado em Node.
  */
 
-export type QueueKind = 'event' | 'point' | 'period' | 'clock' | 'void' | 'finish';
+export type QueueKind = 'event' | 'point' | 'period' | 'clock' | 'shot_clock' | 'void' | 'finish';
 
 export interface QueueItem {
     /** Chave gerada no aparelho: o servidor a usa para não aplicar o mesmo item duas vezes. */
@@ -47,6 +47,7 @@ export interface SheetView<C extends ClockView = ClockView> {
     away_score: number;
     teams: Record<string, TeamView>;
     clock: C;
+    shot_clock?: ClockView | null;
     /** Há um encerramento do jogo na fila. */
     finishing: boolean;
     /** Ids de lançamentos que têm anulação na fila. */
@@ -76,6 +77,21 @@ function elapsedAt(clock: ClockView, at: number): number {
     }
 
     return clock.base_seconds;
+}
+
+function shotRemainingAt(clock: ClockView, at: number): number {
+    if (clock.state === 'running' && clock.running_since_ms !== null) {
+        return Math.max(0, clock.base_seconds - Math.floor((at - clock.running_since_ms) / 1000));
+    }
+
+    return clock.base_seconds;
+}
+
+function applyShotClockMark(clock: ClockView, mark: 'start' | 'end' | 'pause' | 'resume', period: number, at: number): ClockView {
+    if (mark === 'start') return { state: 'running', period, base_seconds: 24, running_since_ms: at };
+    if (mark === 'end') return { ...clock, state: 'stopped', base_seconds: shotRemainingAt(clock, at), running_since_ms: null };
+    if (mark === 'pause') return clock.state === 'running' ? { ...clock, state: 'paused', base_seconds: shotRemainingAt(clock, at), running_since_ms: null } : clock;
+    return clock.state === 'paused' ? { ...clock, state: 'running', running_since_ms: clock.base_seconds > 0 ? at : null } : clock;
 }
 
 /** Mesmas transições do GameClock do servidor, aplicadas ao retrato do relógio. */
@@ -175,9 +191,16 @@ export function project<C extends ClockView>(base: SheetView<C>, items: QueueIte
                 break;
             case 'period':
                 view.clock = applyClockMark(view.clock, item.payload.start ? 'start' : 'end', Number(item.payload.period ?? 0), item.at, rules.offsets);
+                if (view.shot_clock) view.shot_clock = applyShotClockMark(view.shot_clock, item.payload.start ? 'start' : 'end', Number(item.payload.period ?? 0), item.at);
                 break;
             case 'clock':
                 view.clock = applyClockMark(view.clock, item.payload.pause ? 'pause' : 'resume', view.clock.period ?? 0, item.at, rules.offsets);
+                if (view.shot_clock) view.shot_clock = applyShotClockMark(view.shot_clock, item.payload.pause ? 'pause' : 'resume', view.shot_clock.period ?? 0, item.at);
+                break;
+            case 'shot_clock':
+                if (view.shot_clock) {
+                    view.shot_clock = { ...view.shot_clock, base_seconds: Number(item.payload.seconds ?? 24), running_since_ms: view.shot_clock.state === 'running' ? item.at : null };
+                }
                 break;
             case 'finish':
                 view.finishing = true;

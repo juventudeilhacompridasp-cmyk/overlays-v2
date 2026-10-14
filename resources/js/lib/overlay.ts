@@ -1,4 +1,4 @@
-import { GameClock } from '@/lib/clock';
+import { GameClock, ShotClock } from '@/lib/clock';
 import { ConnectionState, Realtime, subscribeToChannel } from '@/lib/echo';
 import './artFonts';
 import { LowerThirdBannerData, LowerThirdSettings } from './lowerThird';
@@ -65,6 +65,7 @@ export interface OverlayGame {
     division: string;
     stage: string;
     clock: GameClock;
+    shot_clock: ShotClock | null;
     sport: string;
     score_model: string;
     quarters: { period: number; home: number; away: number }[] | null;
