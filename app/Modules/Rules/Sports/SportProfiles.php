@@ -22,6 +22,7 @@ final class SportProfiles
             ], teamFoulLimit: 5, positions: ['goalkeeper' => 'Goleiro', 'fixo' => 'Fixo', 'ala' => 'Ala', 'pivo' => 'Pivô']),
             // Vôlei: placar em sets (melhor de 5; 25 pontos, decisivo de 15; vantagem mínima de 2), sem relógio.
             // Tabela: 3-0/3-1 = 3 pontos; 3-2 = 2 para o vencedor e 1 para o perdedor. W.O. = 3-0 em sets.
+            // Dois pedidos de tempo por equipe em cada set; o set decisivo também segue a mesma regra.
             'volleyball' => new SportProfile('volleyball', 'Vôlei', [], [
                 'points' => ['win' => 3, 'draw' => 0, 'loss' => 0],
                 'tiebreakers' => ['wins', 'set_ratio', 'point_ratio', 'head_to_head', 'draw'],
@@ -29,7 +30,7 @@ final class SportProfiles
                 'walkover' => ['winner_goals' => 3, 'loser_goals' => 0],
                 'substitutions' => ['max' => 99, 'max_windows' => 99, 'allow_reentry' => true],
                 'lineup' => ['max_starters' => 6, 'max_bench' => 6, 'max_staff' => 3],
-            ], scoreModel: 'sets', positions: [
+            ], scoreModel: 'sets', timeoutGroups: [1, 2, 3, 4, 5], timeoutLimits: [1 => 2, 2 => 2, 3 => 2, 4 => 2, 5 => 2], positions: [
                 'setter' => 'Levantador', 'outside_hitter' => 'Ponteiro', 'opposite' => 'Oposto', 'middle_blocker' => 'Central', 'libero' => 'Líbero',
             ]),
             // Basquete (FIBA): 4 quartos de 10 min + prorrogações de 5 min, relógio regressivo que para e volta,

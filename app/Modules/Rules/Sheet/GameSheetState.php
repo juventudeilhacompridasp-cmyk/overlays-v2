@@ -79,7 +79,7 @@ final class GameSheetState
     {
         $team = $event->teamId;
 
-        if (! isset($this->onField[$team])) {
+        if (! isset($this->onField[$team]) && $event->type !== GameEventType::Timeout) {
             return 'A equipe ainda não tem escalação neste jogo.';
         }
 

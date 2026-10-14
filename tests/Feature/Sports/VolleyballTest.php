@@ -160,6 +160,26 @@ it('exposes the sets in the public snapshot and broadcasts on every point', func
         ->and($snapshot['fouls'])->toBeNull();
 });
 
+it('allows two timeouts per team in each set and exposes the remaining count', function () {
+    $game = volleyballGame();
+    $home = $game->home_entry_id;
+    $away = $game->away_entry_id;
+
+    app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Timeout, $home, null, period: 1);
+    app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Timeout, $home, null, period: 1);
+
+    expect(fn () => app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Timeout, $home, null, period: 1))
+        ->toThrow(InvalidArgumentException::class, 'já usou os pedidos de tempo');
+
+    expect(PublicGameSnapshot::for($game->fresh())['timeouts'])
+        ->toBe(['home' => 0, 'away' => 2, 'limit' => 2, 'period' => 1]);
+
+    scorePoints($game, 'home', 25);
+    app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Timeout, $away, null, period: 2);
+    expect(PublicGameSnapshot::for($game->fresh())['timeouts']['home'])->toBe(2)
+        ->and(PublicGameSnapshot::for($game->fresh())['timeouts']['away'])->toBe(1);
+});
+
 it('scores from the sheet screen with a button per team and undoes the last point', function () {
     $game = volleyballGame();
     $this->actingAs(panelUser(Role::Operator));
@@ -172,7 +192,7 @@ it('scores from the sheet screen with a button per team and undoes the last poin
         ->where('score_model', 'sets')
         ->where('sets', [['home' => 1, 'away' => 1, 'winner' => null, 'finished' => false]])
         ->where('sets_to_win', 3)
-        ->where('event_types', fn ($types) => collect($types)->pluck('value')->all() === ['substitution', 'yellow_card', 'red_card'])
+        ->where('event_types', fn ($types) => collect($types)->pluck('value')->all() === ['substitution', 'yellow_card', 'red_card', 'timeout'])
         ->where('events', fn ($events) => collect($events)->where('type', 'point')->where('voidable', true)->count() === 1));
 
     $last = $game->events()->where('type', GameEventType::Point)->orderByDesc('id')->first();

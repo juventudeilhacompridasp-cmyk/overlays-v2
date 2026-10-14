@@ -67,5 +67,9 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 
 - O relógio de posse usa `ShotClock` e eventos `shot_clock_reset` de 14 ou 24 segundos; derive o estado pelos marcos do relógio principal e exponha apenas contagens agregadas em snapshots/overlays. Só o último reinício pode ser anulado.
 
+## Regra adicional do vôlei
+
+- O vôlei permite dois pedidos de tempo por set; registre `timeout` com o período do set e exponha somente os contadores agregados no painel, snapshot e overlays.
+
 ## Qualidade
 Testes Pest para toda regra de negócio (as regras de campeonato têm testes baseados em exemplos reais). PHPStan/Larastan (nível sobe gradualmente até 8). PRs pequenos, descrição em português, sem segredos no repositório.
