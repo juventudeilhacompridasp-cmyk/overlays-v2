@@ -215,6 +215,7 @@ return [
                     'position' => ['type' => 'string', 'enum' => ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right']],
                     'scale' => ['type' => 'number'],
                     'motion' => ['type' => 'string', 'enum' => ['dynamic', 'subtle', 'none']],
+                    'font' => ['type' => 'string', 'description' => 'Fonte do catálogo (system, inter, montserrat, oswald, bebas, anton, barlow, roboto-condensed, archivo, playfair, marker) ou ID de uma fonte própria da organização.'],
                 ]],
                 'sponsor_settings' => ['type' => 'object', 'properties' => [
                     'enabled' => ['type' => 'boolean'],
@@ -229,7 +230,7 @@ return [
             'example' => [
                 'game_id' => '01JABCDEF0123456789XYZ0001',
                 'layers' => ['scoreboard' => true, 'lower_third' => false, 'lineup' => true, 'standings' => false],
-                'appearance' => ['preset' => 'arena', 'accent_color' => '#22c55e', 'background_color' => '#07111f', 'text_color' => '#ffffff', 'position' => 'top-center', 'scale' => 1, 'motion' => 'dynamic'],
+                'appearance' => ['preset' => 'arena', 'accent_color' => '#22c55e', 'background_color' => '#07111f', 'text_color' => '#ffffff', 'position' => 'top-center', 'scale' => 1, 'motion' => 'dynamic', 'font' => 'oswald'],
                 'sponsor_settings' => ['enabled' => true, 'seconds' => 8],
                 'lineup_settings' => ['presentation' => 'sequence', 'list_seconds' => 8, 'photo_person_ids' => []],
             ],

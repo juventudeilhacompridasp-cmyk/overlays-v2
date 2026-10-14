@@ -5,6 +5,7 @@ use App\Modules\Arts\Http\Controllers\ArtController;
 use App\Modules\Arts\Http\Controllers\AssetController as ArtAssetController;
 use App\Modules\Arts\Http\Controllers\TemplateController as ArtTemplateController;
 use App\Modules\Broadcast\Http\Controllers\ChannelController;
+use App\Modules\Broadcast\Http\Controllers\FontController;
 use App\Modules\Broadcast\Http\Controllers\SponsorController;
 use App\Modules\Competitions\Http\Controllers\CompetitionController;
 use App\Modules\Competitions\Http\Controllers\DivisionController;
@@ -160,6 +161,8 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::delete('broadcast/{channel}', [ChannelController::class, 'destroy'])->name('broadcast.destroy');
         Route::post('broadcast/patrocinadores', [SponsorController::class, 'store'])->name('broadcast.sponsors.store');
         Route::patch('broadcast/patrocinadores/{sponsor}', [SponsorController::class, 'update'])->name('broadcast.sponsors.update');
+        Route::post('broadcast/fontes', [FontController::class, 'store'])->name('broadcast.fonts.store');
+        Route::delete('broadcast/fontes/{font}', [FontController::class, 'destroy'])->name('broadcast.fonts.destroy');
         Route::delete('broadcast/patrocinadores/{sponsor}', [SponsorController::class, 'destroy'])->name('broadcast.sponsors.destroy');
     });
 

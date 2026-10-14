@@ -50,4 +50,18 @@ integrações com controladores externos sem dar poder de escrita a quem apenas 
   preset do canal. O estado traz `sponsors {enabled, seconds, items[{name, logo_url}]}`; **com a rotação desligada `items` vai
   vazio** e nunca vão caminhos nem IDs. Toda mudança nos patrocinadores dispara `OverlayUpdated` para os canais abertos.
 
+## Addendum — fontes (14/10/2026)
+
+- `appearance.font` escolhe a fonte do canal: `system` (padrão), uma das 10 fontes embutidas no build (`@fontsource`, mesmas das
+  artes; nenhum CDN externo na transmissão) ou o ID (ULID) de uma **fonte própria** da organização.
+- `overlay_fonts` (`OverlayFont`, até 4 por organização, 2 MB): WOFF2, WOFF, TTF ou OTF. O formato vem dos **primeiros bytes**
+  (`OverlayFontFile::detect`), nunca da extensão; coleções `.ttc` e qualquer outro arquivo são recusados. Enviar e excluir é
+  `manage-competitions`; escolher a fonte é operação ao vivo (`operate-games`) e também aceito pela API de controle, que só
+  aceita fonte do catálogo ou da própria organização.
+- O arquivo é servido pela **mesma origem do overlay** (`/overlay/{token}/fonte/{fonte}`, `nosniff`, cache de 1 dia), sem
+  depender de CORS no CDN. O estado traz `font_face {family, url relativa, format}` só quando o canal usa fonte própria; o
+  front registra o arquivo com `FontFace` e, até carregar, vale a pilha de reserva. Excluir uma fonte devolve à padrão os canais
+  que a usavam e atualiza os abertos no OBS.
+- A licença da fonte é responsabilidade da organização (aviso na tela de envio).
+
 - Preset novo = entrada em `PRESETS` + moldura em `scoreboardFrame` + opção na tela de transmissão + teste.

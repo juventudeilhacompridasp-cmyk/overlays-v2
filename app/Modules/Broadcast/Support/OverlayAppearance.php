@@ -7,11 +7,14 @@ final class OverlayAppearance
     /** arena = painel de alto contraste; classic = barra de TV compacta e chapada; minimal = pílula translúcida só com o essencial. */
     public const PRESETS = ['arena', 'classic', 'minimal'];
 
+    /** Fontes embutidas no sistema (CSS próprio, sem CDN) além da padrão; uma fonte própria é escolhida pelo ID (ULID). */
+    public const FONTS = ['system', 'inter', 'montserrat', 'oswald', 'bebas', 'anton', 'barlow', 'roboto-condensed', 'archivo', 'playfair', 'marker'];
+
     public const POSITIONS = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'];
 
     public const MOTIONS = ['dynamic', 'subtle', 'none'];
 
-    /** @return array{preset: string, accent_color: string, background_color: string, text_color: string, position: string, scale: float, motion: string} */
+    /** @return array{preset: string, accent_color: string, background_color: string, text_color: string, position: string, scale: float, motion: string, font: string} */
     public static function defaults(): array
     {
         return [
@@ -22,12 +25,13 @@ final class OverlayAppearance
             'position' => 'top-left',
             'scale' => 1.0,
             'motion' => 'dynamic',
+            'font' => 'system',
         ];
     }
 
     /**
      * @param  array<string, mixed>|null  $appearance
-     * @return array{preset: string, accent_color: string, background_color: string, text_color: string, position: string, scale: float, motion: string}
+     * @return array{preset: string, accent_color: string, background_color: string, text_color: string, position: string, scale: float, motion: string, font: string}
      */
     public static function normalize(?array $appearance): array
     {
@@ -41,6 +45,17 @@ final class OverlayAppearance
             'position' => (string) $values['position'],
             'scale' => (float) $values['scale'],
             'motion' => (string) $values['motion'],
+            'font' => self::font($values['font']),
         ];
+    }
+
+    /** Fonte do catálogo ou ID (ULID, em minúsculas como o Laravel gera) de fonte própria; qualquer outra coisa volta à fonte padrão. */
+    public static function font(mixed $value): string
+    {
+        if (is_string($value) && (in_array($value, self::FONTS, true) || preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/i', $value) === 1)) {
+            return in_array($value, self::FONTS, true) ? $value : strtolower($value);
+        }
+
+        return 'system';
     }
 }
