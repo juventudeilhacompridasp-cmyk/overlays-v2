@@ -80,7 +80,7 @@ describe('the specification', function () {
             ->and($spec['info']['title'])->not->toBe('')
             ->and($spec['paths'])->toHaveKey('/api/v1/competitions')
             ->and($spec['paths']['/api/v1/seasons/{season}']['get']['parameters'][0])->toMatchArray(['name' => 'season', 'in' => 'path', 'required' => true])
-            ->and($spec['components']['securitySchemes'])->toHaveKeys(['session', 'overlayToken', 'personalLink']);
+            ->and($spec['components']['securitySchemes'])->toHaveKeys(['session', 'overlayToken', 'overlayControlToken', 'personalLink']);
 
         foreach ($spec['paths'] as $path => $methods) {
             expect($path)->toStartWith('/');
@@ -100,6 +100,7 @@ describe('the specification', function () {
         $publicApi = $spec['paths']['/api/v1/games/{game}']['get'];
         $sync = collect($spec['paths'])->flatten(1)->firstWhere('x-name', 'panel.games.sync');
         $overlay = collect($spec['paths'])->flatten(1)->firstWhere('x-name', 'overlay.state');
+        $overlayControl = collect($spec['paths'])->flatten(1)->firstWhere('x-name', 'api.v1.overlay-channels.state.update');
         $platform = collect($spec['paths'])->flatten(1)->firstWhere('x-name', 'platform.api-docs.index');
         $push = collect($spec['paths'])->flatten(1)->firstWhere('x-name', 'push.subscribe');
 
@@ -111,6 +112,9 @@ describe('the specification', function () {
             ->and($sync['security'])->toBe([['session' => []]])
             ->and($overlay['x-access'])->toBe('Token do canal na URL')
             ->and($overlay['x-feature'])->toBe('overlays')
+            ->and($overlayControl['x-access'])->toBe('Chave Bearer do canal')
+            ->and($overlayControl['security'])->toBe([['overlayControlToken' => []]])
+            ->and($overlayControl['tags'])->toBe(['Overlays (OBS)'])
             ->and($platform['x-access'])->toBe('Super Admin')
             ->and($push['x-feature'])->toBe('push');
     });

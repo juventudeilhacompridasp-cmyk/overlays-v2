@@ -87,6 +87,7 @@ final class OpenApiBuilder
                 'securitySchemes' => [
                     'session' => ['type' => 'apiKey', 'in' => 'cookie', 'name' => 'laravel_session', 'description' => 'Sessão de quem fez login (painel, gestor ou plataforma).'],
                     'overlayToken' => ['type' => 'apiKey', 'in' => 'header', 'name' => 'URL', 'description' => 'O token do canal vai no próprio endereço (`/overlay/{token}/...`) e é o segredo.'],
+                    'overlayControlToken' => ['type' => 'http', 'scheme' => 'bearer', 'description' => 'Chave privada de controle do canal, enviada no cabeçalho `Authorization: Bearer ...`.'],
                     'personalLink' => ['type' => 'apiKey', 'in' => 'header', 'name' => 'URL', 'description' => 'O token pessoal da inscrição vai no próprio endereço (`/minha-inscricao/{token}`).'],
                 ],
             ],
@@ -150,7 +151,7 @@ final class OpenApiBuilder
     {
         $name = $route->getName();
         $middleware = array_values(array_filter($route->gatherMiddleware(), 'is_string'));
-        $access = $this->access($uri, $middleware);
+        $access = $this->access($name, $uri, $middleware);
 
         $operation = [
             'operationId' => $name ?? strtolower($method).'_'.trim((string) preg_replace('/[^a-z0-9]+/i', '_', $uri), '_'),
@@ -202,6 +203,7 @@ final class OpenApiBuilder
         $trimmed = ltrim($uri, '/');
 
         return match (true) {
+            $name === 'api.v1.overlay-channels.state.update' => 'Overlays (OBS)',
             str_starts_with($name, 'api.v1.') => 'API pública v1',
             in_array($name, ['public.games.state', 'overlay.state'], true), str_starts_with($name, 'push.') => 'Tempo real e avisos',
             str_starts_with($name, 'embed.') => 'Widgets',
@@ -220,10 +222,11 @@ final class OpenApiBuilder
     /**
      * @param  list<string>  $middleware
      */
-    private function access(string $uri, array $middleware): string
+    private function access(?string $name, string $uri, array $middleware): string
     {
         return match (true) {
             in_array('platform.admin', $middleware, true) => 'Super Admin',
+            $name === 'api.v1.overlay-channels.state.update' => 'Chave Bearer do canal',
             str_contains($uri, '{channel:token}') || str_contains($uri, '{channel}') => 'Token do canal na URL',
             str_contains($uri, 'minha-inscricao/{token}') => 'Link pessoal na URL',
             in_array('manager.member', $middleware, true) => 'Gestor de equipe (sessão)',
@@ -237,6 +240,7 @@ final class OpenApiBuilder
     private function scheme(string $access): string
     {
         return match ($access) {
+            'Chave Bearer do canal' => 'overlayControlToken',
             'Token do canal na URL' => 'overlayToken',
             'Link pessoal na URL' => 'personalLink',
             default => 'session',

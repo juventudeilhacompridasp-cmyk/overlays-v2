@@ -194,6 +194,53 @@ return [
             '429' => $throttle,
         ],
     ],
+    'api.v1.overlay-channels.state.update' => [
+        'summary' => 'Atualiza o estado e o visual de um canal de overlay',
+        'description' => 'Controle privado para automações da transmissão. Aceita atualizações parciais do jogo no ar, camadas, aparência e apresentação da escalação. Use a chave de controle do canal como Bearer; ela é diferente do token público usado pelo OBS.',
+        'parameters' => ['channel' => 'ID (ULID) do canal de overlay.'],
+        'request' => [
+            'schema' => ['type' => 'object', 'properties' => [
+                'game_id' => ['type' => ['string', 'null']],
+                'layers' => ['type' => 'object', 'properties' => [
+                    'scoreboard' => ['type' => 'boolean'],
+                    'lower_third' => ['type' => 'boolean'],
+                    'lineup' => ['type' => 'boolean'],
+                    'standings' => ['type' => 'boolean'],
+                ]],
+                'appearance' => ['type' => 'object', 'properties' => [
+                    'preset' => ['type' => 'string', 'enum' => ['arena']],
+                    'accent_color' => ['type' => 'string'],
+                    'background_color' => ['type' => 'string'],
+                    'text_color' => ['type' => 'string'],
+                    'position' => ['type' => 'string', 'enum' => ['top-left', 'top-center', 'top-right']],
+                    'scale' => ['type' => 'number'],
+                    'motion' => ['type' => 'string', 'enum' => ['dynamic', 'subtle', 'none']],
+                ]],
+                'lineup_settings' => ['type' => 'object', 'properties' => [
+                    'presentation' => ['type' => 'string', 'enum' => ['sequence', 'list', 'formation']],
+                    'list_seconds' => ['type' => 'integer'],
+                    'photo_person_ids' => ['type' => 'array', 'items' => ['type' => 'string']],
+                ]],
+            ]],
+            'example' => [
+                'game_id' => '01JABCDEF0123456789XYZ0001',
+                'layers' => ['scoreboard' => true, 'lower_third' => false, 'lineup' => true, 'standings' => false],
+                'appearance' => ['preset' => 'arena', 'accent_color' => '#22c55e', 'background_color' => '#07111f', 'text_color' => '#ffffff', 'position' => 'top-center', 'scale' => 1, 'motion' => 'dynamic'],
+                'lineup_settings' => ['presentation' => 'sequence', 'list_seconds' => 8, 'photo_person_ids' => []],
+            ],
+        ],
+        'responses' => [
+            '200' => [
+                'description' => 'Estado completo e atualizado do canal.',
+                'schema' => ['type' => 'object', 'required' => ['data'], 'properties' => ['data' => ['type' => 'object']]],
+                'example' => ['data' => ['channel' => 'Transmissão principal', 'layers' => ['scoreboard' => true, 'lower_third' => false, 'lineup' => true, 'standings' => false], 'game' => null, 'lineup' => null, 'standings' => null, 'server_time_ms' => 1792000000000]],
+            ],
+            '401' => ['description' => 'Chave de controle ausente ou inválida.'],
+            '404' => ['description' => 'Canal inexistente ou recurso `overlays` indisponível.'],
+            '422' => ['description' => 'Estado, aparência ou configuração da escalação inválidos.'],
+            '429' => $throttle,
+        ],
+    ],
 
     // ───────────── Tempo real e avisos ─────────────
     'public.games.state' => [
