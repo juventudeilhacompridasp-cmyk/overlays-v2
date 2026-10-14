@@ -7,10 +7,11 @@ interface Props {
     query: string;
     competitions: { name: string; url: string }[];
     teams: { name: string; city: string | null; logo_url: string | null; url: string }[];
+    venues: { name: string; city: string | null; url: string }[];
 }
 
 /** Busca por nome de competições e equipes de edições publicadas (nunca atletas). */
-export default function Search({ theme, seo, query, competitions, teams }: Props) {
+export default function Search({ theme, seo, query, competitions, teams, venues }: Props) {
     const searched = query.trim().length >= 2;
 
     return (
@@ -22,7 +23,7 @@ export default function Search({ theme, seo, query, competitions, teams }: Props
             </form>
 
             {!searched && <p className="text-gray-500">Digite pelo menos 2 letras para buscar.</p>}
-            {searched && competitions.length === 0 && teams.length === 0 && <p className="text-gray-500" data-testid="search-empty">Nada encontrado para “{query}”.</p>}
+            {searched && competitions.length === 0 && teams.length === 0 && venues.length === 0 && <p className="text-gray-500" data-testid="search-empty">Nada encontrado para “{query}”.</p>}
 
             {competitions.length > 0 && (
                 <section className="mb-6 rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200" data-testid="search-competitions">
@@ -47,6 +48,17 @@ export default function Search({ theme, seo, query, competitions, teams }: Props
                                     {team.city && <span className="text-sm text-gray-500">{team.city}</span>}
                                 </Link>
                             </li>
+                        ))}
+                    </ul>
+                </section>
+            )}
+
+            {venues.length > 0 && (
+                <section className="mt-6 rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200" data-testid="search-venues">
+                    <h2 className="mb-2 text-lg font-bold">Locais</h2>
+                    <ul className="divide-y divide-gray-100">
+                        {venues.map((venue) => (
+                            <li key={venue.url}><Link href={venue.url} className="block py-2 hover:underline"><span className="font-medium">{venue.name}</span>{venue.city && <span className="ml-2 text-sm text-gray-500">{venue.city}</span>}</Link></li>
                         ))}
                     </ul>
                 </section>

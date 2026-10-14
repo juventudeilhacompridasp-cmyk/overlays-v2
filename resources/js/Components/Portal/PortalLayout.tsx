@@ -29,6 +29,7 @@ export function SeoHead({ seo }: { seo: Seo }) {
         <Head title={seo.title}>
             <meta name="description" content={seo.description} />
             <link rel="canonical" href={seo.url} />
+            <link rel="alternate" type="application/atom+xml" title="Resultados" href={route('portal.feed')} />
             {seo.noindex && <meta name="robots" content="noindex,follow" />}
             <meta property="og:type" content="website" />
             <meta property="og:locale" content="pt_BR" />
