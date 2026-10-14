@@ -167,9 +167,11 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
                             <>
                                 <Side team={game.home} align="left" look={look} wide={layout === 'wide'} />
                                 <div key={`${game.home_score}-${game.away_score}`} className={`flex items-center gap-3 border-x border-white/10 bg-black/30 font-black tabular-nums ${layout === 'wide' ? 'px-12 text-6xl' : 'px-6 text-4xl'} ${hasMotion ? 'overlay-score-pulse' : ''}`} data-testid="overlay-score">
+                                    {sets && state.serve === 'home' && <span className="text-xl" data-testid="overlay-serve" title="Saque">🏐</span>}
                                     <span style={look.text}>{game.home_score}</span>
                                     <span className="text-xl text-white/35">×</span>
                                     <span style={look.text}>{game.away_score}</span>
+                                    {sets && state.serve === 'away' && <span className="text-xl" data-testid="overlay-serve" title="Saque">🏐</span>}
                                 </div>
                                 <Side team={game.away} align="right" look={look} wide={layout === 'wide'} />
                             </>

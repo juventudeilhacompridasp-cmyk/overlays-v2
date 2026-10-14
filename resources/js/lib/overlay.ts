@@ -135,6 +135,7 @@ export interface OverlayState {
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     championship: Record<string, boolean>;
     stoppage: number;
+    serve: 'home' | 'away' | null;
     social: { items: { label: string; value: string }[]; url: string | null };
     screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean; social: boolean; sponsor_bar: boolean; stats: boolean };
     stats: StatsState | null;

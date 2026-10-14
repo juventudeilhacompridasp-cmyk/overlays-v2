@@ -53,7 +53,7 @@ final class UpdateOverlayChannel
 
         // Acréscimos e craque do jogo valem para o jogo no ar: trocar de jogo zera os dois.
         if ($gameChanged) {
-            $channel->screen_settings = OverlayScreenSettings::normalize([...OverlayScreenSettings::normalize($channel->screen_settings), 'stoppage' => 0, 'mvp' => null]);
+            $channel->screen_settings = OverlayScreenSettings::normalize([...OverlayScreenSettings::normalize($channel->screen_settings), 'stoppage' => 0, 'mvp' => null, 'serve' => null]);
         } elseif (array_key_exists('stoppage_minutes', $data)) {
             $channel->screen_settings = OverlayScreenSettings::normalize([...OverlayScreenSettings::normalize($channel->screen_settings), 'stoppage' => (int) $data['stoppage_minutes']]);
         }

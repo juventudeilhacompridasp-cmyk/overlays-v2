@@ -238,6 +238,7 @@ return [
                         'items' => ['type' => 'array', 'maxItems' => 4, 'items' => ['type' => 'object', 'properties' => ['label' => ['type' => 'string', 'maxLength' => 20], 'value' => ['type' => 'string', 'maxLength' => 60]]]],
                         'url' => ['type' => ['string', 'null'], 'maxLength' => 200],
                     ]],
+                    'serve' => ['type' => ['string', 'null'], 'enum' => ['home', 'away', null], 'description' => 'Equipe que saca (esportes de sets); aparece como bola ao lado do placar. Zera ao trocar o jogo.'],
                     'mvp_person_id' => ['type' => ['string', 'null'], 'description' => 'Craque do jogo (atleta da escalação) mostrado no resumo; vale só para o jogo no ar.'],
                 ]],
                 'custom_live' => ['type' => 'object', 'description' => 'Mostra (true) ou oculta (false) ao vivo os overlays livres (Builder) da organização, por ID. IDs que não existem são ignorados.', 'additionalProperties' => ['type' => 'boolean']],

@@ -28,6 +28,7 @@ final class OverlayControlRules
             'screen_settings.social.items.*.label' => ['nullable', 'string', 'max:20'],
             'screen_settings.social.items.*.value' => ['required', 'string', 'max:60'],
             'screen_settings.social.url' => ['sometimes', 'nullable', 'string', 'max:200', 'regex:#^https://[^\s/]+(/\S*)?$#i'],
+            'screen_settings.serve' => ['sometimes', 'nullable', 'string', 'in:home,away'],
             'screen_settings.mvp_person_id' => ['sometimes', 'nullable', 'string', 'max:40'],
             'screen_settings.minutes' => ['sometimes', 'nullable', 'integer', 'between:0,180'],
             'stats_settings' => ['sometimes', 'array'],

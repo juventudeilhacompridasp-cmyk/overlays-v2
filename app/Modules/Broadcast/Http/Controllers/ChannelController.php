@@ -106,6 +106,13 @@ class ChannelController extends Controller
             'sponsor_limit' => OverlaySponsor::LIMIT,
             'custom_items' => $customItems->map(fn (OverlayCustomItem $item) => ['id' => $item->getKey(), 'name' => $item->name, 'width' => $item->width, 'height' => $item->height, 'elements' => $item->elements])->values(),
             'custom_limit' => OverlayCustomItem::LIMIT,
+            'defaults' => [
+                'appearance' => OverlayAppearance::normalize([]),
+                'lower_third_settings' => OverlayLowerThirdSettings::normalize([]),
+                'lineup_settings' => array_diff_key(OverlayLineupSettings::normalize([]), ['photo_person_ids' => 0]),
+                'sponsor_settings' => OverlaySponsorSettings::normalize([]),
+                'stats_settings' => OverlayStatsSettings::normalize([]),
+            ],
             'fonts' => OverlayFont::query()->orderBy('name')->get()->map(fn (OverlayFont $font) => ['id' => $font->id, 'name' => $font->name, 'format' => $font->format])->values(),
             'font_limit' => OverlayFont::LIMIT,
             'scenes' => OverlayScene::query()->orderBy('name')->get()->map(fn (OverlayScene $scene) => ['id' => $scene->id, 'name' => $scene->name])->values(),

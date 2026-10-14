@@ -52,6 +52,27 @@ it('sets the stoppage time of the game on air, validates it and clears it when t
     expect(OverlayState::for($channel->fresh())['stoppage'])->toBe(0);
 });
 
+it('sets the serving side, validates it, clears it with the game and serves the all-layers page', function () {
+    ['game' => $game] = sheetGame();
+    $channel = extrasChannel($game);
+    $this->actingAs(panelUser(Role::Operator));
+    Event::fake([OverlayUpdated::class]);
+
+    expect(OverlayState::for($channel)['serve'])->toBeNull();
+
+    $this->patch("/painel/broadcast/{$channel->id}", ['screen_settings' => ['serve' => 'away']])->assertSessionHasNoErrors();
+    expect(OverlayState::for($channel->fresh())['serve'])->toBe('away');
+    expect(OverlayState::for($channel->fresh())['cartela'])->not->toHaveKey('serve');
+
+    $this->patch("/painel/broadcast/{$channel->id}", ['screen_settings' => ['serve' => 'meio']])->assertSessionHasErrors('screen_settings.serve');
+    expect(OverlayState::for($channel->fresh())['serve'])->toBe('away');
+
+    $this->get("/overlay/{$channel->token}/todos")->assertOk()->assertInertia(fn ($page) => $page->component('Overlay/All'));
+
+    $this->patch("/painel/broadcast/{$channel->id}", ['game_id' => null])->assertSessionHasNoErrors();
+    expect(OverlayState::for($channel->fresh())['serve'])->toBeNull();
+});
+
 it('keeps the stoppage out of the cartela, away from other settings, and works through the control api', function () {
     $channel = extrasChannel();
     $channel->update(['screen_settings' => ['title' => 'Intervalo', 'subtitle' => '', 'until_ms' => null, 'stoppage' => 3]]);
