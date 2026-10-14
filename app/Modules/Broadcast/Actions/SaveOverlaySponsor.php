@@ -62,6 +62,6 @@ final class SaveOverlaySponsor
     /** Os canais abertos no OBS recebem a nova lista sem recarregar. */
     private static function refresh(): void
     {
-        OverlayChannel::query()->get()->each(fn (OverlayChannel $channel) => event(OverlayUpdated::for($channel)));
+        OverlayChannel::query()->get()->each(fn (OverlayChannel $channel) => OverlayUpdated::dispatchFor($channel));
     }
 }

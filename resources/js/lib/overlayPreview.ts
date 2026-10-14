@@ -3,6 +3,8 @@ export type OverlayPreviewSlug = 'placar' | 'eventos' | 'escalacao' | 'tabela';
 export interface OverlayPreviewLayers {
     lineup: boolean;
     standings: boolean;
+    scoreboard?: boolean;
+    lower_third?: boolean;
 }
 
 export interface OverlayPreviewStatus {
@@ -33,6 +35,14 @@ export function overlayPreviewStatus(slug: string, hasGame: boolean, layers: Ove
             label: 'Oculta',
             tone: 'hidden',
             description: 'A prévia está disponível; ligue a camada para exibi-la no OBS.',
+        };
+    }
+
+    if ((slug === 'placar' && layers.scoreboard === false) || (slug === 'eventos' && layers.lower_third === false)) {
+        return {
+            label: 'Oculta',
+            tone: 'hidden',
+            description: 'Foi ocultada pelo operador; ligue de novo para voltar ao ar no OBS.',
         };
     }
 

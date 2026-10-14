@@ -64,7 +64,7 @@ export interface OverlayState {
     font_face: OverlayFontFace | null;
     lineup_settings: { presentation: 'sequence' | 'list' | 'formation'; list_seconds: number };
     sponsors: { enabled: boolean; seconds: number; items: { name: string; logo_url: string }[] };
-    layers: { lineup: boolean; standings: boolean };
+    layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     game: OverlayGame | null;
     lineup: { home: LineupSide; away: LineupSide } | null;
     standings: {

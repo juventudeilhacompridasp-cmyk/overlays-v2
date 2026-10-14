@@ -73,7 +73,7 @@ interface Channel {
     name: string;
     game_id: string | null;
     game_label: string | null;
-    layers: { lineup: boolean; standings: boolean };
+    layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     appearance: Appearance;
     lineup_settings: LineupSettings;
     lineup_people: LineupPerson[];
@@ -93,7 +93,11 @@ interface GameOption {
     label: string;
 }
 
-const layerNames: Record<'lineup' | 'standings', string> = { lineup: 'Escalação', standings: 'Tabela' };
+type LayerKey = 'lineup' | 'standings' | 'scoreboard' | 'lower_third';
+
+// Placar e lances começam no ar; escalação e tabela começam ocultas. Só estas duas precisam de jogo no ar.
+const layerNames: Record<LayerKey, string> = { scoreboard: 'Placar', lower_third: 'Lances', lineup: 'Escalação', standings: 'Tabela' };
+const layersNeedingGame: LayerKey[] = ['lineup', 'standings'];
 
 function CopyButton({ text }: { text: string }) {
     const [copied, setCopied] = useState(false);
@@ -166,7 +170,16 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
-    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; sponsor_settings?: Partial<SponsorSettings> }) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true });
+    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; sponsor_settings?: Partial<SponsorSettings> }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
+
+    // Comandos de exibir/ocultar: o botão muda no clique e a mudança segue direto para o OBS; se o servidor recusar, volta ao estado real.
+    const [layers, setLayers] = useState(channel.layers);
+    useEffect(() => setLayers(channel.layers), [channel.layers]);
+    const toggleLayer = (layer: LayerKey) => {
+        const next = !layers[layer];
+        setLayers({ ...layers, [layer]: next });
+        patch({ layers: { [layer]: next } }, { onError: () => setLayers(channel.layers) });
+    };
     // O jogo atual pode já ter saído da lista de candidatos (ex.: encerrado): mantém a opção para o select refletir o estado real.
     const options = channel.game_id && !games.some((game) => game.id === channel.game_id) ? [{ id: channel.game_id, label: channel.game_label ?? 'Jogo atual' }, ...games] : games;
 
@@ -342,20 +355,21 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                 </div>
 
                 <div>
-                    <div className="mb-2 text-sm font-medium text-gray-700">Camadas sob demanda</div>
+                    <div className="mb-2 text-sm font-medium text-gray-700">No ar agora</div>
                     <div className="flex flex-wrap gap-2">
-                        {(Object.keys(layerNames) as ('lineup' | 'standings')[]).map((layer) => (
+                        {(Object.keys(layerNames) as LayerKey[]).map((layer) => (
                             <Button
                                 key={layer}
-                                variant={channel.layers[layer] ? 'primary' : 'secondary'}
-                                disabled={!canOperate || !channel.game_id}
-                                onClick={() => patch({ layers: { [layer]: !channel.layers[layer] } })}
+                                variant={layers[layer] ? 'primary' : 'secondary'}
+                                disabled={!canOperate || (layersNeedingGame.includes(layer) && !channel.game_id)}
+                                aria-pressed={layers[layer]}
+                                onClick={() => toggleLayer(layer)}
                             >
-                                {channel.layers[layer] ? `Ocultar ${layerNames[layer].toLowerCase()}` : `Mostrar ${layerNames[layer].toLowerCase()}`}
+                                {layers[layer] ? `Ocultar ${layerNames[layer].toLowerCase()}` : `Mostrar ${layerNames[layer].toLowerCase()}`}
                             </Button>
                         ))}
                     </div>
-                    {!channel.game_id && <p className="mt-1 text-xs text-gray-500">Escolha um jogo no ar para liberar as camadas.</p>}
+                    <p className="mt-1 text-xs text-gray-500">Cada clique vale na hora no OBS, sem esperar. {!channel.game_id && 'Escolha um jogo no ar para liberar a escalação e a tabela.'}</p>
                 </div>
 
                 <div className="rounded-lg border border-gray-200 p-4">
@@ -365,8 +379,11 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                         <label className="flex items-center gap-2 text-sm text-gray-700">
-                            <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={sponsorSettings.enabled} onChange={(event) => setSponsorSettings({ ...sponsorSettings, enabled: event.target.checked })} />
-                            Rotacionar patrocinadores neste canal
+                            <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={sponsorSettings.enabled} onChange={(event) => {
+                                setSponsorSettings({ ...sponsorSettings, enabled: event.target.checked });
+                                patch({ sponsor_settings: { enabled: event.target.checked } }, { onError: () => setSponsorSettings(channel.sponsor_settings) });
+                            }} />
+                            Mostrar a rotação de patrocinadores (vale na hora)
                         </label>
                         <Field label={`Tempo de cada logotipo · ${sponsorSettings.seconds}s`} htmlFor={`sponsor-seconds-${channel.id}`}>
                             <Input id={`sponsor-seconds-${channel.id}`} type="range" min="3" max="30" step="1" disabled={!canOperate} value={sponsorSettings.seconds} onChange={(event) => setSponsorSettings({ ...sponsorSettings, seconds: Number(event.target.value) })} />

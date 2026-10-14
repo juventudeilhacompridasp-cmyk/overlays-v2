@@ -21,6 +21,9 @@ Você pode trocar o fundo entre campo, quadra, escuro e a grade de transparênci
 
 > O endereço do canal é o segredo: quem tem a URL vê a tela. Se vazar, use **Renovar** para gerar outra (a antiga para de funcionar).
 
+## Exibir e ocultar ao vivo
+Em **No ar agora** use os botões **Placar**, **Lances**, **Escalação** e **Tabela** para tirar e colocar cada tela do ar: cada clique vale na hora no OBS. Ocultar o placar o remove instantaneamente; ocultar os lances impede as faixas de gol, cartão e substituição (a súmula continua registrando tudo). Escalação e tabela só podem ser mostradas com um jogo no ar. A rotação de patrocinadores também liga e desliga com um clique.
+
 ## Cenas
 Ajuste o visual de um canal do jeito que quer (estilo, cores, posição, fonte, camadas, patrocinadores) e use **Salvar cena** para guardá-lo com um nome, como *Pré-jogo*, *Jogo* ou *Intervalo*. Na hora da transmissão, clique no nome da cena para trocar tudo de uma vez — vale para qualquer canal. O jogo no ar e as fotos escolhidas na escalação não mudam. Quem gerencia competições salva e exclui cenas; o operador só aplica.
 

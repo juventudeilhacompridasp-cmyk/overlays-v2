@@ -27,6 +27,14 @@ Em cada canal, a seção **Visual do overlay** configura o placar:
 Clique em **Aplicar visual**. As fontes que já estão abertas no OBS recebem a mudança por Reverb, sem recarregar. As animações
 usam somente opacidade e transformação para reduzir o trabalho de renderização do Chromium do OBS.
 
+### Exibir e ocultar em tempo real
+
+Em **No ar agora**, os botões **Placar**, **Lances**, **Escalação** e **Tabela** tiram e colocam cada tela do ar. O placar e os
+lances começam no ar; escalação e tabela, ocultos. Cada clique chega ao OBS na hora, sem fila: ocultar o placar o remove
+instantaneamente, sem animação, e ocultar os lances impede que as faixas de gol, cartão e substituição apareçam (a súmula
+continua registrando tudo normalmente). A rotação de patrocinadores também liga e desliga com um clique. Se a conexão em tempo
+real do OBS cair, a tela confirma o comando em até 3 segundos pela consulta periódica.
+
 ### Cenas
 
 Em cada canal, a seção **Cenas** guarda o visual atual (estilo, cores, posição, escala, animação, fonte, camadas ligadas,

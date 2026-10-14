@@ -30,6 +30,11 @@ export default function LowerThird({ token, state, realtime }: { token: string; 
         setShown(false);
     }, [banner]);
 
+    // Comando de ocultar os lances: nada fica na tela, nem a faixa que estava saindo.
+    if (!current.layers.lower_third) {
+        return <Head title="Lances" />;
+    }
+
     const style = last ? kinds[last.kind] ?? kinds.goal : kinds.goal;
     const appearance = current.appearance;
     const duration = appearance.motion === 'none' ? 0 : appearance.motion === 'subtle' ? 300 : 500;

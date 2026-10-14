@@ -76,4 +76,17 @@ integrações com controladores externos sem dar poder de escrita a quem apenas 
   (`array_replace_recursive`); ID de outra organização ou inexistente é 422.
 - Fonte própria excluída depois de salva na cena não quebra: o estado simplesmente não traz `font_face` e vale a fonte padrão.
 
+## Addendum — comandos de exibir/ocultar em tempo real (14/10/2026)
+
+- As camadas ganham `scoreboard` e `lower_third` (placar e faixas de lance), além de `lineup` e `standings`. **Placar e lances
+  começam no ar** (`OverlayChannel::DEFAULT_ON`); escalação e tabela começam ocultas. O operador tira qualquer uma da tela com
+  um clique, mesmo sem jogo no ar (só escalação e tabela exigem jogo). `OverlayChannel::layerStates()` é a leitura única.
+- **Sem fila:** `OverlayUpdated` e `OverlayLowerThird` passam a `ShouldBroadcastNow` — o comando sai do clique direto para o
+  Reverb, sem esperar um worker. `OverlayUpdated::dispatchFor` captura falha do broadcaster (a mudança já está gravada e a
+  consulta periódica de 3 s cobre o OBS), e a faixa de lance idem: **nenhuma falha de transmissão desfaz um lance da súmula**.
+- **Lances** só são enviados aos canais com a camada ligada; ocultar tira da tela na hora, inclusive a faixa que estava saindo.
+- **Cliente:** ocultar o placar o remove na hora, sem animação. No painel o botão muda no clique (otimista) e volta ao estado
+  real se o servidor recusar; ligar/desligar a rotação de patrocinadores também vale na hora.
+- A API de controle (`layers.scoreboard`, `layers.lower_third`) e as cenas já aceitam as novas camadas.
+
 - Preset novo = entrada em `PRESETS` + moldura em `scoreboardFrame` + opção na tela de transmissão + teste.
