@@ -87,7 +87,7 @@ describe('subscribing', function () {
 
         Mail::assertSent(SubscriptionConfirm::class, 1);
 
-        Subscriber::query()->update(['updated_at' => now()->subMinutes(6)]);
+        $this->travel(6)->minutes();
         $this->post('/status/inscrever', ['email' => 'ana@exemplo.test']);
 
         Mail::assertSent(SubscriptionConfirm::class, 2);
