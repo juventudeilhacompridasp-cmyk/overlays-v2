@@ -13,7 +13,28 @@ interface Appearance {
     position: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
     scale: number;
     motion: 'dynamic' | 'subtle' | 'none';
+    font: string;
 }
+
+interface CustomFont {
+    id: string;
+    name: string;
+    format: string;
+}
+
+const catalogFonts: { value: string; label: string }[] = [
+    { value: 'system', label: 'Padrão do sistema' },
+    { value: 'inter', label: 'Inter (moderna)' },
+    { value: 'montserrat', label: 'Montserrat (geométrica)' },
+    { value: 'oswald', label: 'Oswald (condensada)' },
+    { value: 'bebas', label: 'Bebas Neue (títulos altos)' },
+    { value: 'anton', label: 'Anton (títulos pesados)' },
+    { value: 'barlow', label: 'Barlow Condensed' },
+    { value: 'roboto-condensed', label: 'Roboto Condensed' },
+    { value: 'archivo', label: 'Archivo Black (extra pesada)' },
+    { value: 'playfair', label: 'Playfair Display (clássica)' },
+    { value: 'marker', label: 'Permanent Marker (manuscrita)' },
+];
 
 interface LineupSettings {
     presentation: 'sequence' | 'list' | 'formation';
@@ -91,7 +112,7 @@ function CopyButton({ text }: { text: string }) {
     );
 }
 
-function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: { channel: Channel; games: GameOption[]; canManage: boolean; canOperate: boolean; issuedControl?: IssuedControl }) {
+function ChannelCard({ channel, games, fonts, canManage, canOperate, issuedControl }: { channel: Channel; games: GameOption[]; fonts: CustomFont[]; canManage: boolean; canOperate: boolean; issuedControl?: IssuedControl }) {
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
@@ -172,6 +193,20 @@ function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: {
                                 <option value="arena">Arena (alto contraste)</option>
                                 <option value="classic">Clássico (barra de TV)</option>
                                 <option value="minimal">Minimal (pílula translúcida)</option>
+                            </Select>
+                        </Field>
+                        <Field label="Fonte" htmlFor={`font-${channel.id}`}>
+                            <Select id={`font-${channel.id}`} disabled={!canOperate} value={appearance.font} onChange={(event) => setAppearance({ ...appearance, font: event.target.value })}>
+                                {catalogFonts.map((font) => (
+                                    <option key={font.value} value={font.value}>{font.label}</option>
+                                ))}
+                                {fonts.length > 0 && (
+                                    <optgroup label="Fontes da organização">
+                                        {fonts.map((font) => (
+                                            <option key={font.id} value={font.id}>{font.name}</option>
+                                        ))}
+                                    </optgroup>
+                                )}
                             </Select>
                         </Field>
                         <Field label="Cor de destaque" htmlFor={`accent-${channel.id}`}>
@@ -377,7 +412,55 @@ function SponsorsCard({ sponsors, limit, canManage }: { sponsors: Sponsor[]; lim
     );
 }
 
-export default function Index({ channels, games, issued_control, sponsors, sponsor_limit }: { channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl; sponsors: Sponsor[]; sponsor_limit: number }) {
+function FontsCard({ fonts, limit, canManage }: { fonts: CustomFont[]; limit: number; canManage: boolean }) {
+    const [name, setName] = useState('');
+    const [file, setFile] = useState<File | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const add = (event: FormEvent) => {
+        event.preventDefault();
+        if (!file) return;
+        router.post(route('panel.broadcast.fonts.store'), { name, font: file }, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                setName('');
+                setFile(null);
+                setError(null);
+            },
+            onError: (errors) => setError(errors.font ?? errors.name ?? 'Não foi possível enviar.'),
+        });
+    };
+
+    return (
+        <Card title="Fontes próprias dos overlays">
+            <p className="mb-3 text-xs text-gray-500">Envie a fonte da identidade visual (WOFF2, WOFF, TTF ou OTF, até 2 MB; {fonts.length}/{limit}). Ela aparece na lista de fontes de cada canal. Use só fontes que a sua organização tem licença para usar na transmissão.</p>
+            {fonts.length === 0 && <p className="text-sm text-gray-500">Nenhuma fonte própria enviada.</p>}
+            <ul className="divide-y divide-gray-100">
+                {fonts.map((font) => (
+                    <li key={font.id} className="flex items-center gap-3 py-2">
+                        <span className="flex-1 text-sm font-medium text-gray-900">{font.name}</span>
+                        <Badge>{font.format.toUpperCase()}</Badge>
+                        {canManage && <Button small variant="danger" onClick={() => window.confirm(`Excluir ${font.name}? Os canais que a usam voltam à fonte padrão.`) && router.delete(route('panel.broadcast.fonts.destroy', font.id), { preserveScroll: true })}>Excluir</Button>}
+                    </li>
+                ))}
+            </ul>
+            {canManage && fonts.length < limit && (
+                <form onSubmit={add} className="mt-4 flex flex-wrap items-end gap-3" aria-label="Nova fonte">
+                    <Field label="Nome" htmlFor="font-name">
+                        <Input id="font-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={60} required />
+                    </Field>
+                    <Field label="Arquivo da fonte" htmlFor="font-file" error={error ?? undefined}>
+                        <input id="font-file" type="file" accept=".woff2,.woff,.ttf,.otf" onChange={(event) => setFile(event.target.files?.[0] ?? null)} className="text-sm" required />
+                    </Field>
+                    <Button type="submit" disabled={!file || name.trim() === ''}>Enviar fonte</Button>
+                </form>
+            )}
+        </Card>
+    );
+}
+
+export default function Index({ channels, games, issued_control, sponsors, sponsor_limit, fonts, font_limit }: { channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl; sponsors: Sponsor[]; sponsor_limit: number; fonts: CustomFont[]; font_limit: number }) {
     const canManage = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
     const { data, setData, post, processing, errors, reset } = useForm({ name: '' });
@@ -396,10 +479,12 @@ export default function Index({ channels, games, issued_control, sponsors, spons
                 {channels.length === 0 && <Empty title="Nenhum canal de transmissão ainda.">{canManage ? 'Crie um canal abaixo para gerar as URLs do OBS.' : 'Peça a um organizador para criar um canal.'}</Empty>}
 
                 {channels.map((channel) => (
-                    <ChannelCard key={channel.id} channel={channel} games={games} canManage={canManage} canOperate={canOperate} issuedControl={issued_control} />
+                    <ChannelCard key={channel.id} channel={channel} games={games} fonts={fonts} canManage={canManage} canOperate={canOperate} issuedControl={issued_control} />
                 ))}
 
                 <SponsorsCard sponsors={sponsors} limit={sponsor_limit} canManage={canManage} />
+
+                <FontsCard fonts={fonts} limit={font_limit} canManage={canManage} />
 
                 {canManage && (
                     <Card title="Novo canal">

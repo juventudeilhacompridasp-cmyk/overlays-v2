@@ -8,9 +8,9 @@ import ts from 'typescript';
 const source = readFileSync(new URL('../../resources/js/lib/overlayVisual.ts', import.meta.url), 'utf8').replace(/^import .*$/gm, '');
 const out = join(mkdtempSync(join(tmpdir(), 'overlay-visual-')), 'overlayVisual.mjs');
 writeFileSync(out, ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 } }).outputText);
-const { nextSponsorIndex, overlayOrigin, overlayPosition, scoreboardFrame, sponsorFrameClass } = await import(out);
+const { nextSponsorIndex, overlayFontFamily, overlayOrigin, overlayPosition, overlayStyle, scoreboardFrame, sponsorFrameClass } = await import(out);
 
-const appearance = (extra = {}) => ({ preset: 'arena', accent_color: '#14b8a6', background_color: '#0f172a', text_color: '#f8fafc', position: 'top-left', scale: 1, motion: 'dynamic', ...extra });
+const appearance = (extra = {}) => ({ preset: 'arena', accent_color: '#14b8a6', background_color: '#0f172a', text_color: '#f8fafc', position: 'top-left', scale: 1, motion: 'dynamic', font: 'system', ...extra });
 
 test('every position anchors the scoreboard to its own corner or edge', () => {
     assert.match(overlayPosition('top-center'), /items-start justify-center/);
@@ -43,4 +43,12 @@ test('the sponsor card follows the preset corners', () => {
     assert.equal(sponsorFrameClass('arena'), 'rounded-2xl');
     assert.equal(sponsorFrameClass('classic'), 'rounded-md');
     assert.equal(sponsorFrameClass('minimal'), 'rounded-full');
+});
+
+test('the font choice maps to a stack, a custom id to the registered family, and the default to nothing', () => {
+    assert.equal(overlayFontFamily('system'), undefined);
+    assert.match(overlayFontFamily('bebas'), /^"Bebas Neue"/);
+    assert.match(overlayFontFamily('01JABCDEF0123456789XYZ0001'), /^"OverlayCustom"/);
+    assert.equal(overlayStyle(appearance({ font: 'inter' })).fontFamily, overlayFontFamily('inter'));
+    assert.equal('fontFamily' in overlayStyle(appearance({ font: 'system' })) && overlayStyle(appearance({ font: 'system' })).fontFamily, undefined);
 });

@@ -3,6 +3,7 @@
 namespace App\Modules\Broadcast\Support;
 
 use App\Modules\Broadcast\Models\OverlayChannel;
+use App\Modules\Broadcast\Models\OverlayFont;
 use App\Modules\Matches\Enums\LineupSlot;
 use Illuminate\Validation\Rule;
 
@@ -23,6 +24,14 @@ final class OverlayControlRules
             'appearance.position' => ['sometimes', 'string', Rule::in(OverlayAppearance::POSITIONS)],
             'appearance.scale' => ['sometimes', 'numeric', 'between:0.75,1.5'],
             'appearance.motion' => ['sometimes', 'string', Rule::in(OverlayAppearance::MOTIONS)],
+            'appearance.font' => ['sometimes', 'string', function (string $attribute, mixed $value, \Closure $fail) use ($channel): void {
+                $known = in_array($value, OverlayAppearance::FONTS, true)
+                    || OverlayFont::query()->where('organization_id', $channel->organization_id)->whereKey(is_string($value) ? strtoupper($value) : '')->exists();
+
+                if (! $known) {
+                    $fail('A fonte escolhida não existe.');
+                }
+            }],
             'sponsor_settings' => ['sometimes', 'array'],
             'sponsor_settings.enabled' => ['sometimes', 'boolean'],
             'sponsor_settings.seconds' => ['sometimes', 'integer', 'between:3,30'],

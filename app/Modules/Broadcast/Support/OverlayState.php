@@ -3,6 +3,7 @@
 namespace App\Modules\Broadcast\Support;
 
 use App\Modules\Broadcast\Models\OverlayChannel;
+use App\Modules\Broadcast\Models\OverlayFont;
 use App\Modules\Competitions\Actions\CalculateStandings;
 use App\Modules\Competitions\Data\StandingEntry;
 use App\Modules\Competitions\Enums\StageType;
@@ -31,7 +32,8 @@ final class OverlayState
 
         return [
             'channel' => $channel->name,
-            'appearance' => OverlayAppearance::normalize($channel->appearance),
+            'appearance' => $appearance = OverlayAppearance::normalize($channel->appearance),
+            'font_face' => self::fontFace($channel, $appearance['font']),
             'lineup_settings' => OverlayLineupSettings::public($channel->lineup_settings),
             'sponsors' => OverlaySponsorSettings::public($channel->sponsor_settings),
             'layers' => array_merge(array_fill_keys(OverlayChannel::LAYERS, false), array_map('boolval', $channel->layers ?? [])),
@@ -39,6 +41,27 @@ final class OverlayState
             'lineup' => $game && $channel->layerOn('lineup') ? self::lineup($game, OverlayLineupSettings::normalize($channel->lineup_settings)['photo_person_ids']) : null,
             'standings' => $game && $channel->layerOn('standings') ? self::standings($game) : null,
             'server_time_ms' => (int) (microtime(true) * 1000),
+        ];
+    }
+
+    /**
+     * Fonte própria escolhida pelo canal: endereço RELATIVO na mesma origem do overlay (o estado também é montado fora
+     * de requisição). Fonte excluída ou inexistente não vem (o front usa a fonte padrão).
+     *
+     * @return array{family: string, url: string, format: string}|null
+     */
+    private static function fontFace(OverlayChannel $channel, string $font): ?array
+    {
+        if (in_array($font, OverlayAppearance::FONTS, true)) {
+            return null;
+        }
+
+        $custom = OverlayFont::query()->find($font);
+
+        return $custom === null ? null : [
+            'family' => OverlayFont::FAMILY,
+            'url' => route('overlay.font', ['channel' => $channel->token, 'font' => $custom->getKey()], false),
+            'format' => $custom->format,
         ];
     }
 

@@ -21,6 +21,9 @@ Você pode trocar o fundo entre campo, quadra, escuro e a grade de transparênci
 
 > O endereço do canal é o segredo: quem tem a URL vê a tela. Se vazar, use **Renovar** para gerar outra (a antiga para de funcionar).
 
+## Fontes
+No visual do canal escolha a **Fonte** do placar, dos lances, da escalação e da tabela: a padrão, uma das fontes embutidas ou uma fonte própria. Quem gerencia competições envia as fontes da organização (WOFF2, WOFF, TTF ou OTF, até 2 MB, no máximo 4) em **Fontes próprias dos overlays** — envie só fontes que a organização pode usar na transmissão. Excluir uma fonte devolve à padrão os canais que a usavam.
+
 ## Patrocinadores
 Cadastre os logotipos em **Patrocinadores dos overlays** (quem gerencia competições) e, em cada canal, ligue a rotação e escolha o tempo de cada logotipo. Adicione no OBS a URL da tela **Patrocinadores**: ela mostra um logotipo por vez na posição do visual do canal. Pausar um patrocinador o tira da rotação.
 

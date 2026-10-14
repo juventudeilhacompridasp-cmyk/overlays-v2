@@ -27,6 +27,14 @@ Em cada canal, a seção **Visual do overlay** configura o placar:
 Clique em **Aplicar visual**. As fontes que já estão abertas no OBS recebem a mudança por Reverb, sem recarregar. As animações
 usam somente opacidade e transformação para reduzir o trabalho de renderização do Chromium do OBS.
 
+### Fontes
+
+Cada canal tem a opção **Fonte** no visual: a padrão do sistema, dez fontes embutidas (Inter, Montserrat, Oswald, Bebas Neue,
+Anton, Barlow Condensed, Roboto Condensed, Archivo Black, Playfair Display e Permanent Marker) ou uma **fonte própria** enviada
+em **Fontes próprias dos overlays** (WOFF2, WOFF, TTF ou OTF, até 2 MB, no máximo 4). Use só fontes que a sua organização tem
+licença para usar na transmissão. A fonte vale para todas as telas do canal; as abertas no OBS mudam sem recarregar. Se a
+fonte própria for excluída, o canal volta à fonte padrão.
+
 ### Patrocinadores
 
 Em **Patrocinadores dos overlays** (abaixo dos canais) cadastre até 12 logotipos — nome e imagem JPG, PNG ou WebP de até 5 MB. Eles

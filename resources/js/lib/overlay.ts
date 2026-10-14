@@ -1,5 +1,6 @@
 import { GameClock } from '@/lib/clock';
 import { ConnectionState, Realtime, subscribeToChannel } from '@/lib/echo';
+import './artFonts';
 import { useEffect, useRef, useState } from 'react';
 
 export interface OverlayTeam {
@@ -17,6 +18,13 @@ export interface OverlayAppearance {
     position: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
     scale: number;
     motion: 'dynamic' | 'subtle' | 'none';
+    font: string;
+}
+
+export interface OverlayFontFace {
+    family: string;
+    url: string;
+    format: 'woff2' | 'woff' | 'ttf' | 'otf';
 }
 
 export interface OverlayGame {
@@ -53,6 +61,7 @@ export interface LineupSide {
 export interface OverlayState {
     channel: string;
     appearance: OverlayAppearance;
+    font_face: OverlayFontFace | null;
     lineup_settings: { presentation: 'sequence' | 'list' | 'formation'; list_seconds: number };
     sponsors: { enabled: boolean; seconds: number; items: { name: string; logo_url: string }[] };
     layers: { lineup: boolean; standings: boolean };
@@ -94,6 +103,23 @@ export function useOverlay(token: string, initial: OverlayState, realtime: Realt
         document.documentElement.style.background = 'transparent';
         document.body.style.background = 'transparent';
     }, []);
+
+    // Fonte própria: registra o arquivo (mesma origem do overlay) antes de usar a família; até carregar vale a fonte de reserva.
+    const face = state.font_face;
+    useEffect(() => {
+        if (!face || typeof FontFace === 'undefined') return;
+
+        let cancelled = false;
+        const font = new FontFace(face.family, `url(${face.url}) format("${face.format === 'ttf' ? 'truetype' : face.format === 'otf' ? 'opentype' : face.format}")`);
+
+        font.load().then((loaded) => {
+            if (!cancelled) document.fonts.add(loaded);
+        }).catch(() => undefined);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [face?.family, face?.url, face?.format]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         let stop: (() => void) | undefined;

@@ -3,6 +3,7 @@
 use App\Modules\Broadcast\Events\OverlayLowerThird;
 use App\Modules\Broadcast\Events\OverlayUpdated;
 use App\Modules\Broadcast\Models\OverlayChannel;
+use App\Modules\Broadcast\Models\OverlayFont;
 use App\Modules\Broadcast\Models\OverlaySponsor;
 use App\Modules\Broadcast\Support\OverlayState;
 use App\Modules\Competitions\Enums\StageType;
@@ -50,6 +51,7 @@ it('builds the overlay state with the score, the clock and the logos', function 
             'position' => 'top-left',
             'scale' => 1.0,
             'motion' => 'dynamic',
+            'font' => 'system',
         ])
         ->and($state['lineup_settings'])->toBe(['presentation' => 'sequence', 'list_seconds' => 6])
         ->and($state['game']['id'])->toBe($game->id)
@@ -492,5 +494,114 @@ describe('sponsors', function () {
         $channel = channelFor();
 
         $this->get($channel->overlayUrl('patrocinadores'))->assertOk()->assertInertia(fn ($page) => $page->component('Overlay/Sponsors')->has('state.sponsors'));
+    });
+});
+
+describe('fonts', function () {
+    function fontFile(string $name = 'Marca.woff2', string $magic = 'wOF2', int $size = 400): UploadedFile
+    {
+        return UploadedFile::fake()->createWithContent($name, $magic.str_repeat("\0", $size));
+    }
+
+    beforeEach(function () {
+        Storage::fake('s3');
+    });
+
+    it('uses the system font by default and accepts the catalog fonts', function () {
+        $channel = channelFor();
+        $this->actingAs(panelUser(Role::Operator));
+
+        expect(OverlayState::for($channel)['appearance']['font'])->toBe('system')
+            ->and(OverlayState::for($channel)['font_face'])->toBeNull();
+
+        foreach (['bebas', 'oswald', 'playfair', 'system'] as $font) {
+            $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['font' => $font]])->assertSessionHasNoErrors();
+            expect($channel->fresh()->appearance['font'])->toBe($font);
+        }
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['font' => 'comic-neue']])->assertSessionHasErrors('appearance.font');
+    });
+
+    it('stores a font by its bytes, not its name, and refuses anything else', function () {
+        $this->actingAs(panelUser(Role::Organizer));
+
+        $this->post(route('panel.broadcast.fonts.store'), ['name' => 'Marca', 'font' => fontFile()])->assertSessionHas('success');
+        $font = OverlayFont::query()->firstOrFail();
+        expect($font->format)->toBe('woff2')->and($font->name)->toBe('Marca');
+        Storage::disk('s3')->assertExists($font->path);
+
+        $this->post(route('panel.broadcast.fonts.store'), ['name' => 'Disfarçada', 'font' => UploadedFile::fake()->createWithContent('x.woff2', '%PDF-1.4 conteudo')])->assertSessionHasErrors('font');
+        $this->post(route('panel.broadcast.fonts.store'), ['name' => 'Coleção', 'font' => fontFile('c.ttc', 'ttcf')])->assertSessionHasErrors('font');
+        $this->post(route('panel.broadcast.fonts.store'), ['name' => 'Grande', 'font' => fontFile('g.woff2', 'wOF2', 3 * 1024 * 1024)])->assertSessionHasErrors('font');
+        expect(OverlayFont::query()->count())->toBe(1);
+
+        $this->post(route('panel.broadcast.fonts.store'), ['name' => 'TTF', 'font' => fontFile('a.ttf', "\x00\x01\x00\x00")]);
+        $this->post(route('panel.broadcast.fonts.store'), ['name' => 'OTF', 'font' => fontFile('a.otf', 'OTTO')]);
+        expect(OverlayFont::query()->pluck('format')->sort()->values()->all())->toBe(['otf', 'ttf', 'woff2']);
+    });
+
+    it('stops at the limit and only organizers manage fonts', function () {
+        $this->actingAs(panelUser(Role::Operator))->post(route('panel.broadcast.fonts.store'), ['name' => 'X', 'font' => fontFile()])->assertSessionHas('error');
+        expect(OverlayFont::query()->count())->toBe(0);
+
+        $this->actingAs(panelUser(Role::Admin));
+        foreach (range(1, OverlayFont::LIMIT) as $i) {
+            $this->post(route('panel.broadcast.fonts.store'), ['name' => "Fonte {$i}", 'font' => fontFile("f{$i}.woff2")]);
+        }
+        expect(OverlayFont::query()->count())->toBe(OverlayFont::LIMIT);
+
+        $this->post(route('panel.broadcast.fonts.store'), ['name' => 'De sobra', 'font' => fontFile()])->assertSessionHasErrors('font');
+    });
+
+    it('lets a channel use an own font, hands the OBS a same-origin address and serves the file', function () {
+        $this->actingAs(panelUser(Role::Admin))->post(route('panel.broadcast.fonts.store'), ['name' => 'Marca', 'font' => fontFile()]);
+        $font = OverlayFont::query()->firstOrFail();
+        $channel = channelFor();
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['font' => $font->id]])->assertSessionHasNoErrors();
+
+        $state = OverlayState::for($channel->fresh());
+        expect($state['appearance']['font'])->toBe($font->id)
+            ->and($state['font_face'])->toBe(['family' => 'OverlayCustom', 'url' => "/overlay/{$channel->token}/fonte/{$font->id}", 'format' => 'woff2']);
+
+        $this->get($state['font_face']['url'])->assertOk()->assertHeader('Content-Type', 'font/woff2')->assertHeader('X-Content-Type-Options', 'nosniff');
+        expect(json_encode($state))->not->toContain($font->path);
+    });
+
+    it('refuses a font id that does not belong to the organization', function () {
+        $other = Organization::factory()->create(['slug' => 'outra-fonte']);
+        $foreign = CurrentOrganization::using($other, fn () => OverlayFont::query()->create(['name' => 'Alheia', 'path' => 'x.woff2', 'format' => 'woff2', 'bytes' => 10]));
+        $channel = channelFor();
+        $this->actingAs(panelUser(Role::Admin));
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['font' => $foreign->id]])->assertSessionHasErrors('appearance.font');
+        expect($channel->fresh()->appearance['font'] ?? 'system')->toBe('system');
+    });
+
+    it('falls back to the default font and refreshes the OBS when a used font is deleted', function () {
+        $this->actingAs(panelUser(Role::Admin))->post(route('panel.broadcast.fonts.store'), ['name' => 'Marca', 'font' => fontFile()]);
+        $font = OverlayFont::query()->firstOrFail();
+        $channel = channelFor();
+        $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['font' => $font->id]]);
+        Event::fake([OverlayUpdated::class]);
+
+        $this->delete(route('panel.broadcast.fonts.destroy', $font))->assertSessionHas('success');
+
+        expect(OverlayFont::query()->count())->toBe(0)
+            ->and($channel->fresh()->appearance['font'])->toBe('system')
+            ->and(OverlayState::for($channel->fresh())['font_face'])->toBeNull();
+        Storage::disk('s3')->assertMissing($font->path);
+        Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['appearance']['font'] === 'system');
+    });
+
+    it('answers 404 for a font file that is gone and lists the fonts on the broadcast screen', function () {
+        $this->actingAs(panelUser(Role::Admin))->post(route('panel.broadcast.fonts.store'), ['name' => 'Marca', 'font' => fontFile()]);
+        $font = OverlayFont::query()->firstOrFail();
+        $channel = channelFor();
+
+        $this->get('/painel/broadcast')->assertInertia(fn ($page) => $page->has('fonts', 1)->where('fonts.0.name', 'Marca')->where('font_limit', OverlayFont::LIMIT));
+
+        Storage::disk('s3')->delete($font->path);
+        $this->get("/overlay/{$channel->token}/fonte/{$font->id}")->assertNotFound();
     });
 });

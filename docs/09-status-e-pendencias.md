@@ -34,7 +34,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 - Fila offline: escalação, pênaltis e resultado rápido ainda exigem internet; a página não abre sem internet se for
   recarregada (o service worker não guarda páginas por causa da LGPD).
 - Gestor de equipe: avisos por push/WhatsApp (hoje só e-mail).
-- Overlays: presets Clássico e Minimal, posições inferiores e **patrocinadores (tela com rotação de logotipos)** entregues; mais variações de layout, fontes próprias e composição de cenas continuam para os
+- Overlays: presets Clássico e Minimal, posições inferiores e **patrocinadores (tela com rotação de logotipos) e fontes (10 embutidas + fontes próprias da organização)** entregues; mais variações de layout e composição de cenas continuam para os
   próximos PRs; Arena agora cobre placar, lances, tabela e escalação tática.
 - Dashboard: insights e gráficos ilustrados/animados ficam para uma etapa futura; a prioridade atual continua sendo lapidar
   os overlays e, depois, criar variações visuais.

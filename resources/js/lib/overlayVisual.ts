@@ -36,8 +36,29 @@ export function overlayMotion(motion: OverlayAppearance['motion']): string {
     return motion === 'dynamic' ? 'overlay-motion-dynamic' : motion === 'subtle' ? 'overlay-motion-subtle' : '';
 }
 
+const FONT_STACKS: Record<string, string> = {
+    inter: '"Inter","Segoe UI",Arial,sans-serif',
+    montserrat: '"Montserrat","Segoe UI",Arial,sans-serif',
+    oswald: '"Oswald","Arial Narrow",Impact,sans-serif',
+    bebas: '"Bebas Neue",Impact,"Arial Narrow",sans-serif',
+    anton: '"Anton",Impact,"Arial Narrow",sans-serif',
+    barlow: '"Barlow Condensed","Arial Narrow",Arial,sans-serif',
+    'roboto-condensed': '"Roboto Condensed","Arial Narrow",Arial,sans-serif',
+    archivo: '"Archivo Black","Arial Black",Impact,sans-serif',
+    playfair: '"Playfair Display",Georgia,"Times New Roman",serif',
+    marker: '"Permanent Marker","Comic Sans MS",cursive',
+};
+
+/** Pilha de fontes da escolha do canal; `undefined` = fonte padrão do sistema. Fonte própria (ID) usa a família registrada. */
+export function overlayFontFamily(font: string): string | undefined {
+    if (font === 'system' || font === '') return undefined;
+
+    return FONT_STACKS[font] ?? '"OverlayCustom","Segoe UI",Arial,sans-serif';
+}
+
 export function overlayStyle(appearance: OverlayAppearance): CSSProperties {
     return {
+        fontFamily: overlayFontFamily(appearance.font),
         '--overlay-accent': appearance.accent_color,
         '--overlay-background': appearance.background_color,
         '--overlay-text': appearance.text_color,
