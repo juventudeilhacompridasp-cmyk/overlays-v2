@@ -4,8 +4,8 @@ namespace App\Modules\Broadcast\Support;
 
 final class OverlayAppearance
 {
-    /** arena = painel de alto contraste; classic = barra de TV compacta e chapada; minimal = pílula translúcida só com o essencial. */
-    public const PRESETS = ['arena', 'classic', 'minimal'];
+    /** arena = painel de alto contraste; classic = barra de TV; minimal = pílula translúcida; studio = composição editorial. */
+    public const PRESETS = ['arena', 'classic', 'minimal', 'studio'];
 
     /** Fontes embutidas no sistema (CSS próprio, sem CDN) além da padrão; uma fonte própria é escolhida pelo ID (ULID). */
     public const FONTS = ['system', 'inter', 'montserrat', 'oswald', 'bebas', 'anton', 'barlow', 'roboto-condensed', 'archivo', 'playfair', 'marker'];

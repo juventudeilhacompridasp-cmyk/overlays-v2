@@ -49,9 +49,11 @@ export function SponsorBanner({ sponsors, appearance }: { sponsors: OverlayState
 export function IndividualCard({ side, player, appearance, sponsors, showSponsor }: { side: LineupSide; player: Individual; appearance: OverlayAppearance; sponsors: OverlayState['sponsors']; showSponsor: boolean }) {
     const color = side.color ?? appearance.accent_color;
     const photo = player.photo_large_url ?? player.photo_url;
+    const studio = appearance.preset === 'studio';
 
     return (
-        <section key={`${player.shirt}-${player.name}`} className={`w-[68rem] overflow-hidden rounded-xl border border-white/10 shadow-2xl ${overlayMotion(appearance.motion)}`} style={{ background: appearance.background_color }} data-testid="lineup-individual">
+        <section key={`${player.shirt}-${player.name}`} className={`relative w-[68rem] overflow-hidden border border-white/10 shadow-2xl ${studio ? 'rounded-sm' : 'rounded-xl'} ${overlayMotion(appearance.motion)}`} style={{ background: appearance.background_color }} data-testid="lineup-individual">
+            {studio && <span className="absolute inset-x-0 top-0 z-10 h-[3px]" style={{ backgroundColor: appearance.accent_color }} />}
             <header className="flex items-center gap-4 px-5 py-3">
                 <Crest side={side} />
                 <span className="truncate text-4xl font-black uppercase tracking-wide">{side.name}</span>
@@ -78,11 +80,13 @@ export function IndividualCard({ side, player, appearance, sponsors, showSponsor
 /** Grade de cartões da equipe: titulares e comissão (e reservas, se o escopo pedir). */
 export function CardsGrid({ side, players, appearance, sponsors, showSponsor }: { side: LineupSide; players: Individual[]; appearance: OverlayAppearance; sponsors: OverlayState['sponsors']; showSponsor: boolean }) {
     const color = side.color ?? appearance.accent_color;
+    const studio = appearance.preset === 'studio';
     const athletes = players.filter((player) => player.kind === 'player');
     const coach = players.find((player) => player.kind === 'coach');
 
     return (
-        <section className={`w-[68rem] overflow-hidden rounded-xl border border-white/10 shadow-2xl ${overlayMotion(appearance.motion)}`} style={{ background: appearance.background_color }} data-testid="lineup-cards">
+        <section className={`relative w-[68rem] overflow-hidden border border-white/10 shadow-2xl ${studio ? 'rounded-sm' : 'rounded-xl'} ${overlayMotion(appearance.motion)}`} style={{ background: appearance.background_color }} data-testid="lineup-cards">
+            {studio && <span className="absolute inset-x-0 top-0 z-10 h-[3px]" style={{ backgroundColor: appearance.accent_color }} />}
             <header className="flex items-center gap-4 px-5 py-3">
                 <Crest side={side} />
                 <span className="flex-1 truncate text-4xl font-black uppercase tracking-wide">{side.name}</span>
@@ -90,7 +94,7 @@ export function CardsGrid({ side, players, appearance, sponsors, showSponsor }: 
             </header>
             <div className="grid grid-cols-6 gap-3 px-5 pb-4">
                 {athletes.map((player, index) => (
-                    <figure key={`${player.shirt}-${player.name}-${index}`} className="overflow-hidden rounded-lg border border-white/10" style={{ background: `linear-gradient(180deg, ${color}44, ${appearance.background_color})` }}>
+                    <figure key={`${player.shirt}-${player.name}-${index}`} className={`overflow-hidden border border-white/10 ${studio ? 'rounded-sm' : 'rounded-lg'}`} style={{ background: studio ? appearance.background_color : `linear-gradient(180deg, ${color}44, ${appearance.background_color})` }}>
                         <div className="relative grid aspect-[4/5] place-items-center overflow-hidden">
                             {player.photo_large_url ?? player.photo_url ? <img src={(player.photo_large_url ?? player.photo_url) as string} alt="" className="absolute inset-0 h-full w-full object-cover object-top" /> : <Silhouette />}
                             <span className="absolute bottom-1 left-1 px-2 py-0.5 text-2xl font-black tabular-nums" style={{ backgroundColor: color }}>{pad(player.shirt)}</span>

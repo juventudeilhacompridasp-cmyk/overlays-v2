@@ -31,6 +31,10 @@ export function scoreboardFrame(appearance: OverlayAppearance): { className: str
         return { className: `relative ${display} items-stretch overflow-hidden ${rounded ?? 'rounded-full'} border border-white/10 shadow-lg`, style: { backgroundColor: `${bg}b3` } };
     }
 
+    if (preset === 'studio') {
+        return { className: `relative ${display} items-stretch overflow-hidden ${rounded ?? 'rounded-sm'} border border-white/10 shadow-2xl`, style: { backgroundColor: `${bg}f7` } };
+    }
+
     return { className: `relative ${display} items-stretch overflow-hidden ${rounded ?? 'rounded-2xl'} border border-white/15 shadow-2xl`, style: { background: `linear-gradient(135deg, ${bg}f2, ${bg}d9)` } };
 }
 
@@ -77,5 +81,5 @@ export function nextSponsorIndex(current: number, count: number): number {
 
 /** Moldura do cartão de patrocínio por preset: fundo claro sempre, para qualquer logotipo ficar legível. */
 export function sponsorFrameClass(preset: OverlayAppearance['preset']): string {
-    return preset === 'classic' ? 'rounded-md' : preset === 'minimal' ? 'rounded-full' : 'rounded-2xl';
+    return preset === 'classic' ? 'rounded-md' : preset === 'minimal' ? 'rounded-full' : preset === 'studio' ? 'rounded-sm' : 'rounded-2xl';
 }

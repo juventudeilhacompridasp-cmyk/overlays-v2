@@ -11,7 +11,7 @@ export interface OverlayTeam {
 }
 
 export interface OverlayAppearance {
-    preset: 'arena' | 'classic' | 'minimal';
+    preset: 'arena' | 'classic' | 'minimal' | 'studio';
     accent_color: string;
     background_color: string;
     text_color: string;
