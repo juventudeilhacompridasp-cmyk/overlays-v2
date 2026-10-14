@@ -45,6 +45,8 @@ return [
     'landing' => [
         'root' => (bool) env('PLATFORM_LANDING_ROOT', false),
         'hosts' => env('PLATFORM_LANDING_HOSTS'),
+        // Medição anônima de acessos (só com consentimento no navegador). Desligada = sem aviso e sem coleta.
+        'analytics' => (bool) env('PLATFORM_LANDING_ANALYTICS', true),
     ],
     'contact_email' => env('PLATFORM_CONTACT_EMAIL'),
 

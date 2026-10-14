@@ -95,6 +95,7 @@ export function buildNav(ctx: NavContext): NavMenu {
               item('Organizações', 'platform.organizations.index', 'platform.organizations.*', ICONS.layers),
               item('Status page', 'platform.status.index', 'platform.status.*', ICONS.pulse),
               item('Contatos da landing', 'platform.leads.index', 'platform.leads.*', ICONS.mail),
+              item('Medição da landing', 'platform.metrics.index', 'platform.metrics.*', ICONS.chart),
               item('Documentação das APIs', 'platform.api-docs.index', 'platform.api-docs.*', ICONS.code),
           ]
         : [];

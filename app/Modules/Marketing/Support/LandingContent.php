@@ -57,6 +57,7 @@ class LandingContent
                 'Documentos e fotos pessoais ficam em armazenamento privado, abertos só por link assinado e temporário.',
                 'Dados de menores e de disciplina não são públicos; nomes de atletas menores aparecem abreviados.',
                 'Overlays e páginas públicas nunca recebem documentos, nascimento, cartões de outras equipes ou notas táticas.',
+                'Nesta página, a medição de acessos é anônima e só acontece se você permitir: guardamos apenas contagens, sem IP nem cookies de rastreio.',
             ],
             'faq' => [
                 ['q' => 'Preciso instalar alguma coisa?', 'a' => 'Não. Tudo roda no navegador. No OBS você adiciona cada tela como uma fonte de navegador usando a URL do canal.'],

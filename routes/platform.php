@@ -3,6 +3,7 @@
 use App\Modules\ApiDocs\Http\Controllers\ApiDocsController;
 use App\Modules\Help\Http\Controllers\HelpController;
 use App\Modules\Marketing\Http\Controllers\PlatformLeadController;
+use App\Modules\Marketing\Http\Controllers\PlatformMetricsController;
 use App\Modules\Status\Http\Controllers\PlatformStatusController;
 use App\Modules\Tenancy\Http\Controllers\PlatformOrganizationController;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +18,7 @@ Route::middleware(['auth', 'verified', 'platform.admin'])->prefix('plataforma')-
     Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'platform')->name('help.show');
     Route::get('api-docs', [ApiDocsController::class, 'index'])->name('api-docs.index');
     Route::get('api-docs/openapi.json', [ApiDocsController::class, 'openapi'])->name('api-docs.openapi');
+    Route::get('medicao', [PlatformMetricsController::class, 'index'])->name('metrics.index');
     Route::get('contatos', [PlatformLeadController::class, 'index'])->name('leads.index');
     Route::patch('contatos/{lead}', [PlatformLeadController::class, 'update'])->name('leads.update');
     Route::delete('contatos/{lead}', [PlatformLeadController::class, 'destroy'])->name('leads.destroy');

@@ -1,4 +1,5 @@
 import { Seo, SeoHead } from '@/Components/Portal/PortalLayout';
+import { CONSENT_KEY, csrfFromCookie, mayTrack, MetricEvent, privacySignal, readConsent, SECTIONS, SESSION_KEY, shouldAsk, visitEvents } from '@/lib/landingMetrics';
 import { useForm, usePage } from '@inertiajs/react';
 import { FormEvent, ReactNode, useEffect, useRef, useState } from 'react';
 
@@ -37,6 +38,7 @@ interface Content {
 interface Props {
     content: Content;
     brand: string;
+    analytics: boolean;
     links: { privacy: string; terms: string; status: string; login: string };
     seo: Seo;
 }
@@ -196,6 +198,129 @@ function Gallery({ items }: { items: GalleryItem[] }) {
     );
 }
 
+/** Preferências guardadas só neste navegador; sem armazenamento a pergunta volta a cada visita. */
+const store = {
+    get: (area: 'local' | 'session', key: string): string | null => {
+        try {
+            return (area === 'local' ? window.localStorage : window.sessionStorage).getItem(key);
+        } catch {
+            return null;
+        }
+    },
+    set: (area: 'local' | 'session', key: string, value: string) => {
+        try {
+            (area === 'local' ? window.localStorage : window.sessionStorage).setItem(key, value);
+        } catch {
+            /* sem armazenamento: vale só nesta visita */
+        }
+    },
+};
+
+/**
+ * Medição anônima de acessos: só pergunta se a medição está ligada e não há sinal de privacidade (Do Not Track / GPC), e só
+ * envia contagens (visita, origem, aparelho, seção vista, botão clicado) depois do "Permitir". Sem cookies de rastreio, IP ou
+ * identificador. O rodapé reabre a pergunta para mudar de ideia.
+ */
+function Measurement({ enabled, privacy }: { enabled: boolean; privacy: string }) {
+    const [ready, setReady] = useState(false);
+    const [consent, setConsent] = useState<'yes' | 'no' | null>(null);
+    const [signal, setSignal] = useState(false);
+    const gate = { enabled, consent, signal };
+    const seen = useRef(new Set<string>());
+
+    useEffect(() => {
+        const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
+        setSignal(privacySignal({ doNotTrack: nav.doNotTrack, globalPrivacyControl: nav.globalPrivacyControl }));
+        setConsent(readConsent(store.get('local', CONSENT_KEY)));
+        setReady(true);
+
+        const reopen = () => setConsent(null);
+        window.addEventListener('marketing:consent-reopen', reopen);
+
+        return () => window.removeEventListener('marketing:consent-reopen', reopen);
+    }, []);
+
+    const send = (events: MetricEvent[]) => {
+        const token = csrfFromCookie(document.cookie);
+
+        fetch(route('marketing.metrics'), {
+            method: 'POST',
+            keepalive: true,
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(token ? { 'X-XSRF-TOKEN': token } : {}) },
+            body: JSON.stringify({ events }),
+        }).catch(() => undefined);
+    };
+
+    // Com consentimento: a visita (uma vez por sessão da aba), cada seção vista e os cliques nos botões.
+    useEffect(() => {
+        if (!ready || !mayTrack(gate)) return;
+
+        if (store.get('session', SESSION_KEY) === null) {
+            store.set('session', SESSION_KEY, '1');
+            send(visitEvents(document.referrer, window.location.hostname, window.innerWidth));
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    const id = entry.target.id;
+
+                    if (entry.isIntersecting && !seen.current.has(id)) {
+                        seen.current.add(id);
+                        send([{ metric: 'section', dimension: id }]);
+                    }
+                }
+            },
+            { threshold: 0.4 },
+        );
+        SECTIONS.forEach((id) => {
+            const element = document.getElementById(id);
+
+            if (element) observer.observe(element);
+        });
+
+        const onClick = (event: MouseEvent) => {
+            const target = (event.target as Element | null)?.closest<HTMLElement>('[data-cta]');
+
+            if (target?.dataset.cta) send([{ metric: 'cta', dimension: target.dataset.cta }]);
+        };
+        document.addEventListener('click', onClick);
+
+        return () => {
+            observer.disconnect();
+            document.removeEventListener('click', onClick);
+        };
+    }, [ready, consent, enabled, signal]);
+
+    const answer = (value: 'yes' | 'no') => {
+        store.set('local', CONSENT_KEY, value);
+        setConsent(value);
+    };
+
+    if (!ready || !shouldAsk(gate)) return null;
+
+    return (
+        <section role="region" aria-label="Medição de acessos" className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-2xl rounded-xl bg-neutral-900 p-4 text-sm text-white shadow-2xl ring-1 ring-white/10">
+            <p className="leading-relaxed text-white/90">
+                Podemos medir os acessos desta página? É uma <strong>contagem anônima</strong>: sem cookies de rastreio, sem IP e sem identificar você. Ela nos mostra quais partes ajudam. Veja a{' '}
+                <a href={privacy} className="font-semibold text-emerald-300 underline">
+                    política de privacidade
+                </a>
+                . Você pode mudar de ideia no rodapé.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" onClick={() => answer('yes')} className="rounded-md bg-emerald-500 px-4 py-2 font-bold text-neutral-950 hover:bg-emerald-400">
+                    Permitir
+                </button>
+                <button type="button" onClick={() => answer('no')} className="rounded-md border border-white/25 px-4 py-2 font-bold text-white hover:bg-white/10">
+                    Agora não
+                </button>
+            </div>
+        </section>
+    );
+}
+
 function Section({ id, title, subtitle, children, tone = 'light' }: { id?: string; title: string; subtitle?: string; children: ReactNode; tone?: 'light' | 'muted' }) {
     return (
         <section id={id} className={tone === 'muted' ? 'bg-gray-100 py-16' : 'py-16'}>
@@ -275,7 +400,7 @@ function ContactForm({ interests, privacy }: { interests: Content['interests']; 
             {errors.consent && <p className="-mt-2 text-sm text-red-600">{errors.consent}</p>}
             {errors.website && <p className="-mt-2 text-sm text-red-600">{errors.website}</p>}
             <div>
-                <button type="submit" disabled={processing} className="rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60">
+                <button type="submit" data-cta="contato" disabled={processing} className="rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60">
                     {processing ? 'Enviando…' : 'Enviar mensagem'}
                 </button>
             </div>
@@ -283,7 +408,7 @@ function ContactForm({ interests, privacy }: { interests: Content['interests']; 
     );
 }
 
-export default function Landing({ content, brand, links, seo }: Props) {
+export default function Landing({ content, brand, analytics, links, seo }: Props) {
     const nav = [
         { href: '#recursos', label: 'Recursos' },
         { href: '#galeria', label: 'Em ação' },
@@ -295,6 +420,7 @@ export default function Landing({ content, brand, links, seo }: Props) {
     return (
         <div className="bg-white text-gray-900">
             <SeoHead seo={seo} />
+            <Measurement enabled={analytics} privacy={links.privacy} />
             <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
                 Pular para o conteúdo
             </a>
@@ -315,7 +441,7 @@ export default function Landing({ content, brand, links, seo }: Props) {
                         <a href={links.login} className="text-white/80 hover:text-white">
                             Entrar
                         </a>
-                        <a href="#contato" className="rounded-md bg-emerald-500 px-3 py-1.5 text-neutral-950 hover:bg-emerald-400">
+                        <a href="#contato" data-cta="menu" className="rounded-md bg-emerald-500 px-3 py-1.5 text-neutral-950 hover:bg-emerald-400">
                             <span className="hidden sm:inline">Falar com a equipe</span><span className="sm:hidden">Contato</span>
                         </a>
                     </div>
@@ -330,7 +456,7 @@ export default function Landing({ content, brand, links, seo }: Props) {
                             <h1 className="break-words text-3xl font-black leading-tight tracking-tight sm:text-5xl">{content.hero.title}</h1>
                             <p className="mt-4 max-w-xl text-lg text-white/75">{content.hero.subtitle}</p>
                             <div className="mt-8 flex flex-wrap gap-3">
-                                <a href="#contato" className="rounded-md bg-emerald-500 px-5 py-3 font-bold text-neutral-950 hover:bg-emerald-400">
+                                <a href="#contato" data-cta="hero" className="rounded-md bg-emerald-500 px-5 py-3 font-bold text-neutral-950 hover:bg-emerald-400">
                                     Quero conhecer
                                 </a>
                                 <a href="#overlays" className="rounded-md border border-white/25 px-5 py-3 font-bold text-white hover:bg-white/10">
@@ -466,6 +592,11 @@ export default function Landing({ content, brand, links, seo }: Props) {
                         <a href={links.terms} className="hover:text-white">Termos de uso</a>
                         <a href={links.privacy} className="hover:text-white">Privacidade</a>
                         <a href={links.status} className="hover:text-white">Status</a>
+                        {analytics && (
+                            <button type="button" onClick={() => window.dispatchEvent(new Event('marketing:consent-reopen'))} className="hover:text-white">
+                                Preferências de medição
+                            </button>
+                        )}
                     </nav>
                 </div>
             </footer>
