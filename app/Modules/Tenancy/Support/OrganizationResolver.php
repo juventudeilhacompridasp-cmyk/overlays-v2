@@ -32,6 +32,11 @@ final class OrganizationResolver
         if ($base !== null && str_ends_with($host, ".{$base}")) {
             $slug = substr($host, 0, -strlen(".{$base}"));
 
+            // `www.{base}` é a landing page do produto (mesmo tratamento do `status`).
+            if ($slug === 'www') {
+                return self::defaultOrganization();
+            }
+
             // `status.{base}` é a status page da plataforma: não é organização, mas precisa de uma organização ativa para o pipeline web.
             if ($slug === 'status') {
                 return self::defaultOrganization();

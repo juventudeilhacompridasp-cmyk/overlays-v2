@@ -4,6 +4,8 @@ Pedido de 14/10/2026: depois do Modo operador, **mapear** (não implementar aind
 
 ## 1. Landing page (site do produto)
 
+> **Estado (14/10/2026): partes 1 e 2 entregues** — página em `/produto` (raiz opcional por `PLATFORM_LANDING_ROOT`), pacotes lidos do código, FAQ, LGPD, formulário com aceite, armadilha e limite, leads no painel da plataforma (`/plataforma/contatos`) e aviso por e-mail (`PLATFORM_CONTACT_EMAIL`). **Falta a parte 3:** galeria de prints/vídeos por script versionado e imagens WebP otimizadas; medição agregada só com consentimento. Decisão de hosts: `/produto` sempre; raiz da landing opt-in (a recomendação (a) do ADR virou configuração). Detalhes em `AGENTS.md`.
+
 **Objetivo:** apresentar a plataforma a organizadores de competições e transmissores, e levar a um contato/cadastro. Não é o portal público de uma organização.
 
 ### Onde mora
