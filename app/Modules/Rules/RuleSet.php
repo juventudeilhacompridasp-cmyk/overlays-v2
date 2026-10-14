@@ -45,6 +45,8 @@ final readonly class RuleSet
         public ?int $pointsWalkoverLoss = null,
         /** Faltas pessoais que eliminam o atleta (nulo = esporte sem esse controle). Basquete: 5. */
         public ?int $maxPlayerFouls = null,
+        /** Faltas técnicas/antidesportivas (somadas) que desqualificam o atleta. Basquete: 2. */
+        public int $maxDisqualifyingFouls = 2,
         /** Minutos antes do horário do jogo em que a escalação do gestor da equipe trava (0 = no horário do jogo). */
         public int $managerLineupDeadlineMinutes = 30,
     ) {
@@ -150,6 +152,7 @@ final readonly class RuleSet
             pointsNarrowLoss: isset($merged['scoring']['points_narrow_loss']) ? (int) $merged['scoring']['points_narrow_loss'] : null,
             pointsWalkoverLoss: isset($merged['points']['walkover_loss']) ? (int) $merged['points']['walkover_loss'] : null,
             maxPlayerFouls: isset($merged['fouls']['max_player']) ? (int) $merged['fouls']['max_player'] : null,
+            maxDisqualifyingFouls: (int) ($merged['fouls']['max_disqualifying'] ?? 2),
             managerLineupDeadlineMinutes: (int) $merged['lineup']['manager_deadline_minutes'],
         );
     }
@@ -161,7 +164,7 @@ final readonly class RuleSet
     {
         return [
             'points' => ['win' => $this->pointsWin, 'draw' => $this->pointsDraw, 'loss' => $this->pointsLoss, 'walkover_loss' => $this->pointsWalkoverLoss],
-            'fouls' => ['max_player' => $this->maxPlayerFouls],
+            'fouls' => ['max_player' => $this->maxPlayerFouls, 'max_disqualifying' => $this->maxDisqualifyingFouls],
             'tiebreakers' => array_map(fn (Tiebreaker $t) => $t->value, $this->tiebreakers),
             'cards' => [
                 'yellow_for_suspension' => $this->yellowCardsForSuspension,

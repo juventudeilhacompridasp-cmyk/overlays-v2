@@ -26,6 +26,9 @@ enum GameEventType: string
     case ClockResume = 'clock_resume';
     /** Basquete: pedido de tempo da equipe (sem atleta). */
     case Timeout = 'timeout';
+    /** Basquete: falta técnica (não conta como falta de equipe) e antidesportiva (conta); ambas contam na falta pessoal e desqualificam na segunda. */
+    case TechnicalFoul = 'technical_foul';
+    case UnsportsmanlikeFoul = 'unsportsmanlike_foul';
 
     public function label(): string
     {
@@ -48,6 +51,8 @@ enum GameEventType: string
             self::ClockPause => 'Relógio parado',
             self::ClockResume => 'Relógio em andamento',
             self::Timeout => 'Pedido de tempo',
+            self::TechnicalFoul => 'Falta técnica',
+            self::UnsportsmanlikeFoul => 'Falta antidesportiva',
         };
     }
 
@@ -60,6 +65,24 @@ enum GameEventType: string
             self::ThreePointer => 3,
             default => null,
         };
+    }
+
+    /** Faltas que somam no contador de faltas da equipe (a técnica não soma). */
+    public function countsAsTeamFoul(): bool
+    {
+        return in_array($this, [self::Foul, self::UnsportsmanlikeFoul], true);
+    }
+
+    /** Falta pessoal de qualquer tipo (soma no limite de faltas do atleta). */
+    public function isPersonalFoul(): bool
+    {
+        return in_array($this, [self::Foul, self::TechnicalFoul, self::UnsportsmanlikeFoul], true);
+    }
+
+    /** Falta que desqualifica o atleta na segunda ocorrência (técnica ou antidesportiva). */
+    public function isDisqualifying(): bool
+    {
+        return in_array($this, [self::TechnicalFoul, self::UnsportsmanlikeFoul], true);
     }
 
     /** Eventos que só movem o relógio (não passam pela súmula). */

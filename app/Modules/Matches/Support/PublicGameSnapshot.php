@@ -95,7 +95,7 @@ final class PublicGameSnapshot
         $group = $profile->foulGroup((int) $current);
         $counts = ['home' => 0, 'away' => 0];
 
-        $game->events()->effective()->where('type', GameEventType::Foul)->get()->each(function (GameEvent $event) use (&$counts, $side, $profile, $group): void {
+        $game->events()->effective()->whereIn('type', [GameEventType::Foul, GameEventType::UnsportsmanlikeFoul])->get()->each(function (GameEvent $event) use (&$counts, $side, $profile, $group): void {
             $team = $side($event->entry_id);
 
             if ($team !== null && $profile->foulGroup((int) $event->period) === $group) {

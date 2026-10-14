@@ -12,7 +12,7 @@ A súmula digital é onde o mesário registra o jogo. Placar, tabela e telas ao 
 1. Abra o [Mesário](route:panel.mesario) e escolha o jogo.
 2. **Escalação**: marque titulares, reservas e comissão de cada equipe (só atletas do elenco ativo e sem suspensão). A escalação trava depois do primeiro lançamento da equipe. Se o gestor da equipe já confirmou a escalação, ela aparece como "confirmada pelo gestor".
 3. **Inicie o período** (1º tempo, quarto, set). O cronômetro conta sozinho na tela.
-4. Lance os eventos: gols, cartões, substituições e faltas. No vôlei cada ponto de rally é um lançamento; no basquete há o painel de cestas (+1, +2, +3, falta e pedido de tempo).
+4. Lance os eventos: gols, cartões, substituições e faltas. No vôlei cada ponto de rally é um lançamento; no basquete há o painel de cestas (+1, +2, +3, falta, T para falta técnica, U para antidesportiva e pedido de tempo; a antidesportiva conta nas faltas da equipe e a segunda técnica ou antidesportiva do mesmo atleta o desqualifica).
 5. **Encerre o período** e, no fim, **encerre o jogo**.
 
 ## Corrigir um erro

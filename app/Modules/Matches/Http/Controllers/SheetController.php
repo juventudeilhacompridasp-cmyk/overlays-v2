@@ -180,7 +180,7 @@ class SheetController extends Controller
             'quarters' => PublicGameSnapshot::for($game)['quarters'],
             'event_types' => collect(match ($game->sport()->profile()->scoreModel) {
                 'sets' => [GameEventType::Substitution, GameEventType::YellowCard, GameEventType::RedCard],
-                'points' => [GameEventType::FieldGoal, GameEventType::ThreePointer, GameEventType::FreeThrow, GameEventType::Foul, GameEventType::Substitution],
+                'points' => [GameEventType::FieldGoal, GameEventType::ThreePointer, GameEventType::FreeThrow, GameEventType::Foul, GameEventType::TechnicalFoul, GameEventType::UnsportsmanlikeFoul, GameEventType::Substitution],
                 default => [
                     GameEventType::Goal, GameEventType::OwnGoal, GameEventType::YellowCard, GameEventType::RedCard,
                     GameEventType::BlueCard, GameEventType::Substitution,

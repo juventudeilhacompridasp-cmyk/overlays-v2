@@ -110,6 +110,8 @@ const typeIcon: Record<string, string> = {
     period_start: '▶️',
     period_end: '⏸️',
     foul: '🚫',
+    technical_foul: '🅣',
+    unsportsmanlike_foul: '🅤',
     timeout: '⏱️',
     point: '🏐',
     free_throw: '🏀 (1)',
@@ -263,7 +265,7 @@ function ClockCard({ game, clock, publicUrl, sport, send }: { game: Props['game'
     );
 }
 
-const basketLabel: Record<string, string> = { free_throw: 'Lance livre (+1)', field_goal: 'Cesta de 2', three_pointer: 'Cesta de 3', foul: 'Falta', timeout: 'Pedido de tempo' };
+const basketLabel: Record<string, string> = { free_throw: 'Lance livre (+1)', field_goal: 'Cesta de 2', three_pointer: 'Cesta de 3', foul: 'Falta', technical_foul: 'Falta técnica', unsportsmanlike_foul: 'Falta antidesportiva', timeout: 'Pedido de tempo' };
 
 /** Basquete: toque rápido por atleta em quadra (+1, +2, +3 e falta). Quem foi eliminado por faltas não pontua nem comete falta. */
 function BasketPad({ game, team, period, send: enqueue }: { game: Props['game']; team: Team; period: number; send: Send }) {
@@ -302,6 +304,12 @@ function BasketPad({ game, team, period, send: enqueue }: { game: Props['game'];
                                     ))}
                                     <Button small variant="secondary" disabled={out} onClick={() => send('foul', id)}>
                                         Falta
+                                    </Button>
+                                    <Button small variant="secondary" disabled={out} onClick={() => send('technical_foul', id)}>
+                                        T
+                                    </Button>
+                                    <Button small variant="secondary" disabled={out} onClick={() => send('unsportsmanlike_foul', id)}>
+                                        U
                                     </Button>
                                 </span>
                             )}

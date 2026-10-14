@@ -138,6 +138,55 @@ describe('fouls', function () {
         basket($game, GameEventType::FieldGoal, 'home', $hp[0]);
         expect($game->fresh()->home_score)->toBe(2);
     });
+
+    it('counts the unsportsmanlike foul in the team total but not the technical one', function () {
+        ['game' => $game, 'hp' => $hp] = basketballGame();
+
+        basket($game, GameEventType::Foul, 'home', $hp[0]);
+        basket($game, GameEventType::UnsportsmanlikeFoul, 'home', $hp[1]);
+        basket($game, GameEventType::TechnicalFoul, 'home', $hp[2]);
+
+        expect(PublicGameSnapshot::for($game->fresh())['fouls']['home'])->toBe(2);
+    });
+
+    it('disqualifies on the second technical or unsportsmanlike foul, in any mix, and takes the player off court', function () {
+        ['game' => $game, 'hp' => $hp] = basketballGame();
+
+        basket($game, GameEventType::TechnicalFoul, 'home', $hp[0]);
+        basket($game, GameEventType::FieldGoal, 'home', $hp[0]); // uma só ainda não desqualifica
+        basket($game, GameEventType::UnsportsmanlikeFoul, 'home', $hp[0]);
+
+        expect(fn () => basket($game, GameEventType::FieldGoal, 'home', $hp[0]))->toThrow(InvalidArgumentException::class, 'expulso')
+            ->and(fn () => app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Substitution, $game->home_entry_id, $hp[0], $hp[5], 1, 3))
+            ->toThrow(InvalidArgumentException::class);
+    });
+
+    it('also adds technical and unsportsmanlike fouls to the personal foul limit', function () {
+        ['game' => $game, 'hp' => $hp] = basketballGame();
+
+        foreach ([GameEventType::Foul, GameEventType::Foul, GameEventType::Foul, GameEventType::TechnicalFoul, GameEventType::Foul] as $type) {
+            basket($game, $type, 'home', $hp[1]);
+        }
+
+        expect(fn () => basket($game, GameEventType::FieldGoal, 'home', $hp[1]))->toThrow(InvalidArgumentException::class, 'eliminado por faltas');
+    });
+
+    it('gives the unsportsmanlike foul back when voided', function () {
+        ['game' => $game, 'hp' => $hp] = basketballGame();
+        basket($game, GameEventType::UnsportsmanlikeFoul, 'home', $hp[0]);
+        $event = $game->events()->where('type', GameEventType::UnsportsmanlikeFoul)->firstOrFail();
+
+        app(VoidGameEvent::class)->handle($game->fresh(), $event);
+
+        expect(PublicGameSnapshot::for($game->fresh())['fouls']['home'])->toBe(0);
+    });
+
+    it('is refused in football', function () {
+        ['game' => $game, 'hp' => $hp] = sheetGame();
+
+        expect(fn () => app(RecordGameEvent::class)->handle($game, GameEventType::TechnicalFoul, $game->home_entry_id, $hp[0]))
+            ->toThrow(InvalidArgumentException::class, 'não registra faltas');
+    });
 });
 
 describe('countdown clock that stops', function () {
