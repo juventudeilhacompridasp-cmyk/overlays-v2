@@ -43,7 +43,7 @@ class StatusFakeProbe implements Probe
 
     public function run(): ProbeResult
     {
-        return match (self::$results[$this->key] ?? true) {
+        return match (array_key_exists($this->key, self::$results) ? self::$results[$this->key] : true) {
             null => ProbeResult::skipped(),
             true => ProbeResult::ok(12),
             false => ProbeResult::fail('falhou'),
