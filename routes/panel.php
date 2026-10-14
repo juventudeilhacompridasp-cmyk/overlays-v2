@@ -131,6 +131,8 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::post('games/{game}/clock', [SheetController::class, 'clockPause'])->name('games.clock.pause');
         Route::post('games/{game}/shot-clock', [SheetController::class, 'shotClock'])->name('games.shot-clock.reset');
         Route::post('games/{game}/shootout', [SheetController::class, 'shootout'])->name('games.shootout');
+        Route::post('games/{game}/shootout/kick', [SheetController::class, 'shootoutKick'])->name('games.shootout.kick');
+        Route::post('games/{game}/shootout/undo', [SheetController::class, 'undoShootoutKick'])->name('games.shootout.undo');
         Route::post('games/{game}/finish', [SheetController::class, 'finish'])->name('games.finish');
     });
 

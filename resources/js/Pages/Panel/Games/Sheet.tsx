@@ -2,6 +2,7 @@ import { Badge, Button, Card, Field, Input, LinkButton, Logo, PageHeader, Select
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan, useFeature } from '@/lib/can';
 import { GameClock, formatClock, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
+import { ShootoutData, shootoutCaption, shootoutDots } from '@/lib/shootout';
 import { SheetView, project, ProjectionRules, QueueItem, QueueKind } from '@/lib/sheetProject';
 import { SheetQueue, useSheetQueue } from '@/lib/sheetQueue';
 import { Option } from '@/types/panel';
@@ -67,6 +68,7 @@ interface Props {
         knockout: boolean;
         home_penalties: number | null;
         away_penalties: number | null;
+        shootout: ShootoutData | null;
         stage_id: string;
         stage: string;
         division: string;
@@ -365,27 +367,73 @@ function PointsCard({ game, sets, home, away, lastPoint, send }: { game: Props['
     );
 }
 
+/** Bolinhas da disputa no painel (fundo claro): verde convertida, vermelha perdida, vazia por cobrar. */
+function ShootoutRow({ name, kicks, opponent, rounds, turn }: { name: string; kicks: boolean[]; opponent: number; rounds: number; turn: boolean }) {
+    return (
+        <div className={`flex items-center gap-2 rounded-md px-2 py-1 ${turn ? 'bg-amber-50 ring-1 ring-amber-300' : ''}`}>
+            <span className="w-40 truncate text-sm font-medium text-gray-800">{name}{turn ? ' · cobra' : ''}</span>
+            <span className="inline-flex gap-1" role="img" aria-label={`Cobranças de ${name}`}>
+                {shootoutDots(kicks, rounds, opponent).map((dot, index) => (
+                    <span key={index} data-dot={dot} className={`grid h-6 w-6 place-items-center rounded-full border-2 text-xs font-black leading-none ${dot === 'goal' ? 'border-emerald-600 bg-emerald-500 text-white' : dot === 'miss' ? 'border-red-600 bg-red-500 text-white' : 'border-gray-300 bg-white text-gray-300'}`}>{dot === 'goal' ? '✓' : dot === 'miss' ? '✕' : ''}</span>
+                ))}
+            </span>
+        </div>
+    );
+}
+
+/** Disputa de pênaltis cobrança a cobrança (os times se alternam; a disputa fecha sozinha ao ter vencedor) ou só o total, à mão. */
 function ShootoutCard({ game, home, away }: { game: Props['game']; home: Team; away: Team }) {
     const [homePens, setHomePens] = useState(game.home_penalties?.toString() ?? '');
     const [awayPens, setAwayPens] = useState(game.away_penalties?.toString() ?? '');
+    const shootout = game.shootout;
+    const manual = shootout !== null && !shootout.by_kick;
+    const empty = shootout === null;
+    const state = shootout ?? { home: [], away: [], goals: { home: 0, away: 0 }, first: null, next: null, decided: false, winner: null, rounds: 5, by_kick: true };
+    const locked = state.decided || manual;
+    const post = (name: string, data: Record<string, unknown> = {}) => router.post(route(name, game.id), data as never, { preserveScroll: true });
+    const kick = (side: 'home' | 'away', scored: boolean) => post('panel.games.shootout.kick', { side, scored });
+    const canKick = (side: 'home' | 'away') => !locked && (state.next === null || state.next === side);
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
-        router.post(route('panel.games.shootout', game.id), { home_penalties: homePens === '' ? null : homePens, away_penalties: awayPens === '' ? null : awayPens }, { preserveScroll: true });
+        post('panel.games.shootout', { home_penalties: homePens === '' ? null : homePens, away_penalties: awayPens === '' ? null : awayPens });
     };
 
     return (
         <Card title="Disputa de pênaltis">
-            <form onSubmit={submit} className="flex flex-wrap items-end gap-3" aria-label="Disputa de pênaltis">
-                <Field label={`${home.name} (convertidos)`}>
-                    <Input type="number" min={0} max={30} value={homePens} onChange={(event) => setHomePens(event.target.value)} />
-                </Field>
-                <Field label={`${away.name} (convertidos)`}>
-                    <Input type="number" min={0} max={30} value={awayPens} onChange={(event) => setAwayPens(event.target.value)} />
-                </Field>
-                <Button type="submit">Salvar pênaltis</Button>
-                <p className="w-full text-xs text-gray-500">Só no jogo que decide o confronto empatado. Deixe em branco e salve para remover a disputa.</p>
-            </form>
+            <div className="space-y-2" data-testid="shootout-card">
+                <ShootoutRow name={home.name} kicks={state.home} opponent={state.away.length} rounds={state.rounds} turn={!locked && state.next === 'home'} />
+                <ShootoutRow name={away.name} kicks={state.away} opponent={state.home.length} rounds={state.rounds} turn={!locked && state.next === 'away'} />
+                <p className="text-sm font-medium text-gray-700" data-testid="shootout-status">
+                    {empty ? 'Lance cada cobrança na ordem em que acontece; qualquer equipe pode abrir a disputa.' : manual ? `Total lançado à mão: ${state.goals.home} x ${state.goals.away}.` : shootoutCaption(state, { home: home.name, away: away.name })}
+                    {!empty && !manual && ` (${state.goals.home} x ${state.goals.away})`}
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                    {([['home', home], ['away', away]] as const).map(([side, team]) => (
+                        <div key={side} className="flex gap-2">
+                            <Button className="flex-1" disabled={!canKick(side)} onClick={() => kick(side, true)}>⚽ {team.name}: converteu</Button>
+                            <Button className="flex-1" variant="secondary" disabled={!canKick(side)} onClick={() => kick(side, false)}>✕ perdeu</Button>
+                        </div>
+                    ))}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button small variant="secondary" disabled={empty || manual} onClick={() => post('panel.games.shootout.undo')}>↶ Desfazer a última cobrança</Button>
+                    {state.decided && !manual && <span className="text-xs text-gray-500">Decidida: já dá para encerrar o jogo.</span>}
+                </div>
+            </div>
+            <details className="mt-4 border-t border-gray-100 pt-3">
+                <summary className="cursor-pointer text-sm font-medium text-gray-700">Lançar só o total de pênaltis convertidos</summary>
+                <form onSubmit={submit} className="mt-3 flex flex-wrap items-end gap-3" aria-label="Disputa de pênaltis">
+                    <Field label={`${home.name} (convertidos)`}>
+                        <Input type="number" min={0} max={30} value={homePens} onChange={(event) => setHomePens(event.target.value)} />
+                    </Field>
+                    <Field label={`${away.name} (convertidos)`}>
+                        <Input type="number" min={0} max={30} value={awayPens} onChange={(event) => setAwayPens(event.target.value)} />
+                    </Field>
+                    <Button type="submit">Salvar pênaltis</Button>
+                    <p className="w-full text-xs text-gray-500">Só no jogo que decide o confronto empatado. Deixe em branco e salve para remover a disputa (também a lançada cobrança a cobrança).</p>
+                </form>
+            </details>
         </Card>
     );
 }

@@ -31,6 +31,7 @@ class OverlayController extends Controller
         'social' => 'Overlay/Social',
         'barra-patrocinio' => 'Overlay/SponsorBar',
         'estatisticas' => 'Overlay/Stats',
+        'penaltis' => 'Overlay/Shootout',
         'todos' => 'Overlay/All',
     ];
 

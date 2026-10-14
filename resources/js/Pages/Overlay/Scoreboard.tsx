@@ -1,3 +1,5 @@
+import { PenaltyDots } from '@/Components/Overlay/PenaltyDots';
+import { shootoutRows, shootoutScore } from '@/lib/shootout';
 import { formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
 import { Realtime } from '@/lib/echo';
 import { celebrationDuration, celebrationPhase, scoredSide, Side as ScoreSide } from '@/lib/goalCelebration';
@@ -219,7 +221,13 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
                             <span className={game.timeouts.away === 0 ? 'text-white/40' : 'font-bold'}>{game.timeouts.away}</span>
                         </div>
                     )}
-                    {game.home_penalties !== null && game.away_penalties !== null && (
+                    {game.shootout && game.shootout.by_kick ? (
+                        <div className="mt-1 inline-flex items-center gap-3 rounded-lg border border-white/10 px-3 py-1 text-sm shadow-lg" style={{ backgroundColor: `${appearance.background_color}e6` }} data-testid="overlay-shootout-strip">
+                            <PenaltyDots dots={shootoutRows(game.shootout).home} size={16} label="Cobranças do mandante" />
+                            <span className="font-black tabular-nums">{shootoutScore(game.shootout)}</span>
+                            <PenaltyDots dots={shootoutRows(game.shootout).away} size={16} align="right" label="Cobranças do visitante" />
+                        </div>
+                    ) : game.home_penalties !== null && game.away_penalties !== null && (
                         <div className="mt-1 inline-block rounded-lg border border-white/10 px-3 py-1 text-sm shadow-lg" style={{ backgroundColor: `${appearance.background_color}e6` }}>
                             Pênaltis: {game.home_penalties} x {game.away_penalties}
                         </div>

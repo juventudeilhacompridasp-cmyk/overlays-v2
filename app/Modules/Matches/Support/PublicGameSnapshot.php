@@ -48,6 +48,7 @@ final class PublicGameSnapshot
             'away_score' => $game->away_score,
             'home_penalties' => $game->home_penalties,
             'away_penalties' => $game->away_penalties,
+            'shootout' => ShootoutView::for($game),
             'scheduled_at' => $game->scheduled_at?->toIso8601String(),
             'venue' => $game->venue?->name,
             'competition' => $game->division->season->competition->name,
