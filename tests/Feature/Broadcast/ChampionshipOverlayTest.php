@@ -1,7 +1,6 @@
 <?php
 
 use App\Modules\Broadcast\Models\OverlayChannel;
-use App\Modules\Competitions\Enums\SeasonStatus;
 use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Models\Game;
@@ -17,11 +16,6 @@ beforeEach(function () {
 function championshipChannel(?Game $game = null): OverlayChannel
 {
     return OverlayChannel::query()->create(['name' => 'Canal '.fake()->unique()->word(), 'token' => OverlayChannel::newToken(), 'game_id' => $game?->id, 'layers' => []]);
-}
-
-function publishSeason(Game $game): void
-{
-    $game->division->season->update(['status' => SeasonStatus::Active]);
 }
 
 it('serves each championship view to guests by token and refuses unknown views, tokens and organizations', function () {
