@@ -216,6 +216,11 @@ return [
                     'seconds' => ['type' => 'integer', 'minimum' => 3, 'maximum' => 15],
                     'kinds' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['goal', 'own_goal', 'yellow_card', 'red_card', 'blue_card', 'substitution']], 'description' => 'Quais lances da súmula viram faixa.'],
                     'score' => ['type' => 'boolean', 'description' => 'Mostra o placar na faixa do gol.'],
+                    'position' => ['type' => 'string', 'enum' => ['left', 'center', 'right'], 'description' => 'Âncora horizontal da faixa (a faixa de ponta a ponta ignora).'],
+                    'x' => ['type' => ['integer', 'null'], 'description' => 'Posição livre horizontal em % da tela; só vale com `y`.'],
+                    'y' => ['type' => ['integer', 'null'], 'description' => 'Posição livre vertical em % da tela.'],
+                    'text_scale' => ['type' => 'integer', 'minimum' => 50, 'maximum' => 200, 'description' => 'Tamanho do texto da faixa (%).'],
+                    'card_mode' => ['type' => 'string', 'enum' => ['banner', 'fullscreen'], 'description' => 'Cartões amarelo, vermelho e azul em faixa ou em cartão grande no centro da tela.'],
                 ]],
                 'lower_third_show' => ['type' => 'object', 'description' => 'Dispara uma faixa agora (não é guardada). `custom` = título/subtítulo livres; `player` = atleta da escalação (`person_id`); os demais tipos enviam uma amostra com o jogo no ar. Só sai com a tela de lances no ar.', 'properties' => [
                     'kind' => ['type' => 'string', 'enum' => ['custom', 'player', 'goal', 'own_goal', 'yellow_card', 'red_card', 'blue_card', 'substitution']],

@@ -44,13 +44,28 @@ describe('settings', function () {
 
         $state = OverlayState::for(ltChannel());
 
-        expect($state['lower_third_settings'])->toBe(['style' => 'arena', 'animation' => 'slide', 'seconds' => 7, 'kinds' => OverlayLowerThirdSettings::KINDS, 'score' => true]);
+        expect($state['lower_third_settings'])->toBe(['style' => 'arena', 'animation' => 'slide', 'seconds' => 7, 'kinds' => OverlayLowerThirdSettings::KINDS, 'score' => true, 'position' => 'left', 'x' => null, 'y' => null, 'text_scale' => 100, 'card_mode' => 'banner']);
     });
 
     it('normalizes whatever was saved', function () {
         expect(OverlayLowerThirdSettings::normalize(['style' => 'neon', 'animation' => 'x', 'seconds' => 99, 'kinds' => ['goal', 'inventado'], 'score' => 0]))
-            ->toBe(['style' => 'arena', 'animation' => 'slide', 'seconds' => 15, 'kinds' => ['goal'], 'score' => false])
+            ->toMatchArray(['style' => 'arena', 'animation' => 'slide', 'seconds' => 15, 'kinds' => ['goal'], 'score' => false])
             ->and(OverlayLowerThirdSettings::normalize(['seconds' => 1])['seconds'])->toBe(3);
+    });
+
+    it('positions the banner, scales the text and can show cards fullscreen', function () {
+        expect(OverlayLowerThirdSettings::normalize(['x' => 30]))->toMatchArray(['x' => null, 'y' => null, 'position' => 'left', 'text_scale' => 100, 'card_mode' => 'banner'])
+            ->and(OverlayLowerThirdSettings::normalize(['x' => '30', 'y' => 400, 'text_scale' => 999, 'position' => 'topo', 'card_mode' => 'x']))->toMatchArray(['x' => 30, 'y' => 100, 'text_scale' => 200, 'position' => 'left', 'card_mode' => 'banner']);
+
+        $channel = ltChannel();
+        $this->actingAs(panelUser(Role::Operator));
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['lower_third_settings' => ['position' => 'center', 'text_scale' => 130, 'card_mode' => 'fullscreen', 'x' => 10, 'y' => 70]])->assertSessionHasNoErrors();
+        expect(OverlayState::for($channel->fresh())['lower_third_settings'])->toMatchArray(['position' => 'center', 'text_scale' => 130, 'card_mode' => 'fullscreen', 'x' => 10, 'y' => 70]);
+
+        foreach ([['position' => 'meio'], ['text_scale' => 10], ['card_mode' => 'x'], ['x' => 101]] as $invalid) {
+            $this->patch("/painel/broadcast/{$channel->id}", ['lower_third_settings' => $invalid])->assertSessionHasErrors('lower_third_settings.'.array_key_first($invalid));
+        }
     });
 
     it('lets the operator change style, animation, time and kinds, and tells the OBS', function () {
@@ -62,7 +77,7 @@ describe('settings', function () {
             expect($channel->fresh()->lower_third_settings['style'])->toBe($style);
         }
 
-        expect($channel->fresh()->lower_third_settings)->toBe(['style' => 'flash', 'animation' => 'zoom', 'seconds' => 10, 'kinds' => ['goal', 'red_card'], 'score' => false]);
+        expect($channel->fresh()->lower_third_settings)->toMatchArray(['style' => 'flash', 'animation' => 'zoom', 'seconds' => 10, 'kinds' => ['goal', 'red_card'], 'score' => false]);
 
         $this->patch("/painel/broadcast/{$channel->id}", ['lower_third_settings' => ['style' => 'neon', 'animation' => 'x', 'seconds' => 2, 'kinds' => ['gol']]])
             ->assertSessionHasErrors(['lower_third_settings.style', 'lower_third_settings.animation', 'lower_third_settings.seconds', 'lower_third_settings.kinds.0']);

@@ -64,6 +64,38 @@ export default function LowerThirdStudio({ channelId, settings: saved, people, h
                         <Input id={`lt-seconds-${channelId}`} type="range" min="3" max="15" step="1" disabled={!canOperate} value={settings.seconds} onChange={(event) => setSettings({ ...settings, seconds: Number(event.target.value) })} />
                     </Field>
                 </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <Field label="Posição" htmlFor={`lt-position-${channelId}`}>
+                        <Select id={`lt-position-${channelId}`} disabled={!canOperate || settings.x !== null} value={settings.position} onChange={(event) => setSettings({ ...settings, position: event.target.value as LowerThirdSettings['position'] })}>
+                            <option value="left">Esquerda</option>
+                            <option value="center">Centro</option>
+                            <option value="right">Direita</option>
+                        </Select>
+                    </Field>
+                    <Field label={`Tamanho do texto · ${settings.text_scale}%`} htmlFor={`lt-text-${channelId}`}>
+                        <Input id={`lt-text-${channelId}`} type="range" min="50" max="200" step="5" disabled={!canOperate} value={settings.text_scale} onChange={(event) => setSettings({ ...settings, text_scale: Number(event.target.value) })} />
+                    </Field>
+                    <label className="flex items-center gap-2 text-sm text-gray-700 sm:col-span-2">
+                        <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={settings.x !== null && settings.y !== null} onChange={(event) => setSettings({ ...settings, x: event.target.checked ? 4 : null, y: event.target.checked ? 72 : null })} />
+                        Posição livre (X e Y em % da tela)
+                    </label>
+                    {settings.x !== null && settings.y !== null && (
+                        <>
+                            <Field label={`Horizontal · ${settings.x}%`} htmlFor={`lt-x-${channelId}`}>
+                                <Input id={`lt-x-${channelId}`} type="range" min="0" max="100" disabled={!canOperate} value={settings.x} onChange={(event) => setSettings({ ...settings, x: Number(event.target.value) })} />
+                            </Field>
+                            <Field label={`Vertical · ${settings.y}%`} htmlFor={`lt-y-${channelId}`}>
+                                <Input id={`lt-y-${channelId}`} type="range" min="0" max="100" disabled={!canOperate} value={settings.y} onChange={(event) => setSettings({ ...settings, y: Number(event.target.value) })} />
+                            </Field>
+                        </>
+                    )}
+                    <Field label="Cartões amarelo, vermelho e azul" htmlFor={`lt-card-${channelId}`}>
+                        <Select id={`lt-card-${channelId}`} disabled={!canOperate} value={settings.card_mode} onChange={(event) => setSettings({ ...settings, card_mode: event.target.value as LowerThirdSettings['card_mode'] })}>
+                            <option value="banner">Em faixa</option>
+                            <option value="fullscreen">Cartão grande no centro da tela</option>
+                        </Select>
+                    </Field>
+                </div>
                 <div className="mt-3">
                     <div className="mb-1 text-sm font-medium text-gray-700">Quais lances aparecem</div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1">

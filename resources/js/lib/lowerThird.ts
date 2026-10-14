@@ -12,6 +12,24 @@ export interface LowerThirdSettings {
     seconds: number;
     kinds: string[];
     score: boolean;
+    position: 'left' | 'center' | 'right';
+    x: number | null;
+    y: number | null;
+    text_scale: number;
+    card_mode: 'banner' | 'fullscreen';
+}
+
+/** Cartões que podem ocupar a tela inteira. */
+export const CARD_KINDS = ['yellow_card', 'red_card', 'blue_card'];
+
+/** O cartão deste lance sai em tela cheia? */
+export function isFullscreenCard(settings: Pick<LowerThirdSettings, 'card_mode'>, kind: string): boolean {
+    return settings.card_mode === 'fullscreen' && CARD_KINDS.includes(kind);
+}
+
+/** Posição livre da faixa (x e y em %); só vale com os dois. */
+export function lowerThirdFreePosition(settings: Pick<LowerThirdSettings, 'x' | 'y'>): { left: string; top: string } | null {
+    return typeof settings.x === 'number' && typeof settings.y === 'number' ? { left: `${settings.x}%`, top: `${settings.y}%` } : null;
 }
 
 export interface LowerThirdBannerData {

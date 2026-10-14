@@ -50,3 +50,11 @@ test('score line and shirt label', () => {
     assert.equal(lib.shirtLabel(banner({ player: { name: 'Rafa', shirt: null, position: null } })), null);
     assert.equal(lib.shirtLabel(banner()), null);
 });
+
+test('cards can take the whole screen only in that mode, and the free position needs both coordinates', () => {
+    assert.equal(lib.isFullscreenCard({ card_mode: 'fullscreen' }, 'red_card'), true);
+    assert.equal(lib.isFullscreenCard({ card_mode: 'fullscreen' }, 'goal'), false);
+    assert.equal(lib.isFullscreenCard({ card_mode: 'banner' }, 'yellow_card'), false);
+    assert.deepEqual(lib.lowerThirdFreePosition({ x: 5, y: 70 }), { left: '5%', top: '70%' });
+    assert.equal(lib.lowerThirdFreePosition({ x: 5, y: null }), null);
+});
