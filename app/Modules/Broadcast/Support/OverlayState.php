@@ -35,7 +35,7 @@ final class OverlayState
             'appearance' => $appearance = OverlayAppearance::normalize($channel->appearance),
             'font_face' => self::fontFace($channel, $appearance['font']),
             'lineup_settings' => OverlayLineupSettings::public($channel->lineup_settings),
-            'sponsors' => OverlaySponsorSettings::public($channel->sponsor_settings),
+            'sponsors' => OverlaySponsorSettings::public($channel->sponsor_settings, OverlayLineupSettings::normalize($channel->lineup_settings)['sponsor_banner']),
             'layers' => $channel->layerStates(),
             'game' => $game ? PublicGameSnapshot::for($game) : null,
             'lineup' => $game && $channel->layerOn('lineup') ? self::lineup($game, OverlayLineupSettings::normalize($channel->lineup_settings)['photo_person_ids']) : null,
@@ -63,6 +63,25 @@ final class OverlayState
             'url' => route('overlay.font', ['channel' => $channel->token, 'font' => $custom->getKey()], false),
             'format' => $custom->format,
         ];
+    }
+
+    /**
+     * Quantos jogadores a apresentação individual percorre na equipe escolhida: titulares, reservas (escopo `all`) e o técnico.
+     * Mesma conta do front (`individuals` em `overlayLineup.ts`).
+     */
+    public static function individualCount(OverlayChannel $channel): int
+    {
+        $game = $channel->game_id ? Game::query()->find($channel->game_id) : null;
+        $lineup = $game ? self::lineup($game, []) : null;
+
+        if ($lineup === null) {
+            return 0;
+        }
+
+        $settings = OverlayLineupSettings::normalize($channel->lineup_settings);
+        $side = $lineup[$settings['team']];
+
+        return count($side['starters']) + ($settings['individual_scope'] === 'all' ? count($side['bench']) : 0) + ($side['coach'] !== null ? 1 : 0);
     }
 
     /** @return array{home: array<string, mixed>, away: array<string, mixed>}|null */
@@ -100,6 +119,7 @@ final class OverlayState
                             'y' => $formationSlot?->y,
                             'captain' => $row->is_captain,
                             'photo_url' => $person !== null && isset($photos[$person->getKey()]) ? OverlayPhotoUrl::for($person) : null,
+                            'photo_large_url' => $person !== null && isset($photos[$person->getKey()]) ? OverlayPhotoUrl::for($person, 400) : null,
                         ];
                     })
                     ->sortBy(fn (array $item) => $item['shirt'] ?? 999)
@@ -118,9 +138,9 @@ final class OverlayState
                 'formation_ready' => $formation !== null && $starters->count() === $requiredPositions && $starters->every(fn (array $item) => $item['x'] !== null && $item['y'] !== null),
                 'starters' => $starters->map(fn (array $i) => [
                     'shirt' => $i['shirt'], 'name' => $i['name'], 'position' => $i['position'], 'position_label' => $i['position_label'],
-                    'x' => $i['x'], 'y' => $i['y'], 'captain' => $i['captain'], 'photo_url' => $i['photo_url'],
+                    'x' => $i['x'], 'y' => $i['y'], 'captain' => $i['captain'], 'photo_url' => $i['photo_url'], 'photo_large_url' => $i['photo_large_url'],
                 ])->all(),
-                'bench' => $named('bench')->map(fn (array $i) => ['shirt' => $i['shirt'], 'name' => $i['name'], 'captain' => $i['captain'], 'photo_url' => $i['photo_url']])->all(),
+                'bench' => $named('bench')->map(fn (array $i) => ['shirt' => $i['shirt'], 'name' => $i['name'], 'captain' => $i['captain'], 'photo_url' => $i['photo_url'], 'photo_large_url' => $i['photo_large_url']])->all(),
                 'coach' => $coach['name'] ?? null,
             ];
         };

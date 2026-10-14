@@ -37,3 +37,14 @@ depois o esquema tático, com escolha explícita de quais fotos podem aparecer, 
   deve deixar esse efeito claro.
 - Mudanças de formação e posição feitas pelo gestor chegam ao overlay pelo estado já existente; notas privadas continuam fora.
 - Novos modos de apresentação devem ampliar `lineup_settings` de forma compatível e manter um fallback sem fotos.
+
+## Adendo — apresentação individual e grade de cartões
+
+`lineup_settings` ganhou as apresentações `cards` (grade de cartões da equipe com o técnico), `individual` (um jogador por
+vez: foto grande, camisa, posição, nome) e `show` (grade e depois cada jogador), com `team`, `individual_mode`
+(`auto` por `individual_seconds`, 3 a 30 s, ou `manual`), `individual_scope` (titulares ou todos) e `sponsor_banner`.
+A etapa atual é do servidor: `step` (manual) ou `anchor_ms` (automático, o cliente deriva a etapa do relógio do servidor, então
+todas as telas ficam sincronizadas). O operador usa `lineup_command` (`next`, `previous`, `reset`) no painel ou na API; o servidor
+calcula a nova etapa (`OverlayLineupTimeline`, espelhada em `resources/js/lib/overlayLineup.ts`) e nenhum cliente envia `step`
+ou `anchor_ms`. Mudar jogo, equipe, modo, tempos, apresentação ou ligar a camada reinicia. A foto grande (400 px, URL assinada de
+5 min) segue a mesma regra: só para o atleta habilitado pelo operador.

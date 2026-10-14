@@ -42,9 +42,16 @@ const catalogFonts: { value: string; label: string }[] = [
 ];
 
 interface LineupSettings {
-    presentation: 'sequence' | 'list' | 'formation';
+    presentation: 'sequence' | 'list' | 'formation' | 'cards' | 'individual' | 'show';
     list_seconds: number;
     photo_person_ids: string[];
+    team: 'home' | 'away';
+    individual_mode: 'auto' | 'manual';
+    individual_seconds: number;
+    individual_scope: 'starters' | 'all';
+    sponsor_banner: boolean;
+    step: number;
+    anchor_ms: number;
 }
 
 interface LineupPerson {
@@ -77,6 +84,7 @@ interface Channel {
     appearance: Appearance;
     lineup_settings: LineupSettings;
     lineup_people: LineupPerson[];
+    lineup_steps: number;
     sponsor_settings: SponsorSettings;
     has_control_token: boolean;
     control_url: string;
@@ -170,7 +178,7 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
-    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; sponsor_settings?: Partial<SponsorSettings> }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
+    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings> }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
 
     // Comandos de exibir/ocultar: o botão muda no clique e a mudança segue direto para o OBS; se o servidor recusar, volta ao estado real.
     const [layers, setLayers] = useState(channel.layers);
@@ -318,12 +326,64 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                                 <option value="sequence">Lista e depois esquema tático</option>
                                 <option value="list">Somente lista</option>
                                 <option value="formation">Somente esquema tático</option>
+                                <option value="cards">Cartões da equipe (titulares + comissão)</option>
+                                <option value="individual">Jogador por jogador</option>
+                                <option value="show">Cartões e depois jogador por jogador</option>
                             </Select>
                         </Field>
                         <Field label={`Lista antes da transição · ${lineupSettings.list_seconds} s`} htmlFor={`lineup-seconds-${channel.id}`}>
                             <Input id={`lineup-seconds-${channel.id}`} type="range" min="3" max="20" step="1" disabled={!canOperate || lineupSettings.presentation !== 'sequence'} value={lineupSettings.list_seconds} onChange={(event) => setLineupSettings({ ...lineupSettings, list_seconds: Number(event.target.value) })} />
                         </Field>
                     </div>
+
+                    {['cards', 'individual', 'show'].includes(lineupSettings.presentation) && (
+                        <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+                            <div className="text-sm font-medium text-gray-800">Apresentação por equipe</div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                <Field label="Equipe no ar" htmlFor={`lineup-team-${channel.id}`}>
+                                    <Select id={`lineup-team-${channel.id}`} disabled={!canOperate} value={lineupSettings.team} onChange={(event) => setLineupSettings({ ...lineupSettings, team: event.target.value as LineupSettings['team'] })}>
+                                        <option value="home">Mandante</option>
+                                        <option value="away">Visitante</option>
+                                    </Select>
+                                </Field>
+                                <Field label="Quem aparece um a um" htmlFor={`lineup-scope-${channel.id}`}>
+                                    <Select id={`lineup-scope-${channel.id}`} disabled={!canOperate} value={lineupSettings.individual_scope} onChange={(event) => setLineupSettings({ ...lineupSettings, individual_scope: event.target.value as LineupSettings['individual_scope'] })}>
+                                        <option value="starters">Titulares e técnico</option>
+                                        <option value="all">Titulares, reservas e técnico</option>
+                                    </Select>
+                                </Field>
+                                {lineupSettings.presentation !== 'cards' && (
+                                    <>
+                                        <Field label="Passagem dos jogadores" htmlFor={`lineup-mode-${channel.id}`}>
+                                            <Select id={`lineup-mode-${channel.id}`} disabled={!canOperate} value={lineupSettings.individual_mode} onChange={(event) => setLineupSettings({ ...lineupSettings, individual_mode: event.target.value as LineupSettings['individual_mode'] })}>
+                                                <option value="auto">Automática, a cada X segundos</option>
+                                                <option value="manual">Manual (o operador passa um a um)</option>
+                                            </Select>
+                                        </Field>
+                                        <Field label={`Tempo de cada jogador · ${lineupSettings.individual_seconds} s`} htmlFor={`lineup-individual-${channel.id}`}>
+                                            <Input id={`lineup-individual-${channel.id}`} type="range" min="3" max="30" step="1" disabled={!canOperate || lineupSettings.individual_mode !== 'auto'} value={lineupSettings.individual_seconds} onChange={(event) => setLineupSettings({ ...lineupSettings, individual_seconds: Number(event.target.value) })} />
+                                        </Field>
+                                    </>
+                                )}
+                            </div>
+                            {lineupSettings.presentation === 'show' && <p className="text-xs text-gray-500">Os cartões ficam {lineupSettings.list_seconds} s no ar antes do primeiro jogador (ajuste em "Lista antes da transição").</p>}
+                            <label className="flex items-center gap-2 text-sm text-gray-700">
+                                <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={lineupSettings.sponsor_banner} onChange={(event) => setLineupSettings({ ...lineupSettings, sponsor_banner: event.target.checked })} />
+                                Mostrar a faixa de patrocinador no rodapé
+                            </label>
+                            {lineupSettings.presentation !== 'cards' && canOperate && (
+                                <div className="rounded-md bg-gray-50 p-3">
+                                    <div className="mb-2 text-sm font-medium text-gray-800">Passar ao vivo{channel.lineup_settings.individual_mode === 'manual' ? ` · etapa ${channel.lineup_settings.step + 1} de ${channel.lineup_steps}` : ''}</div>
+                                    <div className="flex flex-wrap gap-2">
+                                        <Button small variant="secondary" disabled={!channel.game_id} onClick={() => patch({ lineup_command: 'previous' })}>← Anterior</Button>
+                                        <Button small disabled={!channel.game_id} onClick={() => patch({ lineup_command: 'next' })}>Próximo →</Button>
+                                        <Button small variant="secondary" disabled={!channel.game_id} onClick={() => patch({ lineup_command: 'reset' })}>↺ Reiniciar</Button>
+                                    </div>
+                                    <p className="mt-1 text-xs text-gray-500">Vale na hora no OBS, também no modo automático (pula para o jogador anterior ou seguinte e segue a contagem).</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="mt-4 border-t border-gray-100 pt-4">
                         <div className="text-sm font-medium text-gray-800">Fotos no ar</div>

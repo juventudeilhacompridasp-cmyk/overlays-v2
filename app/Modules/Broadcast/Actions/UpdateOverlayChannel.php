@@ -7,6 +7,8 @@ use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Models\OverlayScene;
 use App\Modules\Broadcast\Support\OverlayAppearance;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
+use App\Modules\Broadcast\Support\OverlayLineupTimeline;
+use App\Modules\Broadcast\Support\OverlayState;
 use App\Modules\Broadcast\Support\OverlaySponsorSettings;
 
 final class UpdateOverlayChannel
@@ -25,6 +27,8 @@ final class UpdateOverlayChannel
         }
 
         $gameChanged = false;
+        $lineupBefore = OverlayLineupSettings::normalize($channel->lineup_settings);
+        $lineupWasOn = $channel->layerOn('lineup');
 
         if (array_key_exists('game_id', $data)) {
             $gameId = is_string($data['game_id']) ? $data['game_id'] : null;
@@ -49,6 +53,23 @@ final class UpdateOverlayChannel
 
         if (isset($data['lineup_settings']) && is_array($data['lineup_settings'])) {
             $channel->lineup_settings = OverlayLineupSettings::normalize(array_merge($channel->lineup_settings ?? [], $data['lineup_settings']));
+        }
+
+        // Mudou o jogo, a equipe, o modo ou os tempos (ou a escalação acabou de entrar no ar): a apresentação recomeça da etapa 0.
+        $lineup = OverlayLineupSettings::normalize($channel->lineup_settings);
+        $watched = ['presentation', 'team', 'individual_mode', 'individual_scope', 'list_seconds', 'individual_seconds'];
+        $restart = $gameChanged || (! $lineupWasOn && $channel->layerOn('lineup')) || array_diff_assoc(array_intersect_key($lineup, array_flip($watched)), array_intersect_key($lineupBefore, array_flip($watched))) !== [];
+
+        if ($restart) {
+            $channel->lineup_settings = array_merge($lineup, ['step' => 0, 'anchor_ms' => (int) (microtime(true) * 1000)]);
+        }
+
+        // Comando do operador (próximo, anterior, reiniciar): vale na hora e é calculado aqui para duas pessoas não se atropelarem.
+        if (isset($data['lineup_command']) && is_string($data['lineup_command'])) {
+            $channel->lineup_settings = array_merge(
+                OverlayLineupSettings::normalize($channel->lineup_settings),
+                OverlayLineupTimeline::apply($data['lineup_command'], OverlayLineupSettings::normalize($channel->lineup_settings), OverlayState::individualCount($channel), (int) (microtime(true) * 1000)),
+            );
         }
 
         if (isset($data['sponsor_settings']) && is_array($data['sponsor_settings'])) {

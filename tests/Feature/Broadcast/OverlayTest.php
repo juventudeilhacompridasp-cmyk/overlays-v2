@@ -6,6 +6,8 @@ use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Models\OverlayFont;
 use App\Modules\Broadcast\Models\OverlayScene;
 use App\Modules\Broadcast\Models\OverlaySponsor;
+use App\Modules\Broadcast\Support\OverlayLineupSettings;
+use App\Modules\Broadcast\Support\OverlayLineupTimeline;
 use App\Modules\Broadcast\Support\OverlayState;
 use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Matches\Actions\ChangeGamePeriod;
@@ -56,7 +58,7 @@ it('builds the overlay state with the score, the clock and the logos', function 
             'motion' => 'dynamic',
             'font' => 'system',
         ])
-        ->and($state['lineup_settings'])->toBe(['presentation' => 'sequence', 'list_seconds' => 6])
+        ->and($state['lineup_settings'])->toBe(['presentation' => 'sequence', 'list_seconds' => 6, 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'step' => 0, 'anchor_ms' => 0])
         ->and($state['game']['id'])->toBe($game->id)
         ->and($state['game']['home']['color'])->toBe('#ff0000')
         ->and($state['game']['clock']['state'])->toBe('not_started')
@@ -86,12 +88,12 @@ it('only fills the lineup when the layer is on, with shirt numbers and nicknames
         ->and($lineup['home']['bench'])->toHaveCount(3)
         ->and($lineup['home']['starters'][0])->toBe([
             'shirt' => 1, 'name' => 'Rafa', 'position' => null, 'position_label' => null, 'x' => null, 'y' => null,
-            'captain' => false, 'photo_url' => null,
+            'captain' => false, 'photo_url' => null, 'photo_large_url' => null,
         ])
         // Só dados visuais indispensáveis (nada de IDs, cartões, documentos ou nascimento). Confere as chaves: os nomes sorteados
         // pela fábrica podem conter "card" (ex.: Ricardo), então buscar texto no JSON era instável.
-        ->and(collect([...$lineup['home']['starters'], ...$lineup['away']['starters']])->every(fn ($player) => array_keys($player) === ['shirt', 'name', 'position', 'position_label', 'x', 'y', 'captain', 'photo_url']))->toBeTrue()
-        ->and(collect([...$lineup['home']['bench'], ...$lineup['away']['bench']])->every(fn ($player) => array_keys($player) === ['shirt', 'name', 'captain', 'photo_url']))->toBeTrue();
+        ->and(collect([...$lineup['home']['starters'], ...$lineup['away']['starters']])->every(fn ($player) => array_keys($player) === ['shirt', 'name', 'position', 'position_label', 'x', 'y', 'captain', 'photo_url', 'photo_large_url']))->toBeTrue()
+        ->and(collect([...$lineup['home']['bench'], ...$lineup['away']['bench']])->every(fn ($player) => array_keys($player) === ['shirt', 'name', 'captain', 'photo_url', 'photo_large_url']))->toBeTrue();
 });
 
 it('only publishes a short signed photo url for athletes explicitly enabled on the channel', function () {
@@ -104,7 +106,7 @@ it('only publishes a short signed photo url for athletes explicitly enabled on t
     $channel->update(['lineup_settings' => ['presentation' => 'formation', 'list_seconds' => 8, 'photo_person_ids' => [$hp[0]]]]);
     $state = OverlayState::for($channel->fresh());
 
-    expect($state['lineup_settings'])->toBe(['presentation' => 'formation', 'list_seconds' => 8])
+    expect($state['lineup_settings'])->toBe(['presentation' => 'formation', 'list_seconds' => 8, 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'step' => 0, 'anchor_ms' => 0])
         ->and($state['lineup']['home']['starters'][0]['photo_url'])->toStartWith('https://private.test/')
         ->and($state['lineup']['home']['starters'][1]['photo_url'])->toBeNull()
         ->and(json_encode($state))->not->toContain($hp[0])->not->toContain('photo_person_ids');
@@ -294,7 +296,9 @@ describe('panel', function () {
             ->and($channel->layers)->toBe(['lineup' => true])
             ->and($channel->appearance['accent_color'])->toBe('#ff5500')
             ->and($channel->appearance['position'])->toBe('top-right')
-            ->and($channel->lineup_settings)->toBe(['presentation' => 'formation', 'list_seconds' => 9, 'photo_person_ids' => [$hp[0]]]);
+            ->and($channel->lineup_settings['presentation'])->toBe('formation')
+            ->and($channel->lineup_settings['list_seconds'])->toBe(9)
+            ->and($channel->lineup_settings['photo_person_ids'])->toBe([$hp[0]]);
         $this->get('/painel/broadcast')->assertInertia(fn ($page) => $page->where('channels.0.layers', ['lineup' => true, 'standings' => false, 'scoreboard' => true, 'lower_third' => true]));
         Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['lineup'] !== null && $event->state['game']['id'] === $game->id);
 
@@ -701,7 +705,7 @@ describe('scenes', function () {
             ->and($scene->config['appearance']['font'])->toBe('bebas')
             ->and($scene->config['layers'])->toBe(['lineup' => true, 'standings' => false, 'scoreboard' => true, 'lower_third' => true])
             ->and($scene->config['sponsor_settings'])->toBe(['enabled' => true, 'seconds' => 12])
-            ->and($scene->config['lineup_settings'])->toBe(['presentation' => 'formation', 'list_seconds' => 9])
+            ->and($scene->config['lineup_settings'])->toBe(['presentation' => 'formation', 'list_seconds' => 9, 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false])
             ->and(array_keys($scene->config))->not->toContain('game_id')
             ->and(json_encode($scene->config))->not->toContain('01jabc');
     });
@@ -784,5 +788,128 @@ describe('scenes', function () {
         });
 
         $this->get('/painel/broadcast')->assertInertia(fn ($page) => $page->has('scenes', OverlayScene::LIMIT)->where('scene_limit', OverlayScene::LIMIT));
+    });
+});
+
+describe('lineup presentation', function () {
+    function showChannel(array $lineupSettings = []): array
+    {
+        ['game' => $game, 'hp' => $hp, 'ap' => $ap] = sheetGame();
+        $channel = channelFor($game, ['lineup' => true]);
+        $channel->update(['lineup_settings' => array_merge(['presentation' => 'show', 'individual_mode' => 'manual', 'step' => 0, 'anchor_ms' => 0], $lineupSettings)]);
+
+        return [$channel->fresh(), $game, $hp, $ap];
+    }
+
+    it('counts the players the individual presentation walks', function () {
+        [$channel] = showChannel();
+
+        // sheetGame: 11 titulares + 3 reservas por equipe, sem técnico lançado.
+        expect(OverlayState::individualCount($channel))->toBe(11);
+
+        $channel->update(['lineup_settings' => ['individual_scope' => 'all']]);
+        expect(OverlayState::individualCount($channel->fresh()))->toBe(14);
+    });
+
+    it('has the timeline steps, starts and commands in one place', function () {
+        expect(OverlayLineupTimeline::steps('show', 11))->toBe(12)
+            ->and(OverlayLineupTimeline::steps('individual', 11))->toBe(11)
+            ->and(OverlayLineupTimeline::steps('individual', 0))->toBe(1)
+            ->and(OverlayLineupTimeline::steps('cards', 11))->toBe(1)
+            ->and(OverlayLineupTimeline::starts('show', 5, 6, 3))->toBe([0, 5000, 11000, 17000])
+            ->and(OverlayLineupTimeline::starts('individual', 5, 6, 3))->toBe([0, 6000, 12000]);
+
+        $manual = OverlayLineupSettings::normalize(['presentation' => 'show', 'individual_mode' => 'manual', 'step' => 2]);
+        expect(OverlayLineupTimeline::apply('next', $manual, 3, 50_000)['step'])->toBe(3)
+            ->and(OverlayLineupTimeline::apply('previous', $manual, 3, 50_000)['step'])->toBe(1)
+            ->and(OverlayLineupTimeline::apply('next', [...$manual, 'step' => 3], 3, 50_000)['step'])->toBe(0)
+            ->and(OverlayLineupTimeline::apply('next', [...$manual, 'presentation' => 'individual', 'step' => 2], 3, 50_000)['step'])->toBe(2)
+            ->and(OverlayLineupTimeline::apply('previous', [...$manual, 'step' => 0], 3, 50_000)['step'])->toBe(0)
+            ->and(OverlayLineupTimeline::apply('reset', $manual, 3, 50_000))->toBe(['step' => 0, 'anchor_ms' => 50_000]);
+
+        $auto = OverlayLineupSettings::normalize(['presentation' => 'show', 'individual_mode' => 'auto', 'list_seconds' => 5, 'individual_seconds' => 6, 'anchor_ms' => 100_000]);
+        // 100_000 + 5_500 está na etapa 1: próximo leva o relógio para o início da etapa 2 (11 s), anterior para o início da 0.
+        expect(OverlayLineupTimeline::apply('next', $auto, 3, 105_500)['anchor_ms'])->toBe(105_500 - 11_000)
+            ->and(OverlayLineupTimeline::apply('previous', $auto, 3, 105_500)['anchor_ms'])->toBe(105_500);
+    });
+
+    it('moves the manual presentation with the operator commands, in real time, and tells the OBS', function () {
+        [$channel] = showChannel();
+        $this->actingAs(panelUser(Role::Operator));
+        Event::fake([OverlayUpdated::class]);
+
+        foreach ([1, 2, 3] as $expected) {
+            $this->patch("/painel/broadcast/{$channel->id}", ['lineup_command' => 'next'])->assertSessionHasNoErrors();
+            expect($channel->fresh()->lineup_settings['step'])->toBe($expected);
+        }
+        Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['lineup_settings']['step'] === 3);
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['lineup_command' => 'previous']);
+        expect($channel->fresh()->lineup_settings['step'])->toBe(2);
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['lineup_command' => 'reset']);
+        expect($channel->fresh()->lineup_settings['step'])->toBe(0)->and($channel->fresh()->lineup_settings['anchor_ms'])->toBeGreaterThan(0);
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['lineup_command' => 'explodir'])->assertSessionHasErrors('lineup_command');
+    });
+
+    it('lets the control API pass the players and never accepts step or anchor directly', function () {
+        [$channel] = showChannel();
+        $key = OverlayChannel::newControlToken();
+        $channel->update(['control_token_hash' => OverlayChannel::controlTokenHash($key)]);
+
+        $this->withToken($key)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", ['lineup_command' => 'next'])
+            ->assertOk()->assertJsonPath('data.lineup_settings.step', 1);
+
+        $this->withToken($key)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", ['lineup_settings' => ['step' => 9, 'anchor_ms' => 5]])->assertOk();
+        expect($channel->fresh()->lineup_settings['step'])->toBe(1)->and($channel->fresh()->lineup_settings['anchor_ms'])->toBe(0);
+    });
+
+    it('restarts the presentation when the team, the mode, the times or the game change, or the lineup goes on air', function () {
+        [$channel] = showChannel(['step' => 5, 'anchor_ms' => 1000]);
+        $this->actingAs(panelUser(Role::Operator));
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['lineup_settings' => ['team' => 'away']])->assertSessionHasNoErrors();
+        expect($channel->fresh()->lineup_settings['step'])->toBe(0)->and($channel->fresh()->lineup_settings['anchor_ms'])->toBeGreaterThan(1000);
+
+        $channel->update(['lineup_settings' => array_merge($channel->fresh()->lineup_settings, ['step' => 4, 'anchor_ms' => 1000])]);
+        $this->patch("/painel/broadcast/{$channel->id}", ['lineup_settings' => ['sponsor_banner' => true]]);
+        expect($channel->fresh()->lineup_settings['step'])->toBe(4)->and($channel->fresh()->lineup_settings['sponsor_banner'])->toBeTrue();
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['layers' => ['lineup' => false]]);
+        $this->patch("/painel/broadcast/{$channel->id}", ['layers' => ['lineup' => true]]);
+        expect($channel->fresh()->lineup_settings['step'])->toBe(0);
+    });
+
+    it('validates the new lineup options', function () {
+        [$channel] = showChannel();
+        $this->actingAs(panelUser(Role::Operator));
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['lineup_settings' => ['presentation' => 'individual', 'team' => 'away', 'individual_mode' => 'manual', 'individual_seconds' => 12, 'individual_scope' => 'all', 'sponsor_banner' => true]])->assertSessionHasNoErrors();
+        expect($channel->fresh()->lineup_settings)->toMatchArray(['presentation' => 'individual', 'team' => 'away', 'individual_mode' => 'manual', 'individual_seconds' => 12, 'individual_scope' => 'all', 'sponsor_banner' => true]);
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['lineup_settings' => ['team' => 'neutro', 'individual_mode' => 'turbo', 'individual_seconds' => 2, 'individual_scope' => 'ninguem']])
+            ->assertSessionHasErrors(['lineup_settings.team', 'lineup_settings.individual_mode', 'lineup_settings.individual_seconds', 'lineup_settings.individual_scope']);
+    });
+
+    it('sends a large photo only for the athletes the operator enabled, and the sponsors for the banner', function () {
+        [$channel, , $hp] = showChannel(['photo_person_ids' => []]);
+        Storage::fake('s3-private');
+        Storage::disk('s3-private')->buildTemporaryUrlsUsing(fn (string $path) => "https://private.test/{$path}");
+        Person::query()->whereIn('id', [$hp[0], $hp[1]])->update(['photo_path' => 'people/test/photo']);
+        $channel->update(['lineup_settings' => array_merge($channel->lineup_settings, ['photo_person_ids' => [$hp[0]]])]);
+
+        $state = OverlayState::for($channel->fresh());
+        $first = $state['lineup']['home']['starters'][0];
+        expect($first['photo_url'])->toContain('-96.webp')->and($first['photo_large_url'])->toContain('-400.webp')
+            ->and($state['lineup']['home']['starters'][1]['photo_large_url'])->toBeNull();
+
+        Storage::fake('s3');
+        $this->actingAs(panelUser(Role::Organizer))->post(route('panel.broadcast.sponsors.store'), ['name' => 'Padaria', 'logo' => UploadedFile::fake()->image('logo.png', 300, 120)])->assertSessionHas('success');
+        expect(OverlayState::for($channel->fresh())['sponsors']['items'])->toBe([]);
+
+        $channel->update(['lineup_settings' => array_merge($channel->fresh()->lineup_settings, ['sponsor_banner' => true])]);
+        $sponsors = OverlayState::for($channel->fresh())['sponsors'];
+        expect($sponsors['enabled'])->toBeFalse()->and($sponsors['items'])->toHaveCount(1)->and($sponsors['items'][0]['name'])->toBe('Padaria');
     });
 });

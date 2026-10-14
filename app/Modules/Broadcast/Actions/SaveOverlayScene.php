@@ -26,7 +26,7 @@ final class SaveOverlayScene
                 'appearance' => OverlayAppearance::normalize($channel->appearance),
                 'layers' => $channel->layerStates(),
                 'sponsor_settings' => OverlaySponsorSettings::normalize($channel->sponsor_settings),
-                'lineup_settings' => ['presentation' => $lineup['presentation'], 'list_seconds' => $lineup['list_seconds']],
+                'lineup_settings' => array_diff_key($lineup, ['step' => 0, 'anchor_ms' => 0]),
             ],
         ]);
     }
