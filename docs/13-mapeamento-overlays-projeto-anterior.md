@@ -12,7 +12,7 @@ Fonte: repositório `juventudeilhacompridasp-cmyk/overlays` (Overlay Studio: `pu
 | `photo-lineup` (apresentação com fotos) | `/overlay/{token}/escalacao` (cartões, individual, show) | ✅ (2.3) |
 | `sponsor` (patrocinador rotativo) | `/overlay/{token}/patrocinadores` | ✅ (2.4) |
 | `sponsor-bar` (barra 1500 x 200) | `/overlay/{token}/barra-patrocinio` | ✅ (2.5) |
-| `stats` (estatísticas: comparativo, gols/cartões, destaque do atleta) | `/comparativo` só com dados da súmula | ⬜ estatísticas manuais e 3 visões (2.6) |
+| `stats` (estatísticas: comparativo, gols/cartões, destaque do atleta) | `/overlay/{token}/estatisticas` | ✅ (2.6) |
 | `custom` (Builder: overlays por elementos) | — | ⬜ (2.7) |
 | `all` (todas as camadas numa fonte) | — | ⬜ (2.8) |
 | `/obs/<visão>` (campeonato: tabela, jogos, resultados, artilharia, cartões, jogo em destaque, faixa, campeão) | `/overlay/{token}/campeonato/*` (ADR 0012) | ✅ |
@@ -43,7 +43,7 @@ Aqui: nada equivalente. **Entregue:** tela `barra-patrocinio` (tela extra que li
 
 ### 2.6 Estatísticas
 Antigo: estatísticas lançadas à mão (finalizações, no gol, escanteios, faltas, impedimentos, defesas, posse de bola), três visões (comparativo com até 6 indicadores, gols e cartões por equipe, destaque do atleta com foto/camisa/gols/cartões/observação), `statsStyle` (painel TV, vidro, minimal), `statsAnimation`, `statsDuration` (0 = fica no ar), escala/fonte/tipografia/X/Y.
-Aqui: `/comparativo` (campanha, forma, confronto direto) — outro conteúdo. **Falta tudo** do estúdio de estatísticas da partida.
+Aqui: `/comparativo` (campanha, forma, confronto direto) — outro conteúdo. **Entregue:** estúdio de estatísticas (6 números por equipe + posse), 3 visões, 3 estilos, 5 animações, tempo no ar (0 = até ocultar), tamanho, texto e posição livre. Diferença consciente: os cartões do destaque e da visão de eventos só saem com `game_cards` ligado (LGPD) e a foto só do atleta habilitado.
 
 ### 2.7 Builder (overlays livres)
 Antigo: canvas com até 60 elementos (texto, imagem, vídeo, forma), posição/tamanho/camadas, animações de entrada/saída (10), atraso/duração, 7 modelos prontos (lower third, mini-placar, aviso central, intervalo, selo, faixa rolante…), duplicar, exportar/importar JSON, dados ao vivo (`{home.name}`, `{home.score}`, `{clock}`, `{period}`, `{competition}`, `{sponsor}`, `{time}`, `{table.N.*}`, `{champ.name}`), URL por overlay (`layer=custom&id=`).

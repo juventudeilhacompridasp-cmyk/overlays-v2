@@ -4,6 +4,7 @@ import './artFonts';
 import { LowerThirdBannerData, LowerThirdSettings } from './lowerThird';
 import { useEffect, useRef, useState } from 'react';
 import type { BarLook, SponsorItem, SponsorLook } from './sponsorLook';
+import type { StatsState } from './statsLook';
 
 export interface OverlayTeam {
     name: string;
@@ -135,7 +136,8 @@ export interface OverlayState {
     championship: Record<string, boolean>;
     stoppage: number;
     social: { items: { label: string; value: string }[]; url: string | null };
-    screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean; social: boolean; sponsor_bar: boolean };
+    screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean; social: boolean; sponsor_bar: boolean; stats: boolean };
+    stats: StatsState | null;
     cartela: { title: string; subtitle: string; until_ms: number | null };
     summary: {
         headline: string;

@@ -17,6 +17,7 @@ use Illuminate\Support\Str;
  * @property array<string, mixed>|null $sponsor_settings
  * @property array<string, mixed>|null $lower_third_settings
  * @property array<string, mixed>|null $screen_settings
+ * @property array<string, mixed>|null $stats_settings
  * @property string|null $control_token_hash
  */
 #[Unguarded]
@@ -37,7 +38,7 @@ class OverlayChannel extends Model
     public const CHAMPIONSHIP_VIEWS = ['standings', 'fixtures', 'results', 'scorers', 'discipline', 'matchcard', 'ticker', 'champion'];
 
     /** Telas extras sob demanda (começam ocultas): cartela pré-jogo, comparativo, cartela de transmissão, resumo do jogo e chaveamento. */
-    public const SCREENS = ['pregame', 'compare', 'cartela', 'summary', 'bracket', 'social', 'sponsor_bar'];
+    public const SCREENS = ['pregame', 'compare', 'cartela', 'summary', 'bracket', 'social', 'sponsor_bar', 'stats'];
 
     /** Camadas que valem como ligadas quando o operador nunca mexeu nelas. */
     public const DEFAULT_ON = ['scoreboard', 'lower_third'];
@@ -56,6 +57,7 @@ class OverlayChannel extends Model
         'chaveamento' => 'Chaveamento do mata-mata (sob demanda)',
         'social' => 'Chamada para redes sociais com QR code (sob demanda)',
         'barra-patrocinio' => 'Barra de patrocinadores 1500 x 200 (sob demanda)',
+        'estatisticas' => 'Estatísticas da partida (sob demanda)',
     ];
 
     /**
@@ -63,7 +65,7 @@ class OverlayChannel extends Model
      */
     protected function casts(): array
     {
-        return ['layers' => 'array', 'appearance' => 'array', 'lineup_settings' => 'array', 'sponsor_settings' => 'array', 'lower_third_settings' => 'array', 'screen_settings' => 'array'];
+        return ['layers' => 'array', 'appearance' => 'array', 'lineup_settings' => 'array', 'sponsor_settings' => 'array', 'lower_third_settings' => 'array', 'screen_settings' => 'array', 'stats_settings' => 'array'];
     }
 
     public static function newToken(): string

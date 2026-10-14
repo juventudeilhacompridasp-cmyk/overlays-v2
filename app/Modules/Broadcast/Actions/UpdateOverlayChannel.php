@@ -14,6 +14,7 @@ use App\Modules\Broadcast\Support\OverlayLowerThirdSettings;
 use App\Modules\Broadcast\Support\OverlayScreenSettings;
 use App\Modules\Broadcast\Support\OverlaySponsorSettings;
 use App\Modules\Broadcast\Support\OverlayState;
+use App\Modules\Broadcast\Support\OverlayStatsSettings;
 use App\Modules\Matches\Models\Game;
 use Throwable;
 
@@ -54,6 +55,19 @@ final class UpdateOverlayChannel
             $channel->screen_settings = OverlayScreenSettings::normalize([...OverlayScreenSettings::normalize($channel->screen_settings), 'stoppage' => 0, 'mvp' => null]);
         } elseif (array_key_exists('stoppage_minutes', $data)) {
             $channel->screen_settings = OverlayScreenSettings::normalize([...OverlayScreenSettings::normalize($channel->screen_settings), 'stoppage' => (int) $data['stoppage_minutes']]);
+        }
+
+        if ($gameChanged) {
+            $channel->stats_settings = OverlayStatsSettings::forNewGame($channel->stats_settings);
+        }
+
+        if (isset($data['stats_settings']) && is_array($data['stats_settings'])) {
+            $channel->stats_settings = OverlayStatsSettings::apply($channel->stats_settings, $data['stats_settings']);
+        }
+
+        if (isset($data['screens_live']) && is_array($data['screens_live']) && array_key_exists('stats', $data['screens_live'])) {
+            // Ligar a tela marca quando ela sai sozinha (duração > 0); ocultar limpa o prazo.
+            $channel->stats_settings = OverlayStatsSettings::withExpiry($channel->stats_settings, (bool) $data['screens_live']['stats'], (int) (microtime(true) * 1000));
         }
 
         if (isset($data['screens_live']) && is_array($data['screens_live'])) {
