@@ -352,3 +352,33 @@ describe('team timeouts', function () {
             ->where('away.timeouts.used', 0));
     });
 });
+
+describe('timeouts in the public snapshot', function () {
+    it('shows how many timeouts each team still has in the current half, as numbers only', function () {
+        ['game' => $game] = basketballGame();
+        app(ChangeGamePeriod::class)->handle($game->fresh(), true, 1);
+
+        expect(PublicGameSnapshot::for($game->fresh())['timeouts'])->toBe(['home' => 2, 'away' => 2, 'limit' => 2, 'period' => 1]);
+
+        basketTimeout($game, 'home', 1);
+        $snapshot = PublicGameSnapshot::for($game->fresh());
+
+        expect($snapshot['timeouts'])->toBe(['home' => 1, 'away' => 2, 'limit' => 2, 'period' => 1])
+            ->and(json_encode($snapshot['timeouts']))->not->toContain('person');
+    });
+
+    it('gives the timeout back when it is voided and has no entry in sports without timeouts', function () {
+        ['game' => $game] = basketballGame();
+        app(ChangeGamePeriod::class)->handle($game->fresh(), true, 1);
+        basketTimeout($game, 'away', 1);
+        $event = $game->fresh()->events()->where('type', GameEventType::Timeout)->firstOrFail();
+
+        expect(PublicGameSnapshot::for($game->fresh())['timeouts']['away'])->toBe(1);
+
+        app(VoidGameEvent::class)->handle($game->fresh(), $event);
+        expect(PublicGameSnapshot::for($game->fresh())['timeouts']['away'])->toBe(2);
+
+        ['game' => $football] = sheetGame();
+        expect(PublicGameSnapshot::for($football)['timeouts'])->toBeNull();
+    });
+});

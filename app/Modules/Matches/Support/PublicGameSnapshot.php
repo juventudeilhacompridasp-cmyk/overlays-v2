@@ -58,6 +58,7 @@ final class PublicGameSnapshot
             'clock' => $game->clock()->snapshot($marks) + self::clockDisplay($game, $marks),
             'quarters' => self::quarters($game),
             'fouls' => self::fouls($game, $marks, $side),
+            'timeouts' => self::timeouts($game, $marks, $side),
             'goals' => $goals->map(function (GameEvent $event) use ($side, $names) {
                 $own = $event->type === GameEventType::OwnGoal;
                 $scoringSide = $side($event->entry_id);
@@ -103,6 +104,38 @@ final class PublicGameSnapshot
         });
 
         return ['home' => $counts['home'], 'away' => $counts['away'], 'limit' => $profile->teamFoulLimit, 'period' => $group];
+    }
+
+    /**
+     * Pedidos de tempo que restam a cada equipe no grupo de períodos em andamento (null se o esporte não conta pedidos).
+     * Só números: o pedido é da equipe, sem atleta.
+     *
+     * @param  list<ClockMark>  $marks
+     * @return array{home: int, away: int, limit: int, period: int}|null
+     */
+    private static function timeouts(Game $game, array $marks, \Closure $side): ?array
+    {
+        $profile = $game->sport()->profile();
+
+        if (! $profile->tracksTimeouts()) {
+            return null;
+        }
+
+        $current = (int) ($game->clock()->snapshot($marks)['period'] ?? 1);
+        $group = $profile->timeoutGroup($current);
+        $used = ['home' => 0, 'away' => 0];
+
+        $game->events()->effective()->where('type', GameEventType::Timeout)->get()->each(function (GameEvent $event) use (&$used, $side, $profile, $group): void {
+            $team = $side($event->entry_id);
+
+            if ($team !== null && $profile->timeoutGroup((int) $event->period) === $group) {
+                $used[$team]++;
+            }
+        });
+
+        $limit = $profile->timeoutLimit($current);
+
+        return ['home' => max(0, $limit - $used['home']), 'away' => max(0, $limit - $used['away']), 'limit' => $limit, 'period' => $group];
     }
 
     /**
