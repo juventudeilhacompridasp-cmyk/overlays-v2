@@ -6,6 +6,7 @@ use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Support\PublicGameSnapshot;
 use App\Support\Images\ImageStore;
 use GdImage;
+use Illuminate\Support\Carbon;
 
 /**
  * Imagem de pré-visualização (Open Graph, 1200 x 630 PNG) do jogo para WhatsApp/redes. Só dados PÚBLICOS do
@@ -83,7 +84,7 @@ final class GameShareImage
 
     private static function when(?string $iso): string
     {
-        return $iso ? \Illuminate\Support\Carbon::parse($iso)->timezone(config('app.timezone'))->format('d/m/Y \à\s H:i') : 'Em breve';
+        return $iso ? Carbon::parse($iso)->timezone(config('app.timezone'))->format('d/m/Y \à\s H:i') : 'Em breve';
     }
 
     /** Texto centralizado em $x, que encolhe até caber em $maxWidth. */

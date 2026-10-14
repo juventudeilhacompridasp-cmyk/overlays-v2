@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Competitions\Enums\SeasonStatus;
 use App\Modules\Competitions\Models\Entry;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
@@ -96,6 +97,6 @@ it('serves a PNG share image for a published game and 404s for drafts', function
     $size = getimagesizefromstring($response->getContent());
     expect($size[0])->toBe(1200)->and($size[1])->toBe(630);
 
-    $game->division->season->update(['status' => \App\Modules\Competitions\Enums\SeasonStatus::Draft]);
+    $game->division->season->update(['status' => SeasonStatus::Draft]);
     $this->get(route('public.games.image', $game->getKey()))->assertNotFound();
 });
