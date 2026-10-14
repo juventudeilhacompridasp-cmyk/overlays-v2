@@ -74,6 +74,7 @@ Route::get('/overlay/{channel:token}/{overlay}', [OverlayController::class, 'sho
 // Portal público: placar ao vivo (sem login).
 Route::get('/jogos/{game}', [PublicGameController::class, 'show'])->name('public.games.show');
 Route::get('/jogos/{game}/estado', [PublicGameController::class, 'state'])->name('public.games.state');
+Route::get('/jogos/{game}/imagem.png', [PublicGameController::class, 'image'])->name('public.games.image');
 
 // Mercado de jogadores livres (ADR 0008): cadastro público do atleta; 404 sem o recurso, fora dos buscadores.
 Route::middleware(['guest', 'feature:market', PrivateNoIndex::class])->prefix('mercado')->group(function () {

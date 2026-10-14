@@ -145,7 +145,7 @@ function GoalList({ goals, side }: { goals: Goal[]; side: 'home' | 'away' }) {
     );
 }
 
-export default function GameLive({ snapshot: initial, realtime, push_key, insights, json_ld }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null; insights?: Insights; json_ld?: Record<string, unknown> | null }) {
+export default function GameLive({ snapshot: initial, realtime, push_key, insights, json_ld, share_image }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null; insights?: Insights; json_ld?: Record<string, unknown> | null; share_image?: string | null }) {
     const [snapshot, setSnapshot] = useState(initial);
     const [connection, setConnection] = useState<ConnectionState>('connecting');
     // Diferença entre o relógio do navegador e o do servidor, medida na carga da página (não nos deltas, que podem atrasar na fila).
@@ -219,7 +219,10 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
                 <meta property="og:title" content={`${home} ${snapshot.home_score} x ${snapshot.away_score} ${away}`} />
                 <meta property="og:description" content={`${snapshot.competition} · ${snapshot.division} · ${snapshot.stage}`} />
                 <meta property="og:url" content={route('public.games.show', snapshot.id)} />
-                {snapshot.home?.logo_url && <meta property="og:image" content={snapshot.home.logo_url} />}
+                {share_image && <meta property="og:image" content={share_image} />}
+                {share_image && <meta property="og:image:width" content="1200" />}
+                {share_image && <meta property="og:image:height" content="630" />}
+                {share_image && <meta name="twitter:card" content="summary_large_image" />}
                 {json_ld && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(json_ld) }} />}
             </Head>
             <main className="mx-auto max-w-3xl">

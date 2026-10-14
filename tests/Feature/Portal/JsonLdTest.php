@@ -86,3 +86,16 @@ it('does not publish structured data for draft seasons', function () {
 
     $this->get(route('public.games.show', $game->getKey()))->assertNotFound();
 });
+
+it('serves a PNG share image for a published game and 404s for drafts', function () {
+    ['game' => $game] = jsonLdGame();
+
+    $response = $this->get(route('public.games.image', $game->getKey()));
+
+    $response->assertOk()->assertHeader('Content-Type', 'image/png');
+    $size = getimagesizefromstring($response->getContent());
+    expect($size[0])->toBe(1200)->and($size[1])->toBe(630);
+
+    $game->division->season->update(['status' => \App\Modules\Competitions\Enums\SeasonStatus::Draft]);
+    $this->get(route('public.games.image', $game->getKey()))->assertNotFound();
+});
