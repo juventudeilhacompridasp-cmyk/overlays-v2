@@ -13,6 +13,7 @@ use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Portal\Support\PublicName;
 use App\Modules\Teams\Models\Person;
+use App\Modules\Teams\Models\RosterEntry;
 use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
@@ -273,5 +274,38 @@ describe('panel: portal identity', function () {
         $this->patch('/painel/organization', ['name' => 'Invasor', 'primary' => '#000000'])->assertSessionHas('error');
 
         expect(CurrentOrganization::get()->fresh()->name)->toBe('Liga Local');
+    });
+});
+
+describe('search', function () {
+    it('finds published competitions and teams by name, never drafts, athletes or other organizations', function () {
+        ['game' => $game, 'home' => $home, 'competition' => $competition] = publishedGame();
+        Team::query()->whereKey($home->team_id)->update(['name' => 'Leões da Ilha', 'city' => 'Ilhabela']);
+        $competition->update(['name' => 'Copa Ilhabela']);
+        $draft = Competition::factory()->create(['name' => 'Copa Ilhabela Secreta']);
+        Season::factory()->create(['competition_id' => $draft->id]);
+        Team::factory()->create(['name' => 'Leões Rascunho']);
+        Person::query()->whereIn('id', RosterEntry::query()->where('entry_id', $home->id)->pluck('person_id'))->update(['name' => 'Leonardo Atleta']);
+
+        $this->get('/busca?q=ilha')->assertOk()->assertInertia(fn ($page) => $page
+            ->component('Portal/Search')->where('query', 'ilha')->where('seo.noindex', true)
+            ->has('competitions', 1)->where('competitions.0.name', 'Copa Ilhabela')
+            ->has('teams', 1)->where('teams.0.name', 'Leões da Ilha'));
+
+        $this->get('/busca?q=le%C3%B5es')->assertInertia(fn ($page) => $page->has('teams', 1)->where('teams.0.name', 'Leões da Ilha'));
+        $this->get('/busca?q=Leonardo')->assertInertia(fn ($page) => $page->has('teams', 0)->has('competitions', 0));
+    });
+
+    it('needs two letters, escapes wildcards and trims the term', function () {
+        publishedGame();
+
+        $this->get('/busca')->assertOk()->assertInertia(fn ($page) => $page->where('query', '')->has('teams', 0)->has('competitions', 0));
+        $this->get('/busca?q=a')->assertInertia(fn ($page) => $page->has('teams', 0)->has('competitions', 0));
+        $this->get('/busca?q=%25%25')->assertInertia(fn ($page) => $page->has('teams', 0)->has('competitions', 0));
+        $this->get('/busca?q='.str_repeat('x', 200))->assertInertia(fn ($page) => $page->where('query', str_repeat('x', 60)));
+    });
+
+    it('is kept out of the robots file', function () {
+        $this->get('/robots.txt')->assertSee('Disallow: /busca');
     });
 });
