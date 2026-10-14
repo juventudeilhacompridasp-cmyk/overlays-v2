@@ -237,14 +237,14 @@ class PortalController extends Controller
         $teams = collect();
 
         if (mb_strlen($term) >= 2) {
-            $like = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $term).'%';
+            $like = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($term)).'%';
 
             $competitions = Competition::query()->whereHas('seasons', fn ($query) => $query->published())
-                ->where('name', 'ilike', $like)->orderBy('name')->limit(self::SEARCH_LIMIT)->get();
+                ->whereRaw("lower(name) like ? escape '\\'", [$like])->orderBy('name')->limit(self::SEARCH_LIMIT)->get();
 
             $teams = Team::query()
                 ->whereHas('entries', fn ($query) => $query->where('status', EntryStatus::Confirmed)->whereHas('division.season', fn ($season) => $season->published()))
-                ->where(fn (Builder $query) => $query->where('name', 'ilike', $like)->orWhere('city', 'ilike', $like))
+                ->where(fn (Builder $query) => $query->whereRaw("lower(name) like ? escape '\\'", [$like])->orWhereRaw("lower(city) like ? escape '\\'", [$like]))
                 ->orderBy('name')->limit(self::SEARCH_LIMIT)->get();
         }
 
