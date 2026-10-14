@@ -14,9 +14,15 @@ Os overlays são telas de vídeo que o OBS carrega como **fonte de navegador**, 
 3. Escolha o **jogo no ar**. O placar, o relógio e as faixas de gol/cartão aparecem sozinhos conforme a súmula é lançada.
 4. Ligue as **camadas** sob demanda (escalação, tabela) quando quiser mostrar.
 
+## Conferir antes de transmitir
+O **Estúdio de pré-visualização** reúne as quatro telas em cards. Clique em **Visualizar ao vivo** no card que deseja conferir: a prévia abre a URL real do canal em 1920 x 1080 e recebe as mesmas atualizações do OBS.
+
+Você pode trocar o fundo entre campo, quadra, escuro e a grade de transparência para verificar contraste e recorte. Apenas uma prévia por canal fica conectada ao vivo de cada vez, evitando conexões e renderizações desnecessárias no navegador. Use os botões do próprio card para copiar a URL ou abrir a tela separadamente.
+
 > O endereço do canal é o segredo: quem tem a URL vê a tela. Se vazar, use **Renovar** para gerar outra (a antiga para de funcionar).
 
 ## Dicas
 - Cartões, disciplina e documentos nunca aparecem nos overlays.
+- Alterações de visual aparecem na prévia assim que você clica em **Aplicar visual**.
 - Se a conexão em tempo real falhar, a tela continua atualizando por consulta periódica.
 - O passo a passo completo com imagens está no guia do OBS que acompanha o projeto.

@@ -3,6 +3,7 @@ import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
 import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent, useEffect, useState } from 'react';
+import OverlayPreviewStudio from './OverlayPreviewStudio';
 
 interface Appearance {
     preset: 'arena';
@@ -130,6 +131,8 @@ function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: {
             }
         >
             <div className="space-y-5">
+                <OverlayPreviewStudio overlays={channel.overlays} hasGame={channel.game_id !== null} layers={channel.layers} />
+
                 <div>
                     <Field label="Jogo no ar" htmlFor={`game-${channel.id}`} hint="Todas as telas deste canal passam a acompanhar este jogo, sem mexer no OBS.">
                         <Select id={`game-${channel.id}`} disabled={!canOperate} value={channel.game_id ?? ''} onChange={(event) => patch({ game_id: event.target.value || null })}>
@@ -273,25 +276,6 @@ function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: {
                     </div>
                 )}
 
-                <div>
-                    <div className="mb-2 text-sm font-medium text-gray-700">URLs para o OBS (Fonte de navegador)</div>
-                    <ul className="divide-y divide-gray-100 rounded-md border border-gray-200">
-                        {channel.overlays.map((overlay) => (
-                            <li key={overlay.slug} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
-                                <div className="min-w-0">
-                                    <div className="font-medium text-gray-900">{overlay.title}</div>
-                                    <code className="block truncate text-xs text-gray-500">{overlay.url}</code>
-                                </div>
-                                <div className="flex gap-2">
-                                    <CopyButton text={overlay.url} />
-                                    <a href={overlay.url} target="_blank" rel="noreferrer" className="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200">
-                                        Abrir
-                                    </a>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
             </div>
         </Card>
     );

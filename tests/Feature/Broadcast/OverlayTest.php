@@ -212,7 +212,12 @@ describe('panel', function () {
         $this->get('/painel/broadcast')->assertOk()->assertInertia(fn ($page) => $page
             ->component('Panel/Broadcast/Index')
             ->has('channels', 1)
+            ->where('channels.0.overlays.0.slug', 'placar')
+            ->where('channels.0.overlays.0.title', 'Placar e cronômetro')
             ->where('channels.0.overlays.0.url', url("/overlay/{$channel->token}/placar"))
+            ->where('channels.0.overlays.1.slug', 'eventos')
+            ->where('channels.0.overlays.2.slug', 'escalacao')
+            ->where('channels.0.overlays.3.slug', 'tabela')
             ->has('channels.0.overlays', 4)
             ->where('channels.0.appearance.preset', 'arena')
             ->where('channels.0.lineup_settings.presentation', 'sequence')
