@@ -7,6 +7,7 @@ use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Support\PublicGameSnapshot;
 use App\Modules\Portal\Push\PushConfig;
 use App\Modules\Portal\Support\GameInsights;
+use App\Modules\Portal\Support\JsonLd;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,6 +25,7 @@ class PublicGameController extends Controller
             'snapshot' => PublicGameSnapshot::for($game),
             // Reenviado sozinho (recarga parcial) quando o placar ou a situação mudam, para a linha do tempo acompanhar o jogo.
             'insights' => fn () => $insights->for($game),
+            'json_ld' => JsonLd::game($game),
             'push_key' => PushConfig::publicKeyFor(),
             'realtime' => [
                 'key' => $realtime['key'],

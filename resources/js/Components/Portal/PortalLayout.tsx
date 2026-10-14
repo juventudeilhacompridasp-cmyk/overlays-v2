@@ -1,4 +1,5 @@
 import ThemeToggle from '@/Components/ThemeToggle';
+import { safeJsonLd } from '@/lib/jsonLd';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren } from 'react';
 
@@ -16,6 +17,10 @@ export interface Seo {
     description: string;
     url: string;
     image: string | null;
+    /** Dados estruturados (schema.org) montados pelo servidor. */
+    json_ld?: Record<string, unknown>;
+    /** Páginas que não devem ser indexadas (ex.: resultados de busca). */
+    noindex?: boolean;
 }
 
 /** Título, descrição, canonical e Open Graph: renderizados no servidor (SSR) para buscadores e pré-visualização de links. */
@@ -24,6 +29,7 @@ export function SeoHead({ seo }: { seo: Seo }) {
         <Head title={seo.title}>
             <meta name="description" content={seo.description} />
             <link rel="canonical" href={seo.url} />
+            {seo.noindex && <meta name="robots" content="noindex,follow" />}
             <meta property="og:type" content="website" />
             <meta property="og:locale" content="pt_BR" />
             <meta property="og:title" content={seo.title} />
@@ -31,6 +37,7 @@ export function SeoHead({ seo }: { seo: Seo }) {
             <meta property="og:url" content={seo.url} />
             {seo.image && <meta property="og:image" content={seo.image} />}
             <meta name="twitter:card" content={seo.image ? 'summary_large_image' : 'summary'} />
+            {seo.json_ld && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(seo.json_ld) }} />}
         </Head>
     );
 }
@@ -51,6 +58,9 @@ export default function PortalLayout({ theme, seo, children }: PropsWithChildren
                         <Link href={route('portal.home')} className="hover:underline">
                             Competições
                         </Link>
+                        <form method="get" action={route('portal.search')} role="search" className="hidden sm:block">
+                            <input type="search" name="q" maxLength={60} placeholder="Buscar" aria-label="Buscar competição ou equipe" className="w-32 rounded bg-white/20 px-2 py-1 text-sm text-white placeholder-white/70 focus:bg-white/30 focus:outline-none" />
+                        </form>
                         <ThemeToggle onDark />
                         {auth.user ? (
                             <Link href={route('panel.dashboard')} className="rounded bg-white/20 px-3 py-1 hover:bg-white/30">

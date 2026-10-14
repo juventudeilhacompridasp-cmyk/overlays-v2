@@ -13,6 +13,7 @@ use App\Modules\Portal\Push\PushConfig;
 use App\Modules\Portal\Support\CompetitionPage;
 use App\Modules\Portal\Support\GamePresenter;
 use App\Modules\Portal\Support\IcsCalendar;
+use App\Modules\Portal\Support\JsonLd;
 use App\Modules\Portal\Support\PortalSettings;
 use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Portal\Support\SeasonExtras;
@@ -24,6 +25,7 @@ use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -33,6 +35,8 @@ use Inertia\Response;
 class PortalController extends Controller
 {
     private const SHOWN = 8;
+
+    private const SEARCH_LIMIT = 15;
 
     public function home(): Response
     {
@@ -103,7 +107,7 @@ class PortalController extends Controller
 
         return Inertia::render('Portal/Season', [
             'theme' => $theme,
-            'seo' => $this->seo("{$title} · {$theme['name']}", "Classificação, jogos, resultados e artilharia — {$title}.", route('portal.season', [$competition->slug, $season->getKey()])),
+            'seo' => $this->seo("{$title} · {$theme['name']}", "Classificação, jogos, resultados e artilharia — {$title}.", route('portal.season', [$competition->slug, $season->getKey()]), null, JsonLd::season($competition, $season, Game::query()->whereIn('division_id', $season->divisions()->pluck('id'))->with(['homeEntry.team', 'awayEntry.team', 'venue', 'division.season.competition', 'stage'])->orderByRaw('scheduled_at is null')->orderBy('scheduled_at')->limit(20)->get())),
             ...$data,
             'extras' => $extras->for($season),
             'stats_url' => route('portal.stats', [$competition->slug, $season->getKey()]),
@@ -148,7 +152,7 @@ class PortalController extends Controller
 
         return Inertia::render('Portal/Team', [
             'theme' => $theme,
-            'seo' => $this->seo("{$team->name} · {$theme['name']}", "Jogos e resultados de {$team->name}.", route('portal.team', $team->getKey()), $team->logoUrl(512)),
+            'seo' => $this->seo("{$team->name} · {$theme['name']}", "Jogos e resultados de {$team->name}.", route('portal.team', $team->getKey()), $team->logoUrl(512), JsonLd::teamPage($team)),
             'push_key' => PushConfig::publicKeyFor(),
             'team' => ['id' => $team->getKey(), 'name' => $team->name, 'city' => $team->city, 'logo_url' => $team->logoUrl(512), 'color' => $team->primary_color],
             'participations' => $entries->map(fn (Entry $entry) => [
@@ -223,16 +227,51 @@ class PortalController extends Controller
         return response($xml.'</urlset>'."\n", 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
     }
 
+    /** Busca do portal: competições e equipes de edições publicadas pelo nome (nunca atletas). Página sem indexação. */
+    public function search(Request $request): Response
+    {
+        $term = trim((string) $request->query('q', ''));
+        $term = mb_substr($term, 0, 60);
+        $theme = PublicTheme::current();
+        $competitions = collect();
+        $teams = collect();
+
+        if (mb_strlen($term) >= 2) {
+            $like = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($term)).'%';
+
+            $competitions = Competition::query()->whereHas('seasons', fn ($query) => $query->published())
+                ->whereRaw("lower(name) like ? escape '\\'", [$like])->orderBy('name')->limit(self::SEARCH_LIMIT)->get();
+
+            $teams = Team::query()
+                ->whereHas('entries', fn ($query) => $query->where('status', EntryStatus::Confirmed)->whereHas('division.season', fn ($season) => $season->published()))
+                ->where(fn (Builder $query) => $query->whereRaw("lower(name) like ? escape '\\'", [$like])->orWhereRaw("lower(city) like ? escape '\\'", [$like]))
+                ->orderBy('name')->limit(self::SEARCH_LIMIT)->get();
+        }
+
+        return Inertia::render('Portal/Search', [
+            'theme' => $theme,
+            'seo' => $this->seo("Busca · {$theme['name']}", "Busque competições e equipes de {$theme['name']}.", route('portal.search'), null, null, true),
+            'query' => $term,
+            'competitions' => $competitions->map(fn (Competition $competition) => ['name' => $competition->name, 'url' => route('portal.competition', $competition->slug)])->values(),
+            'teams' => $teams->map(fn (Team $team) => ['name' => $team->name, 'city' => $team->city, 'logo_url' => $team->logoUrl(128), 'url' => route('portal.team', $team->getKey())])->values(),
+        ]);
+    }
+
     public function robots(): HttpResponse
     {
-        $body = "User-agent: *\nDisallow: /painel\nDisallow: /overlay\nDisallow: /minha-inscricao\nDisallow: /carteirinha\nDisallow: /api\nDisallow: /login\nDisallow: /register\n\nSitemap: ".route('portal.sitemap')."\n";
+        $body = "User-agent: *\nDisallow: /painel\nDisallow: /overlay\nDisallow: /minha-inscricao\nDisallow: /carteirinha\nDisallow: /busca\nDisallow: /api\nDisallow: /login\nDisallow: /register\n\nSitemap: ".route('portal.sitemap')."\n";
 
         return response($body, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }
 
-    /** @return array{title: string, description: string, url: string, image: string|null} */
-    private function seo(string $title, string $description, string $url, ?string $image = null): array
+    /**
+     * @param  array<string, mixed>|null  $jsonLd  dados estruturados (schema.org) da página
+     * @return array{title: string, description: string, url: string, image: string|null, json_ld?: array<string, mixed>, noindex?: bool}
+     */
+    private function seo(string $title, string $description, string $url, ?string $image = null, ?array $jsonLd = null, bool $noindex = false): array
     {
-        return ['title' => $title, 'description' => $description, 'url' => $url, 'image' => $image];
+        return ['title' => $title, 'description' => $description, 'url' => $url, 'image' => $image]
+            + ($jsonLd === null ? [] : ['json_ld' => $jsonLd])
+            + ($noindex ? ['noindex' => true] : []);
     }
 }
