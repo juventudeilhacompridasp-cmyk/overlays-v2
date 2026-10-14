@@ -8,15 +8,15 @@ namespace App\Modules\Broadcast\Support;
  */
 final class OverlayScreenSettings
 {
-    /** @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int, mvp: string|null, social: array{items: list<array{label: string, value: string}>, url: string|null}} */
+    /** @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int, mvp: string|null, serve: string|null, social: array{items: list<array{label: string, value: string}>, url: string|null}} */
     public static function defaults(): array
     {
-        return ['title' => 'Começamos em breve', 'subtitle' => '', 'until_ms' => null, 'stoppage' => 0, 'mvp' => null, 'social' => ['items' => [], 'url' => null]];
+        return ['title' => 'Começamos em breve', 'subtitle' => '', 'until_ms' => null, 'stoppage' => 0, 'mvp' => null, 'serve' => null, 'social' => ['items' => [], 'url' => null]];
     }
 
     /**
      * @param  array<string, mixed>|null  $settings
-     * @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int, mvp: string|null, social: array{items: list<array{label: string, value: string}>, url: string|null}}
+     * @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int, mvp: string|null, serve: string|null, social: array{items: list<array{label: string, value: string}>, url: string|null}}
      */
     public static function normalize(?array $settings): array
     {
@@ -28,6 +28,7 @@ final class OverlayScreenSettings
             'subtitle' => mb_substr(trim((string) $values['subtitle']), 0, 80),
             'until_ms' => $until,
             'stoppage' => is_numeric($values['stoppage']) ? min(15, max(0, (int) $values['stoppage'])) : 0,
+            'serve' => in_array($values['serve'], ['home', 'away'], true) ? (string) $values['serve'] : null,
             'social' => self::social($values['social']),
             'mvp' => is_string($values['mvp']) && $values['mvp'] !== '' ? mb_substr($values['mvp'], 0, 40) : null,
         ];
@@ -38,7 +39,7 @@ final class OverlayScreenSettings
      *
      * @param  array<string, mixed>|null  $current
      * @param  array<string, mixed>  $command
-     * @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int, mvp: string|null, social: array{items: list<array{label: string, value: string}>, url: string|null}}
+     * @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int, mvp: string|null, serve: string|null, social: array{items: list<array{label: string, value: string}>, url: string|null}}
      */
     public static function apply(?array $current, array $command, int $nowMs): array
     {
@@ -46,6 +47,10 @@ final class OverlayScreenSettings
 
         if (array_key_exists('social', $command) && is_array($command['social'])) {
             $next['social'] = $command['social'];
+        }
+
+        if (array_key_exists('serve', $command)) {
+            $next['serve'] = $command['serve'];
         }
 
         if (array_key_exists('mvp_person_id', $command)) {

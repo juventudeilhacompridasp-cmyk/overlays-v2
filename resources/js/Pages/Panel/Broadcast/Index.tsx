@@ -134,6 +134,8 @@ interface Sponsor {
     banner_url: string | null;
 }
 
+type Defaults = Record<'appearance' | 'lower_third_settings' | 'lineup_settings' | 'sponsor_settings' | 'stats_settings', Record<string, unknown>>;
+
 interface Channel {
     id: string;
     name: string;
@@ -143,7 +145,7 @@ interface Channel {
     championship_live: Record<string, boolean>;
     stoppage: number;
     screens_live: Record<string, boolean>;
-    screen_settings: { title: string; subtitle: string; until_ms: number | null; social: { items: { label: string; value: string }[]; url: string | null } };
+    screen_settings: { title: string; subtitle: string; until_ms: number | null; serve: 'home' | 'away' | null; social: { items: { label: string; value: string }[]; url: string | null } };
     appearance: Appearance;
     lineup_settings: LineupSettings;
     lineup_people: LineupPerson[];
@@ -241,11 +243,11 @@ function ScenesBlock({ channel, scenes, limit, canManage, canOperate }: { channe
     );
 }
 
-function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, styleModels, styleModelLimit, canManage, canOperate, issuedControl }: { channel: Channel; games: GameOption[]; fonts: CustomFont[]; scenes: Scene[]; sceneLimit: number; seasons: ChampionshipSeason[]; styleModels: StyleModel[]; styleModelLimit: number; canManage: boolean; canOperate: boolean; issuedControl?: IssuedControl }) {
+function ChannelCard({ channel, defaults, games, fonts, scenes, sceneLimit, seasons, styleModels, styleModelLimit, canManage, canOperate, issuedControl }: { defaults: Defaults; channel: Channel; games: GameOption[]; fonts: CustomFont[]; scenes: Scene[]; sceneLimit: number; seasons: ChampionshipSeason[]; styleModels: StyleModel[]; styleModelLimit: number; canManage: boolean; canOperate: boolean; issuedControl?: IssuedControl }) {
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
-    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; championship_live?: Record<string, boolean>; stoppage_minutes?: number; screens_live?: Record<string, boolean>; screen_settings?: { title?: string; subtitle?: string; minutes?: number; mvp_person_id?: string | null; social?: { items: { label: string; value: string }[]; url: string | null } }; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings>; lower_third_settings?: Partial<LowerThirdSettings>; stats_settings?: Partial<StatsSettings>; custom_live?: Record<string, boolean>; lower_third_show?: { kind: string; title?: string; subtitle?: string; person_id?: string } }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
+    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; championship_live?: Record<string, boolean>; stoppage_minutes?: number; screens_live?: Record<string, boolean>; screen_settings?: { title?: string; subtitle?: string; minutes?: number; mvp_person_id?: string | null; serve?: 'home' | 'away' | null; social?: { items: { label: string; value: string }[]; url: string | null } }; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings>; lower_third_settings?: Partial<LowerThirdSettings>; stats_settings?: Partial<StatsSettings>; custom_live?: Record<string, boolean>; lower_third_show?: { kind: string; title?: string; subtitle?: string; person_id?: string } }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
 
     // Comandos de exibir/ocultar: o botão muda no clique e a mudança segue direto para o OBS; se o servidor recusar, volta ao estado real.
     const [layers, setLayers] = useState(channel.layers);
@@ -345,6 +347,24 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                         ))}
                     </div>
                     <p className="mt-1 text-xs text-gray-500">Aparece ao lado do relógio do placar enquanto o jogo corre; trocar o jogo zera.</p>
+                </div>
+                <div>
+                    <div className="mb-2 text-sm font-medium text-gray-700">Saque (esportes de sets)</div>
+                    <div className="flex flex-wrap gap-2">
+                        {([[null, 'Sem'], ['home', 'Mandante'], ['away', 'Visitante']] as const).map(([side, label]) => (
+                            <Button key={label} small variant={channel.screen_settings.serve === side ? 'primary' : 'secondary'} disabled={!canOperate || !channel.game_id} aria-pressed={channel.screen_settings.serve === side} onClick={() => patch({ screen_settings: { serve: side } })}>{label}</Button>
+                        ))}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Mostra a bola ao lado do placar da equipe que saca; trocar o jogo zera.</p>
+                </div>
+                <div>
+                    <div className="mb-2 text-sm font-medium text-gray-700">Restaurar padrões do módulo</div>
+                    <div className="flex flex-wrap gap-2">
+                        {([['appearance', 'Placar'], ['lower_third_settings', 'Lances'], ['lineup_settings', 'Escalação'], ['sponsor_settings', 'Patrocinadores'], ['stats_settings', 'Estatísticas']] as const).map(([key, label]) => (
+                            <Button key={key} small variant="secondary" disabled={!canOperate} onClick={() => window.confirm(`Restaurar os padrões de ${label}? As cores e ajustes atuais deste módulo serão trocados.`) && patch({ [key]: defaults[key] } as never)}>{label}</Button>
+                        ))}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Volta só aquele módulo ao visual inicial; jogo no ar, camadas e fotos habilitadas não mudam.</p>
                 </div>
 
                 <div>
@@ -974,7 +994,7 @@ function FontsCard({ fonts, limit, canManage }: { fonts: CustomFont[]; limit: nu
     );
 }
 
-export default function Index({ channels, games, issued_control, sponsors, sponsor_limit, custom_items, custom_limit, fonts, font_limit, scenes, scene_limit, style_models, style_model_limit, championship_seasons }: { channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl; sponsors: Sponsor[]; sponsor_limit: number; custom_items: CustomItem[]; custom_limit: number; fonts: CustomFont[]; font_limit: number; scenes: Scene[]; scene_limit: number; style_models: StyleModel[]; style_model_limit: number; championship_seasons: ChampionshipSeason[] }) {
+export default function Index({ channels, games, issued_control, sponsors, sponsor_limit, custom_items, custom_limit, fonts, font_limit, scenes, scene_limit, style_models, style_model_limit, championship_seasons, defaults }: { defaults: Defaults; channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl; sponsors: Sponsor[]; sponsor_limit: number; custom_items: CustomItem[]; custom_limit: number; fonts: CustomFont[]; font_limit: number; scenes: Scene[]; scene_limit: number; style_models: StyleModel[]; style_model_limit: number; championship_seasons: ChampionshipSeason[] }) {
     const canManage = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
     const { data, setData, post, processing, errors, reset } = useForm({ name: '' });
@@ -993,7 +1013,7 @@ export default function Index({ channels, games, issued_control, sponsors, spons
                 {channels.length === 0 && <Empty title="Nenhum canal de transmissão ainda.">{canManage ? 'Crie um canal abaixo para gerar as URLs do OBS.' : 'Peça a um organizador para criar um canal.'}</Empty>}
 
                 {channels.map((channel) => (
-                    <ChannelCard key={channel.id} channel={channel} games={games} fonts={fonts} scenes={scenes} sceneLimit={scene_limit} seasons={championship_seasons} styleModels={style_models} styleModelLimit={style_model_limit} canManage={canManage} canOperate={canOperate} issuedControl={issued_control} />
+                    <ChannelCard key={channel.id} defaults={defaults} channel={channel} games={games} fonts={fonts} scenes={scenes} sceneLimit={scene_limit} seasons={championship_seasons} styleModels={style_models} styleModelLimit={style_model_limit} canManage={canManage} canOperate={canOperate} issuedControl={issued_control} />
                 ))}
 
                 <SponsorsCard sponsors={sponsors} limit={sponsor_limit} canManage={canManage} />

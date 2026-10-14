@@ -58,6 +58,7 @@ class OverlayChannel extends Model
         'social' => 'Chamada para redes sociais com QR code (sob demanda)',
         'barra-patrocinio' => 'Barra de patrocinadores 1500 x 200 (sob demanda)',
         'estatisticas' => 'Estatísticas da partida (sob demanda)',
+        'todos' => 'Todas as camadas numa só fonte (placar, lances, escalação, tabela, patrocinadores, estatísticas)',
     ];
 
     /**

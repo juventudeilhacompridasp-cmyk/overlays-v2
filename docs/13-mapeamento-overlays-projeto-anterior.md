@@ -14,7 +14,7 @@ Fonte: repositório `juventudeilhacompridasp-cmyk/overlays` (Overlay Studio: `pu
 | `sponsor-bar` (barra 1500 x 200) | `/overlay/{token}/barra-patrocinio` | ✅ (2.5) |
 | `stats` (estatísticas: comparativo, gols/cartões, destaque do atleta) | `/overlay/{token}/estatisticas` | ✅ (2.6) |
 | `custom` (Builder: overlays por elementos) | `/overlay/{token}/personalizado/{id}` | 🟡 texto, imagem e forma entregues; falta vídeo e upload de imagens próprias (2.7) |
-| `all` (todas as camadas numa fonte) | — | ⬜ (2.8) |
+| `all` (todas as camadas numa fonte) | `/overlay/{token}/todos` | ✅ (2.8) |
 | `/obs/<visão>` (campeonato: tabela, jogos, resultados, artilharia, cartões, jogo em destaque, faixa, campeão) | `/overlay/{token}/campeonato/*` (ADR 0012) | ✅ |
 | Pré-jogo / resumo para narradores | `/prejogo`, `/resumo` | ✅ |
 
@@ -51,7 +51,7 @@ Antigo: canvas com até 60 elementos (texto, imagem, vídeo, forma), posição/t
 
 ### 2.8 Camada `all`, aparência global, esportes
 Antigo: `layer=all`; aparência global (fonte global, 9 tipografias, predefinições compacto/impacto), "Restaurar padrões do módulo", seções recolhíveis, controle por esporte (relógio de posse regressivo de 24 s no basquete, saque e sets no vôlei, faltas no futsal).
-Aqui: aparência por canal, cenas (predefinições), fontes. **Falta:** `all`, restaurar padrões por módulo, relógio de posse (24 s), saque no vôlei.
+Aqui: aparência por canal, cenas (predefinições), fontes. **Entregue:** `all` (`/overlay/{token}/todos`, empilha as telas existentes; cada camada abre a própria conexão em tempo real), "Restaurar padrões do módulo" (placar, lances, escalação, patrocinadores, estatísticas; o servidor envia os padrões em `defaults`), relógio de posse (24 s) e saque no vôlei (`screen_settings.serve`, bola ao lado do placar de sets; zera ao trocar o jogo). **Falta:** fonte global/predefinições de tipografia.
 
 ## 3. Ordem de entrega (um PR por linha; atualize a coluna Estado acima)
 
@@ -61,6 +61,6 @@ Aqui: aparência por canal, cenas (predefinições), fontes. **Falta:** `all`, r
 4. Patrocinador rotativo + barra de patrocinadores (2.4, 2.5).
 5. Estúdio de estatísticas da partida (2.6).
 6. Builder de overlays por elementos (2.7), o maior item.
-7. `all`, restaurar padrões e relógio de posse/saque (2.8).
+7. ✅ `all`, restaurar padrões e relógio de posse/saque (2.8).
 
 Regra para todos: dados públicos apenas (LGPD, `PublicName`), nada de ID/documento no estado do overlay, parâmetro novo passa por `UpdateOverlayChannel`, API de controle, cenas e testes.

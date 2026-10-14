@@ -31,6 +31,7 @@ class OverlayController extends Controller
         'social' => 'Overlay/Social',
         'barra-patrocinio' => 'Overlay/SponsorBar',
         'estatisticas' => 'Overlay/Stats',
+        'todos' => 'Overlay/All',
     ];
 
     public function show(OverlayChannel $channel, string $overlay): Response
