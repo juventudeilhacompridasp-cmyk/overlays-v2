@@ -1,4 +1,6 @@
 import { Realtime } from '@/lib/echo';
+import { lineupPresentationPlan } from '@/lib/lineupPresentation';
+import type { LineupPhase } from '@/lib/lineupPresentation';
 import { LineupSide, OverlayState, useOverlay } from '@/lib/overlay';
 import { overlayMotion, overlayStyle } from '@/lib/overlayVisual';
 import { Head } from '@inertiajs/react';
@@ -8,10 +10,13 @@ type Player = LineupSide['starters'][number];
 
 function AthletePhoto({ player, size = 'large' }: { player: Pick<Player, 'photo_url' | 'shirt'>; size?: 'small' | 'large' }) {
     const dimension = size === 'large' ? 'h-[4.6rem] w-[4.6rem]' : 'h-11 w-11';
+    const [failed, setFailed] = useState(false);
+
+    useEffect(() => setFailed(false), [player.photo_url]);
 
     return (
         <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white/80 bg-slate-900 font-black shadow-lg ${dimension}`}>
-            {player.photo_url ? <img src={player.photo_url} alt="" className="h-full w-full object-cover" /> : <span className={size === 'large' ? 'text-2xl' : 'text-base'}>{player.shirt ?? '—'}</span>}
+            {player.photo_url && !failed ? <img src={player.photo_url} alt="" className="h-full w-full object-cover" decoding="async" draggable={false} onError={() => setFailed(true)} /> : <span className={size === 'large' ? 'text-2xl' : 'text-base'}>{player.shirt ?? '—'}</span>}
         </span>
     );
 }
@@ -97,43 +102,58 @@ function TacticalSide({ side, sport, background, accent }: { side: LineupSide; s
     );
 }
 
+function FormationSide({ side, ready, sport, background, accent }: { side: LineupSide; ready: boolean; sport: string; background: string; accent: string }) {
+    if (ready) {
+        return <TacticalSide side={side} sport={sport} background={background} accent={accent} />;
+    }
+
+    return (
+        <div className="relative" data-formation-fallback="list">
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-amber-300/30 bg-slate-950/90 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-200 shadow-lg">
+                Posições ainda não confirmadas
+            </div>
+            <ListColumn side={side} background={background} accent={accent} />
+        </div>
+    );
+}
+
 export default function Lineup({ token, state: initial, realtime }: { token: string; state: OverlayState; realtime: Realtime }) {
     const { state } = useOverlay(token, initial, realtime);
     const visible = state.lineup !== null;
-    const formationAvailable = Boolean(state.lineup?.home.formation_ready && state.lineup?.away.formation_ready);
     const requested = state.lineup_settings.presentation;
-    const [phase, setPhase] = useState<'list' | 'formation'>(requested === 'formation' && formationAvailable ? 'formation' : 'list');
+    const plan = lineupPresentationPlan(requested, Boolean(state.lineup?.home.formation_ready), Boolean(state.lineup?.away.formation_ready));
+    const [phase, setPhase] = useState<LineupPhase>(plan.initialPhase);
 
     useEffect(() => {
-        const first = requested === 'formation' && formationAvailable ? 'formation' : 'list';
-        setPhase(first);
+        setPhase(plan.initialPhase);
 
-        if (!visible || requested !== 'sequence' || !formationAvailable) return;
+        if (!visible || !plan.transitionsToFormation) return;
         const timer = window.setTimeout(() => setPhase('formation'), state.lineup_settings.list_seconds * 1000);
 
         return () => window.clearTimeout(timer);
-    }, [formationAvailable, requested, state.game?.id, state.lineup_settings.list_seconds, visible]);
+    }, [plan.initialPhase, plan.transitionsToFormation, state.game?.id, state.lineup_settings.list_seconds, visible]);
 
     const transition = state.appearance.motion === 'none' ? 'duration-0' : state.appearance.motion === 'subtle' ? 'duration-300' : 'duration-700';
-    const common = `absolute inset-0 flex items-center justify-center gap-8 transition-[opacity,transform] ${transition}`;
+    const common = `overlay-phase-transition absolute inset-0 flex items-center justify-center gap-8 transition-[opacity,transform] ${transition}`;
+    const visibilityTransition = state.appearance.motion === 'none' ? 'duration-0' : 'duration-500';
 
     return (
-        <div className="fixed inset-0 overflow-hidden font-sans transition-opacity duration-500" style={{ ...overlayStyle(state.appearance), color: state.appearance.text_color, opacity: visible ? 1 : 0, textShadow: '0 1px 2px rgba(0,0,0,.55)' }} data-testid="overlay-lineup" data-visible={visible} data-phase={phase}>
+        <div className={`overlay-phase-transition fixed inset-0 overflow-hidden font-sans transition-opacity ${visibilityTransition}`} style={{ ...overlayStyle(state.appearance), color: state.appearance.text_color, opacity: visible ? 1 : 0, textShadow: '0 1px 2px rgba(0,0,0,.55)' }} data-testid="overlay-lineup" data-visible={visible} data-phase={phase}>
             <Head title="Escalação" />
             {state.lineup && state.game && (
-                <div className="absolute inset-0" style={{ transform: `scale(${state.appearance.scale})` }}>
-                    <div className={`${common} ${phase === 'list' ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0 pointer-events-none'}`}>
+                <div className="overlay-stage absolute inset-0" style={{ transform: `scale(${state.appearance.scale})`, transformOrigin: 'center center' }}>
+                    {plan.renderList && <div className={`${common} ${phase === 'list' ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0 pointer-events-none'}`} aria-hidden={phase !== 'list'}>
                         <div className={`flex gap-8 ${phase === 'list' ? overlayMotion(state.appearance.motion) : ''}`}>
                             <ListColumn side={state.lineup.home} background={state.appearance.background_color} accent={state.appearance.accent_color} />
                             <ListColumn side={state.lineup.away} background={state.appearance.background_color} accent={state.appearance.accent_color} />
                         </div>
-                    </div>
-                    <div className={`${common} ${phase === 'formation' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0 pointer-events-none'}`}>
+                    </div>}
+                    {plan.renderFormation && <div className={`${common} ${phase === 'formation' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0 pointer-events-none'}`} aria-hidden={phase !== 'formation'}>
                         <div className={`flex gap-8 ${phase === 'formation' ? overlayMotion(state.appearance.motion) : ''}`}>
-                            <TacticalSide side={state.lineup.home} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} />
-                            <TacticalSide side={state.lineup.away} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} />
+                            <FormationSide side={state.lineup.home} ready={plan.homeUsesFormation} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} />
+                            <FormationSide side={state.lineup.away} ready={plan.awayUsesFormation} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} />
                         </div>
-                    </div>
+                    </div>}
                 </div>
             )}
         </div>
