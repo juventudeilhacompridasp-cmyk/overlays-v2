@@ -1,12 +1,14 @@
 import { formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
 import { Realtime } from '@/lib/echo';
+import { celebrationDuration, celebrationPhase, scoredSide, Side as ScoreSide } from '@/lib/goalCelebration';
 import { scorerLines } from '@/lib/scorerLines';
 import { OverlayState, OverlayTeam, useOverlay } from '@/lib/overlay';
-import { overlayMotion, overlayOrigin, overlayPosition, overlayStyle, scoreboardFrame } from '@/lib/overlayVisual';
+import { freePosition, overlayMotion, overlayOrigin, overlayPosition, overlayStyle, scoreboardFrame } from '@/lib/overlayVisual';
 import { Head } from '@inertiajs/react';
+import { CSSProperties, useEffect, useRef, useState } from 'react';
 
-function Crest({ team, size }: { team: OverlayTeam; size: 'sm' | 'md' }) {
-    if (!team.logo_url) return null;
+function Crest({ team, size, hidden = false }: { team: OverlayTeam; size: 'sm' | 'md'; hidden?: boolean }) {
+    if (hidden || !team.logo_url) return null;
     const box = size === 'sm' ? 'h-7 w-7 p-0.5' : 'h-11 w-11 p-1';
 
     return (
@@ -16,21 +18,28 @@ function Crest({ team, size }: { team: OverlayTeam; size: 'sm' | 'md' }) {
     );
 }
 
-function Side({ team, align, wide = false }: { team: OverlayTeam; align: 'left' | 'right'; wide?: boolean }) {
+interface Look {
+    badge: boolean;
+    /** Zoom só dos textos (a caixa cresce junto). */
+    text: CSSProperties;
+    accentSize: number;
+}
+
+function Side({ team, align, look, wide = false }: { team: OverlayTeam; align: 'left' | 'right'; look: Look; wide?: boolean }) {
     const label = (team.short_name || team.name).toUpperCase();
 
     return (
         <div className={`relative flex items-center gap-3 px-4 py-2 ${wide ? 'min-w-0 flex-1 gap-5 px-8 py-3' : 'min-w-[13rem]'}`}>
-            <span className="absolute inset-x-0 bottom-0 h-1" style={{ backgroundColor: team.color ?? 'var(--overlay-accent)' }} />
-            {align === 'left' && <Crest team={team} size="md" />}
-            <span className={`flex-1 truncate font-black tracking-[0.08em] ${wide ? 'text-3xl' : 'max-w-[12rem] text-xl'} ${align === 'right' ? 'text-right' : ''}`}>{wide ? (team.name).toUpperCase() : label}</span>
-            {align === 'right' && <Crest team={team} size="md" />}
+            {look.accentSize > 0 && <span className="absolute inset-x-0 bottom-0" style={{ height: look.accentSize, backgroundColor: team.color ?? 'var(--overlay-accent)' }} />}
+            {align === 'left' && <Crest team={team} size="md" hidden={!look.badge} />}
+            <span className={`flex-1 truncate font-black tracking-[0.08em] ${wide ? 'text-3xl' : 'max-w-[12rem] text-xl'} ${align === 'right' ? 'text-right' : ''}`} style={look.text}>{wide ? (team.name).toUpperCase() : label}</span>
+            {align === 'right' && <Crest team={team} size="md" hidden={!look.badge} />}
         </div>
     );
 }
 
 /** Equipes em duas linhas (escudo, sigla, gols): placar estreito, bom para o canto da tela. */
-function StackedTeams({ game, pulse }: { game: NonNullable<OverlayState['game']>; pulse: boolean }) {
+function StackedTeams({ game, pulse, look }: { game: NonNullable<OverlayState['game']>; pulse: boolean; look: Look }) {
     const rows = [
         { team: game.home!, score: game.home_score },
         { team: game.away!, score: game.away_score },
@@ -40,12 +49,26 @@ function StackedTeams({ game, pulse }: { game: NonNullable<OverlayState['game']>
         <div className="flex min-w-[14rem] flex-col justify-center divide-y divide-white/10" data-testid="overlay-score">
             {rows.map(({ team, score }, index) => (
                 <div key={index} className="relative flex items-center gap-3 px-4 py-2">
-                    <span className="absolute inset-y-1 left-0 w-1 rounded-r" style={{ backgroundColor: team.color ?? 'var(--overlay-accent)' }} />
-                    <Crest team={team} size="sm" />
-                    <span className="flex-1 truncate text-lg font-black tracking-[0.08em]">{(team.short_name || team.name).toUpperCase()}</span>
-                    <span key={score} className={`min-w-[2rem] text-right text-3xl font-black tabular-nums ${pulse ? 'overlay-score-pulse' : ''}`}>{score}</span>
+                    {look.accentSize > 0 && <span className="absolute inset-y-1 left-0 rounded-r" style={{ width: Math.max(2, look.accentSize - 1), backgroundColor: team.color ?? 'var(--overlay-accent)' }} />}
+                    <Crest team={team} size="sm" hidden={!look.badge} />
+                    <span className="flex-1 truncate text-lg font-black tracking-[0.08em]" style={look.text}>{(team.short_name || team.name).toUpperCase()}</span>
+                    <span key={score} className={`min-w-[2rem] text-right text-3xl font-black tabular-nums ${pulse ? 'overlay-score-pulse' : ''}`} style={look.text}>{score}</span>
                 </div>
             ))}
+        </div>
+    );
+}
+
+/** Comemoração de gol sobre o placar: a palavra (com a animação escolhida) e depois o nome da equipe. */
+function GoalCelebration({ phase, text, animation, team, accent }: { phase: 'word' | 'team'; text: string; animation: string; team: OverlayTeam; accent: string }) {
+    const label = phase === 'word' ? text : (team.name).toUpperCase();
+    const background = phase === 'word' ? accent : (team.color ?? accent);
+
+    return (
+        <div className={`absolute inset-0 z-10 grid place-items-center overflow-hidden text-center font-black tracking-[0.12em] text-white goal-${animation}`} style={{ backgroundColor: background }} data-testid="overlay-goal" data-phase={phase}>
+            <span key={phase} className="goal-text px-4 text-4xl" style={{ ['--goal-chars' as string]: label.length } as CSSProperties}>
+                {animation === 'typewriter' && phase === 'word' ? [...label].map((char, index) => <span key={index} className="goal-char" style={{ animationDelay: `${index * 90}ms` }}>{char === ' ' ? '\u00a0' : char}</span>) : label}
+            </span>
         </div>
     );
 }
@@ -55,6 +78,39 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
     const game = state.game;
     const elapsed = useGameClock(game?.clock ?? { state: 'not_started', period: null, base_seconds: 0, running_since_ms: null }, skew);
     const seconds = game ? shownSeconds(game.clock, elapsed) : elapsed;
+
+    // Comemoração de gol: detecta a subida do placar (nunca na primeira carga nem em correções para menos).
+    const previous = useRef<{ home: number; away: number } | null>(null);
+    const [celebration, setCelebration] = useState<{ side: ScoreSide; startedAt: number } | null>(null);
+    const [now, setNow] = useState(() => Date.now());
+    const celebrates = state.appearance.goal_celebration === true && game?.score_model === 'goals';
+    const wordSeconds = state.appearance.goal_word_seconds ?? 2;
+    const teamSeconds = state.appearance.goal_team_seconds ?? 2;
+    const homeScore = game?.home_score ?? 0;
+    const awayScore = game?.away_score ?? 0;
+
+    useEffect(() => {
+        const next = { home: homeScore, away: awayScore };
+        const side = previous.current && celebrates ? scoredSide(previous.current, next) : null;
+        previous.current = next;
+
+        if (side) {
+            setCelebration({ side, startedAt: Date.now() });
+            setNow(Date.now());
+        }
+    }, [homeScore, awayScore, celebrates]);
+
+    useEffect(() => {
+        if (!celebration) return;
+        const timer = window.setInterval(() => {
+            setNow(Date.now());
+            if (Date.now() - celebration.startedAt >= celebrationDuration(wordSeconds, teamSeconds)) {
+                setCelebration(null);
+            }
+        }, 150);
+
+        return () => window.clearInterval(timer);
+    }, [celebration, wordSeconds, teamSeconds]);
 
     // Comando de ocultar: o placar sai na hora, sem animação (fiel ao clique do operador).
     if (!game || !game.home || !game.away || !state.layers.scoreboard) {
@@ -75,40 +131,51 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
     const layout = appearance.layout;
     const hasMotion = appearance.motion !== 'none';
     const frame = scoreboardFrame(appearance);
+    const free = freePosition(appearance);
+    const textZoom = (appearance.text_scale ?? 100) / 100;
+    const look: Look = { badge: appearance.show_badge !== false, text: textZoom === 1 ? {} : { zoom: textZoom }, accentSize: appearance.accent_size ?? 4 };
+    const periodZoom = (appearance.period_scale ?? 100) / 100;
+    const extraZoom = (appearance.extra_time_scale ?? 100) / 100;
+    const phase = celebration ? celebrationPhase(now - celebration.startedAt, wordSeconds, teamSeconds) : null;
+    const entrance = appearance.entrance ?? 'fade';
+    const enter = appearance.motion === 'none' || entrance === 'none' ? '' : `overlay-enter-${entrance}`;
     const clockStyle = appearance.preset === 'minimal' ? { color: appearance.accent_color } : { background: `linear-gradient(145deg, ${appearance.accent_color}, ${appearance.accent_color}cc)` };
 
     return (
-        <div className={`fixed inset-0 flex p-8 font-sans ${overlayPosition(appearance.position)}`} style={{ ...overlayStyle(appearance), color: appearance.text_color, textShadow: '0 1px 2px rgba(0,0,0,.65)' }}>
+        <div className={`fixed inset-0 font-sans ${free ? '' : `flex p-8 ${overlayPosition(appearance.position)}`}`} style={{ ...overlayStyle(appearance), color: appearance.text_color, textShadow: '0 1px 2px rgba(0,0,0,.65)' }}>
             <Head title="Placar" />
-            <div className={layout === 'wide' ? 'w-full' : undefined} style={{ transform: `scale(${appearance.scale})`, transformOrigin: layout === 'wide' ? 'center' : overlayOrigin(appearance.position) }}>
-                <div className={overlayMotion(appearance.motion)}>
+            <div className={layout === 'wide' && !free ? 'w-full' : undefined} style={{ ...(free ? { position: 'absolute', left: free.left, top: free.top } : {}), transform: `scale(${appearance.scale})`, transformOrigin: free ? 'top left' : layout === 'wide' ? 'center' : overlayOrigin(appearance.position) }}>
+                <div className={`${overlayMotion(appearance.motion)} ${enter}`} style={{ ['--overlay-enter-ms' as string]: `${Math.round(600 / ((appearance.entrance_speed ?? 100) / 100))}ms` } as CSSProperties}>
                     <div className={frame.className} style={frame.style} data-testid="overlay-scoreboard" data-preset={appearance.preset} data-layout={layout} data-motion={appearance.motion}>
+                        {celebration && phase && game.home && game.away && (
+                            <GoalCelebration phase={phase} text={appearance.goal_text ?? 'GOOOL'} animation={appearance.goal_animation ?? 'typewriter'} team={celebration.side === 'home' ? game.home : game.away} accent={appearance.accent_color} />
+                        )}
                         {appearance.preset === 'arena' && <div className="absolute inset-x-0 top-0 h-0.5" style={{ background: `linear-gradient(90deg, transparent, ${appearance.accent_color}, transparent)` }} />}
-                        {layout === 'stacked' && <StackedTeams game={game} pulse={hasMotion} />}
+                        {layout === 'stacked' && <StackedTeams game={game} pulse={hasMotion} look={look} />}
                         {layout === 'compact' && (
                             <div key={`${game.home_score}-${game.away_score}`} className={`flex items-center gap-2 px-4 py-1.5 ${hasMotion ? 'overlay-score-pulse' : ''}`} data-testid="overlay-score">
-                                <Crest team={game.home} size="sm" />
-                                <span className="text-sm font-black tracking-[0.08em]">{(game.home.short_name || game.home.name).slice(0, 3).toUpperCase()}</span>
-                                <span className="text-2xl font-black tabular-nums">{game.home_score}</span>
+                                <Crest team={game.home} size="sm" hidden={!look.badge} />
+                                <span className="text-sm font-black tracking-[0.08em]" style={look.text}>{(game.home.short_name || game.home.name).slice(0, 3).toUpperCase()}</span>
+                                <span className="text-2xl font-black tabular-nums" style={look.text}>{game.home_score}</span>
                                 <span className="text-sm text-white/40">×</span>
-                                <span className="text-2xl font-black tabular-nums">{game.away_score}</span>
-                                <span className="text-sm font-black tracking-[0.08em]">{(game.away.short_name || game.away.name).slice(0, 3).toUpperCase()}</span>
-                                <Crest team={game.away} size="sm" />
+                                <span className="text-2xl font-black tabular-nums" style={look.text}>{game.away_score}</span>
+                                <span className="text-sm font-black tracking-[0.08em]" style={look.text}>{(game.away.short_name || game.away.name).slice(0, 3).toUpperCase()}</span>
+                                <Crest team={game.away} size="sm" hidden={!look.badge} />
                             </div>
                         )}
                         {(layout === 'bar' || layout === 'wide') && (
                             <>
-                                <Side team={game.home} align="left" wide={layout === 'wide'} />
+                                <Side team={game.home} align="left" look={look} wide={layout === 'wide'} />
                                 <div key={`${game.home_score}-${game.away_score}`} className={`flex items-center gap-3 border-x border-white/10 bg-black/30 font-black tabular-nums ${layout === 'wide' ? 'px-12 text-6xl' : 'px-6 text-4xl'} ${hasMotion ? 'overlay-score-pulse' : ''}`} data-testid="overlay-score">
-                                    <span>{game.home_score}</span>
+                                    <span style={look.text}>{game.home_score}</span>
                                     <span className="text-xl text-white/35">×</span>
-                                    <span>{game.away_score}</span>
+                                    <span style={look.text}>{game.away_score}</span>
                                 </div>
-                                <Side team={game.away} align="right" wide={layout === 'wide'} />
+                                <Side team={game.away} align="right" look={look} wide={layout === 'wide'} />
                             </>
                         )}
-                        <div className={`flex flex-col items-center justify-center text-center ${layout === 'compact' ? 'min-w-[5.5rem] px-3 py-0.5' : layout === 'wide' ? 'min-w-[12rem] px-8 py-1' : 'min-w-[8.5rem] px-5 py-1'}`} style={clockStyle} data-testid="overlay-clock">
-                            <span className={`${layout === 'compact' ? 'text-base' : layout === 'wide' ? 'text-3xl' : 'text-xl'} font-black tabular-nums`}>{clock}{state.stoppage > 0 && game.clock.state === 'running' && <sup className="ml-1 text-xs font-black" data-testid="overlay-stoppage">+{state.stoppage}</sup>}</span>
+                        <div className={`flex flex-col items-center justify-center text-center ${layout === 'compact' ? 'min-w-[5.5rem] px-3 py-0.5' : layout === 'wide' ? 'min-w-[12rem] px-8 py-1' : 'min-w-[8.5rem] px-5 py-1'}`} style={{ ...clockStyle, ...(periodZoom === 1 ? {} : { zoom: periodZoom }) }} data-testid="overlay-clock">
+                            <span className={`${layout === 'compact' ? 'text-base' : layout === 'wide' ? 'text-3xl' : 'text-xl'} font-black tabular-nums`}>{clock}{state.stoppage > 0 && game.clock.state === 'running' && <sup className="ml-1 text-xs font-black" style={extraZoom === 1 ? undefined : { zoom: extraZoom }} data-testid="overlay-stoppage">+{state.stoppage}</sup>}</span>
                             {layout !== 'compact' && sets && currentSet && !game.finished && <span className="text-[10px] font-bold uppercase tracking-[0.18em]">Set {sets.length}</span>}
                             {layout !== 'compact' && !sets && (game.clock.state === 'running' || game.clock.state === 'paused') && (
                                 <span className="text-[10px] font-bold uppercase tracking-[0.16em]">

@@ -11,7 +11,7 @@ import LowerThirdStudio from './LowerThirdStudio';
 import OverlayPreviewStudio from './OverlayPreviewStudio';
 
 interface Appearance {
-    preset: 'arena' | 'classic' | 'minimal';
+    preset: 'arena' | 'classic' | 'minimal' | 'glass' | 'contrast' | 'neon' | 'ribbon' | 'gradient';
     accent_color: string;
     background_color: string;
     text_color: string;
@@ -21,6 +21,23 @@ interface Appearance {
     layout: 'bar' | 'stacked' | 'compact' | 'wide';
     scorers: boolean;
     font: string;
+    x: number | null;
+    y: number | null;
+    text_scale: number;
+    show_badge: boolean;
+    radius: number | null;
+    surface: number;
+    accent_size: number;
+    shadow: 'none' | 'soft' | 'strong';
+    entrance: 'none' | 'fade' | 'slide' | 'zoom' | 'assemble';
+    entrance_speed: number;
+    period_scale: number;
+    extra_time_scale: number;
+    goal_celebration: boolean;
+    goal_text: string;
+    goal_word_seconds: number;
+    goal_team_seconds: number;
+    goal_animation: 'typewriter' | 'bounce' | 'sweep';
 }
 
 interface Scene {
@@ -324,6 +341,11 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                                 <option value="arena">Arena (alto contraste)</option>
                                 <option value="classic">Clássico (barra de TV)</option>
                                 <option value="minimal">Minimal (pílula translúcida)</option>
+                                <option value="glass">Vidro</option>
+                                <option value="contrast">Alto impacto</option>
+                                <option value="neon">Neon</option>
+                                <option value="ribbon">Faixa dinâmica</option>
+                                <option value="gradient">Gradiente</option>
                             </Select>
                         </Field>
                         <Field label="Formato do placar" htmlFor={`layout-${channel.id}`}>
@@ -382,6 +404,93 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                             </Select>
                         </Field>
                     </div>
+                    <details className="mt-4 rounded-lg border border-gray-200 p-3" data-testid="scoreboard-advanced">
+                        <summary className="cursor-pointer text-sm font-medium text-gray-800">Placar avançado: tamanho, posição livre, entrada e comemoração de gol</summary>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                            <label className="flex items-center gap-2 text-sm text-gray-700 sm:col-span-2">
+                                <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={appearance.x !== null && appearance.y !== null} onChange={(event) => setAppearance({ ...appearance, x: event.target.checked ? 4 : null, y: event.target.checked ? 7 : null })} />
+                                Posição livre (X e Y em % da tela) em vez dos seis cantos
+                            </label>
+                            {appearance.x !== null && appearance.y !== null && (
+                                <>
+                                    <Field label={`Horizontal · ${appearance.x}%`} htmlFor={`x-${channel.id}`}>
+                                        <Input id={`x-${channel.id}`} type="range" min="0" max="100" disabled={!canOperate} value={appearance.x} onChange={(event) => setAppearance({ ...appearance, x: Number(event.target.value) })} />
+                                    </Field>
+                                    <Field label={`Vertical · ${appearance.y}%`} htmlFor={`y-${channel.id}`}>
+                                        <Input id={`y-${channel.id}`} type="range" min="0" max="100" disabled={!canOperate} value={appearance.y} onChange={(event) => setAppearance({ ...appearance, y: Number(event.target.value) })} />
+                                    </Field>
+                                </>
+                            )}
+                            <Field label={`Tamanho do texto · ${appearance.text_scale}%`} htmlFor={`text-scale-${channel.id}`}>
+                                <Input id={`text-scale-${channel.id}`} type="range" min="50" max="200" step="5" disabled={!canOperate} value={appearance.text_scale} onChange={(event) => setAppearance({ ...appearance, text_scale: Number(event.target.value) })} />
+                            </Field>
+                            <Field label={`Bloco do período · ${appearance.period_scale}%`} htmlFor={`period-scale-${channel.id}`}>
+                                <Input id={`period-scale-${channel.id}`} type="range" min="60" max="200" step="5" disabled={!canOperate} value={appearance.period_scale} onChange={(event) => setAppearance({ ...appearance, period_scale: Number(event.target.value) })} />
+                            </Field>
+                            <Field label={`Acréscimos (+N) · ${appearance.extra_time_scale}%`} htmlFor={`extra-scale-${channel.id}`}>
+                                <Input id={`extra-scale-${channel.id}`} type="range" min="60" max="200" step="5" disabled={!canOperate} value={appearance.extra_time_scale} onChange={(event) => setAppearance({ ...appearance, extra_time_scale: Number(event.target.value) })} />
+                            </Field>
+                            <label className="flex items-center gap-2 self-end pb-2 text-sm text-gray-700">
+                                <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={appearance.show_badge} onChange={(event) => setAppearance({ ...appearance, show_badge: event.target.checked })} />
+                                Mostrar escudos
+                            </label>
+                            <Field label={`Opacidade do fundo · ${appearance.surface}%`} htmlFor={`surface-${channel.id}`}>
+                                <Input id={`surface-${channel.id}`} type="range" min="30" max="100" step="5" disabled={!canOperate} value={appearance.surface} onChange={(event) => setAppearance({ ...appearance, surface: Number(event.target.value) })} />
+                            </Field>
+                            <Field label={appearance.radius === null ? 'Cantos · automático' : `Cantos · ${appearance.radius}px`} htmlFor={`radius-${channel.id}`}>
+                                <Input id={`radius-${channel.id}`} type="range" min="0" max="40" disabled={!canOperate} value={appearance.radius ?? 12} onChange={(event) => setAppearance({ ...appearance, radius: Number(event.target.value) })} />
+                                {appearance.radius !== null && canOperate && <button type="button" className="mt-1 text-xs text-teal-700 underline" onClick={() => setAppearance({ ...appearance, radius: null })}>Voltar ao automático</button>}
+                            </Field>
+                            <Field label={`Faixa da cor da equipe · ${appearance.accent_size}px`} htmlFor={`accent-size-${channel.id}`}>
+                                <Input id={`accent-size-${channel.id}`} type="range" min="0" max="8" disabled={!canOperate} value={appearance.accent_size} onChange={(event) => setAppearance({ ...appearance, accent_size: Number(event.target.value) })} />
+                            </Field>
+                            <Field label="Sombra" htmlFor={`shadow-${channel.id}`}>
+                                <Select id={`shadow-${channel.id}`} disabled={!canOperate} value={appearance.shadow} onChange={(event) => setAppearance({ ...appearance, shadow: event.target.value as Appearance['shadow'] })}>
+                                    <option value="none">Sem sombra</option>
+                                    <option value="soft">Suave</option>
+                                    <option value="strong">Forte</option>
+                                </Select>
+                            </Field>
+                            <Field label="Entrada do placar" htmlFor={`entrance-${channel.id}`}>
+                                <Select id={`entrance-${channel.id}`} disabled={!canOperate} value={appearance.entrance} onChange={(event) => setAppearance({ ...appearance, entrance: event.target.value as Appearance['entrance'] })}>
+                                    <option value="none">Sem animação</option>
+                                    <option value="fade">Aparecer</option>
+                                    <option value="slide">Deslizar</option>
+                                    <option value="zoom">Zoom</option>
+                                    <option value="assemble">Montar</option>
+                                </Select>
+                            </Field>
+                            <Field label={`Velocidade da entrada · ${appearance.entrance_speed}%`} htmlFor={`entrance-speed-${channel.id}`}>
+                                <Input id={`entrance-speed-${channel.id}`} type="range" min="50" max="200" step="10" disabled={!canOperate} value={appearance.entrance_speed} onChange={(event) => setAppearance({ ...appearance, entrance_speed: Number(event.target.value) })} />
+                            </Field>
+                            <div className="space-y-3 rounded-lg bg-gray-50 p-3 sm:col-span-2">
+                                <label className="flex items-center gap-2 text-sm font-medium text-gray-800">
+                                    <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={appearance.goal_celebration} onChange={(event) => setAppearance({ ...appearance, goal_celebration: event.target.checked })} />
+                                    Comemorar gols no placar (esportes de gols)
+                                </label>
+                                {appearance.goal_celebration && (
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                        <Field label="Texto" htmlFor={`goal-text-${channel.id}`}>
+                                            <Input id={`goal-text-${channel.id}`} maxLength={20} disabled={!canOperate} value={appearance.goal_text} onChange={(event) => setAppearance({ ...appearance, goal_text: event.target.value })} />
+                                        </Field>
+                                        <Field label="Animação" htmlFor={`goal-animation-${channel.id}`}>
+                                            <Select id={`goal-animation-${channel.id}`} disabled={!canOperate} value={appearance.goal_animation} onChange={(event) => setAppearance({ ...appearance, goal_animation: event.target.value as Appearance['goal_animation'] })}>
+                                                <option value="typewriter">Digitada</option>
+                                                <option value="bounce">Quicando</option>
+                                                <option value="sweep">Varredura</option>
+                                            </Select>
+                                        </Field>
+                                        <Field label={`Duração da palavra · ${appearance.goal_word_seconds} s`} htmlFor={`goal-word-${channel.id}`}>
+                                            <Input id={`goal-word-${channel.id}`} type="range" min="1" max="6" disabled={!canOperate} value={appearance.goal_word_seconds} onChange={(event) => setAppearance({ ...appearance, goal_word_seconds: Number(event.target.value) })} />
+                                        </Field>
+                                        <Field label={appearance.goal_team_seconds === 0 ? 'Nome da equipe · não mostrar' : `Nome da equipe · ${appearance.goal_team_seconds} s`} htmlFor={`goal-team-${channel.id}`}>
+                                            <Input id={`goal-team-${channel.id}`} type="range" min="0" max="6" disabled={!canOperate} value={appearance.goal_team_seconds} onChange={(event) => setAppearance({ ...appearance, goal_team_seconds: Number(event.target.value) })} />
+                                        </Field>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </details>
                     {canOperate && <Button small className="mt-3" onClick={() => patch({ appearance })}>Aplicar visual</Button>}
                 </div>
                     </section>

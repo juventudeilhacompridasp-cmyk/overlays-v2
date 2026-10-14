@@ -6,7 +6,7 @@ Fonte: repositório `juventudeilhacompridasp-cmyk/overlays` (Overlay Studio: `pu
 
 | Overlay antigo (`layer=`) | Equivalente aqui | Estado |
 |---|---|---|
-| `scoreboard` (placar) | `/overlay/{token}/placar` | 🟡 faltam parâmetros (ver 2.1) |
+| `scoreboard` (placar) | `/overlay/{token}/placar` | ✅ (2.1) |
 | `event` (gols, cartões, substituições, gol contra) | `/overlay/{token}/eventos` (lower thirds, ADR 0013) | 🟡 faltam modo de cartão e estilos do bloco (2.2) |
 | `lineup` (lista de escalação) | `/overlay/{token}/escalacao` | ✅ |
 | `photo-lineup` (apresentação com fotos) | `/overlay/{token}/escalacao` (cartões, individual, show) | 🟡 faltam 5 conceitos de layout, 6 estilos e 6 animações (2.3) |
@@ -23,7 +23,7 @@ Fonte: repositório `juventudeilhacompridasp-cmyk/overlays` (Overlay Studio: `pu
 ### 2.1 Placar
 Antigo: `scoreboardScale`, `scoreboardFont` (tamanho do texto), `scoreboardTypeface`, `scoreboardX/Y` (posição livre em %), `scoreboardLayout`, `scoreboardShowBadge` (escudo), `scoreboardStyle` (clássico, minimalista, vidro, alto impacto, neon, faixa dinâmica, gradiente), `scoreboardRadius`, `scoreboardSurface` (opacidade), `scoreboardAccent` (espessura do destaque), `scoreboardShadow` (nenhuma/suave/forte), `scoreboardAnimation` (assemble, slide, zoom…), `scoreboardAnimationSpeed`; período: `periodScale`, `periodFont`, `periodSurface`, `extraTimeScale`; gol: `goalText` ("GOOOL"), `goalWordDuration`, `goalTeamDuration`, `goalAnimation` (typewriter, bounce, sweep); `cardDisplayMode`.
 Aqui já existe: preset (arena/classic/minimal), `layout` (bar/stacked/compact/wide), cores, 6 posições fixas, escala, movimento, fonte (catálogo + própria), gols sob o placar, acréscimos.
-**Falta:** posição livre X/Y, tamanho do texto separado da escala, escudo ligado/desligado, 7 estilos, raio, opacidade, espessura do destaque, sombra, animação de entrada + velocidade, escala do bloco de período/prorrogação, comemoração de gol (texto, durações, animação).
+**Entregue (PR do placar):** posição livre X/Y, tamanho do texto separado da escala, escudos ligados/desligados, 8 estilos (arena, clássico, minimal, vidro, alto impacto, neon, faixa dinâmica, gradiente), raio, opacidade, espessura da faixa da equipe, sombra, entrada (aparecer, deslizar, zoom, montar) e velocidade, escala do bloco de período e dos acréscimos, comemoração de gol (texto, durações, digitada/quicando/varredura). Tipografia por overlay segue sendo a fonte do canal.
 
 ### 2.2 Eventos
 Antigo: `eventScale/Font/Typeface/X/Y`, `eventPosition` (esquerda/centro/direita), `eventStyle` (faixa TV, linha limpa, bloco esportivo), `cardDisplayMode` (faixa ou tela cheia).

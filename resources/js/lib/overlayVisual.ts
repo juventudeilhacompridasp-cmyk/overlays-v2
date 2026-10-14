@@ -17,21 +17,59 @@ export function overlayOrigin(position: OverlayAppearance['position']): string {
     return position.replace('-', ' ');
 }
 
-/** Aparência de cada preset (moldura do placar). O contrato de dados é o mesmo; só muda a apresentação. */
+/** Cor `#rrggbb` com transparência: `alpha` (0 a 1) do estilo vezes a opacidade escolhida (`surface`, em %). Opaco de verdade devolve a cor pura. */
+export function withAlpha(hex: string, alpha: number, surface = 100): string {
+    const value = Math.max(0, Math.min(1, alpha * (surface / 100)));
+
+    return value >= 1 ? hex : `${hex}${Math.round(value * 255).toString(16).padStart(2, '0')}`;
+}
+
+const SHADOW_CLASS: Record<string, string> = { none: '', soft: 'shadow-lg', strong: 'shadow-2xl' };
+
+/** Posição livre (x e y em % da tela) quando os dois estão definidos; senão vale a posição nomeada. */
+export function freePosition(appearance: Pick<OverlayAppearance, 'x' | 'y'>): { left: string; top: string } | null {
+    return typeof appearance.x === 'number' && typeof appearance.y === 'number' ? { left: `${appearance.x}%`, top: `${appearance.y}%` } : null;
+}
+
+/** Aparência de cada estilo (moldura do placar). O contrato de dados é o mesmo; só muda a apresentação. */
 export function scoreboardFrame(appearance: OverlayAppearance): { className: string; style: CSSProperties } {
-    const { preset, background_color: bg, layout } = appearance;
+    const { preset, background_color: bg, accent_color: accent, layout } = appearance;
+    const surface = appearance.surface ?? 100;
+    const shadow = SHADOW_CLASS[appearance.shadow ?? 'soft'] ?? SHADOW_CLASS.soft;
     const rounded = layout === 'compact' ? 'rounded-full' : layout === 'wide' ? 'rounded-none' : layout === 'stacked' ? 'rounded-xl' : null;
     const display = layout === 'wide' ? 'flex w-[1840px] max-w-full' : 'inline-flex';
+    const base = `relative ${display} items-stretch overflow-hidden`;
+    const custom: CSSProperties = typeof appearance.radius === 'number' ? { borderRadius: `${appearance.radius}px` } : {};
+    const round = (fallback: string) => (typeof appearance.radius === 'number' ? '' : rounded ?? fallback);
+    const lift = (fallback: string) => (shadow === '' ? '' : shadow === 'shadow-2xl' ? 'shadow-2xl' : fallback);
 
-    if (preset === 'classic') {
-        return { className: `relative ${display} items-stretch overflow-hidden ${rounded ?? 'rounded-md'} shadow-xl`, style: { backgroundColor: bg } };
+    switch (preset) {
+        case 'classic':
+            return { className: `${base} ${round('rounded-md')} ${shadow}`, style: { backgroundColor: withAlpha(bg, 1, surface), ...custom } };
+        case 'minimal':
+            return { className: `${base} ${round('rounded-full')} border border-white/10 ${shadow}`, style: { backgroundColor: withAlpha(bg, 0.7, surface), ...custom } };
+        case 'glass':
+            return { className: `${base} ${round('rounded-2xl')} border border-white/25 backdrop-blur-md ${shadow}`, style: { backgroundColor: withAlpha(bg, 0.4, surface), ...custom } };
+        case 'contrast':
+            return { className: `${base} ${round('rounded-lg')} border-2 ${shadow}`, style: { backgroundColor: withAlpha(bg, 1, surface), borderColor: accent, ...custom } };
+        case 'neon':
+            return {
+                className: `${base} ${round('rounded-xl')} border-2`,
+                style: { backgroundColor: withAlpha(bg, 0.95, surface), borderColor: accent, boxShadow: shadow === '' ? 'none' : `0 0 ${shadow === 'shadow-2xl' ? 28 : 16}px ${accent}aa`, ...custom },
+            };
+        case 'ribbon':
+            return {
+                className: `${base} ${round('rounded-none')} ${shadow}`,
+                style: { background: `linear-gradient(90deg, ${withAlpha(bg, 1, surface)}, ${withAlpha(bg, 0.9, surface)} 70%, ${withAlpha(accent, 0.4, surface)})`, clipPath: 'polygon(0 0, 100% 0, 98% 100%, 0 100%)', ...custom },
+            };
+        case 'gradient':
+            return { className: `${base} ${round('rounded-2xl')} ${shadow}`, style: { background: `linear-gradient(120deg, ${withAlpha(accent, 1, surface)}, ${withAlpha(bg, 1, surface)} 60%)`, ...custom } };
+        default:
+            return {
+                className: `${base} ${round('rounded-2xl')} border border-white/15 ${lift('shadow-2xl')}`,
+                style: { background: `linear-gradient(135deg, ${withAlpha(bg, 0.95, surface)}, ${withAlpha(bg, 0.85, surface)})`, ...custom },
+            };
     }
-
-    if (preset === 'minimal') {
-        return { className: `relative ${display} items-stretch overflow-hidden ${rounded ?? 'rounded-full'} border border-white/10 shadow-lg`, style: { backgroundColor: `${bg}b3` } };
-    }
-
-    return { className: `relative ${display} items-stretch overflow-hidden ${rounded ?? 'rounded-2xl'} border border-white/15 shadow-2xl`, style: { background: `linear-gradient(135deg, ${bg}f2, ${bg}d9)` } };
 }
 
 export function overlayMotion(motion: OverlayAppearance['motion']): string {
@@ -77,5 +115,5 @@ export function nextSponsorIndex(current: number, count: number): number {
 
 /** Moldura do cartão de patrocínio por preset: fundo claro sempre, para qualquer logotipo ficar legível. */
 export function sponsorFrameClass(preset: OverlayAppearance['preset']): string {
-    return preset === 'classic' ? 'rounded-md' : preset === 'minimal' ? 'rounded-full' : 'rounded-2xl';
+    return { classic: 'rounded-md', minimal: 'rounded-full', contrast: 'rounded-lg', neon: 'rounded-xl', ribbon: 'rounded-none' }[preset as string] ?? 'rounded-2xl';
 }
