@@ -7,6 +7,7 @@ use App\Modules\Status\Models\Component;
 use App\Modules\Status\Models\Incident;
 use App\Modules\Status\Models\IncidentUpdate;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -96,8 +97,8 @@ class StatusSummary
     /**
      * Situação do componente: incidente aberto manda (pelo impacto), depois manutenção em curso, depois a última medição.
      *
-     * @param  \Illuminate\Support\Collection<int, Incident>  $open
-     * @param  \Illuminate\Support\Collection<int, Incident>  $maintenance
+     * @param  Collection<int, Incident>  $open
+     * @param  Collection<int, Incident>  $maintenance
      * @param  array{ok: bool, latency_ms: int|null}|null  $latest
      */
     private static function statusOf(Component $component, $open, $maintenance, ?array $latest, Carbon $now): string

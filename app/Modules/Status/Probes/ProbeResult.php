@@ -5,9 +5,7 @@ namespace App\Modules\Status\Probes;
 /** Resultado de uma sondagem: ok/falha com a latência, ou "pulada" quando o componente não está configurado neste ambiente. */
 final readonly class ProbeResult
 {
-    private function __construct(public bool $ok, public ?int $latencyMs, public ?string $detail, public bool $skipped = false)
-    {
-    }
+    private function __construct(public bool $ok, public ?int $latencyMs, public ?string $detail, public bool $skipped = false) {}
 
     public static function ok(?int $latencyMs = null): self
     {

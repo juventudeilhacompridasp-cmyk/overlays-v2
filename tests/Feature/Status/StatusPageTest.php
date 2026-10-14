@@ -10,6 +10,8 @@ use App\Modules\Status\Models\Component;
 use App\Modules\Status\Models\Incident;
 use App\Modules\Status\Probes\Probe;
 use App\Modules\Status\Probes\ProbeResult;
+use App\Modules\Status\Probes\QueueProbe;
+use App\Modules\Status\Probes\WebProbe;
 use App\Modules\Status\Support\StatusComponents;
 use App\Modules\Status\Support\StatusSummary;
 use App\Modules\Tenancy\CurrentOrganization;
@@ -19,6 +21,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /** Sonda de mentira: o resultado de cada chave vem de `$results` (true = ok, false = falha, null = pulada). */
 class StatusFakeProbe implements Probe
@@ -26,9 +29,7 @@ class StatusFakeProbe implements Probe
     /** @var array<string, bool|null> */
     public static array $results = [];
 
-    public function __construct(private string $key)
-    {
-    }
+    public function __construct(private string $key) {}
 
     public function key(): string
     {
@@ -99,7 +100,7 @@ describe('public page', function () {
         config(['platform.base_domain' => 'exemplo.test']);
 
         expect(OrganizationResolver::forHost('status.exemplo.test')->slug)->toBe(config('platform.default_organization_slug'));
-        expect(fn () => OrganizationResolver::forHost('inexistente.exemplo.test'))->toThrow(Symfony\Component\HttpKernel\Exception\HttpException::class);
+        expect(fn () => OrganizationResolver::forHost('inexistente.exemplo.test'))->toThrow(HttpException::class);
     });
 });
 
@@ -166,18 +167,18 @@ describe('probes and automatic incidents', function () {
     it('fails the web probe when /up does not answer', function () {
         Http::fake(['*' => Http::response('erro', 500)]);
 
-        expect((new App\Modules\Status\Probes\WebProbe)->run()->ok)->toBeFalse();
+        expect((new WebProbe)->run()->ok)->toBeFalse();
     });
 
     it('detects a stalled queue by the oldest unacknowledged heartbeat', function () {
         Cache::put('status:queue:sent', time() - 600, 3600);
         Cache::put('status:queue:beat', time() - 900, 3600);
 
-        expect((new App\Modules\Status\Probes\QueueProbe)->run()->ok)->toBeFalse();
+        expect((new QueueProbe)->run()->ok)->toBeFalse();
 
         Cache::put('status:queue:beat', time(), 3600);
 
-        expect((new App\Modules\Status\Probes\QueueProbe)->run()->ok)->toBeTrue();
+        expect((new QueueProbe)->run()->ok)->toBeTrue();
     });
 
     it('prunes old checks but keeps the retention window', function () {
