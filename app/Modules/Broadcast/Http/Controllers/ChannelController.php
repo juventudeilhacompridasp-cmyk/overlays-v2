@@ -5,6 +5,7 @@ namespace App\Modules\Broadcast\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Broadcast\Actions\UpdateOverlayChannel;
 use App\Modules\Broadcast\Models\OverlayChannel;
+use App\Modules\Broadcast\Models\OverlayCustomItem;
 use App\Modules\Broadcast\Models\OverlayFont;
 use App\Modules\Broadcast\Models\OverlayScene;
 use App\Modules\Broadcast\Models\OverlaySponsor;
@@ -41,6 +42,8 @@ class ChannelController extends Controller
             'game.lineups.person',
         ])->orderBy('name')->get();
 
+        $customItems = OverlayCustomItem::query()->orderBy('name')->get();
+
         $label = fn (Game $game) => ($game->homeEntry?->team->name ?? 'A definir').' x '.($game->awayEntry?->team->name ?? 'A definir')
             .($game->scheduled_at ? ' · '.$game->scheduled_at->format('d/m H:i') : '');
 
@@ -52,7 +55,7 @@ class ChannelController extends Controller
             ->limit(60)->get();
 
         return Inertia::render('Panel/Broadcast/Index', [
-            'channels' => $channels->map(function (OverlayChannel $channel) use ($label): array {
+            'channels' => $channels->map(function (OverlayChannel $channel) use ($label, $customItems): array {
                 $game = $channel->game;
                 $people = $game?->lineups
                     ->whereIn('slot', [LineupSlot::Starter, LineupSlot::Bench])
@@ -80,6 +83,7 @@ class ChannelController extends Controller
                     'layers' => $channel->layerStates(),
                     'championship_live' => $channel->championshipLive(),
                     'screens_live' => $channel->screensLive(),
+                    'custom_overlays' => $customItems->map(fn (OverlayCustomItem $item) => ['id' => $item->getKey(), 'name' => $item->name, 'url' => $channel->customUrl((string) $item->getKey()), 'live' => ($channel->customLive()[$item->getKey()] ?? false) === true])->values(),
                     'screen_settings' => OverlayScreenSettings::normalize($channel->screen_settings),
                     'stats_settings' => OverlayStatsSettings::normalize($channel->stats_settings),
                     'appearance' => OverlayAppearance::normalize($channel->appearance),
@@ -100,6 +104,8 @@ class ChannelController extends Controller
                 'id' => $sponsor->id, 'name' => $sponsor->name, 'active' => $sponsor->active, 'logo_url' => $sponsor->logoUrl(128), 'banner_url' => $sponsor->bannerUrl(),
             ])->values(),
             'sponsor_limit' => OverlaySponsor::LIMIT,
+            'custom_items' => $customItems->map(fn (OverlayCustomItem $item) => ['id' => $item->getKey(), 'name' => $item->name, 'width' => $item->width, 'height' => $item->height, 'elements' => $item->elements])->values(),
+            'custom_limit' => OverlayCustomItem::LIMIT,
             'fonts' => OverlayFont::query()->orderBy('name')->get()->map(fn (OverlayFont $font) => ['id' => $font->id, 'name' => $font->name, 'format' => $font->format])->values(),
             'font_limit' => OverlayFont::LIMIT,
             'scenes' => OverlayScene::query()->orderBy('name')->get()->map(fn (OverlayScene $scene) => ['id' => $scene->id, 'name' => $scene->name])->values(),

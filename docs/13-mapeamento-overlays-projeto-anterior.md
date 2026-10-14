@@ -13,7 +13,7 @@ Fonte: repositório `juventudeilhacompridasp-cmyk/overlays` (Overlay Studio: `pu
 | `sponsor` (patrocinador rotativo) | `/overlay/{token}/patrocinadores` | ✅ (2.4) |
 | `sponsor-bar` (barra 1500 x 200) | `/overlay/{token}/barra-patrocinio` | ✅ (2.5) |
 | `stats` (estatísticas: comparativo, gols/cartões, destaque do atleta) | `/overlay/{token}/estatisticas` | ✅ (2.6) |
-| `custom` (Builder: overlays por elementos) | — | ⬜ (2.7) |
+| `custom` (Builder: overlays por elementos) | `/overlay/{token}/personalizado/{id}` | 🟡 texto, imagem e forma entregues; falta vídeo e upload de imagens próprias (2.7) |
 | `all` (todas as camadas numa fonte) | — | ⬜ (2.8) |
 | `/obs/<visão>` (campeonato: tabela, jogos, resultados, artilharia, cartões, jogo em destaque, faixa, campeão) | `/overlay/{token}/campeonato/*` (ADR 0012) | ✅ |
 | Pré-jogo / resumo para narradores | `/prejogo`, `/resumo` | ✅ |
@@ -47,7 +47,7 @@ Aqui: `/comparativo` (campanha, forma, confronto direto) — outro conteúdo. **
 
 ### 2.7 Builder (overlays livres)
 Antigo: canvas com até 60 elementos (texto, imagem, vídeo, forma), posição/tamanho/camadas, animações de entrada/saída (10), atraso/duração, 7 modelos prontos (lower third, mini-placar, aviso central, intervalo, selo, faixa rolante…), duplicar, exportar/importar JSON, dados ao vivo (`{home.name}`, `{home.score}`, `{clock}`, `{period}`, `{competition}`, `{sponsor}`, `{time}`, `{table.N.*}`, `{champ.name}`), URL por overlay (`layer=custom&id=`).
-Aqui: **falta tudo**. (Os avisos rápidos e a chamada social cobrem só casos fixos.)
+**Entregue:** canvas com até 60 elementos (texto, imagem, forma), posição/tamanho/rotação/opacidade, tipografia, degradê, borda, sombra, texto rolante, 10 animações de entrada e saída com atraso e duração, 7 modelos prontos, duplicar, exportar/importar JSON, dados ao vivo nos textos e imagens (escudos e patrocinador), prévia com arrasto e liga/desliga por canal. **Falta:** elemento de vídeo, upload de imagens próprias (hoje: https, escudos, patrocinador ou logo da biblioteca) e os dados `{table.N.*}` da classificação.
 
 ### 2.8 Camada `all`, aparência global, esportes
 Antigo: `layer=all`; aparência global (fonte global, 9 tipografias, predefinições compacto/impacto), "Restaurar padrões do módulo", seções recolhíveis, controle por esporte (relógio de posse regressivo de 24 s no basquete, saque e sets no vôlei, faltas no futsal).

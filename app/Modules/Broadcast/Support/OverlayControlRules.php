@@ -48,6 +48,8 @@ final class OverlayControlRules
             'stats_settings.text_scale' => ['sometimes', 'integer', 'between:50,200'],
             'stats_settings.x' => ['sometimes', 'nullable', 'integer', 'between:0,100'],
             'stats_settings.y' => ['sometimes', 'nullable', 'integer', 'between:0,100'],
+            'custom_live' => ['sometimes', 'array'],
+            'custom_live.*' => ['boolean'],
             'championship_live' => ['sometimes', 'array'],
             'championship_live.*' => ['boolean'],
             'appearance' => ['sometimes', 'array'],
