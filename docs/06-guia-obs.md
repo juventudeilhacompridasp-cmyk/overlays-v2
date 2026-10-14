@@ -95,6 +95,13 @@ Adicione no OBS uma fonte de navegador com a URL da tela **Patrocinadores**; ela
 escala do visual do canal, e fica vazia quando a rotação está desligada ou não há patrocinador ativo. Pausar um patrocinador o
 tira da rotação sem perder o cadastro.
 
+### Modo operador
+
+O botão **Modo operador** (no alto da página Transmissão) abre uma tela cheia para operar ao vivo, sem rolagem: jogo no ar e cenas, as cinco
+camadas (atalhos **1 a 5**), telas extras, campeonato, overlays livres, controle da escalação (**← →** e **R**), avisos de um clique, jogador em
+destaque, cartelas prontas, acréscimos, saque e contadores das estatísticas. **Esc** volta ao quadro kanban, que continua com todos os ajustes.
+A escolha de visualização fica no navegador (`broadcast:view`).
+
 ### Escalação visual
 
 Na seção **Escalação visual**, escolha entre lista, esquema tático ou a sequência automática **lista → esquema** e defina de

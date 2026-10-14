@@ -36,6 +36,9 @@ Você pode trocar o fundo entre campo, quadra, escuro e a grade de transparênci
 
 > O endereço do canal é o segredo: quem tem a URL vê a tela. Se vazar, use **Renovar** para gerar outra (a antiga para de funcionar).
 
+## Modo operador (para a hora da transmissão)
+O botão **Modo operador**, no alto da página, abre uma tela cheia pensada para operar ao vivo: tudo compacto e visível ao mesmo tempo, **sem rolar** (testado de 1024 x 768 a 1920 x 1080). Nela ficam o jogo no ar e as cenas, as cinco camadas grandes (Placar, Lances, Escalação, Tabela e Patrocinadores), as telas extras, as telas de campeonato, os overlays livres, o controle da escalação (apresentação, equipe, Anterior, Próximo e Início), os avisos de um clique, o jogador em destaque, as cartelas prontas, os acréscimos, o saque e os contadores das estatísticas. Atalhos: **1 a 5** ligam e desligam as camadas, **← →** passam a escalação, **R** reinicia e **Esc** volta ao quadro. Os atalhos não disparam enquanto você digita. Com vários canais, escolha o canal nas abas do topo. O quadro com todos os ajustes (visual, estúdios e configurações) continua igual: use **← Quadro** para voltar. A escolha fica neste navegador; quem só consulta vê a tela com os botões desativados.
+
 ## Exibir e ocultar ao vivo
 Em **No ar agora** use os botões **Placar**, **Lances**, **Escalação** e **Tabela** para tirar e colocar cada tela do ar: cada clique vale na hora no OBS. Ocultar o placar o remove instantaneamente; ocultar os lances impede as faixas de gol, cartão e substituição (a súmula continua registrando tudo). Escalação e tabela só podem ser mostradas com um jogo no ar. A rotação de patrocinadores também liga e desliga com um clique.
 
