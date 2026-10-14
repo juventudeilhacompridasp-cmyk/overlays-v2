@@ -96,6 +96,8 @@ export const TEXT_TOKENS: { token: string; label: string }[] = [
     { token: '{venue}', label: 'Local' },
     { token: '{sponsor}', label: 'Patrocinador' },
     { token: '{time}', label: 'Hora' },
+    { token: '{table.1.name}', label: 'Tabela: 1º colocado' },
+    { token: '{table.1.points}', label: 'Tabela: pontos do 1º' },
 ];
 
 export const IMAGE_TOKENS: { token: string; label: string }[] = [
@@ -115,6 +117,29 @@ export interface DataContext {
     venue: string;
     sponsor: { name: string; logo: string | null } | null;
     time: string;
+    table?: { position: number; team: string; points: number; played: number; won: number; drawn: number; lost: number; goal_difference: number }[] | null;
+}
+
+export const TABLE_FIELDS = ['pos', 'name', 'points', 'played', 'won', 'drawn', 'lost', 'gd'] as const;
+
+/** Valor de `{table.N.campo}` (N de 1 a 10); campo desconhecido devolve null (o texto fica como escrito) e linha sem dado, vazio. */
+export function tableValue(table: DataContext['table'], index: number, field: string): string | null {
+    if (!(TABLE_FIELDS as readonly string[]).includes(field) || index < 1 || index > 10) return null;
+
+    const row = table?.[index - 1];
+
+    if (!row) return '';
+
+    switch (field) {
+        case 'pos': return String(row.position);
+        case 'name': return row.team;
+        case 'points': return String(row.points);
+        case 'played': return String(row.played);
+        case 'won': return String(row.won);
+        case 'drawn': return String(row.drawn);
+        case 'lost': return String(row.lost);
+        default: return String(row.goal_difference);
+    }
 }
 
 /** Troca os `{dados}` do texto pelos valores do jogo no ar; sem dado, fica vazio (nunca "undefined"). */
@@ -126,7 +151,13 @@ export function resolveText(text: string, ctx: DataContext): string {
         sponsor: ctx.sponsor?.name ?? '', time: ctx.time,
     };
 
-    return text.replace(/\{([a-z]+(?:\.[a-z]+)?)\}/g, (match, key: string) => (key in values ? values[key] : match));
+    return text.replace(/\{([a-z]+(?:\.[a-z0-9]+)*)\}/g, (match, key: string) => {
+        const row = /^table\.(\d{1,2})\.([a-z]+)$/.exec(key);
+
+        if (row) return tableValue(ctx.table ?? null, Number(row[1]), row[2]) ?? match;
+
+        return key in values ? values[key] : match;
+    });
 }
 
 /** Endereço da imagem do elemento: `token:` vira o escudo/patrocinador do jogo; vazio quando não há. */

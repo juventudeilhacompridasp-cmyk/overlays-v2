@@ -52,6 +52,7 @@ final class OverlayState
             'game' => $game ? PublicGameSnapshot::for($game) : null,
             'lineup' => $game && $channel->layerOn('lineup') ? self::lineup($game, OverlayLineupSettings::normalize($channel->lineup_settings)['photo_person_ids']) : null,
             'standings' => $game && $channel->layerOn('standings') ? self::standings($game) : null,
+            'custom_table' => $game && $channel->customLive() !== [] ? self::customTable($game) : null,
             'server_time_ms' => (int) (microtime(true) * 1000),
         ];
     }
@@ -158,6 +159,26 @@ final class OverlayState
         };
 
         return ['home' => $side($game->homeEntry), 'away' => $side($game->awayEntry)];
+    }
+
+    /**
+     * Linhas da tabela para os tokens `{table.N.*}` dos overlays livres (só com algum ligado): as primeiras posições, sem logotipo,
+     * cor nem destaque, nunca IDs.
+     *
+     * @return list<array{position: int, team: string, points: int, played: int, won: int, drawn: int, lost: int, goal_difference: int}>|null
+     */
+    private static function customTable(Game $game): ?array
+    {
+        $table = self::standings($game);
+
+        if ($table === null) {
+            return null;
+        }
+
+        return array_map(fn (array $row) => [
+            'position' => $row['position'], 'team' => $row['team'], 'points' => $row['points'], 'played' => $row['played'],
+            'won' => $row['won'], 'drawn' => $row['drawn'], 'lost' => $row['lost'], 'goal_difference' => $row['goal_difference'],
+        ], array_slice($table['rows'], 0, 10));
     }
 
     /** @return array{title: string, rows: list<array<string, mixed>>}|null */

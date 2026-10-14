@@ -25,5 +25,6 @@ export function buildContext(state: OverlayState, seconds: number, now: Date, sp
         competition: game?.competition ?? '', division: game?.division ?? '', stage: game?.stage ?? '', venue: game?.venue ?? '',
         sponsor: sponsor ? { name: sponsor.name, logo: sponsor.logo_url } : null,
         time: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        table: state.custom_table ?? null,
     };
 }

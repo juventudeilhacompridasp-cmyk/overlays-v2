@@ -116,3 +116,16 @@ test('the export has the agreed format and every template builds valid elements'
         for (const element of elements) assert.ok(['text', 'image', 'shape'].includes(element.type));
     }
 });
+
+test('table tokens resolve rows of the standings and stay literal when unknown', () => {
+    const table = [
+        { position: 1, team: 'Leões', points: 9, played: 3, won: 3, drawn: 0, lost: 0, goal_difference: 7 },
+        { position: 2, team: 'Tigres', points: 4, played: 3, won: 1, drawn: 1, lost: 1, goal_difference: -1 },
+    ];
+    const withTable = { ...ctx(), table };
+    assert.equal(resolveText('{table.1.pos}. {table.1.name} {table.1.points} pts ({table.1.gd})', withTable), '1. Leões 9 pts (7)');
+    assert.equal(resolveText('{table.2.name} {table.2.won}-{table.2.drawn}-{table.2.lost}', withTable), 'Tigres 1-1-1');
+    assert.equal(resolveText('[{table.5.name}]', withTable), '[]');
+    assert.equal(resolveText('[{table.1.name}]', ctx()), '[]');
+    assert.equal(resolveText('{table.1.xyz} {table.11.name}', withTable), '{table.1.xyz} {table.11.name}');
+});
