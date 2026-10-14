@@ -14,7 +14,7 @@ export interface OverlayTeam {
 }
 
 export interface OverlayAppearance {
-    preset: 'arena' | 'classic' | 'minimal' | 'glass' | 'contrast' | 'neon' | 'ribbon' | 'gradient';
+    preset: 'arena' | 'classic' | 'minimal' | 'glass' | 'contrast' | 'neon' | 'ribbon' | 'gradient' | 'aurora';
     accent_color: string;
     background_color: string;
     text_color: string;
