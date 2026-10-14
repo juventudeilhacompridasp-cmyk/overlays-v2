@@ -75,6 +75,8 @@ class ChannelController extends Controller
                     ->sortBy(fn (array $person) => ($person['team'].'|'.str_pad((string) ($person['shirt'] ?? 999), 3, '0', STR_PAD_LEFT)))
                     ->values() ?? collect();
 
+                $plan = OverlayState::lineupPlan($channel);
+
                 return [
                     'id' => $channel->id,
                     'name' => $channel->name,
@@ -91,7 +93,7 @@ class ChannelController extends Controller
                     'sponsor_settings' => OverlaySponsorSettings::normalize($channel->sponsor_settings),
                     'lower_third_settings' => OverlayLowerThirdSettings::normalize($channel->lower_third_settings),
                     'lineup_people' => $people,
-                    'lineup_steps' => OverlayLineupTimeline::steps(OverlayLineupSettings::normalize($channel->lineup_settings)['presentation'], OverlayState::individualCount($channel)),
+                    'lineup_steps' => OverlayLineupTimeline::steps(OverlayLineupSettings::normalize($channel->lineup_settings), $plan['individuals'], $plan['formation']),
                     'championship_base' => substr(route('overlay.championship', ['channel' => $channel->token, 'view' => 'standings']), 0, -strlen('/standings')),
                     'has_control_token' => $channel->control_token_hash !== null,
                     'control_url' => route('api.v1.overlay-channels.state.update', ['channel' => $channel]),

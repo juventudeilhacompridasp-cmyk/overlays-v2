@@ -89,8 +89,11 @@ export interface LineupSide {
 }
 
 export interface LineupPublicSettings {
-    presentation: 'sequence' | 'list' | 'formation' | 'cards' | 'individual' | 'show';
+    presentation: 'sequence' | 'list' | 'formation' | 'cards' | 'individual' | 'show' | 'full';
     list_seconds: number;
+    formation_seconds?: number;
+    full_individuals?: boolean;
+    transition?: 'fade' | 'slide' | 'wipe' | 'zoom' | 'flip';
     team: 'home' | 'away';
     individual_mode: 'auto' | 'manual';
     individual_seconds: number;

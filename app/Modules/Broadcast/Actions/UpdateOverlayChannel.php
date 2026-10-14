@@ -111,7 +111,7 @@ final class UpdateOverlayChannel
 
         // Mudou o jogo, a equipe, o modo ou os tempos (ou a escalação acabou de entrar no ar): a apresentação recomeça da etapa 0.
         $lineup = OverlayLineupSettings::normalize($channel->lineup_settings);
-        $watched = ['presentation', 'team', 'individual_mode', 'individual_scope', 'list_seconds', 'individual_seconds'];
+        $watched = ['presentation', 'team', 'individual_mode', 'individual_scope', 'list_seconds', 'individual_seconds', 'formation_seconds', 'full_individuals'];
         $restart = $gameChanged || (! $lineupWasOn && $channel->layerOn('lineup')) || array_diff_assoc(array_intersect_key($lineup, array_flip($watched)), array_intersect_key($lineupBefore, array_flip($watched))) !== [];
 
         if ($restart) {
@@ -120,9 +120,10 @@ final class UpdateOverlayChannel
 
         // Comando do operador (próximo, anterior, reiniciar): vale na hora e é calculado aqui para duas pessoas não se atropelarem.
         if (isset($data['lineup_command']) && is_string($data['lineup_command'])) {
+            $plan = OverlayState::lineupPlan($channel);
             $channel->lineup_settings = array_merge(
                 OverlayLineupSettings::normalize($channel->lineup_settings),
-                OverlayLineupTimeline::apply($data['lineup_command'], OverlayLineupSettings::normalize($channel->lineup_settings), OverlayState::individualCount($channel), (int) (microtime(true) * 1000)),
+                OverlayLineupTimeline::apply($data['lineup_command'], OverlayLineupSettings::normalize($channel->lineup_settings), $plan['individuals'], (int) (microtime(true) * 1000), $plan['formation']),
             );
         }
 

@@ -312,7 +312,10 @@ return [
                     'bar_background' => ['type' => 'string', 'description' => 'Cor de fundo da barra (#rrggbb).'],
                 ]],
                 'lineup_settings' => ['type' => 'object', 'properties' => [
-                    'presentation' => ['type' => 'string', 'enum' => ['sequence', 'list', 'formation', 'cards', 'individual', 'show'], 'description' => '`cards` = grade de cartões; `individual` = um jogador por vez; `show` = grade e depois cada jogador.'],
+                    'presentation' => ['type' => 'string', 'enum' => ['sequence', 'list', 'formation', 'cards', 'individual', 'show', 'full'], 'description' => '`cards` = grade de cartões; `individual` = um jogador por vez; `show` = grade e depois cada jogador; `full` = grade, esquema tático da equipe e cada jogador, com a faixa de patrocinadores fixa por baixo.'],
+                    'formation_seconds' => ['type' => 'integer', 'minimum' => 3, 'maximum' => 30, 'description' => 'Tempo do esquema tático na apresentação `full`.'],
+                    'full_individuals' => ['type' => 'boolean', 'description' => 'Na apresentação `full`, passa também jogador a jogador depois do esquema.'],
+                    'transition' => ['type' => 'string', 'enum' => ['fade', 'slide', 'wipe', 'zoom', 'flip'], 'description' => 'Animação de troca entre as etapas da apresentação por equipe.'],
                     'list_seconds' => ['type' => 'integer'],
                     'photo_person_ids' => ['type' => 'array', 'items' => ['type' => 'string']],
                     'team' => ['type' => 'string', 'enum' => ['home', 'away'], 'description' => 'Equipe apresentada em `cards`, `individual` e `show`.'],

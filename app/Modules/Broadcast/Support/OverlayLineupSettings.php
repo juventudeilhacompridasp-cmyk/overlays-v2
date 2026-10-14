@@ -6,9 +6,13 @@ final class OverlayLineupSettings
 {
     /**
      * sequence = lista → esquema tático (as duas equipes); list/formation fixam uma fase; cards = grade de cartões da equipe
-     * escolhida (titulares + comissão); individual = um jogador por vez; show = grade e depois cada jogador.
+     * escolhida (titulares + comissão); individual = um jogador por vez; show = grade e depois cada jogador; full = grade,
+     * esquema tático da equipe e (opcional) cada jogador, com a faixa de patrocinadores fixa por baixo de todas as etapas.
      */
-    public const PRESENTATIONS = ['sequence', 'list', 'formation', 'cards', 'individual', 'show'];
+    public const PRESENTATIONS = ['sequence', 'list', 'formation', 'cards', 'individual', 'show', 'full'];
+
+    /** Animação de troca entre as etapas da apresentação por equipe (a que sai e a que entra). */
+    public const TRANSITIONS = ['fade', 'slide', 'wipe', 'zoom', 'flip'];
 
     public const TEAMS = ['home', 'away'];
 
@@ -35,6 +39,9 @@ final class OverlayLineupSettings
         return [
             'presentation' => 'sequence',
             'list_seconds' => 6,
+            'formation_seconds' => 8,
+            'full_individuals' => true,
+            'transition' => 'slide',
             'photo_person_ids' => [],
             'team' => 'home',
             'individual_mode' => 'auto',
@@ -74,6 +81,9 @@ final class OverlayLineupSettings
         return [
             'presentation' => $choice($values['presentation'], self::PRESENTATIONS, $defaults['presentation']),
             'list_seconds' => min(20, max(3, $number($values['list_seconds'], $defaults['list_seconds']))),
+            'formation_seconds' => min(30, max(3, $number($values['formation_seconds'], $defaults['formation_seconds']))),
+            'full_individuals' => (bool) $values['full_individuals'],
+            'transition' => $choice($values['transition'], self::TRANSITIONS, $defaults['transition']),
             'photo_person_ids' => array_values(array_unique(array_filter($ids, 'is_string'))),
             'team' => $choice($values['team'], self::TEAMS, $defaults['team']),
             'individual_mode' => $choice($values['individual_mode'], self::INDIVIDUAL_MODES, $defaults['individual_mode']),

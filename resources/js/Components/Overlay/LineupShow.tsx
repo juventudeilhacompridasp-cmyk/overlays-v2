@@ -1,3 +1,4 @@
+import { AthletePhoto, FormationPitch } from '@/Components/Overlay/Formation';
 import { enterMotion, LineupLook, lineupSkin } from '@/lib/lineupSkin';
 import { Individual } from '@/lib/overlayLineup';
 import { LineupSide, OverlayAppearance, OverlayState } from '@/lib/overlay';
@@ -10,6 +11,13 @@ export function lineupLook(settings: OverlayState['lineup_settings']): LineupLoo
 }
 
 const zoomOf = (look: LineupLook): CSSProperties | undefined => (look.text_scale === 100 ? undefined : { zoom: look.text_scale / 100 });
+
+/** Tamanho do nome no cartão individual: nomes mais longos encolhem em vez de serem cortados com reticências. */
+export function nameSize(name: string): string {
+    const length = name.length;
+
+    return length <= 9 ? 'text-7xl' : length <= 12 ? 'text-6xl' : length <= 16 ? 'text-5xl' : 'text-4xl';
+}
 
 const pad = (shirt: number | null) => (shirt === null ? '' : String(shirt).padStart(2, '0'));
 
@@ -54,7 +62,7 @@ export function SponsorBanner({ sponsors, appearance, size = 100 }: { sponsors: 
 }
 
 /** Um jogador por vez: foto grande, camisa e nome (a "apresentação individual" da transmissão). */
-export function IndividualCard({ side, player, appearance, sponsors, showSponsor, look, sponsorSize = 100 }: { side: LineupSide; player: Individual; appearance: OverlayAppearance; sponsors: OverlayState['sponsors']; showSponsor: boolean; look: LineupLook; sponsorSize?: number }) {
+export function IndividualCard({ side, player, appearance, sponsors, showSponsor, look, sponsorSize = 100, entrance = true }: { side: LineupSide; player: Individual; appearance: OverlayAppearance; sponsors: OverlayState['sponsors']; showSponsor: boolean; look: LineupLook; sponsorSize?: number; entrance?: boolean }) {
     const color = side.color ?? appearance.accent_color;
     const photo = player.photo_large_url ?? player.photo_url;
     const skin = lineupSkin(look, appearance.background_color, appearance.accent_color);
@@ -62,7 +70,7 @@ export function IndividualCard({ side, player, appearance, sponsors, showSponsor
     const light = skin.ink !== null;
 
     return (
-        <section key={`${player.shirt}-${player.name}`} className={`w-[68rem] ${skin.panel.className} ${enter.className} ${overlayMotion(appearance.motion)}`} style={{ ...skin.panel.style, ...zoomOf(look) }} data-testid="lineup-individual" data-layout={look.layout}>
+        <section key={`${player.shirt}-${player.name}`} className={`w-[68rem] ${skin.panel.className} ${entrance ? enter.className : ''} ${overlayMotion(appearance.motion)}`} style={{ ...skin.panel.style, ...zoomOf(look) }} data-testid="lineup-individual" data-layout={look.layout}>
             <header className="flex items-center gap-4 px-5 py-3">
                 <Crest side={side} />
                 <span className="truncate text-4xl font-black uppercase tracking-wide">{side.name}</span>
@@ -77,7 +85,7 @@ export function IndividualCard({ side, player, appearance, sponsors, showSponsor
                     {(player.position ?? player.position_label) && (
                         <span className="w-fit px-3 py-1 text-xl font-black uppercase tracking-[0.2em]" style={{ backgroundColor: light ? '#7f1d1d' : color, color: light ? '#ffffff' : undefined }}>{player.position ?? player.position_label}</span>
                     )}
-                    <span className={`truncate text-7xl font-black uppercase leading-none ${look.layout === 'matchday' ? 'font-serif' : ''}`}>{player.name}</span>
+                    <span className={`truncate font-black uppercase leading-none ${nameSize(player.name)} ${look.layout === 'matchday' ? 'font-serif' : ''}`} data-testid="lineup-individual-name">{player.name}</span>
                     {player.captain && <span className="text-xl font-black uppercase tracking-widest text-amber-500">Capitão</span>}
                 </div>
             </div>
@@ -87,7 +95,7 @@ export function IndividualCard({ side, player, appearance, sponsors, showSponsor
 }
 
 /** Grade de cartões da equipe: titulares e comissão (e reservas, se o escopo pedir), no conceito visual escolhido. */
-export function CardsGrid({ side, players, appearance, sponsors, showSponsor, look, sponsorSize = 100 }: { side: LineupSide; players: Individual[]; appearance: OverlayAppearance; sponsors: OverlayState['sponsors']; showSponsor: boolean; look: LineupLook; sponsorSize?: number }) {
+export function CardsGrid({ side, players, appearance, sponsors, showSponsor, look, sponsorSize = 100, entrance = true }: { side: LineupSide; players: Individual[]; appearance: OverlayAppearance; sponsors: OverlayState['sponsors']; showSponsor: boolean; look: LineupLook; sponsorSize?: number; entrance?: boolean }) {
     const color = side.color ?? appearance.accent_color;
     const athletes = players.filter((player) => player.kind === 'player');
     const coach = players.find((player) => player.kind === 'coach');
@@ -106,7 +114,7 @@ export function CardsGrid({ side, players, appearance, sponsors, showSponsor, lo
                     const picture = player.photo_large_url ?? player.photo_url;
 
                     return (
-                        <figure key={`${player.shirt}-${player.name}-${index}`} className={`${skin.card.className} ${enter.className}`} style={{ ...skin.card.style(color), animationDelay: `${enter.delay}ms` }}>
+                        <figure key={`${player.shirt}-${player.name}-${index}`} className={`${skin.card.className} ${entrance ? enter.className : ''}`} style={{ ...skin.card.style(color), ...(entrance ? { animationDelay: `${enter.delay}ms` } : {}) }}>
                             {skin.list ? (
                                 <>
                                     <span className={skin.number.className} style={skin.number.style(color)}>{pad(player.shirt)}</span>
@@ -137,6 +145,41 @@ export function CardsGrid({ side, players, appearance, sponsors, showSponsor, lo
                 </div>
             )}
             {showSponsor && <SponsorBanner sponsors={sponsors} appearance={appearance} size={sponsorSize} />}
+        </section>
+    );
+}
+
+/** Esquema tático da equipe no mesmo conceito visual da grade e do jogador a jogador: campo/quadra à esquerda e a lista dos titulares ao lado. */
+export function FormationCard({ side, sport, appearance, look, numberOnly, zoom, entrance = true }: { side: LineupSide; sport: string; appearance: OverlayAppearance; look: LineupLook; numberOnly: boolean; zoom: number; entrance?: boolean }) {
+    const color = side.color ?? appearance.accent_color;
+    const skin = lineupSkin(look, appearance.background_color, appearance.accent_color);
+    const enter = enterMotion(look.animation, 0);
+    const court = sport === 'basketball' || sport === 'volleyball';
+    const light = skin.ink !== null;
+
+    return (
+        <section className={`w-[68rem] ${skin.panel.className} ${entrance ? enter.className : ''} ${overlayMotion(appearance.motion)}`} style={{ ...skin.panel.style, ...zoomOf(look) }} data-testid="lineup-formation" data-layout={look.layout}>
+            <header className="flex items-center gap-4 px-5 py-3">
+                <Crest side={side} />
+                <span className="flex-1 truncate text-4xl font-black uppercase tracking-wide">{side.name}</span>
+                {side.formation && <span className="border-l-4 pl-3 text-3xl font-black tabular-nums" style={{ borderColor: appearance.accent_color, color: skin.ink ?? appearance.accent_color }} data-testid="lineup-formation-name">{side.formation}</span>}
+            </header>
+            <div className="grid grid-cols-[auto_1fr] items-center gap-6 px-5 pb-5">
+                <FormationPitch side={side} sport={sport} accent={appearance.accent_color} numberOnly={numberOnly} zoom={zoom} className={court ? 'h-[26rem] w-[34rem]' : 'h-[36rem] w-[27rem]'} compact />
+                <ol className="min-w-0">
+                    {side.starters.map((player, index) => (
+                        <li key={`${player.shirt}-${player.name}-${index}`} className={`flex min-w-0 items-center gap-3 border-b py-1.5 ${light ? 'border-stone-300' : 'border-white/10'}`}>
+                            <span className="grid h-9 w-11 shrink-0 place-items-center text-xl font-black tabular-nums" style={{ backgroundColor: light ? '#7f1d1d' : color, color: light ? '#ffffff' : undefined }}>{pad(player.shirt)}</span>
+                            <AthletePhoto player={player} size="small" numberOnly={numberOnly} />
+                            <span className="min-w-0 flex-1">
+                                <span className="block truncate text-lg font-black uppercase leading-tight">{player.name}{player.captain && <span className="ml-1 text-sm text-amber-400">C</span>}</span>
+                                {(player.position ?? player.position_label) && <span className="block text-xs font-bold uppercase tracking-widest opacity-70">{player.position_label ?? player.position}</span>}
+                            </span>
+                        </li>
+                    ))}
+                    {side.coach && <li className="flex items-center gap-3 pt-2"><span className="text-xs font-black uppercase tracking-widest opacity-60">Técnico</span><span className="truncate text-lg font-black uppercase">{side.coach}</span></li>}
+                </ol>
+            </div>
         </section>
     );
 }

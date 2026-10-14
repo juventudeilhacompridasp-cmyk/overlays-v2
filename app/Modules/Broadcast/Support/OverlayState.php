@@ -84,17 +84,31 @@ final class OverlayState
      */
     public static function individualCount(OverlayChannel $channel): int
     {
+        return self::lineupPlan($channel)['individuals'];
+    }
+
+    /**
+     * O que a apresentação por equipe percorre: quantos jogadores aparecem um a um e se a equipe escolhida tem esquema
+     * tático pronto (a etapa do esquema só existe na apresentação completa quando há formação).
+     *
+     * @return array{individuals: int, formation: bool}
+     */
+    public static function lineupPlan(OverlayChannel $channel): array
+    {
         $game = $channel->game_id ? Game::query()->find($channel->game_id) : null;
         $lineup = $game ? self::lineup($game, []) : null;
 
         if ($lineup === null) {
-            return 0;
+            return ['individuals' => 0, 'formation' => false];
         }
 
         $settings = OverlayLineupSettings::normalize($channel->lineup_settings);
         $side = $lineup[$settings['team']];
 
-        return count($side['starters']) + ($settings['individual_scope'] === 'all' ? count($side['bench']) : 0) + ($side['coach'] !== null ? 1 : 0);
+        return [
+            'individuals' => count($side['starters']) + ($settings['individual_scope'] === 'all' ? count($side['bench']) : 0) + ($side['coach'] !== null ? 1 : 0),
+            'formation' => (bool) $side['formation_ready'],
+        ];
     }
 
     /** @return array{home: array<string, mixed>, away: array<string, mixed>}|null */
