@@ -342,7 +342,7 @@ describe('panel', function () {
         $channel = channelFor();
         $this->actingAs(panelUser(Role::Operator));
 
-        foreach (['classic', 'minimal', 'arena', 'glass', 'contrast', 'neon', 'ribbon', 'gradient'] as $preset) {
+        foreach (['classic', 'minimal', 'arena', 'glass', 'contrast', 'neon', 'ribbon', 'gradient', 'aurora'] as $preset) {
             foreach (['bottom-left', 'bottom-center', 'bottom-right'] as $position) {
                 $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['preset' => $preset, 'position' => $position]])->assertSessionHasNoErrors();
                 expect($channel->fresh()->appearance['preset'])->toBe($preset)->and($channel->fresh()->appearance['position'])->toBe($position);

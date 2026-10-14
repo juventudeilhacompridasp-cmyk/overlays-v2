@@ -6,9 +6,9 @@ final class OverlayAppearance
 {
     /**
      * arena = painel de alto contraste; classic = barra de TV compacta e chapada; minimal = pílula translúcida só com o essencial;
-     * glass = vidro; contrast = moldura de destaque; neon = brilho na cor de destaque; ribbon = faixa dinâmica; gradient = degradê.
+     * glass = vidro; contrast = moldura de destaque; neon = brilho na cor de destaque; ribbon = faixa dinâmica; gradient = degradê; aurora = brilho atmosférico.
      */
-    public const PRESETS = ['arena', 'classic', 'minimal', 'glass', 'contrast', 'neon', 'ribbon', 'gradient'];
+    public const PRESETS = ['arena', 'classic', 'minimal', 'glass', 'contrast', 'neon', 'ribbon', 'gradient', 'aurora'];
 
     public const SHADOWS = ['none', 'soft', 'strong'];
 

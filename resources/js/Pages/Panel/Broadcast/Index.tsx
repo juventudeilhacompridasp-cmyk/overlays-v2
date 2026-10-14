@@ -14,7 +14,7 @@ import OverlayPreviewStudio from './OverlayPreviewStudio';
 import StatsStudio, { StatsSettings } from './StatsStudio';
 
 interface Appearance {
-    preset: 'arena' | 'classic' | 'minimal' | 'glass' | 'contrast' | 'neon' | 'ribbon' | 'gradient';
+    preset: 'arena' | 'classic' | 'minimal' | 'glass' | 'contrast' | 'neon' | 'ribbon' | 'gradient' | 'aurora';
     accent_color: string;
     background_color: string;
     text_color: string;
@@ -381,6 +381,7 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                                 <option value="neon">Neon</option>
                                 <option value="ribbon">Faixa dinâmica</option>
                                 <option value="gradient">Gradiente</option>
+                                <option value="aurora">Aurora</option>
                             </Select>
                         </Field>
                         <Field label="Formato do placar" htmlFor={`layout-${channel.id}`}>
