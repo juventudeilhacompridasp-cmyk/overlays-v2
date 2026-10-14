@@ -16,10 +16,11 @@ O **token é a senha do canal**: quem tem a URL vê o canal. Se vazar, use *Reno
 
 ### Aparência
 
-Em cada canal, a seção **Visual do overlay** configura o preset Arena:
+Em cada canal, a seção **Visual do overlay** configura o placar:
 
+- estilo: **Arena** (alto contraste), **Clássico** (barra de TV chapada) ou **Minimal** (pílula translúcida);
 - cores de destaque, fundo e texto;
-- placar no canto esquerdo, centro ou canto direito;
+- placar no canto esquerdo, centro ou canto direito, no alto ou embaixo da tela;
 - escala entre 75% e 150%;
 - animações dinâmicas, suaves ou desligadas.
 

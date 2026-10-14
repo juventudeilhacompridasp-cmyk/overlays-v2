@@ -1,4 +1,4 @@
-# ADR 0005 — Escalação visual, esquema tático e fotos no overlay
+# ADR 0011 — Escalação visual, esquema tático e fotos no overlay
 
 Status: aceito (13/10/2026)
 

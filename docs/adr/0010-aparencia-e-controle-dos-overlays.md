@@ -1,4 +1,4 @@
-# ADR 0004 — Aparência e controle externo dos overlays
+# ADR 0010 — Aparência e controle externo dos overlays
 
 Status: aceito (13/10/2026)
 
@@ -33,3 +33,11 @@ integrações com controladores externos sem dar poder de escrita a quem apenas 
 - Novos presets devem preservar o mesmo contrato de estado e oferecer versão sem movimento; imagens e fontes externas não
   entram no preset inicial para evitar downloads e instabilidade durante a transmissão.
 
+
+## Addendum — novos presets e posições (14/10/2026)
+
+- `OverlayAppearance::PRESETS` ganha `classic` (barra de TV compacta, fundo chapado) e `minimal` (pílula translúcida com o
+  relógio na cor de destaque); `arena` continua o padrão. Todos usam o mesmo estado e o mesmo contrato da API; a moldura de
+  cada preset fica em `scoreboardFrame` (`resources/js/lib/overlayVisual.ts`), sem CSS novo e sem imagens.
+- `POSITIONS` ganha `bottom-left`, `bottom-center` e `bottom-right`; a escala cresce a partir do canto/borda de ancoragem.
+- Preset novo = entrada em `PRESETS` + moldura em `scoreboardFrame` + opção na tela de transmissão + teste.
