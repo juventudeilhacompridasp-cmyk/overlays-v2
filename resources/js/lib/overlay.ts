@@ -10,7 +10,7 @@ export interface OverlayTeam {
 }
 
 export interface OverlayAppearance {
-    preset: 'arena';
+    preset: 'arena' | 'studio';
     accent_color: string;
     background_color: string;
     text_color: string;

@@ -208,7 +208,7 @@ return [
                     'standings' => ['type' => 'boolean'],
                 ]],
                 'appearance' => ['type' => 'object', 'properties' => [
-                    'preset' => ['type' => 'string', 'enum' => ['arena']],
+                    'preset' => ['type' => 'string', 'enum' => ['arena', 'studio']],
                     'accent_color' => ['type' => 'string'],
                     'background_color' => ['type' => 'string'],
                     'text_color' => ['type' => 'string'],

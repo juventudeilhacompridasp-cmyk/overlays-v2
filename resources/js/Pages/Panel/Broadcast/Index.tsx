@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import OverlayPreviewStudio from './OverlayPreviewStudio';
 
 interface Appearance {
-    preset: 'arena';
+    preset: 'arena' | 'studio';
     accent_color: string;
     background_color: string;
     text_color: string;
@@ -54,6 +54,11 @@ interface GameOption {
     label: string;
 }
 
+interface AppearancePreset {
+    value: Appearance['preset'];
+    label: string;
+}
+
 const layerNames: Record<'lineup' | 'standings', string> = { lineup: 'Escalação', standings: 'Tabela' };
 
 function CopyButton({ text }: { text: string }) {
@@ -78,7 +83,7 @@ function CopyButton({ text }: { text: string }) {
     );
 }
 
-function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: { channel: Channel; games: GameOption[]; canManage: boolean; canOperate: boolean; issuedControl?: IssuedControl }) {
+function ChannelCard({ channel, games, presets, canManage, canOperate, issuedControl }: { channel: Channel; games: GameOption[]; presets: AppearancePreset[]; canManage: boolean; canOperate: boolean; issuedControl?: IssuedControl }) {
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings> }) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true });
@@ -148,10 +153,15 @@ function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: {
 
                 <div className="rounded-lg border border-gray-200 p-4">
                     <div className="mb-3">
-                        <div className="font-medium text-gray-900">Visual do overlay · Arena</div>
+                        <div className="font-medium text-gray-900">Visual do overlay · {presets.find((preset) => preset.value === appearance.preset)?.label ?? appearance.preset}</div>
                         <p className="text-xs text-gray-500">As fontes abertas no OBS recebem as mudanças sem recarregar.</p>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        <Field label="Estilo" htmlFor={`preset-${channel.id}`}>
+                            <Select id={`preset-${channel.id}`} disabled={!canOperate} value={appearance.preset} onChange={(event) => setAppearance({ ...appearance, preset: event.target.value as Appearance['preset'] })}>
+                                {presets.map((preset) => <option key={preset.value} value={preset.value}>{preset.label}</option>)}
+                            </Select>
+                        </Field>
                         <Field label="Cor de destaque" htmlFor={`accent-${channel.id}`}>
                             <Input id={`accent-${channel.id}`} type="color" disabled={!canOperate} value={appearance.accent_color} onChange={(event) => setAppearance({ ...appearance, accent_color: event.target.value })} className="h-10" />
                         </Field>
@@ -281,7 +291,7 @@ function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: {
     );
 }
 
-export default function Index({ channels, games, issued_control }: { channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl }) {
+export default function Index({ channels, games, appearance_presets, issued_control }: { channels: Channel[]; games: GameOption[]; appearance_presets: AppearancePreset[]; issued_control?: IssuedControl }) {
     const canManage = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
     const { data, setData, post, processing, errors, reset } = useForm({ name: '' });
@@ -300,7 +310,7 @@ export default function Index({ channels, games, issued_control }: { channels: C
                 {channels.length === 0 && <Empty title="Nenhum canal de transmissão ainda.">{canManage ? 'Crie um canal abaixo para gerar as URLs do OBS.' : 'Peça a um organizador para criar um canal.'}</Empty>}
 
                 {channels.map((channel) => (
-                    <ChannelCard key={channel.id} channel={channel} games={games} canManage={canManage} canOperate={canOperate} issuedControl={issued_control} />
+                    <ChannelCard key={channel.id} channel={channel} games={games} presets={appearance_presets} canManage={canManage} canOperate={canOperate} issuedControl={issued_control} />
                 ))}
 
                 {canManage && (

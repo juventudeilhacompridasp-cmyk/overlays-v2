@@ -4,7 +4,13 @@ namespace App\Modules\Broadcast\Support;
 
 final class OverlayAppearance
 {
-    public const PRESETS = ['arena'];
+    public const PRESETS = ['arena', 'studio'];
+
+    /** @var array<string, string> */
+    public const PRESET_LABELS = [
+        'arena' => 'Arena',
+        'studio' => 'Studio',
+    ];
 
     public const POSITIONS = ['top-left', 'top-center', 'top-right'];
 

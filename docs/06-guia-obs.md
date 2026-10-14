@@ -16,14 +16,19 @@ O **token é a senha do canal**: quem tem a URL vê o canal. Se vazar, use *Reno
 
 ### Aparência
 
-Em cada canal, a seção **Visual do overlay** configura o preset Arena:
+Em cada canal, a seção **Visual do overlay** permite escolher o estilo:
+
+- **Arena**: superfícies arredondadas, destaque forte e presença mais esportiva;
+- **Studio**: composição editorial compacta, cantos discretos, tipografia forte e leitura limpa.
+
+Os dois estilos aceitam:
 
 - cores de destaque, fundo e texto;
 - placar no canto esquerdo, centro ou canto direito;
 - escala entre 75% e 150%;
 - animações dinâmicas, suaves ou desligadas.
 
-Clique em **Aplicar visual**. As fontes que já estão abertas no OBS recebem a mudança por Reverb, sem recarregar. As animações
+Use o estúdio de pré-visualização para comparar o resultado e clique em **Aplicar visual**. As fontes que já estão abertas no OBS recebem a mudança por Reverb, sem recarregar. As animações
 usam somente opacidade e transformação para reduzir o trabalho de renderização do Chromium do OBS.
 
 ### Escalação visual

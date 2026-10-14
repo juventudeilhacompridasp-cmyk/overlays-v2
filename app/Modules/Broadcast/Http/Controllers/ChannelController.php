@@ -78,6 +78,9 @@ class ChannelController extends Controller
                 ];
             })->values(),
             'games' => $candidates->map(fn (Game $game) => ['id' => $game->id, 'label' => $label($game)])->values(),
+            'appearance_presets' => collect(OverlayAppearance::PRESET_LABELS)
+                ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])
+                ->values(),
             'issued_control' => session()->pull('overlay_issued_control'),
         ]);
     }

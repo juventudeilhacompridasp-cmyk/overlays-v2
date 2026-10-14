@@ -6,35 +6,39 @@ import { useEffect, useState } from 'react';
 
 type Player = LineupSide['starters'][number];
 
-function AthletePhoto({ player, size = 'large' }: { player: Pick<Player, 'photo_url' | 'shirt'>; size?: 'small' | 'large' }) {
+function AthletePhoto({ player, preset, size = 'large' }: { player: Pick<Player, 'photo_url' | 'shirt'>; preset: OverlayState['appearance']['preset']; size?: 'small' | 'large' }) {
     const dimension = size === 'large' ? 'h-[4.6rem] w-[4.6rem]' : 'h-11 w-11';
 
     return (
-        <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white/80 bg-slate-900 font-black shadow-lg ${dimension}`}>
+        <span className={`grid shrink-0 place-items-center overflow-hidden border-2 bg-slate-900 font-black shadow-lg ${preset === 'studio' ? 'rounded-lg border-white/25' : 'rounded-full border-white/80'} ${dimension}`}>
             {player.photo_url ? <img src={player.photo_url} alt="" className="h-full w-full object-cover" /> : <span className={size === 'large' ? 'text-2xl' : 'text-base'}>{player.shirt ?? '—'}</span>}
         </span>
     );
 }
 
-function TeamHeader({ side, accent }: { side: LineupSide; accent: string }) {
+function TeamHeader({ side, accent, preset }: { side: LineupSide; accent: string; preset: OverlayState['appearance']['preset'] }) {
+    const studio = preset === 'studio';
+
     return (
-        <div className="relative flex min-h-[5.25rem] items-center gap-4 overflow-hidden px-6 py-3">
-            <span className="absolute inset-x-0 bottom-0 h-1" style={{ backgroundColor: side.color ?? accent }} />
-            {side.logo_url && <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white/95 p-1.5"><img src={side.logo_url} alt="" className="h-full w-full object-contain" /></span>}
-            <span className="min-w-0 flex-1 truncate text-2xl font-black uppercase tracking-wide">{side.name}</span>
-            {side.formation && <span className="rounded-full bg-white/10 px-3 py-1 text-lg font-black" style={{ color: accent }}>{side.formation}</span>}
+        <div className={`relative flex min-h-[5.25rem] items-center gap-4 overflow-hidden px-6 py-3 ${studio ? 'bg-black/20' : ''}`}>
+            <span className={`absolute ${studio ? 'inset-y-0 left-0 w-1.5' : 'inset-x-0 bottom-0 h-1'}`} style={{ backgroundColor: side.color ?? accent }} />
+            {side.logo_url && <span className={`grid h-14 w-14 shrink-0 place-items-center bg-white/95 p-1.5 ${studio ? 'rounded-md' : 'rounded-full'}`}><img src={side.logo_url} alt="" className="h-full w-full object-contain" /></span>}
+            <span className={`min-w-0 flex-1 truncate text-2xl font-black uppercase ${studio ? 'tracking-[0.1em]' : 'tracking-wide'}`}>{side.name}</span>
+            {side.formation && <span className={`${studio ? 'rounded-sm border border-white/15' : 'rounded-full bg-white/10'} px-3 py-1 text-lg font-black`} style={{ color: accent }}>{side.formation}</span>}
         </div>
     );
 }
 
-function ListColumn({ side, background, accent }: { side: LineupSide; background: string; accent: string }) {
+function ListColumn({ side, background, accent, preset }: { side: LineupSide; background: string; accent: string; preset: OverlayState['appearance']['preset'] }) {
+    const studio = preset === 'studio';
+
     return (
-        <section className="w-[32rem] overflow-hidden rounded-3xl border border-white/15 shadow-2xl" style={{ background: `linear-gradient(160deg, ${background}f7, ${background}e8)` }}>
-            <TeamHeader side={side} accent={accent} />
+        <section className={`w-[32rem] overflow-hidden border border-white/15 shadow-2xl ${studio ? 'rounded-xl border-t-4' : 'rounded-3xl'}`} style={{ background: studio ? `linear-gradient(180deg, ${background}fa, ${background}e8)` : `linear-gradient(160deg, ${background}f7, ${background}e8)`, borderTopColor: studio ? accent : undefined }}>
+            <TeamHeader side={side} accent={accent} preset={preset} />
             <ol className="grid grid-cols-2 gap-x-3 px-5 py-4">
                 {side.starters.map((player, index) => (
                     <li key={`${player.shirt}-${player.name}-${index}`} className="flex min-w-0 items-center gap-2 border-b border-white/10 py-1.5">
-                        <AthletePhoto player={player} size="small" />
+                        <AthletePhoto player={player} preset={preset} size="small" />
                         <span className="min-w-0 flex-1">
                             <span className="block truncate text-base font-bold">{player.name}{player.captain && <span className="ml-1 text-xs text-amber-300">C</span>}</span>
                             <span className="block text-xs font-semibold uppercase tracking-wider text-white/60">{player.position_label ?? 'Titular'}</span>
@@ -65,7 +69,7 @@ function SurfaceMarkings({ sport }: { sport: string }) {
     return <><span className="absolute inset-x-0 top-1/2 border-t-2 border-white/30" /><span className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/30" /><span className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40" /><span className="absolute inset-x-[22%] top-0 h-[17%] border-x-2 border-b-2 border-white/30" /><span className="absolute inset-x-[22%] bottom-0 h-[17%] border-x-2 border-t-2 border-white/30" /></>;
 }
 
-function TacticalPlayer({ player, accent }: { player: Player; accent: string }) {
+function TacticalPlayer({ player, accent, preset }: { player: Player; accent: string; preset: OverlayState['appearance']['preset'] }) {
     if (player.x === null || player.y === null) return null;
     const x = Math.min(90, Math.max(10, player.x));
     const y = Math.min(84, Math.max(12, player.y));
@@ -73,25 +77,26 @@ function TacticalPlayer({ player, accent }: { player: Player; accent: string }) 
     return (
         <div className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center" style={{ left: `${x}%`, top: `${y}%` }}>
             <div className="relative">
-                <AthletePhoto player={player} />
+                <AthletePhoto player={player} preset={preset} />
                 {player.captain && <span className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-amber-300 text-xs font-black text-slate-900 shadow">C</span>}
             </div>
-            <span className="mt-1 max-w-40 truncate rounded-full border border-white/20 bg-slate-950/90 px-3 py-1 text-sm font-black shadow-lg">{player.name}</span>
+            <span className={`mt-1 max-w-40 truncate border border-white/20 bg-slate-950/90 px-3 py-1 text-sm font-black shadow-lg ${preset === 'studio' ? 'rounded-md' : 'rounded-full'}`}>{player.name}</span>
             {player.position && <span className="mt-0.5 text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: accent }}>{player.position}</span>}
         </div>
     );
 }
 
-function TacticalSide({ side, sport, background, accent }: { side: LineupSide; sport: string; background: string; accent: string }) {
+function TacticalSide({ side, sport, background, accent, preset }: { side: LineupSide; sport: string; background: string; accent: string; preset: OverlayState['appearance']['preset'] }) {
     const court = sport === 'basketball' || sport === 'volleyball';
+    const studio = preset === 'studio';
 
     return (
-        <section className="overflow-hidden rounded-3xl border border-white/15 shadow-2xl" style={{ background: `linear-gradient(160deg, ${background}f7, ${background}e8)` }}>
-            <TeamHeader side={side} accent={accent} />
-            <div className={`relative m-4 overflow-hidden rounded-2xl border-2 border-white/45 ${court ? 'h-[31rem] w-[36rem]' : 'h-[43rem] w-[31rem]'}`} style={{ background: sport === 'basketball' ? 'linear-gradient(90deg,#a85f2d,#c77a3b,#a85f2d)' : sport === 'volleyball' ? 'linear-gradient(90deg,#d1943d 0 50%,#3b82a0 50%)' : 'linear-gradient(90deg,#087443,#0a8150,#087443)' }}>
+        <section className={`overflow-hidden border border-white/15 shadow-2xl ${studio ? 'rounded-xl border-t-4' : 'rounded-3xl'}`} style={{ background: studio ? `linear-gradient(180deg, ${background}fa, ${background}e8)` : `linear-gradient(160deg, ${background}f7, ${background}e8)`, borderTopColor: studio ? accent : undefined }}>
+            <TeamHeader side={side} accent={accent} preset={preset} />
+            <div className={`relative m-4 overflow-hidden border-2 border-white/45 ${studio ? 'rounded-md' : 'rounded-2xl'} ${court ? 'h-[31rem] w-[36rem]' : 'h-[43rem] w-[31rem]'}`} style={{ background: sport === 'basketball' ? 'linear-gradient(90deg,#a85f2d,#c77a3b,#a85f2d)' : sport === 'volleyball' ? 'linear-gradient(90deg,#d1943d 0 50%,#3b82a0 50%)' : 'linear-gradient(90deg,#087443,#0a8150,#087443)' }}>
                 <div className="absolute inset-3 border-2 border-white/35" />
                 <SurfaceMarkings sport={sport} />
-                {side.starters.map((player, index) => <TacticalPlayer key={`${player.shirt}-${player.name}-${index}`} player={player} accent={accent} />)}
+                {side.starters.map((player, index) => <TacticalPlayer key={`${player.shirt}-${player.name}-${index}`} player={player} accent={accent} preset={preset} />)}
             </div>
         </section>
     );
@@ -118,20 +123,20 @@ export default function Lineup({ token, state: initial, realtime }: { token: str
     const common = `absolute inset-0 flex items-center justify-center gap-8 transition-[opacity,transform] ${transition}`;
 
     return (
-        <div className="fixed inset-0 overflow-hidden font-sans transition-opacity duration-500" style={{ ...overlayStyle(state.appearance), color: state.appearance.text_color, opacity: visible ? 1 : 0, textShadow: '0 1px 2px rgba(0,0,0,.55)' }} data-testid="overlay-lineup" data-visible={visible} data-phase={phase}>
+        <div className="fixed inset-0 overflow-hidden font-sans transition-opacity duration-500" style={{ ...overlayStyle(state.appearance), color: state.appearance.text_color, opacity: visible ? 1 : 0, textShadow: '0 1px 2px rgba(0,0,0,.55)' }} data-testid="overlay-lineup" data-visible={visible} data-phase={phase} data-preset={state.appearance.preset}>
             <Head title="Escalação" />
             {state.lineup && state.game && (
                 <div className="absolute inset-0" style={{ transform: `scale(${state.appearance.scale})` }}>
                     <div className={`${common} ${phase === 'list' ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0 pointer-events-none'}`}>
                         <div className={`flex gap-8 ${phase === 'list' ? overlayMotion(state.appearance.motion) : ''}`}>
-                            <ListColumn side={state.lineup.home} background={state.appearance.background_color} accent={state.appearance.accent_color} />
-                            <ListColumn side={state.lineup.away} background={state.appearance.background_color} accent={state.appearance.accent_color} />
+                            <ListColumn side={state.lineup.home} background={state.appearance.background_color} accent={state.appearance.accent_color} preset={state.appearance.preset} />
+                            <ListColumn side={state.lineup.away} background={state.appearance.background_color} accent={state.appearance.accent_color} preset={state.appearance.preset} />
                         </div>
                     </div>
                     <div className={`${common} ${phase === 'formation' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0 pointer-events-none'}`}>
                         <div className={`flex gap-8 ${phase === 'formation' ? overlayMotion(state.appearance.motion) : ''}`}>
-                            <TacticalSide side={state.lineup.home} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} />
-                            <TacticalSide side={state.lineup.away} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} />
+                            <TacticalSide side={state.lineup.home} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} preset={state.appearance.preset} />
+                            <TacticalSide side={state.lineup.away} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} preset={state.appearance.preset} />
                         </div>
                     </div>
                 </div>

@@ -223,6 +223,10 @@ describe('panel', function () {
             ->where('channels.0.lineup_settings.presentation', 'sequence')
             ->where('channels.0.lineup_settings.photo_person_ids', [])
             ->where('channels.0.has_control_token', true)
+            ->where('appearance_presets', [
+                ['value' => 'arena', 'label' => 'Arena'],
+                ['value' => 'studio', 'label' => 'Studio'],
+            ])
             ->where('issued_control.channel_id', $channel->id)
             ->has('issued_control.token')
             ->where('channels.0.layers', ['lineup' => false, 'standings' => false]));
@@ -243,7 +247,7 @@ describe('panel', function () {
         $this->patch("/painel/broadcast/{$channel->id}", [
             'game_id' => $game->id,
             'layers' => ['lineup' => true, 'inventada' => true],
-            'appearance' => ['accent_color' => '#ff5500', 'position' => 'top-right', 'motion' => 'subtle'],
+            'appearance' => ['preset' => 'studio', 'accent_color' => '#ff5500', 'position' => 'top-right', 'motion' => 'subtle'],
             'lineup_settings' => ['presentation' => 'formation', 'list_seconds' => 9, 'photo_person_ids' => [$hp[0]]],
         ])
             ->assertSessionHas('success');
@@ -251,6 +255,7 @@ describe('panel', function () {
         $channel->refresh();
         expect($channel->game_id)->toBe($game->id)
             ->and($channel->layers)->toBe(['lineup' => true])
+            ->and($channel->appearance['preset'])->toBe('studio')
             ->and($channel->appearance['accent_color'])->toBe('#ff5500')
             ->and($channel->appearance['position'])->toBe('top-right')
             ->and($channel->lineup_settings)->toBe(['presentation' => 'formation', 'list_seconds' => 9, 'photo_person_ids' => [$hp[0]]]);
@@ -328,11 +333,12 @@ describe('control api', function () {
         $this->withToken($token)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", [
             'game_id' => $game->id,
             'layers' => ['lineup' => true],
-            'appearance' => ['accent_color' => '#AABBCC', 'scale' => 1.25, 'motion' => 'none'],
+            'appearance' => ['preset' => 'studio', 'accent_color' => '#AABBCC', 'scale' => 1.25, 'motion' => 'none'],
             'lineup_settings' => ['presentation' => 'sequence', 'list_seconds' => 5, 'photo_person_ids' => [$hp[0]]],
         ])->assertOk()
             ->assertJsonPath('data.game.id', $game->id)
             ->assertJsonPath('data.layers.lineup', true)
+            ->assertJsonPath('data.appearance.preset', 'studio')
             ->assertJsonPath('data.appearance.accent_color', '#aabbcc')
             ->assertJsonPath('data.appearance.scale', 1.25)
             ->assertJsonPath('data.lineup_settings.presentation', 'sequence')
@@ -364,9 +370,9 @@ describe('control api', function () {
 
         $this->withToken($token)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", [
             'game_id' => $foreign->id,
-            'appearance' => ['accent_color' => 'red', 'motion' => 'explosive', 'scale' => 4],
+            'appearance' => ['preset' => 'television', 'accent_color' => 'red', 'motion' => 'explosive', 'scale' => 4],
             'lineup_settings' => ['presentation' => 'carousel', 'list_seconds' => 30],
-        ])->assertUnprocessable()->assertJsonValidationErrors(['game_id', 'appearance.accent_color', 'appearance.motion', 'appearance.scale', 'lineup_settings.presentation', 'lineup_settings.list_seconds']);
+        ])->assertUnprocessable()->assertJsonValidationErrors(['game_id', 'appearance.preset', 'appearance.accent_color', 'appearance.motion', 'appearance.scale', 'lineup_settings.presentation', 'lineup_settings.list_seconds']);
     });
 
     it('refuses photo ids that are not in the game lineup', function () {
