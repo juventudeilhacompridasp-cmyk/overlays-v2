@@ -170,7 +170,7 @@ it('refreshes the channels that have the game on air when the score changes', fu
 
 it('sends a lower third for goals, cards and substitutions of the game on air', function () {
     ['game' => $game, 'home' => $home, 'hp' => $hp] = sheetGame();
-    Person::query()->whereKey($hp[0])->update(['nickname' => 'Rafa']);
+    Person::query()->whereKey($hp[0])->update(['nickname' => 'Rafa', 'birth_date' => '1990-01-01']);
     Team::query()->whereKey($home->team_id)->update(['primary_color' => '#00aa00']);
     $channel = channelFor($game);
     Event::fake([OverlayLowerThird::class]);

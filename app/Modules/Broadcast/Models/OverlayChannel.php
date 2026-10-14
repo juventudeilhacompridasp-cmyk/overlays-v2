@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
  * @property array<string, mixed>|null $appearance
  * @property array<string, mixed>|null $lineup_settings
  * @property array<string, mixed>|null $sponsor_settings
+ * @property array<string, mixed>|null $lower_third_settings
  * @property string|null $control_token_hash
  */
 #[Unguarded]
@@ -51,7 +52,7 @@ class OverlayChannel extends Model
      */
     protected function casts(): array
     {
-        return ['layers' => 'array', 'appearance' => 'array', 'lineup_settings' => 'array', 'sponsor_settings' => 'array'];
+        return ['layers' => 'array', 'appearance' => 'array', 'lineup_settings' => 'array', 'sponsor_settings' => 'array', 'lower_third_settings' => 'array'];
     }
 
     public static function newToken(): string

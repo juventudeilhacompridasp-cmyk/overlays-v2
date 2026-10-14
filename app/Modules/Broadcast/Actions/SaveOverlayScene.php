@@ -6,6 +6,7 @@ use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Models\OverlayScene;
 use App\Modules\Broadcast\Support\OverlayAppearance;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
+use App\Modules\Broadcast\Support\OverlayLowerThirdSettings;
 use App\Modules\Broadcast\Support\OverlaySponsorSettings;
 use InvalidArgumentException;
 
@@ -26,6 +27,7 @@ final class SaveOverlayScene
                 'appearance' => OverlayAppearance::normalize($channel->appearance),
                 'layers' => $channel->layerStates(),
                 'sponsor_settings' => OverlaySponsorSettings::normalize($channel->sponsor_settings),
+                'lower_third_settings' => OverlayLowerThirdSettings::normalize($channel->lower_third_settings),
                 'lineup_settings' => array_diff_key($lineup, ['step' => 0, 'anchor_ms' => 0]),
             ],
         ]);

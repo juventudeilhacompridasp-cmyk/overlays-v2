@@ -28,6 +28,13 @@ Em cada canal, a seção **Visual do overlay** configura o placar:
 Clique em **Aplicar visual**. As fontes que já estão abertas no OBS recebem a mudança por Reverb, sem recarregar. As animações
 usam somente opacidade e transformação para reduzir o trabalho de renderização do Chromium do OBS.
 
+### Lower thirds (faixas de lance)
+Na coluna **Lances (lower thirds)** escolha entre seis estilos — Arena, Barra de TV, Cartão do jogador, Minimal, Esportivo e Flash de
+gol — e sete animações, o tempo no ar (3 a 15 s) e quais lances aparecem (gol, gol contra, cartões, substituição). A faixa traz o jogador
+(nome público, camisa e posição), a equipe e, no gol, o placar, além de avisos como “2º gol do jogador” e “HAT-TRICK”. Use **Testar o
+estilo** para ver cada tipo no OBS, **Jogador em destaque** para apresentar um atleta da escalação e **Aviso manual** para qualquer texto
+(narrador, patrocinador, “Intervalo”). Ocultar *Lances* tira tudo da tela. Detalhes no ADR 0013.
+
 ### Overlays de campeonato
 Na coluna **Campeonato** do canal escolha a tela — tabela, próximos jogos, resultados, artilharia, cartões, jogo em destaque,
 faixa de placares ou campeão —, a edição (sem escolher, vale a do jogo no ar), um modelo de estilo e os ajustes. A **prévia** usa
