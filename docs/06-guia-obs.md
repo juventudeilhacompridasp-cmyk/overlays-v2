@@ -65,6 +65,13 @@ Na seção **Escalação visual**, escolha entre lista, esquema tático ou a seq
 3 a 20 segundos para a transição. O desenho usa a formação e as posições que o gestor da equipe salvou; se uma das equipes
 ainda não tiver todas as posições, o overlay mantém a lista em vez de inventar um esquema.
 
+#### Apresentação por equipe (cartões)
+
+As apresentações **Cartões**, **Jogador a jogador** e **Show completo** (grade e depois cada jogador) mostram uma equipe por vez
+(*Apresentação por equipe*). Escolha o escopo (só titulares ou todos), a faixa de patrocinadores e o modo da passagem:
+**automático** troca de jogador a cada *x* segundos (3 a 30) e **manual** avança com **Anterior / Próximo / Reiniciar**, que
+valem na hora no OBS (também pela API, com `lineup_command`). Mudar jogo, equipe ou modo reinicia a apresentação.
+
 Fotos são desligadas por padrão e habilitadas atleta por atleta. Apenas quem já possui foto cadastrada pode ser selecionado.
 Ao aplicar, uma miniatura privada de curta duração passa a aparecer na lista e no campo para quem tiver a URL do overlay.
 

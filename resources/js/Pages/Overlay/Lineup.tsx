@@ -1,6 +1,8 @@
+import { CardsGrid, IndividualCard } from '@/Components/Overlay/LineupShow';
 import { Realtime } from '@/lib/echo';
 import { LineupSide, OverlayState, useOverlay } from '@/lib/overlay';
-import { overlayMotion, overlayStyle } from '@/lib/overlayVisual';
+import { currentStep, individuals, nextChangeAt } from '@/lib/overlayLineup';
+import { overlayMotion, overlayOrigin, overlayPosition, overlayStyle } from '@/lib/overlayVisual';
 import { Head } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
@@ -97,8 +99,45 @@ function TacticalSide({ side, sport, background, accent }: { side: LineupSide; s
     );
 }
 
+/** Apresentação de uma equipe por vez: grade de cartões e/ou um jogador por vez (automática pelo relógio do servidor, ou manual). */
+function TeamShow({ state, skew }: { state: OverlayState; skew: number }) {
+    const settings = state.lineup_settings;
+    const side = state.lineup?.[settings.team];
+    const [, tick] = useState(0);
+    const players = side ? individuals(side, settings.individual_scope) : [];
+    const serverNow = () => Date.now() - skew;
+
+    // Automático: acorda exatamente quando a etapa muda (todas as telas abertas concordam porque o relógio é o do servidor).
+    useEffect(() => {
+        const at = nextChangeAt(settings, players.length, serverNow());
+        if (at === null) return;
+        const timer = window.setTimeout(() => tick((value) => value + 1), Math.max(50, at - serverNow() + 30));
+
+        return () => window.clearTimeout(timer);
+    }); // eslint-disable-line react-hooks/exhaustive-deps
+
+    if (!side) return null;
+
+    const step = currentStep(settings, players.length, serverNow());
+    const showCards = settings.presentation === 'cards' || (settings.presentation === 'show' && step === 0);
+    const player = settings.presentation === 'individual' ? players[step] : players[step - 1];
+    const appearance = state.appearance;
+
+    return (
+        <div className={`absolute inset-0 flex p-12 ${overlayPosition(appearance.position)}`} data-step={step}>
+            <div style={{ transform: `scale(${appearance.scale})`, transformOrigin: overlayOrigin(appearance.position) }}>
+                {showCards ? (
+                    <CardsGrid side={side} players={players} appearance={appearance} sponsors={state.sponsors} showSponsor={settings.sponsor_banner} />
+                ) : player ? (
+                    <IndividualCard side={side} player={player} appearance={appearance} sponsors={state.sponsors} showSponsor={settings.sponsor_banner} />
+                ) : null}
+            </div>
+        </div>
+    );
+}
+
 export default function Lineup({ token, state: initial, realtime }: { token: string; state: OverlayState; realtime: Realtime }) {
-    const { state } = useOverlay(token, initial, realtime);
+    const { state, skew } = useOverlay(token, initial, realtime);
     const visible = state.lineup !== null;
     const formationAvailable = Boolean(state.lineup?.home.formation_ready && state.lineup?.away.formation_ready);
     const requested = state.lineup_settings.presentation;
@@ -120,7 +159,8 @@ export default function Lineup({ token, state: initial, realtime }: { token: str
     return (
         <div className="fixed inset-0 overflow-hidden font-sans transition-opacity duration-500" style={{ ...overlayStyle(state.appearance), color: state.appearance.text_color, opacity: visible ? 1 : 0, textShadow: '0 1px 2px rgba(0,0,0,.55)' }} data-testid="overlay-lineup" data-visible={visible} data-phase={phase}>
             <Head title="Escalação" />
-            {state.lineup && state.game && (
+            {state.lineup && state.game && ['cards', 'individual', 'show'].includes(requested) && <TeamShow state={state} skew={skew} />}
+            {state.lineup && state.game && !['cards', 'individual', 'show'].includes(requested) && (
                 <div className="absolute inset-0" style={{ transform: `scale(${state.appearance.scale})` }}>
                     <div className={`${common} ${phase === 'list' ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0 pointer-events-none'}`}>
                         <div className={`flex gap-8 ${phase === 'list' ? overlayMotion(state.appearance.motion) : ''}`}>

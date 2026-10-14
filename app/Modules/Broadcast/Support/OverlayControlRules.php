@@ -39,6 +39,12 @@ final class OverlayControlRules
             'lineup_settings' => ['sometimes', 'array'],
             'lineup_settings.presentation' => ['sometimes', 'string', Rule::in(OverlayLineupSettings::PRESENTATIONS)],
             'lineup_settings.list_seconds' => ['sometimes', 'integer', 'between:3,20'],
+            'lineup_settings.team' => ['sometimes', 'string', Rule::in(OverlayLineupSettings::TEAMS)],
+            'lineup_settings.individual_mode' => ['sometimes', 'string', Rule::in(OverlayLineupSettings::INDIVIDUAL_MODES)],
+            'lineup_settings.individual_seconds' => ['sometimes', 'integer', 'between:3,30'],
+            'lineup_settings.individual_scope' => ['sometimes', 'string', Rule::in(OverlayLineupSettings::SCOPES)],
+            'lineup_settings.sponsor_banner' => ['sometimes', 'boolean'],
+            'lineup_command' => ['sometimes', 'string', Rule::in(OverlayLineupSettings::COMMANDS)],
             'lineup_settings.photo_person_ids' => ['sometimes', 'array', 'max:40'],
             'lineup_settings.photo_person_ids.*' => [
                 'string',

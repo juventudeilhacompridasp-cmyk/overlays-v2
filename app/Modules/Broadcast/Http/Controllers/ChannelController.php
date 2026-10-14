@@ -11,7 +11,9 @@ use App\Modules\Broadcast\Models\OverlaySponsor;
 use App\Modules\Broadcast\Support\OverlayAppearance;
 use App\Modules\Broadcast\Support\OverlayControlRules;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
+use App\Modules\Broadcast\Support\OverlayLineupTimeline;
 use App\Modules\Broadcast\Support\OverlaySponsorSettings;
+use App\Modules\Broadcast\Support\OverlayState;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Models\Game;
@@ -75,6 +77,7 @@ class ChannelController extends Controller
                     'lineup_settings' => OverlayLineupSettings::normalize($channel->lineup_settings),
                     'sponsor_settings' => OverlaySponsorSettings::normalize($channel->sponsor_settings),
                     'lineup_people' => $people,
+                    'lineup_steps' => OverlayLineupTimeline::steps(OverlayLineupSettings::normalize($channel->lineup_settings)['presentation'], OverlayState::individualCount($channel)),
                     'has_control_token' => $channel->control_token_hash !== null,
                     'control_url' => route('api.v1.overlay-channels.state.update', ['channel' => $channel]),
                     'overlays' => collect(OverlayChannel::OVERLAYS)->map(fn (string $title, string $slug) => [

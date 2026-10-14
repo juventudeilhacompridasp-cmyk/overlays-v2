@@ -223,10 +223,16 @@ return [
                     'seconds' => ['type' => 'integer', 'minimum' => 3, 'maximum' => 30],
                 ]],
                 'lineup_settings' => ['type' => 'object', 'properties' => [
-                    'presentation' => ['type' => 'string', 'enum' => ['sequence', 'list', 'formation']],
+                    'presentation' => ['type' => 'string', 'enum' => ['sequence', 'list', 'formation', 'cards', 'individual', 'show'], 'description' => '`cards` = grade de cartões; `individual` = um jogador por vez; `show` = grade e depois cada jogador.'],
                     'list_seconds' => ['type' => 'integer'],
                     'photo_person_ids' => ['type' => 'array', 'items' => ['type' => 'string']],
+                    'team' => ['type' => 'string', 'enum' => ['home', 'away'], 'description' => 'Equipe apresentada em `cards`, `individual` e `show`.'],
+                    'individual_mode' => ['type' => 'string', 'enum' => ['auto', 'manual'], 'description' => 'Automático = troca de jogador a cada `individual_seconds`; manual = avança com `lineup_command`.'],
+                    'individual_seconds' => ['type' => 'integer', 'minimum' => 3, 'maximum' => 30],
+                    'individual_scope' => ['type' => 'string', 'enum' => ['starters', 'all']],
+                    'sponsor_banner' => ['type' => 'boolean', 'description' => 'Mostra a faixa de patrocinadores nos cartões.'],
                 ]],
+                'lineup_command' => ['type' => 'string', 'enum' => ['next', 'previous', 'reset'], 'description' => 'Passa a apresentação da escalação para a etapa seguinte/anterior ou a reinicia (o servidor calcula a etapa).'],
             ]],
             'example' => [
                 'game_id' => '01JABCDEF0123456789XYZ0001',

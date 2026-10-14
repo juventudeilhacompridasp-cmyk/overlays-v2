@@ -42,9 +42,16 @@ const catalogFonts: { value: string; label: string }[] = [
 ];
 
 interface LineupSettings {
-    presentation: 'sequence' | 'list' | 'formation';
+    presentation: 'sequence' | 'list' | 'formation' | 'cards' | 'individual' | 'show';
     list_seconds: number;
     photo_person_ids: string[];
+    team: 'home' | 'away';
+    individual_mode: 'auto' | 'manual';
+    individual_seconds: number;
+    individual_scope: 'starters' | 'all';
+    sponsor_banner: boolean;
+    step: number;
+    anchor_ms: number;
 }
 
 interface LineupPerson {
@@ -77,6 +84,7 @@ interface Channel {
     appearance: Appearance;
     lineup_settings: LineupSettings;
     lineup_people: LineupPerson[];
+    lineup_steps: number;
     sponsor_settings: SponsorSettings;
     has_control_token: boolean;
     control_url: string;
@@ -170,7 +178,7 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
-    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; sponsor_settings?: Partial<SponsorSettings> }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
+    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings> }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
 
     // Comandos de exibir/ocultar: o botão muda no clique e a mudança segue direto para o OBS; se o servidor recusar, volta ao estado real.
     const [layers, setLayers] = useState(channel.layers);
@@ -229,9 +237,9 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                 ) : undefined
             }
         >
-            <div className="space-y-5">
-                <OverlayPreviewStudio overlays={channel.overlays} hasGame={channel.game_id !== null} layers={channel.layers} />
-
+            <div className="-mx-1 flex snap-x gap-4 overflow-x-auto px-1 pb-3" data-testid="broadcast-board">
+                    <section className="w-[26rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Ao vivo">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Ao vivo</h3>
                 <div>
                     <Field label="Jogo no ar" htmlFor={`game-${channel.id}`} hint="Todas as telas deste canal passam a acompanhar este jogo, sem mexer no OBS.">
                         <Select id={`game-${channel.id}`} disabled={!canOperate} value={channel.game_id ?? ''} onChange={(event) => patch({ game_id: event.target.value || null })}>
@@ -245,8 +253,32 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                     </Field>
                 </div>
 
-                <ScenesBlock channel={channel} scenes={scenes} limit={sceneLimit} canManage={canManage} canOperate={canOperate} />
+                <div>
+                    <div className="mb-2 text-sm font-medium text-gray-700">No ar agora</div>
+                    <div className="flex flex-wrap gap-2">
+                        {(Object.keys(layerNames) as LayerKey[]).map((layer) => (
+                            <Button
+                                key={layer}
+                                variant={layers[layer] ? 'primary' : 'secondary'}
+                                disabled={!canOperate || (layersNeedingGame.includes(layer) && !channel.game_id)}
+                                aria-pressed={layers[layer]}
+                                onClick={() => toggleLayer(layer)}
+                            >
+                                {layers[layer] ? `Ocultar ${layerNames[layer].toLowerCase()}` : `Mostrar ${layerNames[layer].toLowerCase()}`}
+                            </Button>
+                        ))}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Cada clique vale na hora no OBS, sem esperar. {!channel.game_id && 'Escolha um jogo no ar para liberar a escalação e a tabela.'}</p>
+                </div>
 
+                <ScenesBlock channel={channel} scenes={scenes} limit={sceneLimit} canManage={canManage} canOperate={canOperate} />
+                    </section>
+                    <section className="w-[44rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Pré-visualização">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Pré-visualização</h3>
+                <OverlayPreviewStudio overlays={channel.overlays} hasGame={channel.game_id !== null} layers={channel.layers} />
+                    </section>
+                    <section className="w-[26rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Visual">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Visual</h3>
                 <div className="rounded-lg border border-gray-200 p-4">
                     <div className="mb-3">
                         <div className="font-medium text-gray-900">Visual do overlay</div>
@@ -306,7 +338,9 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                     </div>
                     {canOperate && <Button small className="mt-3" onClick={() => patch({ appearance })}>Aplicar visual</Button>}
                 </div>
-
+                    </section>
+                    <section className="w-[30rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Escalação">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Escalação</h3>
                 <div className="rounded-lg border border-gray-200 p-4">
                     <div className="mb-3">
                         <div className="font-medium text-gray-900">Escalação visual</div>
@@ -318,12 +352,64 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                                 <option value="sequence">Lista e depois esquema tático</option>
                                 <option value="list">Somente lista</option>
                                 <option value="formation">Somente esquema tático</option>
+                                <option value="cards">Cartões da equipe (titulares + comissão)</option>
+                                <option value="individual">Jogador por jogador</option>
+                                <option value="show">Cartões e depois jogador por jogador</option>
                             </Select>
                         </Field>
                         <Field label={`Lista antes da transição · ${lineupSettings.list_seconds} s`} htmlFor={`lineup-seconds-${channel.id}`}>
                             <Input id={`lineup-seconds-${channel.id}`} type="range" min="3" max="20" step="1" disabled={!canOperate || lineupSettings.presentation !== 'sequence'} value={lineupSettings.list_seconds} onChange={(event) => setLineupSettings({ ...lineupSettings, list_seconds: Number(event.target.value) })} />
                         </Field>
                     </div>
+
+                    {['cards', 'individual', 'show'].includes(lineupSettings.presentation) && (
+                        <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+                            <div className="text-sm font-medium text-gray-800">Apresentação por equipe</div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                <Field label="Equipe no ar" htmlFor={`lineup-team-${channel.id}`}>
+                                    <Select id={`lineup-team-${channel.id}`} disabled={!canOperate} value={lineupSettings.team} onChange={(event) => setLineupSettings({ ...lineupSettings, team: event.target.value as LineupSettings['team'] })}>
+                                        <option value="home">Mandante</option>
+                                        <option value="away">Visitante</option>
+                                    </Select>
+                                </Field>
+                                <Field label="Quem aparece um a um" htmlFor={`lineup-scope-${channel.id}`}>
+                                    <Select id={`lineup-scope-${channel.id}`} disabled={!canOperate} value={lineupSettings.individual_scope} onChange={(event) => setLineupSettings({ ...lineupSettings, individual_scope: event.target.value as LineupSettings['individual_scope'] })}>
+                                        <option value="starters">Titulares e técnico</option>
+                                        <option value="all">Titulares, reservas e técnico</option>
+                                    </Select>
+                                </Field>
+                                {lineupSettings.presentation !== 'cards' && (
+                                    <>
+                                        <Field label="Passagem dos jogadores" htmlFor={`lineup-mode-${channel.id}`}>
+                                            <Select id={`lineup-mode-${channel.id}`} disabled={!canOperate} value={lineupSettings.individual_mode} onChange={(event) => setLineupSettings({ ...lineupSettings, individual_mode: event.target.value as LineupSettings['individual_mode'] })}>
+                                                <option value="auto">Automática, a cada X segundos</option>
+                                                <option value="manual">Manual (o operador passa um a um)</option>
+                                            </Select>
+                                        </Field>
+                                        <Field label={`Tempo de cada jogador · ${lineupSettings.individual_seconds} s`} htmlFor={`lineup-individual-${channel.id}`}>
+                                            <Input id={`lineup-individual-${channel.id}`} type="range" min="3" max="30" step="1" disabled={!canOperate || lineupSettings.individual_mode !== 'auto'} value={lineupSettings.individual_seconds} onChange={(event) => setLineupSettings({ ...lineupSettings, individual_seconds: Number(event.target.value) })} />
+                                        </Field>
+                                    </>
+                                )}
+                            </div>
+                            {lineupSettings.presentation === 'show' && <p className="text-xs text-gray-500">Os cartões ficam {lineupSettings.list_seconds} s no ar antes do primeiro jogador (ajuste em "Lista antes da transição").</p>}
+                            <label className="flex items-center gap-2 text-sm text-gray-700">
+                                <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={lineupSettings.sponsor_banner} onChange={(event) => setLineupSettings({ ...lineupSettings, sponsor_banner: event.target.checked })} />
+                                Mostrar a faixa de patrocinador no rodapé
+                            </label>
+                            {lineupSettings.presentation !== 'cards' && canOperate && (
+                                <div className="rounded-md bg-gray-50 p-3">
+                                    <div className="mb-2 text-sm font-medium text-gray-800">Passar ao vivo{channel.lineup_settings.individual_mode === 'manual' ? ` · etapa ${channel.lineup_settings.step + 1} de ${channel.lineup_steps}` : ''}</div>
+                                    <div className="flex flex-wrap gap-2">
+                                        <Button small variant="secondary" disabled={!channel.game_id} onClick={() => patch({ lineup_command: 'previous' })}>← Anterior</Button>
+                                        <Button small disabled={!channel.game_id} onClick={() => patch({ lineup_command: 'next' })}>Próximo →</Button>
+                                        <Button small variant="secondary" disabled={!channel.game_id} onClick={() => patch({ lineup_command: 'reset' })}>↺ Reiniciar</Button>
+                                    </div>
+                                    <p className="mt-1 text-xs text-gray-500">Vale na hora no OBS, também no modo automático (pula para o jogador anterior ou seguinte e segue a contagem).</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="mt-4 border-t border-gray-100 pt-4">
                         <div className="text-sm font-medium text-gray-800">Fotos no ar</div>
@@ -353,25 +439,9 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                     </div>
                     {canOperate && <Button small className="mt-4" onClick={() => patch({ lineup_settings: lineupSettings })}>Aplicar escalação</Button>}
                 </div>
-
-                <div>
-                    <div className="mb-2 text-sm font-medium text-gray-700">No ar agora</div>
-                    <div className="flex flex-wrap gap-2">
-                        {(Object.keys(layerNames) as LayerKey[]).map((layer) => (
-                            <Button
-                                key={layer}
-                                variant={layers[layer] ? 'primary' : 'secondary'}
-                                disabled={!canOperate || (layersNeedingGame.includes(layer) && !channel.game_id)}
-                                aria-pressed={layers[layer]}
-                                onClick={() => toggleLayer(layer)}
-                            >
-                                {layers[layer] ? `Ocultar ${layerNames[layer].toLowerCase()}` : `Mostrar ${layerNames[layer].toLowerCase()}`}
-                            </Button>
-                        ))}
-                    </div>
-                    <p className="mt-1 text-xs text-gray-500">Cada clique vale na hora no OBS, sem esperar. {!channel.game_id && 'Escolha um jogo no ar para liberar a escalação e a tabela.'}</p>
-                </div>
-
+                    </section>
+                    <section className="w-[26rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Patrocinadores">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Patrocinadores</h3>
                 <div className="rounded-lg border border-gray-200 p-4">
                     <div className="mb-3">
                         <div className="font-medium text-gray-900">Patrocinadores</div>
@@ -391,8 +461,10 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                     </div>
                     {canOperate && <Button small className="mt-3" onClick={() => patch({ sponsor_settings: sponsorSettings })}>Aplicar patrocinadores</Button>}
                 </div>
-
-                {canManage && (
+                    </section>
+                    {canManage && (
+                    <section className="w-[26rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="API">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">API</h3>
                     <div className="rounded-lg border border-gray-200 p-4">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
@@ -420,8 +492,9 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                             </div>
                         )}
                     </div>
-                )}
-
+                
+                    </section>
+                    )}
             </div>
         </Card>
     );

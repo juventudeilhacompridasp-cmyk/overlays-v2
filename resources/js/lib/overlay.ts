@@ -53,16 +53,28 @@ export interface LineupSide {
     color: string | null;
     formation: string | null;
     formation_ready: boolean;
-    starters: { shirt: number | null; name: string; position: string | null; position_label: string | null; x: number | null; y: number | null; captain: boolean; photo_url: string | null }[];
-    bench: { shirt: number | null; name: string; captain: boolean; photo_url: string | null }[];
+    starters: { shirt: number | null; name: string; position: string | null; position_label: string | null; x: number | null; y: number | null; captain: boolean; photo_url: string | null; photo_large_url: string | null }[];
+    bench: { shirt: number | null; name: string; captain: boolean; photo_url: string | null; photo_large_url: string | null }[];
     coach: string | null;
+}
+
+export interface LineupPublicSettings {
+    presentation: 'sequence' | 'list' | 'formation' | 'cards' | 'individual' | 'show';
+    list_seconds: number;
+    team: 'home' | 'away';
+    individual_mode: 'auto' | 'manual';
+    individual_seconds: number;
+    individual_scope: 'starters' | 'all';
+    sponsor_banner: boolean;
+    step: number;
+    anchor_ms: number;
 }
 
 export interface OverlayState {
     channel: string;
     appearance: OverlayAppearance;
     font_face: OverlayFontFace | null;
-    lineup_settings: { presentation: 'sequence' | 'list' | 'formation'; list_seconds: number };
+    lineup_settings: LineupPublicSettings;
     sponsors: { enabled: boolean; seconds: number; items: { name: string; logo_url: string }[] };
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     game: OverlayGame | null;
