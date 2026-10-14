@@ -223,6 +223,18 @@ return [
                     'subtitle' => ['type' => 'string', 'maxLength' => 80],
                     'person_id' => ['type' => 'string'],
                 ]],
+                'stoppage_minutes' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 15, 'description' => 'Acréscimos mostrados ao lado do relógio do placar (0 remove). Trocar o jogo no ar zera.'],
+                'screens_live' => ['type' => 'object', 'description' => 'Mostra (true) ou oculta (false) ao vivo as telas extras: `pregame` (cartela pré-jogo), `compare` (comparativo de equipes), `cartela` (cartela de transmissão), `summary` (resumo do jogo) e `bracket` (chaveamento do mata-mata) e `social` (chamada para redes sociais).', 'additionalProperties' => ['type' => 'boolean']],
+                'screen_settings' => ['type' => 'object', 'description' => 'Texto da cartela de transmissão. `minutes` (0 a 180) inicia uma contagem regressiva; 0 a remove.', 'properties' => [
+                    'title' => ['type' => 'string', 'maxLength' => 60],
+                    'subtitle' => ['type' => 'string', 'maxLength' => 80],
+                    'minutes' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 180],
+                    'social' => ['type' => 'object', 'description' => 'Chamada para redes sociais: até 4 linhas (`items[].label`/`value`) e `url` https para o QR code.', 'properties' => [
+                        'items' => ['type' => 'array', 'maxItems' => 4, 'items' => ['type' => 'object', 'properties' => ['label' => ['type' => 'string', 'maxLength' => 20], 'value' => ['type' => 'string', 'maxLength' => 60]]]],
+                        'url' => ['type' => ['string', 'null'], 'maxLength' => 200],
+                    ]],
+                    'mvp_person_id' => ['type' => ['string', 'null'], 'description' => 'Craque do jogo (atleta da escalação) mostrado no resumo; vale só para o jogo no ar.'],
+                ]],
                 'championship_live' => ['type' => 'object', 'description' => 'Mostra (true) ou oculta (false) ao vivo as telas de campeonato abertas com `live=1` na URL. Chaves: standings, fixtures, results, scorers, discipline, matchcard, ticker, champion.', 'additionalProperties' => ['type' => 'boolean']],
                 'appearance' => ['type' => 'object', 'properties' => [
                     'preset' => ['type' => 'string', 'enum' => ['arena', 'classic', 'minimal']],
@@ -231,6 +243,7 @@ return [
                     'text_color' => ['type' => 'string'],
                     'position' => ['type' => 'string', 'enum' => ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right']],
                     'scale' => ['type' => 'number'],
+                    'scorers' => ['type' => 'boolean', 'description' => 'Mostra os autores dos gols sob o placar (esportes de gols).'],
                     'layout' => ['type' => 'string', 'enum' => ['bar', 'stacked', 'compact', 'wide'], 'description' => 'Formato do placar: barra, equipes empilhadas, pílula compacta ou faixa de ponta a ponta.'],
                     'motion' => ['type' => 'string', 'enum' => ['dynamic', 'subtle', 'none']],
                     'font' => ['type' => 'string', 'description' => 'Fonte do catálogo (system, inter, montserrat, oswald, bebas, anton, barlow, roboto-condensed, archivo, playfair, marker) ou ID de uma fonte própria da organização.'],

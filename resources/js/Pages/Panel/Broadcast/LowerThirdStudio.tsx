@@ -9,6 +9,16 @@ interface Person {
     team: string;
 }
 
+/** Avisos de um clique (aparecem direto no OBS). */
+const QUICK_NOTICES: { title: string; subtitle?: string }[] = [
+    { title: 'VAR', subtitle: 'Lance em análise' },
+    { title: 'PÊNALTI', subtitle: 'Penalidade máxima' },
+    { title: 'CARTÃO EM ANÁLISE' },
+    { title: 'JOGO PARALISADO', subtitle: 'Aguarde' },
+    { title: 'INTERVALO' },
+    { title: 'FIM DE JOGO' },
+];
+
 type Show = { kind: string; title?: string; subtitle?: string; person_id?: string };
 
 export default function LowerThirdStudio({ channelId, settings: saved, people, hasGame, visible, canOperate, patch }: {
@@ -102,6 +112,11 @@ export default function LowerThirdStudio({ channelId, settings: saved, people, h
                 <div className="grid gap-2 sm:grid-cols-2">
                     <Field label="Título" htmlFor={`lt-title-${channelId}`}><Input id={`lt-title-${channelId}`} maxLength={60} disabled={blocked} value={title} onChange={(event) => setTitle(event.target.value)} /></Field>
                     <Field label="Subtítulo (opcional)" htmlFor={`lt-subtitle-${channelId}`}><Input id={`lt-subtitle-${channelId}`} maxLength={80} disabled={blocked} value={subtitle} onChange={(event) => setSubtitle(event.target.value)} /></Field>
+                </div>
+                <div className="mb-2 flex flex-wrap gap-2">
+                    {QUICK_NOTICES.map((notice) => (
+                        <Button key={notice.title} small variant="secondary" disabled={blocked} onClick={() => patch({ lower_third_show: { kind: 'custom', title: notice.title, subtitle: notice.subtitle } })}>{notice.title}</Button>
+                    ))}
                 </div>
                 <Button small className="mt-2" disabled={blocked || title.trim() === ''} onClick={() => patch({ lower_third_show: { kind: 'custom', title: title.trim(), subtitle: subtitle.trim() || undefined } })}>Mostrar aviso</Button>
             </div>

@@ -20,6 +20,7 @@ export interface OverlayAppearance {
     scale: number;
     motion: 'dynamic' | 'subtle' | 'none';
     layout: 'bar' | 'stacked' | 'compact' | 'wide';
+    scorers: boolean;
     font: string;
 }
 
@@ -40,6 +41,11 @@ export interface OverlayGame {
     away_score: number;
     home_penalties: number | null;
     away_penalties: number | null;
+    scheduled_at: string | null;
+    venue: string | null;
+    competition: string;
+    division: string;
+    stage: string;
     clock: GameClock;
     sport: string;
     score_model: string;
@@ -73,6 +79,14 @@ export interface LineupPublicSettings {
     anchor_ms: number;
 }
 
+export interface BracketSide {
+    name: string;
+    short: string | null;
+    logo: string | null;
+    score: number | null;
+    winner: boolean;
+}
+
 export interface OverlayState {
     channel: string;
     appearance: OverlayAppearance;
@@ -82,6 +96,25 @@ export interface OverlayState {
     lower_third_settings: LowerThirdSettings;
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     championship: Record<string, boolean>;
+    stoppage: number;
+    social: { items: { label: string; value: string }[]; url: string | null };
+    screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean; social: boolean };
+    cartela: { title: string; subtitle: string; until_ms: number | null };
+    summary: {
+        headline: string;
+        cards: { side: 'home' | 'away'; kind: string; player: string | null; minute: number | null }[] | null;
+        mvp: { name: string; shirt: number | null; team: string | null; side: 'home' | 'away' | null } | null;
+    } | null;
+    bracket: {
+        title: string;
+        rounds: { label: string; ties: { a: BracketSide; b: BracketSide; decided: boolean; live: boolean; penalties: { a: number; b: number } | null }[] }[];
+        champion: string | null;
+    } | null;
+    compare: {
+        standings: { title: string; home: { position: number; points: number; played: number; of: number } | null; away: { position: number; points: number; played: number; of: number } | null } | null;
+        form: { home: string[]; away: string[] } | null;
+        head_to_head: { home_wins: number; draws: number; away_wins: number } | null;
+    } | null;
     game: OverlayGame | null;
     lineup: { home: LineupSide; away: LineupSide } | null;
     standings: {

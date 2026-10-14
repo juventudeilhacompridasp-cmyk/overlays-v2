@@ -58,6 +58,7 @@ it('builds the overlay state with the score, the clock and the logos', function 
             'motion' => 'dynamic',
             'font' => 'system',
             'layout' => 'bar',
+            'scorers' => false,
         ])
         ->and($state['lineup_settings'])->toBe(['presentation' => 'sequence', 'list_seconds' => 6, 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'step' => 0, 'anchor_ms' => 0])
         ->and($state['game']['id'])->toBe($game->id)
@@ -263,7 +264,13 @@ describe('panel', function () {
             ->where('channels.0.overlays.2.slug', 'escalacao')
             ->where('channels.0.overlays.3.slug', 'tabela')
             ->where('channels.0.overlays.4.slug', 'patrocinadores')
-            ->has('channels.0.overlays', 5)
+            ->where('channels.0.overlays.5.slug', 'prejogo')
+            ->where('channels.0.overlays.6.slug', 'comparativo')
+            ->where('channels.0.overlays.7.slug', 'cartela')
+            ->where('channels.0.overlays.8.slug', 'resumo')
+            ->where('channels.0.overlays.9.slug', 'chaveamento')
+            ->where('channels.0.overlays.10.slug', 'social')
+            ->has('channels.0.overlays', 11)
             ->where('channels.0.appearance.preset', 'arena')
             ->where('channels.0.lineup_settings.presentation', 'sequence')
             ->where('channels.0.lineup_settings.photo_person_ids', [])
