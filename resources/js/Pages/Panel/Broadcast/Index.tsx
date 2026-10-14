@@ -237,9 +237,9 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                 ) : undefined
             }
         >
-            <div className="space-y-5">
-                <OverlayPreviewStudio overlays={channel.overlays} hasGame={channel.game_id !== null} layers={channel.layers} />
-
+            <div className="-mx-1 flex snap-x gap-4 overflow-x-auto px-1 pb-3" data-testid="broadcast-board">
+                    <section className="w-[26rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Ao vivo">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Ao vivo</h3>
                 <div>
                     <Field label="Jogo no ar" htmlFor={`game-${channel.id}`} hint="Todas as telas deste canal passam a acompanhar este jogo, sem mexer no OBS.">
                         <Select id={`game-${channel.id}`} disabled={!canOperate} value={channel.game_id ?? ''} onChange={(event) => patch({ game_id: event.target.value || null })}>
@@ -253,8 +253,32 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                     </Field>
                 </div>
 
-                <ScenesBlock channel={channel} scenes={scenes} limit={sceneLimit} canManage={canManage} canOperate={canOperate} />
+                <div>
+                    <div className="mb-2 text-sm font-medium text-gray-700">No ar agora</div>
+                    <div className="flex flex-wrap gap-2">
+                        {(Object.keys(layerNames) as LayerKey[]).map((layer) => (
+                            <Button
+                                key={layer}
+                                variant={layers[layer] ? 'primary' : 'secondary'}
+                                disabled={!canOperate || (layersNeedingGame.includes(layer) && !channel.game_id)}
+                                aria-pressed={layers[layer]}
+                                onClick={() => toggleLayer(layer)}
+                            >
+                                {layers[layer] ? `Ocultar ${layerNames[layer].toLowerCase()}` : `Mostrar ${layerNames[layer].toLowerCase()}`}
+                            </Button>
+                        ))}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Cada clique vale na hora no OBS, sem esperar. {!channel.game_id && 'Escolha um jogo no ar para liberar a escalação e a tabela.'}</p>
+                </div>
 
+                <ScenesBlock channel={channel} scenes={scenes} limit={sceneLimit} canManage={canManage} canOperate={canOperate} />
+                    </section>
+                    <section className="w-[44rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Pré-visualização">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Pré-visualização</h3>
+                <OverlayPreviewStudio overlays={channel.overlays} hasGame={channel.game_id !== null} layers={channel.layers} />
+                    </section>
+                    <section className="w-[26rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Visual">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Visual</h3>
                 <div className="rounded-lg border border-gray-200 p-4">
                     <div className="mb-3">
                         <div className="font-medium text-gray-900">Visual do overlay</div>
@@ -314,7 +338,9 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                     </div>
                     {canOperate && <Button small className="mt-3" onClick={() => patch({ appearance })}>Aplicar visual</Button>}
                 </div>
-
+                    </section>
+                    <section className="w-[30rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Escalação">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Escalação</h3>
                 <div className="rounded-lg border border-gray-200 p-4">
                     <div className="mb-3">
                         <div className="font-medium text-gray-900">Escalação visual</div>
@@ -413,25 +439,9 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                     </div>
                     {canOperate && <Button small className="mt-4" onClick={() => patch({ lineup_settings: lineupSettings })}>Aplicar escalação</Button>}
                 </div>
-
-                <div>
-                    <div className="mb-2 text-sm font-medium text-gray-700">No ar agora</div>
-                    <div className="flex flex-wrap gap-2">
-                        {(Object.keys(layerNames) as LayerKey[]).map((layer) => (
-                            <Button
-                                key={layer}
-                                variant={layers[layer] ? 'primary' : 'secondary'}
-                                disabled={!canOperate || (layersNeedingGame.includes(layer) && !channel.game_id)}
-                                aria-pressed={layers[layer]}
-                                onClick={() => toggleLayer(layer)}
-                            >
-                                {layers[layer] ? `Ocultar ${layerNames[layer].toLowerCase()}` : `Mostrar ${layerNames[layer].toLowerCase()}`}
-                            </Button>
-                        ))}
-                    </div>
-                    <p className="mt-1 text-xs text-gray-500">Cada clique vale na hora no OBS, sem esperar. {!channel.game_id && 'Escolha um jogo no ar para liberar a escalação e a tabela.'}</p>
-                </div>
-
+                    </section>
+                    <section className="w-[26rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Patrocinadores">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Patrocinadores</h3>
                 <div className="rounded-lg border border-gray-200 p-4">
                     <div className="mb-3">
                         <div className="font-medium text-gray-900">Patrocinadores</div>
@@ -451,8 +461,10 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                     </div>
                     {canOperate && <Button small className="mt-3" onClick={() => patch({ sponsor_settings: sponsorSettings })}>Aplicar patrocinadores</Button>}
                 </div>
-
-                {canManage && (
+                    </section>
+                    {canManage && (
+                    <section className="w-[26rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="API">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">API</h3>
                     <div className="rounded-lg border border-gray-200 p-4">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
@@ -480,8 +492,9 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                             </div>
                         )}
                     </div>
-                )}
-
+                
+                    </section>
+                    )}
             </div>
         </Card>
     );
