@@ -12,6 +12,13 @@ export function lineupLook(settings: OverlayState['lineup_settings']): LineupLoo
 
 const zoomOf = (look: LineupLook): CSSProperties | undefined => (look.text_scale === 100 ? undefined : { zoom: look.text_scale / 100 });
 
+/** Tamanho do nome no cartão individual: nomes mais longos encolhem em vez de serem cortados com reticências. */
+export function nameSize(name: string): string {
+    const length = name.length;
+
+    return length <= 9 ? 'text-7xl' : length <= 12 ? 'text-6xl' : length <= 16 ? 'text-5xl' : 'text-4xl';
+}
+
 const pad = (shirt: number | null) => (shirt === null ? '' : String(shirt).padStart(2, '0'));
 
 function Silhouette() {
@@ -78,7 +85,7 @@ export function IndividualCard({ side, player, appearance, sponsors, showSponsor
                     {(player.position ?? player.position_label) && (
                         <span className="w-fit px-3 py-1 text-xl font-black uppercase tracking-[0.2em]" style={{ backgroundColor: light ? '#7f1d1d' : color, color: light ? '#ffffff' : undefined }}>{player.position ?? player.position_label}</span>
                     )}
-                    <span className={`truncate text-7xl font-black uppercase leading-none ${look.layout === 'matchday' ? 'font-serif' : ''}`}>{player.name}</span>
+                    <span className={`truncate font-black uppercase leading-none ${nameSize(player.name)} ${look.layout === 'matchday' ? 'font-serif' : ''}`} data-testid="lineup-individual-name">{player.name}</span>
                     {player.captain && <span className="text-xl font-black uppercase tracking-widest text-amber-500">Capitão</span>}
                 </div>
             </div>
@@ -158,7 +165,7 @@ export function FormationCard({ side, sport, appearance, look, numberOnly, zoom,
                 {side.formation && <span className="border-l-4 pl-3 text-3xl font-black tabular-nums" style={{ borderColor: appearance.accent_color, color: skin.ink ?? appearance.accent_color }} data-testid="lineup-formation-name">{side.formation}</span>}
             </header>
             <div className="grid grid-cols-[auto_1fr] items-center gap-6 px-5 pb-5">
-                <FormationPitch side={side} sport={sport} accent={appearance.accent_color} numberOnly={numberOnly} zoom={zoom} className={court ? 'h-[26rem] w-[34rem]' : 'h-[36rem] w-[27rem]'} />
+                <FormationPitch side={side} sport={sport} accent={appearance.accent_color} numberOnly={numberOnly} zoom={zoom} className={court ? 'h-[26rem] w-[34rem]' : 'h-[36rem] w-[27rem]'} compact />
                 <ol className="min-w-0">
                     {side.starters.map((player, index) => (
                         <li key={`${player.shirt}-${player.name}-${index}`} className={`flex min-w-0 items-center gap-3 border-b py-1.5 ${light ? 'border-stone-300' : 'border-white/10'}`}>

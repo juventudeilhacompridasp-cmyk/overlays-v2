@@ -63,7 +63,7 @@ const TEAM_PRESENTATIONS = ['cards', 'individual', 'show', 'full'];
  * Apresentação de uma equipe por vez. A etapa (grade, esquema tático ou jogador) sai do relógio do servidor (ou do passo manual)
  * e a troca entre etapas é animada pelo palco; a faixa de patrocinadores fica fixa por baixo e não reinicia a cada etapa.
  */
-function TeamShow({ state, skew }: { state: OverlayState; skew: number }) {
+export function TeamShow({ state, skew }: { state: OverlayState; skew: number }) {
     const settings = state.lineup_settings;
     const side = state.lineup?.[settings.team];
     const [, tick] = useState(0);

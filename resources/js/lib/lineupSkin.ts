@@ -90,7 +90,7 @@ export function lineupSkin(look: LineupLook, background: string, accent: string)
             };
         case 'poster':
             return {
-                ...base, grid: 'grid-cols-5', photo: 'aspect-[3/4]', name,
+                ...base, grid: 'grid-cols-6', photo: 'aspect-[3/4]', name,
                 panel: { className: 'overflow-hidden rounded-xl border border-white/10 shadow-2xl', style: { background: fade(background, look.surface), ...radius } },
                 card: { className: 'overflow-hidden rounded-xl border-2 shadow-xl lineup-foil', style: (color) => ({ borderColor: '#facc15', background: `linear-gradient(145deg, ${color}66, ${background} 60%, ${color}33)` }) },
                 number: { className: 'absolute right-1 top-1 rounded-full px-2.5 py-1 text-2xl font-black tabular-nums text-slate-900', style: () => ({ backgroundColor: '#facc15' }) },
@@ -104,14 +104,14 @@ export function lineupSkin(look: LineupLook, background: string, accent: string)
             };
         case 'stadium':
             return {
-                ...base, grid: 'grid-cols-4', photo: 'aspect-[4/3]', name: 'block truncate text-xl font-black uppercase tracking-widest text-amber-300',
+                ...base, grid: 'grid-cols-5', photo: 'aspect-[4/3]', name: 'block truncate text-xl font-black uppercase tracking-widest text-amber-300',
                 panel: { className: 'overflow-hidden rounded-md border-4 border-neutral-800 shadow-2xl', style: { background: fade('#050505', look.surface), ...radius } },
                 card: { className: 'overflow-hidden rounded-sm border border-amber-400/30', style: () => ({ background: '#0b0b0b' }) },
                 number: { className: 'absolute bottom-1 left-1 px-2 text-4xl font-black tabular-nums text-amber-300', style: () => ({ textShadow: '0 0 14px rgba(252,211,77,.9)' }) },
             };
         case 'matchday':
             return {
-                ...base, ink: '#1c1917', grid: 'grid-cols-5', photo: 'aspect-[4/5]', name: 'block truncate font-serif text-lg font-bold uppercase',
+                ...base, ink: '#1c1917', grid: 'grid-cols-6', photo: 'aspect-[4/5]', name: 'block truncate font-serif text-lg font-bold uppercase',
                 panel: { className: 'overflow-hidden rounded-sm border border-stone-400 font-serif shadow-2xl', style: { background: fade('#f5efe0', look.surface), color: '#1c1917', ...radius } },
                 card: { className: 'overflow-hidden border border-stone-400', style: () => ({ background: '#fffaf0' }) },
                 number: { className: 'absolute bottom-1 left-1 px-2 py-0.5 font-serif text-2xl font-black tabular-nums text-white', style: () => ({ backgroundColor: '#7f1d1d' }) },
