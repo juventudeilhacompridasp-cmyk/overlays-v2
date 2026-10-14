@@ -129,7 +129,7 @@ final class LowerThirdBanner
             'title' => $title,
             'subtitle' => $kind === 'substitution' ? '↑ Reserva   ↓ '.$name : $name,
             'minute' => 37,
-            'player' => $kind === 'substitution' ? null : ['name' => $name, 'shirt' => $row?->shirt_number ?? 10, 'position' => null],
+            'player' => $kind === 'substitution' ? null : ['name' => $name, 'shirt' => $row->shirt_number ?? 10, 'position' => null],
             'score' => $isGoal ? self::score($game) : null,
             'detail' => $isGoal ? '1º gol do jogador na partida' : null,
         ], $game->homeEntry?->team);
