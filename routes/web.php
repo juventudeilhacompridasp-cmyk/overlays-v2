@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Middleware\PrivateNoIndex;
+use App\Modules\Broadcast\Http\Controllers\ChampionshipOverlayController;
 use App\Modules\Broadcast\Http\Controllers\OverlayController;
 use App\Modules\Market\Http\Controllers\SignupController;
 use App\Modules\Matches\Http\Controllers\PublicGameController;
@@ -63,6 +64,8 @@ Route::middleware(['throttle:60,1', 'feature:online_registration'])->group(funct
 // Overlays do OBS (sem login; o token da URL é o acesso). A tela "estado" é a contingência sem WebSocket.
 Route::get('/overlay/{channel:token}/estado', [OverlayController::class, 'state'])->name('overlay.state')->middleware(['throttle:120,1', 'feature:overlays']);
 Route::get('/overlay/{channel:token}/fonte/{font}', [OverlayController::class, 'font'])->name('overlay.font')->middleware(['throttle:120,1', 'feature:overlays']);
+Route::get('/overlay/{channel:token}/campeonato/dados', [ChampionshipOverlayController::class, 'data'])->name('overlay.championship.data')->middleware(['throttle:120,1', 'feature:overlays']);
+Route::get('/overlay/{channel:token}/campeonato/{view}', [ChampionshipOverlayController::class, 'show'])->name('overlay.championship')->middleware('feature:overlays');
 Route::get('/overlay/{channel:token}/{overlay}', [OverlayController::class, 'show'])->name('overlay.show')->middleware('feature:overlays');
 
 // Portal público: placar ao vivo (sem login).

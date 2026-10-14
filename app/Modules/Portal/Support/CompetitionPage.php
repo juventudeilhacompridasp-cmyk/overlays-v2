@@ -73,7 +73,7 @@ final class CompetitionPage
      *
      * @return array{champion: array<string, mixed>|null, runner_up: array<string, mixed>|null}
      */
-    private function podium(Season $season, Division $division): array
+    public function podium(Season $season, Division $division): array
     {
         $none = ['champion' => null, 'runner_up' => null];
         $stage = $division->stages()->orderByDesc('sequence')->first();
