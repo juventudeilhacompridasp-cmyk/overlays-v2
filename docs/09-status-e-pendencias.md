@@ -42,8 +42,8 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
   próximos PRs; Arena agora cobre placar, lances, tabela e escalação tática.
 - Portal: **dados estruturados (JSON-LD) nas páginas do jogo, da equipe e da edição** entregues; **busca por competições e equipes** (`/busca`) entregue; **feed Atom de resultados** (`/feed.xml`) e **página do local** (`/locais/{id}`) entregues; **imagem Open Graph por jogo** (`/jogos/{id}/imagem.png`, 1200x630 gerada com GD, só dados públicos) entregue.
 - **Sugestões de novos overlays** (cartela pré-jogo, comparativo, resumo do jogo, pênaltis, chaveamento...): `docs/12-sugestoes-overlays.md`.
-- Dashboard: insights e gráficos ilustrados/animados ficam para uma etapa futura; a prioridade atual continua sendo lapidar
-  os overlays e, depois, criar variações visuais.
+- Dashboard: visão operacional entregue com jogos encerrados por mês, situação dos jogos e próximos jogos; ficam para depois
+  filtros avançados, comparativos entre competições e exportação dos indicadores.
 - Cobrança automática (fora do MVP).
 
 ## Limitações do ambiente de desenvolvimento do agente

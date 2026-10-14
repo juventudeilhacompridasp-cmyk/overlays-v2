@@ -32,5 +32,8 @@ it('shows the panel dashboard with counts', function () {
         ->assertInertia(fn ($page) => $page
             ->component('Panel/Dashboard')
             ->has('counts', fn ($counts) => $counts
-                ->where('competitions', 0)->where('teams', 0)->where('people', 0)->where('games_finished', 0)));
+                ->where('competitions', 0)->where('teams', 0)->where('people', 0)->where('games_finished', 0))
+            ->where('games_by_month.0.value', 0)
+            ->where('status_breakdown.scheduled', 0)
+            ->has('upcoming_games', 0));
 });
