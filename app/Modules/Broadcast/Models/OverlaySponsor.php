@@ -19,10 +19,18 @@ class OverlaySponsor extends Model
 
     public const SIZES = ['full' => 512, 'thumb' => 128];
 
+    /** Largura máxima do banner largo (a barra do OBS tem 1500 x 200). */
+    public const BANNER_SIZE = 1500;
+
     /** @return array<string, string> */
     protected function casts(): array
     {
         return ['active' => 'boolean'];
+    }
+
+    public function bannerUrl(): ?string
+    {
+        return ImageStore::publicUrl($this->banner_path, self::BANNER_SIZE);
     }
 
     public function logoUrl(int $size = 512): ?string

@@ -23,6 +23,7 @@ const SCREENS: { key: string; label: string; hint: string; needsGame: boolean }[
     { key: 'summary', label: 'Resumo do jogo', hint: 'Intervalo ou fim: placar, gols, cartões (se liberados) e craque do jogo.', needsGame: true },
     { key: 'bracket', label: 'Chaveamento do mata-mata', hint: 'Confrontos por rodada, placares, vencedor e campeão.', needsGame: true },
     { key: 'social', label: 'Chamada para redes sociais', hint: 'Faixa com @, site e QR code do link.', needsGame: false },
+    { key: 'sponsor_bar', label: 'Barra de patrocinadores 1500 x 200', hint: 'Banner largo dos patrocinadores em rotação; configure em Patrocinadores.', needsGame: false },
     { key: 'cartela', label: 'Cartela de transmissão', hint: 'Tela cheia com título, contagem e patrocinadores.', needsGame: false },
 ];
 

@@ -36,7 +36,7 @@ final class OverlayState
             'font_face' => self::fontFace($channel, (string) $appearance['font']),
             'lineup_settings' => OverlayLineupSettings::public($channel->lineup_settings),
             'lower_third_settings' => OverlayLowerThirdSettings::normalize($channel->lower_third_settings),
-            'sponsors' => OverlaySponsorSettings::public($channel->sponsor_settings, OverlayLineupSettings::normalize($channel->lineup_settings)['sponsor_banner']),
+            'sponsors' => OverlaySponsorSettings::public($channel->sponsor_settings, OverlayLineupSettings::normalize($channel->lineup_settings)['sponsor_banner'] || ($channel->screensLive()['sponsor_bar'] ?? false)),
             'layers' => $channel->layerStates(),
             'championship' => $channel->championshipLive(),
             'screens' => $screens = $channel->screensLive(),

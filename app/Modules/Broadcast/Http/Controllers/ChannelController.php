@@ -95,7 +95,7 @@ class ChannelController extends Controller
                 ];
             })->values(),
             'sponsors' => OverlaySponsor::query()->orderBy('sort')->orderBy('created_at')->get()->map(fn (OverlaySponsor $sponsor) => [
-                'id' => $sponsor->id, 'name' => $sponsor->name, 'active' => $sponsor->active, 'logo_url' => $sponsor->logoUrl(128),
+                'id' => $sponsor->id, 'name' => $sponsor->name, 'active' => $sponsor->active, 'logo_url' => $sponsor->logoUrl(128), 'banner_url' => $sponsor->bannerUrl(),
             ])->values(),
             'sponsor_limit' => OverlaySponsor::LIMIT,
             'fonts' => OverlayFont::query()->orderBy('name')->get()->map(fn (OverlayFont $font) => ['id' => $font->id, 'name' => $font->name, 'format' => $font->format])->values(),

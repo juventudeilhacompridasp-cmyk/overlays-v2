@@ -18,7 +18,7 @@ final class SaveOverlaySponsor
 {
     private const DISK = 's3';
 
-    public function handle(?OverlaySponsor $sponsor, string $name, bool $active, ?UploadedFile $logo): OverlaySponsor
+    public function handle(?OverlaySponsor $sponsor, string $name, bool $active, ?UploadedFile $logo, ?UploadedFile $banner = null, bool $removeBanner = false): OverlaySponsor
     {
         if ($sponsor === null && $logo === null) {
             throw new InvalidArgumentException('Envie o logotipo do patrocinador.');
@@ -39,11 +39,25 @@ final class SaveOverlaySponsor
             ]);
         }
 
+        $oldBanner = $sponsor?->banner_path;
+        $bannerPath = $removeBanner ? null : $oldBanner;
+
+        if ($banner !== null) {
+            $organizationId ??= $sponsor !== null ? $sponsor->organization_id : CurrentOrganization::id();
+            $bannerPath = ImageStore::save(self::DISK, "organizations/{$organizationId}/sponsors", 'banner', $banner, [
+                'wide' => ['size' => OverlaySponsor::BANNER_SIZE, 'fit' => 'contain'],
+            ]);
+        }
+
         $sponsor ??= new OverlaySponsor(['sort' => (int) OverlaySponsor::query()->max('sort') + 1]);
-        $sponsor->fill(['name' => $name, 'active' => $active, 'logo_path' => $path])->save();
+        $sponsor->fill(['name' => $name, 'active' => $active, 'logo_path' => $path, 'banner_path' => $bannerPath])->save();
 
         if ($logo !== null) {
             ImageStore::delete(self::DISK, $old, array_values(OverlaySponsor::SIZES));
+        }
+
+        if ($oldBanner !== null && $oldBanner !== $bannerPath) {
+            ImageStore::delete(self::DISK, $oldBanner, [OverlaySponsor::BANNER_SIZE]);
         }
 
         self::refresh();
@@ -54,6 +68,7 @@ final class SaveOverlaySponsor
     public function delete(OverlaySponsor $sponsor): void
     {
         ImageStore::delete(self::DISK, $sponsor->logo_path, array_values(OverlaySponsor::SIZES));
+        ImageStore::delete(self::DISK, $sponsor->banner_path, [OverlaySponsor::BANNER_SIZE]);
         $sponsor->delete();
 
         self::refresh();

@@ -515,7 +515,7 @@ describe('sponsors', function () {
         $this->actingAs($organizer)->post(route('panel.broadcast.sponsors.store'), ['name' => 'Padaria Central', 'logo' => sponsorLogo()])->assertSessionHas('success');
         $channel = channelFor();
 
-        expect(OverlayState::for($channel)['sponsors'])->toBe(['enabled' => false, 'seconds' => 8, 'items' => []]);
+        expect(OverlayState::for($channel)['sponsors'])->toMatchArray(['enabled' => false, 'seconds' => 8, 'items' => []]);
 
         $channel->update(['sponsor_settings' => ['enabled' => true, 'seconds' => 12]]);
         $sponsors = OverlayState::for($channel->fresh())['sponsors'];
@@ -525,7 +525,8 @@ describe('sponsors', function () {
             ->and($sponsors['items'])->toHaveCount(1)
             ->and($sponsors['items'][0]['name'])->toBe('Padaria Central')
             ->and($sponsors['items'][0]['logo_url'])->toContain('-512.webp')
-            ->and(array_keys($sponsors['items'][0]))->toBe(['name', 'logo_url']);
+            ->and(array_keys($sponsors['items'][0]))->toBe(['name', 'logo_url', 'banner_url'])
+            ->and($sponsors['items'][0]['banner_url'])->toBeNull();
     });
 
     it('lets the operator turn the rotation on and set the time, with limits, and tells the OBS', function () {
@@ -535,7 +536,7 @@ describe('sponsors', function () {
 
         $this->patch("/painel/broadcast/{$channel->id}", ['sponsor_settings' => ['enabled' => true, 'seconds' => 15]])->assertSessionHasNoErrors();
 
-        expect($channel->fresh()->sponsor_settings)->toBe(['enabled' => true, 'seconds' => 15]);
+        expect($channel->fresh()->sponsor_settings)->toMatchArray(['enabled' => true, 'seconds' => 15]);
         Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['sponsors']['enabled'] === true);
 
         $this->patch("/painel/broadcast/{$channel->id}", ['sponsor_settings' => ['seconds' => 2]])->assertSessionHasErrors('sponsor_settings.seconds');
@@ -762,7 +763,7 @@ describe('scenes', function () {
             ->and($scene->config['appearance']['preset'])->toBe('classic')
             ->and($scene->config['appearance']['font'])->toBe('bebas')
             ->and($scene->config['layers'])->toBe(['lineup' => true, 'standings' => false, 'scoreboard' => true, 'lower_third' => true])
-            ->and($scene->config['sponsor_settings'])->toBe(['enabled' => true, 'seconds' => 12])
+            ->and($scene->config['sponsor_settings'])->toMatchArray(['enabled' => true, 'seconds' => 12])
             ->and($scene->config['lineup_settings'])->toBe(['presentation' => 'formation', 'list_seconds' => 9, 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'layout' => 'classic', 'style' => 'editorial', 'animation' => 'slide', 'formation_mark' => 'photo', 'formation_photo_size' => 100, 'sponsor_size' => 100, 'x' => null, 'y' => null, 'surface' => 96, 'radius' => null, 'text_scale' => 100])
             ->and(array_keys($scene->config))->not->toContain('game_id')
             ->and(json_encode($scene->config))->not->toContain('01jabc');
@@ -784,7 +785,7 @@ describe('scenes', function () {
             ->and($target->appearance['preset'])->toBe('classic')
             ->and($target->appearance['position'])->toBe('bottom-center')
             ->and($target->layers['lineup'])->toBeTrue()
-            ->and($target->sponsor_settings)->toBe(['enabled' => true, 'seconds' => 12])
+            ->and($target->sponsor_settings)->toMatchArray(['enabled' => true, 'seconds' => 12])
             ->and($target->lineup_settings['presentation'])->toBe('formation');
         Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->token === $target->token && $event->state['appearance']['preset'] === 'classic');
     });
