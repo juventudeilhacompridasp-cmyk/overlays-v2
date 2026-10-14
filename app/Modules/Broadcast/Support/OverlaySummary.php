@@ -38,7 +38,7 @@ final class OverlaySummary
     }
 
     /** @return list<array{side: string, kind: string, player: string|null, minute: int|null}> */
-    private static function cards(Game $game): array
+    public static function cards(Game $game): array
     {
         $events = $game->events()->effective()->whereIn('type', [GameEventType::YellowCard, GameEventType::RedCard])->orderBy('period')->orderBy('minute')->get();
         $people = Person::query()->whereIn('id', $events->pluck('person_id')->filter())->get()->keyBy('id');
@@ -52,7 +52,7 @@ final class OverlaySummary
     }
 
     /** @return array{name: string, shirt: int|null, team: string|null, side: string|null}|null */
-    private static function mvp(Game $game, string $personId): ?array
+    public static function mvp(Game $game, string $personId): ?array
     {
         $row = GameLineup::query()->where('game_id', $game->getKey())->where('person_id', $personId)->whereIn('slot', [LineupSlot::Starter, LineupSlot::Bench])->first();
         $person = $row === null ? null : Person::query()->find($personId);

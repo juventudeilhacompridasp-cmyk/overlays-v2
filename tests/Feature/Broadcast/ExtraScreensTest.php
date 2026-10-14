@@ -34,7 +34,7 @@ it('starts with every extra screen hidden and no comparison data', function () {
     ['game' => $game] = sheetGame();
     $state = OverlayState::for(screensChannel($game));
 
-    expect($state['screens'])->toBe(['pregame' => false, 'compare' => false, 'cartela' => false, 'summary' => false, 'bracket' => false, 'social' => false, 'sponsor_bar' => false])
+    expect($state['screens'])->toBe(['pregame' => false, 'compare' => false, 'cartela' => false, 'summary' => false, 'bracket' => false, 'social' => false, 'sponsor_bar' => false, 'stats' => false])
         ->and($state['compare'])->toBeNull()
         ->and($state['cartela'])->toBe(['title' => 'Começamos em breve', 'subtitle' => '', 'until_ms' => null])
         ->and($state['layers'])->toBe(['lineup' => false, 'standings' => false, 'scoreboard' => true, 'lower_third' => true]);

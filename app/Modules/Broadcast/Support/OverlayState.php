@@ -46,6 +46,7 @@ final class OverlayState
             'compare' => $game && $screens['compare'] ? OverlayCompare::for($game) : null,
             'summary' => $game && $screens['summary'] ? OverlaySummary::for($game, OverlayScreenSettings::normalize($channel->screen_settings)['mvp']) : null,
             'bracket' => $game && $screens['bracket'] ? OverlayBracket::for($game) : null,
+            'stats' => $game && $screens['stats'] ? OverlayStats::for($game, $channel->stats_settings, OverlayLineupSettings::normalize($channel->lineup_settings)['photo_person_ids']) : null,
             'game' => $game ? PublicGameSnapshot::for($game) : null,
             'lineup' => $game && $channel->layerOn('lineup') ? self::lineup($game, OverlayLineupSettings::normalize($channel->lineup_settings)['photo_person_ids']) : null,
             'standings' => $game && $channel->layerOn('standings') ? self::standings($game) : null,

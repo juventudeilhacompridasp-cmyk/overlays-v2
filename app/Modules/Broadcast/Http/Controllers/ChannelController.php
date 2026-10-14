@@ -17,6 +17,7 @@ use App\Modules\Broadcast\Support\OverlayLowerThirdSettings;
 use App\Modules\Broadcast\Support\OverlayScreenSettings;
 use App\Modules\Broadcast\Support\OverlaySponsorSettings;
 use App\Modules\Broadcast\Support\OverlayState;
+use App\Modules\Broadcast\Support\OverlayStatsSettings;
 use App\Modules\Competitions\Models\Season;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Enums\LineupSlot;
@@ -80,6 +81,7 @@ class ChannelController extends Controller
                     'championship_live' => $channel->championshipLive(),
                     'screens_live' => $channel->screensLive(),
                     'screen_settings' => OverlayScreenSettings::normalize($channel->screen_settings),
+                    'stats_settings' => OverlayStatsSettings::normalize($channel->stats_settings),
                     'appearance' => OverlayAppearance::normalize($channel->appearance),
                     'lineup_settings' => OverlayLineupSettings::normalize($channel->lineup_settings),
                     'sponsor_settings' => OverlaySponsorSettings::normalize($channel->sponsor_settings),
