@@ -52,6 +52,7 @@ class SeasonRequest extends FormRequest
             'rules.walkover.loser_goals' => ['required', 'integer', 'between:0,20'],
             'rules.substitutions.max' => ['required', 'integer', 'between:0,99'],
             'rules.substitutions.max_windows' => ['required', 'integer', 'between:0,99'],
+            'rules.substitutions.max_per_period' => ['nullable', 'integer', 'between:0,99'],
             'rules.substitutions.allow_reentry' => ['sometimes', 'boolean'],
             'rules.lineup.manager_deadline_minutes' => ['sometimes', 'integer', 'between:0,1440'],
             'rules.fouls.max_player' => ['sometimes', 'nullable', 'integer', 'between:1,20'],

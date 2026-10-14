@@ -242,7 +242,7 @@ export default function Show({ registration, competition, season, rules, tiebrea
                         <div>
                             <dt className="text-gray-500">Substituições</dt>
                             <dd className="font-medium text-gray-900">
-                                Até {rules.substitutions.max} em {rules.substitutions.max_windows} atos
+                                Até {rules.substitutions.max} em {rules.substitutions.max_windows} atos{rules.substitutions.max_per_period > 0 ? `, ${rules.substitutions.max_per_period} por set/período` : ''}
                             </dd>
                         </div>
                         <div className="sm:col-span-2">

@@ -44,6 +44,9 @@ final class GameSheetState
     /** @var array<string, int> */
     private array $substitutions = [];
 
+    /** @var array<string, array<int, int>> substituições por equipe e período/set */
+    private array $periodSubstitutions = [];
+
     /** @var array<string, array<string, true>> */
     private array $windows = [];
 
@@ -146,6 +149,7 @@ final class GameSheetState
                 }
 
                 $this->substitutions[$team]++;
+                $this->periodSubstitutions[$team][$event->period] = ($this->periodSubstitutions[$team][$event->period] ?? 0) + 1;
                 $this->windows[$team][$this->windowKey($event)] = true;
                 $this->used[$team][(string) $person] = true;
                 $this->used[$team][(string) $event->secondaryPersonId] = true;
@@ -298,6 +302,12 @@ final class GameSheetState
 
         if ($this->substitutions[$team] >= $this->rules->maxSubstitutions) {
             return "Limite de {$this->rules->maxSubstitutions} substituições por jogo atingido.";
+        }
+
+        $perPeriod = $this->rules->maxSubstitutionsPerPeriod;
+
+        if ($perPeriod > 0 && ($this->periodSubstitutions[$team][$event->period] ?? 0) >= $perPeriod) {
+            return "Limite de {$perPeriod} substituições por período atingido.";
         }
 
         $key = $this->windowKey($event);

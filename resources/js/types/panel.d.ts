@@ -29,7 +29,7 @@ export type RulesData = {
         second_yellow_counts_for_series: boolean;
     };
     walkover: { winner_goals: number; loser_goals: number };
-    substitutions: { max: number; max_windows: number; allow_reentry: boolean };
+    substitutions: { max: number; max_windows: number; allow_reentry: boolean; max_per_period: number };
     lineup: { max_starters: number; max_bench: number; max_staff: number; manager_deadline_minutes: number };
     scoring: { model: string; sets_to_win: number; set_points: number; deciding_set_points: number; min_lead: number; points_narrow_win: number | null; points_narrow_loss: number | null };
 };

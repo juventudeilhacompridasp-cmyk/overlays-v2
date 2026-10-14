@@ -9,6 +9,8 @@ use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Actions\RecordQuickResult;
 use App\Modules\Matches\Actions\RegisterWalkover;
+use App\Modules\Matches\Actions\SaveGameLineup;
+use App\Modules\Teams\Models\RosterEntry;
 use App\Modules\Matches\Actions\VoidGameEvent;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\GameStatus;
@@ -217,4 +219,25 @@ it('starts a volleyball season with the volleyball regulation', function () {
 
     $rules = Season::query()->where('name', 'Vôlei 2030')->firstOrFail()->ruleSet();
     expect($rules->setsToWin)->toBe(2)->and($rules->setPoints)->toBe(21)->and($rules->scoreModel)->toBe('sets')->and($rules->pointsNarrowWin)->toBe(3);
+});
+
+it('limits volleyball substitutions to six per set, counted in the set the server is on', function () {
+    $game = volleyballGame();
+    $players = fn ($entry) => RosterEntry::factory()->count(12)->sequence(fn ($seq) => ['shirt_number' => $seq->index + 1])->create(['entry_id' => $entry->id])->pluck('person_id')->all();
+    $home = $players($game->homeEntry);
+    app(SaveGameLineup::class)->handle($game, $game->homeEntry, array_slice($home, 0, 6), array_slice($home, 6));
+    $sub = fn (int $i) => app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Substitution, $game->home_entry_id, $home[$i], $home[$i + 6]);
+
+    foreach (range(0, 5) as $i) {
+        expect($sub($i)->period)->toBe(1);
+    }
+
+    // Quem entrou já saiu da lista de reservas; o 7º pedido do set 1 é recusado.
+    expect(fn () => app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Substitution, $game->home_entry_id, $home[6], $home[0]))
+        ->toThrow(InvalidArgumentException::class, 'Limite de 6 substituições por período atingido.');
+
+    scorePoints($game, 'home', 25); // fecha o set 1
+
+    $event = app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Substitution, $game->home_entry_id, $home[6], $home[0]);
+    expect($event->period)->toBe(2);
 });

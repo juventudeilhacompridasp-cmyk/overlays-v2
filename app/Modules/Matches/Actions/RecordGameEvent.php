@@ -82,6 +82,11 @@ final class RecordGameEvent
                 }
             }
 
+            // Esportes de sets: a substituição vale para o set da vez, calculado pelo servidor (nunca informado).
+            if ($type === GameEventType::Substitution && $game->sport()->profile()->scoreModel === 'sets') {
+                $period = (new SetMatch($game->division->ruleSet()))->state(ProjectGameScore::pointSides($game))['current'];
+            }
+
             $error = $this->sheet->handle($game)->check(new SheetEvent($type, $entryId, $personId, $secondaryPersonId, $period, $minute));
 
             if ($error !== null) {

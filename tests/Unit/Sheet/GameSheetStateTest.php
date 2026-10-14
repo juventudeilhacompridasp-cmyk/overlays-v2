@@ -135,3 +135,21 @@ it('lets a substituted-in player receive a card and be sent off', function () {
         // Quem saiu (h1) ainda pode receber cartão de comissão técnica? Não: saiu e não está mais em campo, mas consta como usado na escalação.
         ->and($state->check(ev(GameEventType::YellowCard, 'H', 'h1')))->toBeNull();
 });
+
+it('limits substitutions per period and starts a fresh count in the next one', function () {
+    $state = sheet(RuleSet::fromArray(['substitutions' => ['max' => 99, 'max_windows' => 99, 'max_per_period' => 2, 'allow_reentry' => true]]));
+
+    expect($state->tryApply(ev(GameEventType::Substitution, 'H', 'h1', 'h4', 1)))->toBeNull()
+        ->and($state->tryApply(ev(GameEventType::Substitution, 'H', 'h2', 'h5', 1)))->toBeNull()
+        ->and($state->check(ev(GameEventType::Substitution, 'H', 'h3', 'h6', 1)))->toBe('Limite de 2 substituições por período atingido.')
+        ->and($state->check(ev(GameEventType::Substitution, 'A', 'a1', 'a3', 1)))->toBeNull()
+        ->and($state->check(ev(GameEventType::Substitution, 'H', 'h3', 'h6', 2)))->toBeNull();
+});
+
+it('has no per-period limit by default', function () {
+    $state = sheet(RuleSet::fromArray(['substitutions' => ['max' => 99, 'max_windows' => 99, 'allow_reentry' => true]]));
+
+    foreach ([['h1', 'h4'], ['h2', 'h5'], ['h3', 'h6']] as [$out, $in]) {
+        expect($state->tryApply(ev(GameEventType::Substitution, 'H', $out, $in, 1)))->toBeNull();
+    }
+});

@@ -195,6 +195,7 @@ export default function Form({ competition, season, rules, options, defaults }: 
                         {numberField('Gols do perdedor no W.O.', 'rules.walkover.loser_goals', data.rules.walkover.loser_goals, (d, v) => (d.walkover.loser_goals = v))}
                         {numberField('Máx. de substituições', 'rules.substitutions.max', data.rules.substitutions.max, (d, v) => (d.substitutions.max = v))}
                         {numberField('Máx. de atos de substituição', 'rules.substitutions.max_windows', data.rules.substitutions.max_windows, (d, v) => (d.substitutions.max_windows = v))}
+                        {numberField('Máx. de substituições por set/período (0 = sem limite)', 'rules.substitutions.max_per_period', data.rules.substitutions.max_per_period, (d, v) => (d.substitutions.max_per_period = v))}
                     </div>
                     <div className="mt-4">
                         {checkbox('Quem sai pode voltar ao jogo (substituição volante, como no futsal)', 'rules.substitutions.allow_reentry', data.rules.substitutions.allow_reentry, (d, v) => (d.substitutions.allow_reentry = v))}
