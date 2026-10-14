@@ -22,6 +22,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 beforeEach(function () {
     CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug')]));
@@ -216,8 +217,8 @@ it('broadcasts the commands without going through the queue', function () {
 it('keeps the command and the súmula working when the broadcaster is down', function () {
     ['game' => $game, 'home' => $home, 'hp' => $hp] = sheetGame();
     $channel = channelFor($game);
-    Event::listen(OverlayUpdated::class, fn () => throw new \RuntimeException('Reverb fora do ar'));
-    Event::listen(OverlayLowerThird::class, fn () => throw new \RuntimeException('Reverb fora do ar'));
+    Event::listen(OverlayUpdated::class, fn () => throw new RuntimeException('Reverb fora do ar'));
+    Event::listen(OverlayLowerThird::class, fn () => throw new RuntimeException('Reverb fora do ar'));
     $this->actingAs(panelUser(Role::Operator));
 
     $this->patch("/painel/broadcast/{$channel->id}", ['layers' => ['scoreboard' => false]])->assertSessionHas('success');
