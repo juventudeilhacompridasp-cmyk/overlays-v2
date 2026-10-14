@@ -27,6 +27,8 @@ final readonly class RuleSet
         public int $walkoverWinnerGoals = 3,
         public int $walkoverLoserGoals = 0,
         public int $maxSubstitutions = 8,
+        /** Limite por período (ex.: 6 substituições por set no vôlei); nulo = só limite do jogo. */
+        public ?int $maxSubstitutionsPerPeriod = null,
         public int $maxSubstitutionWindows = 3,
         public int $maxStarters = 11,
         public int $maxBench = 11,
@@ -138,6 +140,7 @@ final readonly class RuleSet
             walkoverWinnerGoals: (int) $merged['walkover']['winner_goals'],
             walkoverLoserGoals: (int) $merged['walkover']['loser_goals'],
             maxSubstitutions: (int) $merged['substitutions']['max'],
+            maxSubstitutionsPerPeriod: isset($merged['substitutions']['max_per_period']) ? (int) $merged['substitutions']['max_per_period'] : null,
             maxSubstitutionWindows: (int) $merged['substitutions']['max_windows'],
             maxStarters: (int) $merged['lineup']['max_starters'],
             maxBench: (int) $merged['lineup']['max_bench'],
@@ -174,7 +177,7 @@ final readonly class RuleSet
                 'second_yellow_counts_for_series' => $this->secondYellowCountsForSeries,
             ],
             'walkover' => ['winner_goals' => $this->walkoverWinnerGoals, 'loser_goals' => $this->walkoverLoserGoals],
-            'substitutions' => ['max' => $this->maxSubstitutions, 'max_windows' => $this->maxSubstitutionWindows, 'allow_reentry' => $this->allowSubstitutionReentry],
+            'substitutions' => ['max' => $this->maxSubstitutions, 'max_per_period' => $this->maxSubstitutionsPerPeriod, 'max_windows' => $this->maxSubstitutionWindows, 'allow_reentry' => $this->allowSubstitutionReentry],
             'lineup' => ['max_starters' => $this->maxStarters, 'max_bench' => $this->maxBench, 'max_staff' => $this->maxStaff, 'manager_deadline_minutes' => $this->managerLineupDeadlineMinutes],
             'scoring' => [
                 'model' => $this->scoreModel,

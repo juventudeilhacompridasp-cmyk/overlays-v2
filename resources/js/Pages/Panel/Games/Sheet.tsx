@@ -34,6 +34,7 @@ interface Team {
     available_bench: string[];
     expelled: string[];
     substitutions_used: number;
+    substitutions_period_used: number | null;
     windows_used: number;
     fouled_out: string[];
     player_fouls: Record<string, number>;
@@ -78,7 +79,7 @@ interface Props {
     home: Team | null;
     away: Team | null;
     events: SheetEvent[];
-    limits: { starters: number; bench: number; staff: number; substitutions: number; windows: number; reentry: boolean; max_player_fouls: number | null };
+    limits: { starters: number; bench: number; staff: number; substitutions: number; substitutions_per_period: number | null; windows: number; reentry: boolean; max_player_fouls: number | null };
     clock_offsets: number[];
     event_types: Option[];
     sport: string;
@@ -548,7 +549,7 @@ function TeamCard({ game, team, limits, period, send }: { game: Props['game']; t
                         </div>
                     )}
                     <p className="text-xs text-gray-500">
-                        Substituições {team.substitutions_used}/{limits.substitutions} · atos {team.windows_used}/{limits.windows}
+                        Substituições {team.substitutions_period_used !== null && limits.substitutions_per_period !== null ? `${team.substitutions_period_used}/${limits.substitutions_per_period} neste período` : `${team.substitutions_used}/${limits.substitutions}`} · atos {team.windows_used}/{limits.windows}
                     </p>
                 </div>
             )}

@@ -75,5 +75,9 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 
 - O preset `aurora` deve manter o contrato de aparência existente e ser validado pela lista central `OverlayAppearance::PRESETS`; a renderização precisa permanecer sem dependências externas para uso no OBS.
 
+## Regra adicional do vôlei
+
+- O limite de substituições do vôlei é por set (`substitutions.max_per_period = 6`), reinicia no próximo set e deve ser aplicado pelo estado da súmula, nunca somente pelo front.
+
 ## Qualidade
 Testes Pest para toda regra de negócio (as regras de campeonato têm testes baseados em exemplos reais). PHPStan/Larastan (nível sobe gradualmente até 8). PRs pequenos, descrição em português, sem segredos no repositório.

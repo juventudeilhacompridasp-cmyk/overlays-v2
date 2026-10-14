@@ -9,12 +9,14 @@ use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Actions\RecordQuickResult;
 use App\Modules\Matches\Actions\RegisterWalkover;
+use App\Modules\Matches\Actions\SaveGameLineup;
 use App\Modules\Matches\Actions\VoidGameEvent;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Support\PublicGameSnapshot;
+use App\Modules\Teams\Models\RosterEntry;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
@@ -178,6 +180,21 @@ it('allows two timeouts per team in each set and exposes the remaining count', f
     app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Timeout, $away, null, period: 2);
     expect(PublicGameSnapshot::for($game->fresh())['timeouts']['home'])->toBe(2)
         ->and(PublicGameSnapshot::for($game->fresh())['timeouts']['away'])->toBe(1);
+});
+
+it('limits substitutions to six per set and resets the count on the next set', function () {
+    $game = volleyballGame();
+    $people = RosterEntry::factory()->count(12)->create(['entry_id' => $game->home_entry_id])->pluck('person_id')->all();
+    app(SaveGameLineup::class)->handle($game, $game->homeEntry, array_slice($people, 0, 6), array_slice($people, 6));
+    $starters = collect(array_slice($people, 0, 6));
+    $bench = collect(array_slice($people, 6));
+
+    foreach (range(0, 5) as $index) {
+        app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Substitution, $game->home_entry_id, $starters[$index], $bench[$index], 1);
+    }
+
+    expect(fn () => app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Substitution, $game->home_entry_id, $bench[0], $starters[0], 1))
+        ->toThrow(InvalidArgumentException::class, 'Limite de 6 substituições neste período');
 });
 
 it('scores from the sheet screen with a button per team and undoes the last point', function () {
