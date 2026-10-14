@@ -1,6 +1,7 @@
 import { GameClock } from '@/lib/clock';
 import { ConnectionState, Realtime, subscribeToChannel } from '@/lib/echo';
 import './artFonts';
+import { LowerThirdBannerData, LowerThirdSettings } from './lowerThird';
 import { useEffect, useRef, useState } from 'react';
 
 export interface OverlayTeam {
@@ -77,6 +78,7 @@ export interface OverlayState {
     font_face: OverlayFontFace | null;
     lineup_settings: LineupPublicSettings;
     sponsors: { enabled: boolean; seconds: number; items: { name: string; logo_url: string }[] };
+    lower_third_settings: LowerThirdSettings;
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     championship: Record<string, boolean>;
     game: OverlayGame | null;
@@ -88,18 +90,9 @@ export interface OverlayState {
     server_time_ms: number;
 }
 
-export interface Banner {
-    id: string;
-    kind: string;
-    title: string;
-    subtitle: string | null;
-    team: string | null;
-    color: string | null;
-    minute: number | null;
-}
+export type Banner = LowerThirdBannerData;
 
 const POLL_MS = 3000;
-const BANNER_MS = 7000;
 
 /**
  * Estado de um canal de transmissão: recebe o estado completo pelo Reverb e, se o WebSocket não conectar,
@@ -179,7 +172,7 @@ export function useOverlay(token: string, initial: OverlayState, realtime: Realt
             return;
         }
 
-        const timer = window.setTimeout(() => setBanner(null), BANNER_MS);
+        const timer = window.setTimeout(() => setBanner(null), (state.lower_third_settings?.seconds ?? 7) * 1000);
 
         return () => window.clearTimeout(timer);
     }, [banner]);

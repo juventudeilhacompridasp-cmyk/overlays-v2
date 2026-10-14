@@ -2,14 +2,19 @@
 
 namespace App\Modules\Broadcast\Actions;
 
+use App\Modules\Broadcast\Events\OverlayLowerThird;
 use App\Modules\Broadcast\Events\OverlayUpdated;
 use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Models\OverlayScene;
+use App\Modules\Broadcast\Support\LowerThirdBanner;
 use App\Modules\Broadcast\Support\OverlayAppearance;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
 use App\Modules\Broadcast\Support\OverlayLineupTimeline;
+use App\Modules\Broadcast\Support\OverlayLowerThirdSettings;
 use App\Modules\Broadcast\Support\OverlaySponsorSettings;
 use App\Modules\Broadcast\Support\OverlayState;
+use App\Modules\Matches\Models\Game;
+use Throwable;
 
 final class UpdateOverlayChannel
 {
@@ -81,6 +86,10 @@ final class UpdateOverlayChannel
             );
         }
 
+        if (isset($data['lower_third_settings']) && is_array($data['lower_third_settings'])) {
+            $channel->lower_third_settings = OverlayLowerThirdSettings::normalize(array_merge($channel->lower_third_settings ?? [], $data['lower_third_settings']));
+        }
+
         if (isset($data['sponsor_settings']) && is_array($data['sponsor_settings'])) {
             $channel->sponsor_settings = OverlaySponsorSettings::normalize(array_merge($channel->sponsor_settings ?? [], $data['sponsor_settings']));
         }
@@ -88,6 +97,43 @@ final class UpdateOverlayChannel
         $channel->save();
         OverlayUpdated::dispatchFor($channel);
 
+        if (isset($data['lower_third_show']) && is_array($data['lower_third_show'])) {
+            $this->showLowerThird($channel, $data['lower_third_show']);
+        }
+
         return $channel;
+    }
+
+    /**
+     * Faixa manual (aviso livre, jogador em destaque ou amostra de um lance): só sai se a tela de lances está no ar e nunca
+     * é guardada. Falha do Reverb não desfaz nada (o operador clica de novo).
+     *
+     * @param  array<string, mixed>  $command
+     */
+    private function showLowerThird(OverlayChannel $channel, array $command): void
+    {
+        if (! $channel->layerOn('lower_third')) {
+            return;
+        }
+
+        $game = $channel->game_id !== null ? Game::query()->find($channel->game_id) : null;
+        $kind = (string) ($command['kind'] ?? '');
+
+        $banner = match (true) {
+            $kind === 'custom' => LowerThirdBanner::custom(trim((string) ($command['title'] ?? '')), isset($command['subtitle']) ? trim((string) $command['subtitle']) : null),
+            $game === null => null,
+            $kind === 'player' => LowerThirdBanner::forPlayer($game, (string) ($command['person_id'] ?? '')),
+            default => LowerThirdBanner::sample($game, $kind),
+        };
+
+        if ($banner === null) {
+            return;
+        }
+
+        try {
+            event(new OverlayLowerThird($channel->token, $banner));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 }

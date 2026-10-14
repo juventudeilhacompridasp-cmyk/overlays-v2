@@ -1,23 +1,21 @@
+import LowerThirdCard, { WIDE_STYLES } from '@/Components/Overlay/LowerThirdCard';
 import { Realtime } from '@/lib/echo';
+import { lowerThirdFrames } from '@/lib/lowerThird';
 import { OverlayState, useOverlay } from '@/lib/overlay';
 import { overlayStyle } from '@/lib/overlayVisual';
 import { Head } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
-
-const kinds: Record<string, { accent: string; icon: string }> = {
-    goal: { accent: '#16a34a', icon: '⚽' },
-    own_goal: { accent: '#16a34a', icon: '⚽' },
-    yellow_card: { accent: '#eab308', icon: '🟨' },
-    red_card: { accent: '#dc2626', icon: '🟥' },
-    blue_card: { accent: '#2563eb', icon: '🟦' },
-    substitution: { accent: '#475569', icon: '🔁' },
-};
+import { useEffect, useRef, useState } from 'react';
 
 export default function LowerThird({ token, state, realtime }: { token: string; state: OverlayState; realtime: Realtime }) {
     const { banner, state: current } = useOverlay(token, state, realtime);
     // Mantém a última faixa na tela durante a animação de saída.
     const [last, setLast] = useState(banner);
     const [shown, setShown] = useState(false);
+    const box = useRef<HTMLDivElement>(null);
+    const settings = current.lower_third_settings;
+    const appearance = current.appearance;
+    const wide = WIDE_STYLES.includes(settings.style);
+    const instant = appearance.motion === 'none';
 
     useEffect(() => {
         if (banner) {
@@ -30,48 +28,33 @@ export default function LowerThird({ token, state, realtime }: { token: string; 
         setShown(false);
     }, [banner]);
 
+    // Entrada e saída pela animação escolhida (a saída toca os mesmos quadros ao contrário).
+    useEffect(() => {
+        const element = box.current;
+        if (!element || !last) return;
+
+        element.animate?.(lowerThirdFrames(settings.animation, settings.style === 'flash'), {
+            duration: instant ? 1 : appearance.motion === 'subtle' ? 350 : 650,
+            easing: settings.animation === 'bounce' && shown ? 'ease-out' : 'cubic-bezier(.16,1,.3,1)',
+            fill: 'both',
+            direction: shown ? 'normal' : 'reverse',
+        });
+    }, [shown, last?.id, settings.animation, settings.style]); // eslint-disable-line react-hooks/exhaustive-deps
+
     // Comando de ocultar os lances: nada fica na tela, nem a faixa que estava saindo.
     if (!current.layers.lower_third) {
         return <Head title="Lances" />;
     }
 
-    const style = last ? kinds[last.kind] ?? kinds.goal : kinds.goal;
-    const appearance = current.appearance;
-    const duration = appearance.motion === 'none' ? 0 : appearance.motion === 'subtle' ? 300 : 500;
-    const hiddenTransform = appearance.motion === 'dynamic' ? 'translate3d(-3rem, 1rem, 0) scale(.98)' : 'translate3d(0, 0, 0)';
+    const placement = settings.style === 'flash' ? 'inset-x-0 bottom-0 pb-24' : wide ? 'inset-x-0 bottom-0 p-12' : 'inset-x-0 bottom-0 p-12';
 
     return (
-        <div className="fixed inset-x-0 bottom-0 p-12 font-sans" style={{ ...overlayStyle(appearance), color: appearance.text_color, textShadow: '0 1px 2px rgba(0,0,0,.55)' }}>
+        <div className={`fixed font-sans ${placement}`} style={{ ...overlayStyle(appearance), color: appearance.text_color, textShadow: '0 1px 2px rgba(0,0,0,.55)' }}>
             <Head title="Lances" />
             {last && (
-                <div style={{ transform: `scale(${appearance.scale})`, transformOrigin: 'bottom left' }}>
-                    <div
-                        data-testid="overlay-lowerthird"
-                        data-visible={shown}
-                        className="inline-flex items-stretch overflow-hidden rounded-2xl border border-white/15 shadow-2xl"
-                        style={{
-                            background: `linear-gradient(135deg, ${appearance.background_color}f5, ${appearance.background_color}df)`,
-                            opacity: shown ? 1 : 0,
-                            transform: shown ? 'translate3d(0, 0, 0) scale(1)' : hiddenTransform,
-                            transition: `opacity ${duration}ms ease, transform ${duration}ms cubic-bezier(.16,1,.3,1)`,
-                        }}
-                    >
-                        <div className="relative flex items-center px-5 text-4xl" style={{ backgroundColor: style.accent }}>
-                            <span className="absolute inset-x-0 top-0 h-0.5 bg-white/50" />
-                            {style.icon}
-                        </div>
-                        <div className="px-6 py-3">
-                            <div className="flex items-baseline gap-3">
-                                <span className="text-3xl font-black tracking-[0.06em]">{last.title}</span>
-                                {last.minute !== null && <span className="text-xl text-white/60">{last.minute}'</span>}
-                            </div>
-                            {last.subtitle && <div className="text-2xl font-semibold">{last.subtitle}</div>}
-                            {last.team && (
-                                <div className="mt-1 inline-block rounded px-2 text-sm font-bold uppercase" style={{ backgroundColor: last.color ?? '#6b7280' }}>
-                                    {last.team}
-                                </div>
-                            )}
-                        </div>
+                <div style={{ transform: `scale(${appearance.scale})`, transformOrigin: settings.style === 'flash' ? 'bottom center' : 'bottom left' }}>
+                    <div ref={box} data-testid="overlay-lowerthird" data-visible={shown} data-style={settings.style} data-animation={settings.animation} className={wide ? 'w-full' : 'inline-block'}>
+                        <LowerThirdCard style={settings.style} banner={last} appearance={appearance} />
                     </div>
                 </div>
             )}

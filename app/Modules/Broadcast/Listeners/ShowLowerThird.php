@@ -4,15 +4,17 @@ namespace App\Modules\Broadcast\Listeners;
 
 use App\Modules\Broadcast\Events\OverlayLowerThird;
 use App\Modules\Broadcast\Models\OverlayChannel;
-use App\Modules\Matches\Enums\GameEventType;
+use App\Modules\Broadcast\Support\LowerThirdBanner;
+use App\Modules\Broadcast\Support\OverlayLowerThirdSettings;
 use App\Modules\Matches\Events\GameEventRecorded;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
-use App\Modules\Teams\Models\Person;
-use Illuminate\Support\Str;
 use Throwable;
 
-/** Gol, cartão ou substituição lançado na súmula vira uma faixa na tela de eventos dos canais com este jogo no ar. */
+/**
+ * Gol, cartão ou substituição lançado na súmula vira uma faixa na tela de eventos dos canais com este jogo no ar.
+ * Cada canal escolhe quais lances aparecem e se o gol mostra o placar.
+ */
 class ShowLowerThird
 {
     public function handle(GameEventRecorded $recorded): void
@@ -30,44 +32,21 @@ class ShowLowerThird
             return;
         }
 
-        $title = match ($event->type) {
-            GameEventType::Goal => 'GOL!',
-            GameEventType::OwnGoal => 'GOL CONTRA',
-            GameEventType::YellowCard => 'CARTÃO AMARELO',
-            GameEventType::RedCard => 'CARTÃO VERMELHO',
-            GameEventType::BlueCard => 'CARTÃO AZUL',
-            GameEventType::Substitution => 'SUBSTITUIÇÃO',
-            default => null,
-        };
+        $banner = LowerThirdBanner::forEvent($event, $game);
 
-        if ($title === null) {
+        if ($banner === null) {
             return;
         }
 
-        $team = $event->entry_id === $game->home_entry_id ? $game->homeEntry?->team : $game->awayEntry?->team;
-        $name = function (?string $id): ?string {
-            $person = $id === null ? null : Person::query()->find($id, ['id', 'name', 'nickname']);
-
-            return $person === null ? null : ($person->nickname ?: $person->name);
-        };
-
-        $subtitle = $event->type === GameEventType::Substitution
-            ? trim('↑ '.$name($event->secondary_person_id).'   ↓ '.$name($event->person_id))
-            : $name($event->person_id);
-
-        $banner = [
-            'id' => (string) Str::uuid(),
-            'kind' => $event->type->value,
-            'title' => $title,
-            'subtitle' => $subtitle,
-            'team' => $team?->name,
-            'color' => $team?->primary_color,
-            'minute' => $event->minute,
-        ];
-
         $channels->each(function (OverlayChannel $channel) use ($banner): void {
+            $settings = OverlayLowerThirdSettings::normalize($channel->lower_third_settings);
+
+            if (! in_array($banner['kind'], $settings['kinds'], true)) {
+                return;
+            }
+
             try {
-                event(new OverlayLowerThird($channel->token, $banner));
+                event(new OverlayLowerThird($channel->token, $settings['score'] ? $banner : [...$banner, 'score' => null]));
             } catch (Throwable $exception) {
                 // O lance já está na súmula; a falta da faixa no OBS não pode desfazê-lo.
                 report($exception);

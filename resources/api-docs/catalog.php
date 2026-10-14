@@ -208,6 +208,19 @@ return [
                     'lineup' => ['type' => 'boolean'],
                     'standings' => ['type' => 'boolean'],
                 ]],
+                'lower_third_settings' => ['type' => 'object', 'properties' => [
+                    'style' => ['type' => 'string', 'enum' => ['arena', 'broadcast', 'player', 'minimal', 'slash', 'flash'], 'description' => 'Estilo visual da faixa de lances.'],
+                    'animation' => ['type' => 'string', 'enum' => ['slide', 'rise', 'zoom', 'wipe', 'flip', 'bounce', 'fade']],
+                    'seconds' => ['type' => 'integer', 'minimum' => 3, 'maximum' => 15],
+                    'kinds' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['goal', 'own_goal', 'yellow_card', 'red_card', 'blue_card', 'substitution']], 'description' => 'Quais lances da súmula viram faixa.'],
+                    'score' => ['type' => 'boolean', 'description' => 'Mostra o placar na faixa do gol.'],
+                ]],
+                'lower_third_show' => ['type' => 'object', 'description' => 'Dispara uma faixa agora (não é guardada). `custom` = título/subtítulo livres; `player` = atleta da escalação (`person_id`); os demais tipos enviam uma amostra com o jogo no ar. Só sai com a tela de lances no ar.', 'properties' => [
+                    'kind' => ['type' => 'string', 'enum' => ['custom', 'player', 'goal', 'own_goal', 'yellow_card', 'red_card', 'blue_card', 'substitution']],
+                    'title' => ['type' => 'string', 'maxLength' => 60],
+                    'subtitle' => ['type' => 'string', 'maxLength' => 80],
+                    'person_id' => ['type' => 'string'],
+                ]],
                 'championship_live' => ['type' => 'object', 'description' => 'Mostra (true) ou oculta (false) ao vivo as telas de campeonato abertas com `live=1` na URL. Chaves: standings, fixtures, results, scorers, discipline, matchcard, ticker, champion.', 'additionalProperties' => ['type' => 'boolean']],
                 'appearance' => ['type' => 'object', 'properties' => [
                     'preset' => ['type' => 'string', 'enum' => ['arena', 'classic', 'minimal']],

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Broadcast\Events;
 
+use App\Modules\Broadcast\Support\LowerThirdBanner;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
@@ -12,7 +13,7 @@ class OverlayLowerThird implements ShouldBroadcastNow, ShouldDispatchAfterCommit
 {
     use Dispatchable;
 
-    /** @param  array{id: string, kind: string, title: string, subtitle: string|null, team: string|null, color: string|null, minute: int|null}  $banner */
+    /** @param  array<string, mixed>  $banner  Faixa montada por {@see LowerThirdBanner}. */
     public function __construct(public string $token, public array $banner) {}
 
     /** @return list<Channel> */
