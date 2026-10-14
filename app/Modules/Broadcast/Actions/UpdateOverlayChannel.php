@@ -8,8 +8,8 @@ use App\Modules\Broadcast\Models\OverlayScene;
 use App\Modules\Broadcast\Support\OverlayAppearance;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
 use App\Modules\Broadcast\Support\OverlayLineupTimeline;
-use App\Modules\Broadcast\Support\OverlayState;
 use App\Modules\Broadcast\Support\OverlaySponsorSettings;
+use App\Modules\Broadcast\Support\OverlayState;
 
 final class UpdateOverlayChannel
 {
