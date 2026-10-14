@@ -85,7 +85,7 @@ describe('cartela', function () {
         $now = 1_800_000_000_000;
 
         $set = OverlayScreenSettings::apply(null, ['title' => '  Intervalo ', 'subtitle' => 'Voltamos já', 'minutes' => 15], $now);
-        expect($set)->toBe(['title' => 'Intervalo', 'subtitle' => 'Voltamos já', 'until_ms' => $now + 15 * 60_000]);
+        expect($set)->toMatchArray(['title' => 'Intervalo', 'subtitle' => 'Voltamos já', 'until_ms' => $now + 15 * 60_000, 'stoppage' => 0, 'mvp' => null]);
 
         expect(OverlayScreenSettings::apply($set, ['title' => 'Outro'], $now)['until_ms'])->toBe($now + 15 * 60_000)
             ->and(OverlayScreenSettings::apply($set, ['minutes' => 0], $now)['until_ms'])->toBeNull()
