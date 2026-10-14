@@ -208,6 +208,7 @@ return [
                     'lineup' => ['type' => 'boolean'],
                     'standings' => ['type' => 'boolean'],
                 ]],
+                'championship_live' => ['type' => 'object', 'description' => 'Mostra (true) ou oculta (false) ao vivo as telas de campeonato abertas com `live=1` na URL. Chaves: standings, fixtures, results, scorers, discipline, matchcard, ticker, champion.', 'additionalProperties' => ['type' => 'boolean']],
                 'appearance' => ['type' => 'object', 'properties' => [
                     'preset' => ['type' => 'string', 'enum' => ['arena', 'classic', 'minimal']],
                     'accent_color' => ['type' => 'string'],

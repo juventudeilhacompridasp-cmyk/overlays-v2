@@ -1,8 +1,10 @@
 <?php
 
+use App\Modules\Broadcast\Events\OverlayUpdated;
 use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Models\OverlayStyleModel;
 use App\Modules\Broadcast\Support\ChampionshipStyle;
+use App\Modules\Broadcast\Support\OverlayState;
 use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Models\Game;
@@ -10,6 +12,7 @@ use App\Modules\Teams\Models\Person;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
+use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
     CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug')]));
@@ -191,5 +194,44 @@ describe('style models', function () {
 
         publishSeason($game);
         $this->get('/painel/broadcast')->assertInertia(fn ($page) => $page->has('championship_seasons', 1)->where('championship_seasons.0.id', $game->division->season_id));
+    });
+});
+
+describe('live control', function () {
+    it('starts hidden and lets the operator show and hide each championship screen, telling the OBS', function () {
+        $channel = championshipChannel();
+        $this->actingAs(panelUser(Role::Operator));
+        Event::fake([OverlayUpdated::class]);
+
+        expect(OverlayState::for($channel)['championship'])->toBe(array_fill_keys(OverlayChannel::CHAMPIONSHIP_VIEWS, false));
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['championship_live' => ['standings' => true, 'ticker' => true, 'inventada' => true]])->assertSessionHasNoErrors();
+        $this->patch("/painel/broadcast/{$channel->id}", ['championship_live' => ['ticker' => false]])->assertSessionHasNoErrors();
+
+        $live = $channel->fresh()->championshipLive();
+        expect($live['standings'])->toBeTrue()->and($live['ticker'])->toBeFalse()->and($live)->not->toHaveKey('inventada');
+        Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['championship']['standings'] === true);
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['championship_live' => ['standings' => 'talvez']])->assertSessionHasErrors('championship_live.standings');
+        $this->get('/painel/broadcast')->assertInertia(fn ($page) => $page->where('channels.0.championship_live.standings', true));
+    });
+
+    it('keeps the other layers and scenes untouched and works through the control api', function () {
+        $channel = championshipChannel();
+        $channel->update(['layers' => ['lineup' => true]]);
+        $key = OverlayChannel::newControlToken();
+        $channel->update(['control_token_hash' => OverlayChannel::controlTokenHash($key)]);
+
+        $this->withToken($key)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", ['championship_live' => ['champion' => true]])
+            ->assertOk()->assertJsonPath('data.championship.champion', true)->assertJsonPath('data.layers.lineup', true);
+
+        expect($channel->fresh()->layers['lineup'])->toBeTrue()->and($channel->fresh()->layerStates())->toBe(['lineup' => true, 'standings' => false, 'scoreboard' => true, 'lower_third' => true]);
+    });
+
+    it('gives the page the channel state for live screens', function () {
+        $channel = championshipChannel();
+
+        $this->get("/overlay/{$channel->token}/campeonato/standings?live=1")->assertOk()
+            ->assertInertia(fn ($page) => $page->where('state.championship.standings', false)->where('state.server_time_ms', fn ($value) => is_int($value)));
     });
 });

@@ -37,6 +37,7 @@ final class OverlayState
             'lineup_settings' => OverlayLineupSettings::public($channel->lineup_settings),
             'sponsors' => OverlaySponsorSettings::public($channel->sponsor_settings, OverlayLineupSettings::normalize($channel->lineup_settings)['sponsor_banner']),
             'layers' => $channel->layerStates(),
+            'championship' => $channel->championshipLive(),
             'game' => $game ? PublicGameSnapshot::for($game) : null,
             'lineup' => $game && $channel->layerOn('lineup') ? self::lineup($game, OverlayLineupSettings::normalize($channel->lineup_settings)['photo_person_ids']) : null,
             'standings' => $game && $channel->layerOn('standings') ? self::standings($game) : null,

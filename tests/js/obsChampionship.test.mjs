@@ -85,3 +85,11 @@ test('templates reset and apply style options, ignoring anything that is not a s
     assert.equal(clean.view, 'standings'); assert.equal(clean.rows, 8); assert.equal(clean.accent, ''); assert.equal(clean.bw, 0); assert.equal(clean.anim, 'rise');
     assert.deepEqual(Object.keys(lib.obsStylePayload(base)), [...lib.OBS_STYLE_KEYS]);
 });
+
+test('live control is off by default and travels in the url', () => {
+    assert.equal(lib.obsConfig('', 'ticker').live, 0);
+    const cfg = lib.obsConfig('?live=1', 'ticker');
+    assert.equal(cfg.live, 1);
+    assert.equal(lib.obsQuery(cfg), 'live=1');
+    assert.equal(lib.obsConfig('?live=2', 'ticker').live, 0);
+});

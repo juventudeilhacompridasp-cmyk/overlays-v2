@@ -33,7 +33,7 @@ Na coluna **Campeonato** do canal escolha a tela — tabela, próximos jogos, re
 faixa de placares ou campeão —, a edição (sem escolher, vale a do jogo no ar), um modelo de estilo e os ajustes. A **prévia** usa
 a mesma URL do OBS; copie-a para uma Fonte de navegador (1920 × 1080). Todo o estilo mora na URL: para outra tela ou outro estilo,
 copie outra URL. A tela de cartões só mostra dados se o administrador ligar *Cartões* em Painel > Portal público. Modelos próprios
-podem ser salvos, exportados e importados (JSON). Detalhes técnicos no ADR 0012.
+podem ser salvos, exportados e importados (JSON). Com **Controle ao vivo** ligado na URL, a tela só aparece quando o operador clica em *Mostrar…* em *Telas de campeonato no ar* (ou pela API, `championship_live`); sem isso ela fica sempre no ar. Detalhes técnicos no ADR 0012.
 
 ### Exibir e ocultar em tempo real
 

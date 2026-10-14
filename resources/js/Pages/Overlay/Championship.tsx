@@ -18,6 +18,8 @@ import {
     obsTeam,
 } from '@/lib/obsChampionship';
 import { OVERLAY_FONT_KEYS, overlayFontFamily } from '@/lib/overlayVisual';
+import { Realtime } from '@/lib/echo';
+import { OverlayState, useOverlay } from '@/lib/overlay';
 import { Head } from '@inertiajs/react';
 import { CSSProperties, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -200,8 +202,20 @@ const FRAMES = (anim: string, pos: string): Keyframe[] => {
     }
 };
 
-export default function Championship({ token, view }: { token: string; view: string }) {
+export default function Championship({ token, view, state, realtime }: { token: string; view: string; state: OverlayState; realtime: Realtime }) {
     const cfg = useMemo(() => obsConfig(typeof window === 'undefined' ? '' : window.location.search, view, OVERLAY_FONT_KEYS), [view]);
+
+    // Sem `live=1` a tela fica sempre no ar; com `live=1` só quando o operador a mostra (comando ao vivo do canal).
+    return cfg.live === 1 ? <LiveGate token={token} cfg={cfg} state={state} realtime={realtime} /> : <ChampionshipView token={token} cfg={cfg} visible />;
+}
+
+function LiveGate({ token, cfg, state: initial, realtime }: { token: string; cfg: ObsConfig; state: OverlayState; realtime: Realtime }) {
+    const { state } = useOverlay(token, initial, realtime);
+
+    return <ChampionshipView token={token} cfg={cfg} visible={state.championship?.[cfg.view] === true} />;
+}
+
+function ChampionshipView({ token, cfg, visible }: { token: string; cfg: ObsConfig; visible: boolean }) {
     const [bundle, setBundle] = useState<ObsBundle | null>(null);
     const [status, setStatus] = useState<'loading' | 'ready' | 'error' | 'empty'>('loading');
     const [page, setPage] = useState(0);
@@ -264,10 +278,12 @@ export default function Championship({ token, view }: { token: string; view: str
         if (page >= pages) setPage(0);
     }, [pages, page]);
 
-    // Entrada (e saída/volta, se `hold` > 0) do painel pela animação escolhida.
+    // Entrada (e saída/volta, se `hold` > 0) do painel pela animação escolhida. Oculto pelo operador = fora de cena.
+    const ready = status !== 'loading';
+    const everShown = useRef(false);
     useEffect(() => {
         const element = panel.current;
-        if (!element || status === 'loading') return;
+        if (!element || !ready) return;
         const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const play = (direction: 'in' | 'out') => {
             element.animate?.(FRAMES(cfg.anim, cfg.pos), {
@@ -281,6 +297,20 @@ export default function Championship({ token, view }: { token: string; view: str
             }
         };
         const timers: number[] = [];
+
+        if (!visible) {
+            if (everShown.current) {
+                play('out');
+                timers.push(window.setTimeout(() => { element.style.visibility = 'hidden'; }, reduced ? 1 : 520));
+            } else {
+                element.style.visibility = 'hidden';
+            }
+
+            return () => timers.forEach((timer) => window.clearTimeout(timer));
+        }
+
+        everShown.current = true;
+        element.style.visibility = 'visible';
         const cycle = () => {
             play('in');
             if (cfg.hold > 0) {
@@ -293,7 +323,7 @@ export default function Championship({ token, view }: { token: string; view: str
         cycle();
 
         return () => timers.forEach((timer) => window.clearTimeout(timer));
-    }, [status === 'loading', cfg.anim, cfg.pos, cfg.hold, cfg.gap]);
+    }, [ready, visible, cfg.anim, cfg.pos, cfg.hold, cfg.gap]);
 
     const solid = hex(cfg.bg, cfg.style === 'light' ? '#ffffff' : '#0b0d13');
     const accent = hex(cfg.accent, '#d8ad56');
@@ -312,6 +342,7 @@ export default function Championship({ token, view }: { token: string; view: str
         ...(cfg.bw ? { border: `${cfg.bw}px solid ${hex(cfg.bc, accent)}` } : {}),
         ...(cfg.sh ? { boxShadow: `0 ${Math.round(cfg.sh / 3)}px ${cfg.sh}px rgba(0,0,0,.6)` } : {}),
         ...(cfg.blur ? { backdropFilter: `blur(${cfg.blur}px)` } : {}),
+        ...(!visible && !everShown.current ? { visibility: 'hidden' } : {}),
     } as CSSProperties;
 
     const heading = cfg.title || TITLES[cfg.view] || '';

@@ -17,6 +17,8 @@ final class OverlayControlRules
             'scene' => ['sometimes', 'string', Rule::exists('overlay_scenes', 'id')->where('organization_id', $channel->organization_id)],
             'layers' => ['sometimes', 'array'],
             'layers.*' => ['boolean'],
+            'championship_live' => ['sometimes', 'array'],
+            'championship_live.*' => ['boolean'],
             'appearance' => ['sometimes', 'array'],
             'appearance.preset' => ['sometimes', 'string', Rule::in(OverlayAppearance::PRESETS)],
             'appearance.accent_color' => ['sometimes', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],

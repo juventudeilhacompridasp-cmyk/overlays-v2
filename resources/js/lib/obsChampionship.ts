@@ -72,6 +72,8 @@ export interface ObsConfig {
     blur: number;
     head: 0 | 1;
     dots: 0 | 1;
+    /** 1 = a tela só aparece quando o operador a coloca no ar (comando ao vivo do painel/API). */
+    live: 0 | 1;
 }
 
 export const OBS_STYLE_KEYS = ['style', 'anim', 'accent', 'bg', 'text', 'font', 'surface', 'radius', 'scale', 'bw', 'bc', 'sh', 'pad', 'blur', 'head', 'dots', 'logos', 'pos', 'hold', 'gap', 'rotate', 'speed', 'refresh'] as const;
@@ -139,6 +141,7 @@ export function obsConfig(search: string, viewName: string, fonts: string[] = []
         blur: number('blur', 0, 30, 0),
         head: params.get('head') === '0' ? 0 : 1,
         dots: params.get('dots') === '0' ? 0 : 1,
+        live: params.get('live') === '1' ? 1 : 0,
     };
 }
 
@@ -150,7 +153,7 @@ export function obsQuery(cfg: ObsConfig): string {
     const plain: Record<string, string | number> = {
         style: OBS_DEFAULTS.style, anim: OBS_DEFAULTS.anim, dx: 0, dy: 0, scale: 100, surface: OBS_DEFAULTS.surface, radius: OBS_DEFAULTS.radius, logos: 1,
         hold: 0, gap: OBS_DEFAULTS.gap, rotate: OBS_DEFAULTS.rotate, refresh: OBS_DEFAULTS.refresh, cols: 'std', speed: OBS_DEFAULTS.speed, font: 'global',
-        accent: '', bg: '', text: '', bw: 0, bc: '', sh: 0, pad: 100, blur: 0, head: 1, dots: 1, title: '', subtitle: '', group: '', round: '', pos: defaults.pos,
+        accent: '', bg: '', text: '', bw: 0, bc: '', sh: 0, pad: 100, blur: 0, head: 1, dots: 1, title: '', subtitle: '', group: '', round: '', live: 0, pos: defaults.pos,
         width: defaults.width + (cfg.view === 'standings' && cfg.cols === 'full' ? 160 : 0), rows: info.rows,
     };
 

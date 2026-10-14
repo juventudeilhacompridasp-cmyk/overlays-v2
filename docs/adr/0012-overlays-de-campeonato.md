@@ -38,3 +38,11 @@ parâmetros por URL e modelos —, e o v2 deve oferecê-lo com as mesmas opçõe
   reage ao canal em tempo real. Os dados atualizam por consulta (`refresh`, 15 s por padrão), sem Reverb.
 - Tela nova de campeonato = chave em `ChampionshipOverlayController::VIEWS` + `OBS_VIEWS` + desenho em `Championship.tsx` + testes.
 - A ajuda e o guia do OBS explicam que o estilo vive na URL.
+
+## Adendo — controle ao vivo das telas de campeonato
+
+URLs com `live=1` só aparecem quando o operador as coloca no ar: `overlay_channels.layers.championship` guarda, por tela
+(`OverlayChannel::CHAMPIONSHIP_VIEWS`), se está no ar (padrão: oculta). O estado do canal traz `championship` (mapa tela → bool);
+a página se inscreve no mesmo canal Reverb `overlay.{token}` (com a contingência de 3 s) e anima a entrada/saída. O comando é
+`championship_live` (painel e API de controle, `operate-games`), e dispara `OverlayUpdated` como as demais camadas. Sem `live=1` a
+tela continua sempre no ar (e não abre conexão Reverb). Cenas não guardam este estado.

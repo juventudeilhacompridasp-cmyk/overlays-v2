@@ -5,6 +5,7 @@ namespace App\Modules\Broadcast\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Support\ChampionshipBundle;
+use App\Modules\Broadcast\Support\OverlayState;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,7 +18,7 @@ use Inertia\Response;
  */
 class ChampionshipOverlayController extends Controller
 {
-    public const VIEWS = ['standings', 'fixtures', 'results', 'scorers', 'discipline', 'matchcard', 'ticker', 'champion'];
+    public const VIEWS = OverlayChannel::CHAMPIONSHIP_VIEWS;
 
     public function show(OverlayChannel $channel, string $view): Response
     {
@@ -28,6 +29,7 @@ class ChampionshipOverlayController extends Controller
         return Inertia::render('Overlay/Championship', [
             'token' => $channel->token,
             'view' => $view,
+            'state' => OverlayState::for($channel),
             'realtime' => ['key' => $realtime['key'], 'host' => $realtime['host'], 'port' => $realtime['port'], 'scheme' => $realtime['scheme']],
         ]);
     }
