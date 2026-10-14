@@ -38,6 +38,17 @@ return [
     ],
 
     /*
+    | Landing page do produto (docs/14). Ela sempre existe em `/produto`. Com `root` ligado, a RAIZ dos hosts da landing
+    | (`hosts`, separados por vírgula; sem valor usa o domínio-base e o www dele) também mostra a landing em vez do portal da
+    | organização padrão. `contact_email` recebe o aviso dos contatos enviados pelo formulário (vazio = só guarda).
+    */
+    'landing' => [
+        'root' => (bool) env('PLATFORM_LANDING_ROOT', false),
+        'hosts' => env('PLATFORM_LANDING_HOSTS'),
+    ],
+    'contact_email' => env('PLATFORM_CONTACT_EMAIL'),
+
+    /*
     | Status page (docs/14): limites das sondagens. `fail_threshold` falhas seguidas abrem um incidente automático e
     | `recover_threshold` sucessos seguidos o resolvem. `publish_disk` (opcional) recebe o retrato estático `status/status.json`
     | a cada sondagem (contingência quando a aplicação cai); `storage_disk` é o disco consultado pela sonda de arquivos.

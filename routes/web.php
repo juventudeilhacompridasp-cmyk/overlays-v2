@@ -5,6 +5,8 @@ use App\Http\Middleware\PrivateNoIndex;
 use App\Modules\Broadcast\Http\Controllers\ChampionshipOverlayController;
 use App\Modules\Broadcast\Http\Controllers\OverlayController;
 use App\Modules\Market\Http\Controllers\SignupController;
+use App\Modules\Marketing\Http\Controllers\LandingController;
+use App\Modules\Marketing\Support\LandingHosts;
 use App\Modules\Matches\Http\Controllers\PublicGameController;
 use App\Modules\Portal\Http\Controllers\CardVerifyController;
 use App\Modules\Portal\Http\Controllers\EmbedController;
@@ -17,6 +19,13 @@ use App\Modules\Status\Http\Controllers\StatusPageController;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Http\Controllers\LegalAcceptController;
 use Illuminate\Support\Facades\Route;
+
+// Landing page do produto (docs/14): sempre em /produto; a raiz só nos hosts da landing quando `platform.landing.root` está ligado.
+foreach (LandingHosts::all() as $landingHost) {
+    Route::domain($landingHost)->get('/', [LandingController::class, 'show']);
+}
+Route::get('/produto', [LandingController::class, 'show'])->middleware('throttle:60,1')->name('marketing.landing');
+Route::post('/produto/contato', [LandingController::class, 'contact'])->middleware('throttle:5,1')->name('marketing.contact');
 
 // Status da plataforma (docs/14): sem login e sem dado de organização; também é a página inicial de status.{domínio-base}.
 if (is_string($statusBase = config('platform.base_domain')) && $statusBase !== '') {

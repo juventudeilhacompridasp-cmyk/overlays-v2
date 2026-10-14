@@ -57,8 +57,15 @@ describe('organization by address', function () {
 
     it('answers 404 for unknown or reserved subdomains instead of falling back', function () {
         $this->get('http://naoexiste.plataforma.test/')->assertNotFound();
-        $this->get('http://www.plataforma.test/')->assertNotFound();
+        $this->get('http://painel.plataforma.test/')->assertNotFound();
         $this->get('http://a.b.plataforma.test/')->assertNotFound();
+    });
+
+    it('serves www and status of the base domain with the default organization, since they are platform hosts', function () {
+        foreach (['www', 'status'] as $host) {
+            $this->get("http://{$host}.plataforma.test/produto")->assertOk();
+            expect(CurrentOrganization::get()->slug)->toBe(config('platform.default_organization_slug'));
+        }
     });
 
     it('ignores subdomains when no base domain is configured', function () {

@@ -204,7 +204,7 @@ class PortalController extends Controller
 
     public function sitemap(): HttpResponse
     {
-        $urls = [route('portal.home')];
+        $urls = [route('portal.home'), route('marketing.landing')];
 
         foreach (Competition::query()->with(['seasons' => fn ($query) => $query->published()])->get() as $competition) {
             foreach ($competition->seasons as $season) {
