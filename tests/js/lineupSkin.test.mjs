@@ -39,7 +39,9 @@ test('the style only changes the classic concept', () => {
     const tunnelGlass = lineupSkin(look({ layout: 'tunnel', style: 'glass' }), '#0f172a', '#14b8a6');
 
     assert.notEqual(premier.card.className, glass.card.className);
-    assert.match(glass.panel.className, /backdrop-blur/);
+    // Sem backdrop-filter: o desfoque do fundo repinta a cada quadro e engasga no navegador do OBS.
+    assert.doesNotMatch(glass.panel.className, /backdrop-blur/);
+    assert.notEqual(glass.panel.style.background, premier.panel.style.background);
     assert.equal(tunnelPremier.card.className, tunnelGlass.card.className);
 });
 

@@ -125,7 +125,7 @@ export function lineupSkin(look: LineupLook, background: string, accent: string)
         case 'cards':
             return { ...base, name, panel: { className: 'overflow-hidden rounded-3xl border border-white/10 shadow-2xl', style: { background: fade(background, look.surface), ...radius } }, card: { className: 'overflow-hidden rounded-2xl border border-white/10', style: (color) => ({ background: `linear-gradient(180deg, ${color}44, ${background})` }) }, number: { ...number, className: `${number.className} rounded-md` } };
         case 'glass':
-            return { ...base, name, panel: { className: 'overflow-hidden rounded-2xl border border-white/25 shadow-2xl backdrop-blur-md', style: { background: fade(background, Math.min(look.surface, 60)), ...radius } }, card: { className: 'overflow-hidden rounded-xl border border-white/20', style: () => ({ background: 'rgba(255,255,255,.08)' }) }, number };
+            return { ...base, name, panel: { className: 'overflow-hidden rounded-2xl border border-white/25 shadow-2xl', style: { background: fade(background, Math.min(look.surface, 70)), ...radius } }, card: { className: 'overflow-hidden rounded-xl border border-white/20', style: () => ({ background: 'rgba(255,255,255,.08)' }) }, number };
         case 'premier':
             return { ...base, name, panel: { className: 'overflow-hidden rounded-none shadow-2xl', style: { background: fade(background, look.surface), ...radius } }, card: { className: 'overflow-hidden rounded-none', style: (color) => ({ background: color }) }, number: { className: 'absolute bottom-0 left-0 bg-white px-2 py-0.5 text-2xl font-black tabular-nums text-slate-900', style: () => ({}) } };
         case 'champions':

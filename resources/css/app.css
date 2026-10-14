@@ -224,12 +224,12 @@
 .goal-sweep .goal-text { display: inline-block; animation: goal-sweep-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 .goal-typewriter .goal-text { display: inline-block; }
 
-/* Entrada da escalação por equipe (transform/opacity e clip-path simples). */
+/* Entrada da escalação por equipe: SÓ transform/opacity (compositor da GPU; clip-path e background-position repintam a cada quadro e engasgam no navegador do OBS). */
 @keyframes lineup-slide { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
-@keyframes lineup-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes lineup-wipe { from { opacity: 0; transform: translateX(-100%); } to { opacity: 1; transform: none; } }
 @keyframes lineup-rise { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
 @keyframes lineup-zoom { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: none; } }
-@keyframes lineup-split { from { clip-path: inset(0 50% 0 50%); } to { clip-path: inset(0 0 0 0); } }
+@keyframes lineup-split { from { opacity: 0; transform: scaleX(0.25); } to { opacity: 1; transform: none; } }
 @keyframes lineup-cascade { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 .lineup-enter-slide { animation: lineup-slide 600ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 .lineup-enter-wipe { animation: lineup-wipe 700ms cubic-bezier(0.16, 1, 0.3, 1) both; }
@@ -237,9 +237,13 @@
 .lineup-enter-zoom { animation: lineup-zoom 600ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 .lineup-enter-split { animation: lineup-split 700ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 .lineup-enter-cascade { animation: lineup-cascade 450ms ease-out both; }
-.lineup-foil { background-size: 200% 200%; animation: lineup-foil-shine 4s linear infinite; }
-@keyframes lineup-foil-shine { 0% { background-position: 0% 0%; } 100% { background-position: 200% 200%; } }
-@media (prefers-reduced-motion: reduce) { .lineup-foil { animation: none; } }
+.lineup-foil { position: relative; }
+.lineup-foil::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.22) 50%, transparent 65%); transform: translateX(-130%); animation: lineup-foil-sweep 4.5s linear infinite; will-change: transform; }
+@keyframes lineup-foil-sweep { 0%, 30% { transform: translateX(-130%); } 100% { transform: translateX(130%); } }
+@media (prefers-reduced-motion: reduce) { .lineup-foil::after { animation: none; } }
+/* Saída dos cartões (cascata: saem na ordem inversa da entrada). */
+@keyframes lineup-leave-cascade { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(16px); } }
+.lineup-leave-cascade { animation: lineup-leave-cascade 240ms ease-in both; }
 
 /* Patrocinadores: animações da rotação e transições da barra 1500 x 200 (transform/opacity). Duração: --sponsor-ms. */
 @keyframes sponsor-fade { from { opacity: 0; } to { opacity: 1; } }
@@ -255,11 +259,11 @@
 .sponsor-in-flip { animation: sponsor-flip var(--sponsor-ms, 600ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
 .sponsor-in-elastic { animation: sponsor-elastic var(--sponsor-ms, 700ms) ease-out both; }
 
-/* Estatísticas da partida: entrada do painel (transform/opacity e clip-path simples). */
+/* Estatísticas da partida: entrada do painel (só transform/opacity). */
 @keyframes stats-rise { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
 @keyframes stats-slide { from { opacity: 0; transform: translateX(-60px); } to { opacity: 1; transform: none; } }
 @keyframes stats-zoom { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: none; } }
-@keyframes stats-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes stats-wipe { from { opacity: 0; transform: translateX(-100%); } to { opacity: 1; transform: none; } }
 @keyframes stats-fade { from { opacity: 0; } to { opacity: 1; } }
 .stats-in-rise { animation: stats-rise 600ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 .stats-in-slide { animation: stats-slide 600ms cubic-bezier(0.16, 1, 0.3, 1) both; }
@@ -270,15 +274,16 @@
 /* Overlay livre (Builder): texto rolante. */
 @keyframes custom-marquee { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 
-/* Troca de etapa da escalação por equipe: a que sai e a que entra (só transform, opacity e clip-path). */
+/* Troca de etapa da escalação por equipe: a que sai e a que entra (SÓ transform e opacity, que rodam no compositor da GPU). Cortinas = a etapa desliza dentro de uma máscara de recorte (.lineup-stage-mask), sem clip-path animado. */
 .lineup-stage { display: grid; }
+.lineup-stage-mask { overflow: hidden; padding: 28px; margin: -28px; }
 .lineup-stage > * { grid-area: 1 / 1; }
 @keyframes lstage-in-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes lstage-out-fade { from { opacity: 1; } to { opacity: 0; } }
 @keyframes lstage-in-slide { from { opacity: 0; transform: translateX(72px); } to { opacity: 1; transform: none; } }
 @keyframes lstage-out-slide { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(-72px); } }
-@keyframes lstage-in-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
-@keyframes lstage-out-wipe { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 0 0 100%); } }
+@keyframes lstage-in-wipe { from { transform: translateX(-101%); } to { transform: none; } }
+@keyframes lstage-out-wipe { from { transform: none; } to { transform: translateX(101%); } }
 @keyframes lstage-in-zoom { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
 @keyframes lstage-out-zoom { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(1.08); } }
 @keyframes lstage-in-flip { from { opacity: 0; transform: perspective(1400px) rotateY(-70deg); } to { opacity: 1; transform: none; } }
@@ -295,13 +300,41 @@
 .lineup-stage-out-flip { animation: lstage-out-flip var(--lineup-out, 440ms) ease-in both; pointer-events: none; }
 @keyframes lstage-in-rise { from { opacity: 0; transform: translateY(64px); } to { opacity: 1; transform: none; } }
 @keyframes lstage-out-rise { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-48px); } }
-@keyframes lstage-in-curtain { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
-@keyframes lstage-out-curtain { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(100% 0 0 0); } }
-@keyframes lstage-in-split { from { clip-path: inset(0 50% 0 50%); } to { clip-path: inset(0 0 0 0); } }
-@keyframes lstage-out-split { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 50% 0 50%); } }
+@keyframes lstage-in-curtain { from { transform: translateY(-101%); } to { transform: none; } }
+@keyframes lstage-out-curtain { from { transform: none; } to { transform: translateY(101%); } }
+@keyframes lstage-in-split { from { opacity: 0; transform: scaleX(0.04); } to { opacity: 1; transform: none; } }
+@keyframes lstage-out-split { from { opacity: 1; transform: none; } to { opacity: 0; transform: scaleX(0.04); } }
 .lineup-stage-in-rise { animation: lstage-in-rise var(--lineup-in, 450ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
 .lineup-stage-out-rise { animation: lstage-out-rise var(--lineup-out, 360ms) ease-in both; pointer-events: none; }
 .lineup-stage-in-curtain { animation: lstage-in-curtain var(--lineup-in, 500ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
 .lineup-stage-out-curtain { animation: lstage-out-curtain var(--lineup-out, 400ms) ease-in both; pointer-events: none; }
 .lineup-stage-in-split { animation: lstage-in-split var(--lineup-in, 520ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
 .lineup-stage-out-split { animation: lstage-out-split var(--lineup-out, 420ms) ease-in both; pointer-events: none; }
+
+/* Entrada e saída do PACOTE inteiro (tela cheia): cortinas e abertura viram movimentos curtos e suaves em vez de varrer a tela. */
+@keyframes lpkg-in-wipe { from { opacity: 0; transform: translateX(-12%); } to { opacity: 1; transform: none; } }
+@keyframes lpkg-out-wipe { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(12%); } }
+@keyframes lpkg-in-curtain { from { opacity: 0; transform: translateY(-10%); } to { opacity: 1; transform: none; } }
+@keyframes lpkg-out-curtain { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(10%); } }
+@keyframes lpkg-in-slide { from { opacity: 0; transform: translateX(8%); } to { opacity: 1; transform: none; } }
+@keyframes lpkg-out-slide { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(-8%); } }
+@keyframes lpkg-in-rise { from { opacity: 0; transform: translateY(8%); } to { opacity: 1; transform: none; } }
+@keyframes lpkg-out-rise { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-6%); } }
+.lineup-pkg-in-fade { animation: lstage-in-fade var(--lineup-in, 350ms) ease-out both; }
+.lineup-pkg-out-fade { animation: lstage-out-fade var(--lineup-out, 280ms) ease-in var(--lineup-delay, 0ms) both; pointer-events: none; }
+.lineup-pkg-in-zoom { animation: lstage-in-zoom var(--lineup-in, 450ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.lineup-pkg-out-zoom { animation: lstage-out-zoom var(--lineup-out, 360ms) ease-in var(--lineup-delay, 0ms) both; pointer-events: none; }
+.lineup-pkg-in-flip { animation: lstage-in-flip var(--lineup-in, 550ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.lineup-pkg-out-flip { animation: lstage-out-flip var(--lineup-out, 440ms) ease-in var(--lineup-delay, 0ms) both; pointer-events: none; }
+.lineup-pkg-in-split { animation: lstage-in-split var(--lineup-in, 520ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.lineup-pkg-out-split { animation: lstage-out-split var(--lineup-out, 420ms) ease-in var(--lineup-delay, 0ms) both; pointer-events: none; }
+.lineup-pkg-in-wipe { animation: lpkg-in-wipe var(--lineup-in, 500ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.lineup-pkg-out-wipe { animation: lpkg-out-wipe var(--lineup-out, 400ms) ease-in var(--lineup-delay, 0ms) both; pointer-events: none; }
+.lineup-pkg-in-curtain { animation: lpkg-in-curtain var(--lineup-in, 500ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.lineup-pkg-out-curtain { animation: lpkg-out-curtain var(--lineup-out, 400ms) ease-in var(--lineup-delay, 0ms) both; pointer-events: none; }
+.lineup-pkg-in-slide { animation: lpkg-in-slide var(--lineup-in, 450ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.lineup-pkg-out-slide { animation: lpkg-out-slide var(--lineup-out, 360ms) ease-in var(--lineup-delay, 0ms) both; pointer-events: none; }
+.lineup-pkg-in-rise { animation: lpkg-in-rise var(--lineup-in, 450ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.lineup-pkg-out-rise { animation: lpkg-out-rise var(--lineup-out, 360ms) ease-in var(--lineup-delay, 0ms) both; pointer-events: none; }
+/* Dicas de composição só enquanto anima (a camada da GPU existe apenas durante a troca). */
+[class*='lineup-stage-in-'], [class*='lineup-stage-out-'], [class*='lineup-pkg-in-'], [class*='lineup-pkg-out-'] { will-change: transform, opacity; backface-visibility: hidden; }
