@@ -28,6 +28,12 @@ Em cada canal, a seção **Visual do overlay** configura o placar:
 Clique em **Aplicar visual**. As fontes que já estão abertas no OBS recebem a mudança por Reverb, sem recarregar. As animações
 usam somente opacidade e transformação para reduzir o trabalho de renderização do Chromium do OBS.
 
+### Telas extras: pré-jogo, comparativo e cartela
+Na coluna **Telas extras** estão três telas sob demanda, cada uma com a sua URL (Fonte de navegador): **Cartela pré-jogo** (escudos, competição,
+local, horário e contagem regressiva para o início), **Comparativo de equipes** (posição na tabela, forma dos últimos 5 jogos e confronto
+direto — os mesmos dados e interruptores do portal) e **Cartela de transmissão** (tela cheia: “Começamos em breve”, “Intervalo”, “Voltamos
+já”, “Fim da transmissão”, com contagem regressiva opcional e os patrocinadores). Todas começam ocultas e o clique em *Mostrar* vale na hora.
+
 ### Tabela e pedidos de tempo
 A tela **Tabela** segue a posição, a escala e o movimento do canal, mostra V/E/D e saldo, destaca as duas equipes do jogo, usa a cor
 de cada equipe e reduz o espaçamento quando passa de 10 linhas. No basquete o placar mostra, abaixo, os **pedidos de tempo que restam** a

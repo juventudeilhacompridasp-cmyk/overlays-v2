@@ -5,6 +5,7 @@ export interface OverlayPreviewLayers {
     standings: boolean;
     scoreboard?: boolean;
     lower_third?: boolean;
+    screens?: Record<string, boolean>;
 }
 
 export interface OverlayPreviewStatus {
@@ -13,7 +14,17 @@ export interface OverlayPreviewStatus {
     description: string;
 }
 
+const EXTRA_SCREENS: Record<string, string> = { prejogo: 'pregame', comparativo: 'compare', cartela: 'cartela' };
+
 export function overlayPreviewStatus(slug: string, hasGame: boolean, layers: OverlayPreviewLayers): OverlayPreviewStatus {
+    const extra = EXTRA_SCREENS[slug];
+
+    if (extra !== undefined && (slug === 'cartela' || hasGame)) {
+        return layers.screens?.[extra] === true
+            ? { label: 'No ar', tone: 'live', description: 'Esta tela está no ar no OBS até você ocultá-la.' }
+            : { label: 'Oculta', tone: 'hidden', description: 'A prévia está disponível; mostre a tela (coluna Telas extras) para exibi-la no OBS.' };
+    }
+
     if (!hasGame) {
         return {
             label: 'Sem jogo',

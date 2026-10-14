@@ -40,3 +40,11 @@ test('the scoreboard and the event banners can be hidden by the operator', () =>
     assert.equal(overlayPreviewStatus('placar', true, { ...layers, scoreboard: true }).tone, 'live');
     assert.equal(overlayPreviewStatus('eventos', true, { ...layers, lower_third: true }).tone, 'automatic');
 });
+
+test('extra screens wait for their own switch and the cartela needs no game', () => {
+    assert.equal(overlayPreviewStatus('prejogo', true, layers).tone, 'hidden');
+    assert.equal(overlayPreviewStatus('prejogo', true, { ...layers, screens: { pregame: true } }).tone, 'live');
+    assert.equal(overlayPreviewStatus('comparativo', false, layers).tone, 'waiting');
+    assert.equal(overlayPreviewStatus('cartela', false, layers).tone, 'hidden');
+    assert.equal(overlayPreviewStatus('cartela', false, { ...layers, screens: { cartela: true } }).tone, 'live');
+});

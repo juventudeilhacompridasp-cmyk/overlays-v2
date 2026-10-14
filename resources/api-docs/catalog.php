@@ -223,6 +223,12 @@ return [
                     'subtitle' => ['type' => 'string', 'maxLength' => 80],
                     'person_id' => ['type' => 'string'],
                 ]],
+                'screens_live' => ['type' => 'object', 'description' => 'Mostra (true) ou oculta (false) ao vivo as telas extras: `pregame` (cartela pré-jogo), `compare` (comparativo de equipes) e `cartela` (cartela de transmissão).', 'additionalProperties' => ['type' => 'boolean']],
+                'screen_settings' => ['type' => 'object', 'description' => 'Texto da cartela de transmissão. `minutes` (0 a 180) inicia uma contagem regressiva; 0 a remove.', 'properties' => [
+                    'title' => ['type' => 'string', 'maxLength' => 60],
+                    'subtitle' => ['type' => 'string', 'maxLength' => 80],
+                    'minutes' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 180],
+                ]],
                 'championship_live' => ['type' => 'object', 'description' => 'Mostra (true) ou oculta (false) ao vivo as telas de campeonato abertas com `live=1` na URL. Chaves: standings, fixtures, results, scorers, discipline, matchcard, ticker, champion.', 'additionalProperties' => ['type' => 'boolean']],
                 'appearance' => ['type' => 'object', 'properties' => [
                     'preset' => ['type' => 'string', 'enum' => ['arena', 'classic', 'minimal']],

@@ -21,6 +21,9 @@ class OverlayController extends Controller
         'escalacao' => 'Overlay/Lineup',
         'tabela' => 'Overlay/Standings',
         'patrocinadores' => 'Overlay/Sponsors',
+        'prejogo' => 'Overlay/Pregame',
+        'comparativo' => 'Overlay/Compare',
+        'cartela' => 'Overlay/Cartela',
     ];
 
     public function show(OverlayChannel $channel, string $overlay): Response

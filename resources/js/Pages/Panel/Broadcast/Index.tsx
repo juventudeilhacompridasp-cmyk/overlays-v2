@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { LowerThirdSettings } from '@/lib/lowerThird';
 import { OBS_VIEWS } from '@/lib/obsChampionship';
 import ChampionshipStudio, { ChampionshipSeason, StyleModel } from './ChampionshipStudio';
+import ExtraScreensStudio from './ExtraScreensStudio';
 import LowerThirdStudio from './LowerThirdStudio';
 import OverlayPreviewStudio from './OverlayPreviewStudio';
 
@@ -87,6 +88,8 @@ interface Channel {
     game_label: string | null;
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     championship_live: Record<string, boolean>;
+    screens_live: Record<string, boolean>;
+    screen_settings: { title: string; subtitle: string; until_ms: number | null };
     appearance: Appearance;
     lineup_settings: LineupSettings;
     lineup_people: LineupPerson[];
@@ -186,7 +189,7 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
-    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; championship_live?: Record<string, boolean>; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings>; lower_third_settings?: Partial<LowerThirdSettings>; lower_third_show?: { kind: string; title?: string; subtitle?: string; person_id?: string } }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
+    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; championship_live?: Record<string, boolean>; screens_live?: Record<string, boolean>; screen_settings?: { title?: string; subtitle?: string; minutes?: number }; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings>; lower_third_settings?: Partial<LowerThirdSettings>; lower_third_show?: { kind: string; title?: string; subtitle?: string; person_id?: string } }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
 
     // Comandos de exibir/ocultar: o botão muda no clique e a mudança segue direto para o OBS; se o servidor recusar, volta ao estado real.
     const [layers, setLayers] = useState(channel.layers);
@@ -294,7 +297,7 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                     </section>
                     <section className="w-[44rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Pré-visualização">
                         <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Pré-visualização</h3>
-                <OverlayPreviewStudio overlays={channel.overlays} hasGame={channel.game_id !== null} layers={channel.layers} />
+                <OverlayPreviewStudio overlays={channel.overlays} hasGame={channel.game_id !== null} layers={{ ...channel.layers, screens: channel.screens_live }} />
                     </section>
                     <section className="w-[26rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Visual">
                         <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Visual</h3>
@@ -466,6 +469,10 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                     </div>
                     {canOperate && <Button small className="mt-4" onClick={() => patch({ lineup_settings: lineupSettings })}>Aplicar escalação</Button>}
                 </div>
+                    </section>
+                    <section className="w-[30rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Telas extras">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Telas extras (pré-jogo, comparativo, cartela)</h3>
+                        <ExtraScreensStudio channelId={channel.id} screens={channel.screens_live} settings={channel.screen_settings} hasGame={channel.game_id !== null} canOperate={canOperate} patch={(data) => patch(data)} />
                     </section>
                     <section className="w-[30rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Lances">
                         <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Lances (lower thirds)</h3>

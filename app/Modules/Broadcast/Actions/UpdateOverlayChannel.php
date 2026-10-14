@@ -11,6 +11,7 @@ use App\Modules\Broadcast\Support\OverlayAppearance;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
 use App\Modules\Broadcast\Support\OverlayLineupTimeline;
 use App\Modules\Broadcast\Support\OverlayLowerThirdSettings;
+use App\Modules\Broadcast\Support\OverlayScreenSettings;
 use App\Modules\Broadcast\Support\OverlaySponsorSettings;
 use App\Modules\Broadcast\Support\OverlayState;
 use App\Modules\Matches\Models\Game;
@@ -46,6 +47,16 @@ final class UpdateOverlayChannel
                 $channel->layers ?? [],
                 array_intersect_key(array_map('boolval', $data['layers']), array_flip(OverlayChannel::LAYERS)),
             );
+        }
+
+        if (isset($data['screens_live']) && is_array($data['screens_live'])) {
+            $channel->layers = array_merge($channel->layers ?? [], [
+                'screens' => array_merge($channel->screensLive(), array_intersect_key(array_map('boolval', $data['screens_live']), array_flip(OverlayChannel::SCREENS))),
+            ]);
+        }
+
+        if (isset($data['screen_settings']) && is_array($data['screen_settings'])) {
+            $channel->screen_settings = OverlayScreenSettings::apply($channel->screen_settings, $data['screen_settings'], (int) (microtime(true) * 1000));
         }
 
         if (isset($data['championship_live']) && is_array($data['championship_live'])) {

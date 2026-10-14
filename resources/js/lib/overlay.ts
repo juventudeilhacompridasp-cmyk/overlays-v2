@@ -40,6 +40,11 @@ export interface OverlayGame {
     away_score: number;
     home_penalties: number | null;
     away_penalties: number | null;
+    scheduled_at: string | null;
+    venue: string | null;
+    competition: string;
+    division: string;
+    stage: string;
     clock: GameClock;
     sport: string;
     score_model: string;
@@ -82,6 +87,13 @@ export interface OverlayState {
     lower_third_settings: LowerThirdSettings;
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     championship: Record<string, boolean>;
+    screens: { pregame: boolean; compare: boolean; cartela: boolean };
+    cartela: { title: string; subtitle: string; until_ms: number | null };
+    compare: {
+        standings: { title: string; home: { position: number; points: number; played: number; of: number } | null; away: { position: number; points: number; played: number; of: number } | null } | null;
+        form: { home: string[]; away: string[] } | null;
+        head_to_head: { home_wins: number; draws: number; away_wins: number } | null;
+    } | null;
     game: OverlayGame | null;
     lineup: { home: LineupSide; away: LineupSide } | null;
     standings: {
