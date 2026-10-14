@@ -44,6 +44,9 @@ final class GameSheetState
     /** @var array<string, int> */
     private array $substitutions = [];
 
+    /** @var array<string, array<int, int>> */
+    private array $substitutionsByPeriod = [];
+
     /** @var array<string, array<string, true>> */
     private array $windows = [];
 
@@ -68,6 +71,7 @@ final class GameSheetState
         $this->fouledOut[$teamId] ??= [];
         $this->disqualifying[$teamId] ??= [];
         $this->substitutions[$teamId] ??= 0;
+        $this->substitutionsByPeriod[$teamId] ??= [];
         $this->windows[$teamId] ??= [];
         $this->used[$teamId] ??= [];
     }
@@ -146,6 +150,7 @@ final class GameSheetState
                 }
 
                 $this->substitutions[$team]++;
+                $this->substitutionsByPeriod[$team][$event->period] = ($this->substitutionsByPeriod[$team][$event->period] ?? 0) + 1;
                 $this->windows[$team][$this->windowKey($event)] = true;
                 $this->used[$team][(string) $person] = true;
                 $this->used[$team][(string) $event->secondaryPersonId] = true;
@@ -219,6 +224,11 @@ final class GameSheetState
     public function substitutionsUsed(string $teamId): int
     {
         return $this->substitutions[$teamId] ?? 0;
+    }
+
+    public function substitutionsUsedInPeriod(string $teamId, int $period): int
+    {
+        return $this->substitutionsByPeriod[$teamId][$period] ?? 0;
     }
 
     public function windowsUsed(string $teamId): int
@@ -298,6 +308,10 @@ final class GameSheetState
 
         if ($this->substitutions[$team] >= $this->rules->maxSubstitutions) {
             return "Limite de {$this->rules->maxSubstitutions} substituições por jogo atingido.";
+        }
+
+        if ($this->rules->maxSubstitutionsPerPeriod !== null && ($this->substitutionsByPeriod[$team][$event->period] ?? 0) >= $this->rules->maxSubstitutionsPerPeriod) {
+            return "Limite de {$this->rules->maxSubstitutionsPerPeriod} substituições neste período atingido.";
         }
 
         $key = $this->windowKey($event);

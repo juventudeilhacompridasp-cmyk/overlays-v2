@@ -105,6 +105,7 @@ class SheetController extends Controller
                     ? ['used' => TeamTimeouts::used($game, $entry->getKey(), $currentPeriod), 'limit' => $game->sport()->profile()->timeoutLimit($currentPeriod)]
                     : null,
                 'substitutions_used' => $state->substitutionsUsed($entry->getKey()),
+                'substitutions_period_used' => $game->sport()->profile()->scoreModel === 'sets' ? $state->substitutionsUsedInPeriod($entry->getKey(), $currentPeriod) : null,
                 'windows_used' => $state->windowsUsed($entry->getKey()),
             ];
         };
@@ -178,6 +179,7 @@ class SheetController extends Controller
                 'bench' => $rules->maxBench,
                 'staff' => $rules->maxStaff,
                 'substitutions' => $rules->maxSubstitutions,
+                'substitutions_per_period' => $rules->maxSubstitutionsPerPeriod,
                 'windows' => $rules->maxSubstitutionWindows,
             ],
             'sport' => $game->sport()->value,
