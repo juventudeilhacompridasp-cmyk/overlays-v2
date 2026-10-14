@@ -34,8 +34,8 @@ final class SaveOverlayCustomItem
 
         $attributes = [
             'name' => $name,
-            'width' => OverlayCustomElements::size($width, $item?->width ?? 1920),
-            'height' => OverlayCustomElements::size($height, $item?->height ?? 1080),
+            'width' => OverlayCustomElements::size($width, $item !== null ? $item->width : 1920),
+            'height' => OverlayCustomElements::size($height, $item !== null ? $item->height : 1080),
             'elements' => OverlayCustomElements::sanitize($elements),
         ];
 

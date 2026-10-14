@@ -55,7 +55,7 @@ class ChannelController extends Controller
             ->limit(60)->get();
 
         return Inertia::render('Panel/Broadcast/Index', [
-            'channels' => $channels->map(function (OverlayChannel $channel) use ($label): array {
+            'channels' => $channels->map(function (OverlayChannel $channel) use ($label, $customItems): array {
                 $game = $channel->game;
                 $people = $game?->lineups
                     ->whereIn('slot', [LineupSlot::Starter, LineupSlot::Bench])
