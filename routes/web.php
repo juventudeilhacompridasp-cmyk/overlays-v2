@@ -6,6 +6,7 @@ use App\Modules\Broadcast\Http\Controllers\ChampionshipOverlayController;
 use App\Modules\Broadcast\Http\Controllers\OverlayController;
 use App\Modules\Market\Http\Controllers\SignupController;
 use App\Modules\Marketing\Http\Controllers\LandingController;
+use App\Modules\Marketing\Http\Controllers\LandingMetricsController;
 use App\Modules\Marketing\Support\LandingHosts;
 use App\Modules\Matches\Http\Controllers\PublicGameController;
 use App\Modules\Portal\Http\Controllers\CardVerifyController;
@@ -26,6 +27,7 @@ foreach (LandingHosts::all() as $landingHost) {
 }
 Route::get('/produto', [LandingController::class, 'show'])->middleware('throttle:60,1')->name('marketing.landing');
 Route::post('/produto/contato', [LandingController::class, 'contact'])->middleware('throttle:5,1')->name('marketing.contact');
+Route::post('/produto/medicao', [LandingMetricsController::class, 'store'])->middleware('throttle:30,1')->name('marketing.metrics');
 
 // Status da plataforma (docs/14): sem login e sem dado de organização; também é a página inicial de status.{domínio-base}.
 if (is_string($statusBase = config('platform.base_domain')) && $statusBase !== '') {

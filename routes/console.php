@@ -20,3 +20,6 @@ Schedule::command('market:expire')->daily();
 // Status page: sonda os componentes a cada minuto (o comando sai com erro se algum falhar, sem derrubar o agendador) e apaga o histórico antigo.
 Schedule::command('status:probe')->everyMinute()->withoutOverlapping()->runInBackground();
 Schedule::command('status:prune')->daily();
+
+// Landing page: contadores da medição anônima com mais de 400 dias são apagados.
+Schedule::command('marketing:prune-metrics')->daily();

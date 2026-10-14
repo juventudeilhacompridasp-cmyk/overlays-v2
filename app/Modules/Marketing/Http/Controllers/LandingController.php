@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Marketing\Actions\StoreLead;
 use App\Modules\Marketing\Http\Requests\StoreLeadRequest;
 use App\Modules\Marketing\Support\LandingContent;
+use App\Modules\Marketing\Support\LandingMetrics;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,6 +22,7 @@ class LandingController extends Controller
         return Inertia::render('Marketing/Landing', [
             'content' => $content,
             'brand' => (string) config('app.name'),
+            'analytics' => LandingMetrics::enabled(),
             'links' => ['privacy' => route('portal.privacy'), 'terms' => route('portal.terms'), 'status' => route('status.index'), 'login' => route('login')],
             'seo' => [
                 'title' => config('app.name').' · Gestão de competições com overlays ao vivo para OBS',

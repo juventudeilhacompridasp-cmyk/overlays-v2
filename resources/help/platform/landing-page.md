@@ -13,6 +13,13 @@ Recursos, overlays, esportes, **pacotes** e perguntas frequentes. A tabela de pa
 ## Galeria "O produto em ação"
 São 7 prints das telas reais (placar, faixa de lance, escalação, classificação, pênaltis, barra de patrocinadores e Modo operador), feitos com **dados fictícios** e guardados em `public/marketing`. Quando uma dessas telas mudar de aparência, quem desenvolve roda `npm run marketing:shots` e publica as imagens novas junto com a mudança.
 
+## Medição de acessos
+A landing pergunta, na primeira visita, se pode **contar os acessos de forma anônima**. Só quem clica em *Permitir* é medido, e quem usa *Do Not Track* ou *Global Privacy Control* no navegador nem vê a pergunta. O rodapé tem *Preferências de medição* para mudar de ideia.
+
+- Guardamos **apenas contadores por dia**: visitas (uma por sessão do navegador), de onde vieram (direto, buscadores, redes sociais ou outros sites, sem guardar o endereço), celular ou computador, seções vistas e botões clicados. Nada de IP, identificador, cookie de rastreio ou histórico de navegação.
+- Em [Medição da landing](route:platform.metrics.index) veja os últimos 7, 30 ou 90 dias: visitas por dia, contatos enviados e *contatos por visita*. Esse último é **aproximado**, porque o formulário também recebe mensagens de quem não permitiu a medição.
+- Os contadores com mais de 400 dias são apagados sozinhos. `PLATFORM_LANDING_ANALYTICS=false` desliga a medição e o aviso.
+
 ## Receber os contatos
 - Cada mensagem fica guardada com nome, e-mail, organização, assunto, texto e a data do **aceite da política de privacidade**. Não guardamos IP, telefone nem CPF.
 - Defina `PLATFORM_CONTACT_EMAIL` para receber um e-mail a cada contato. Sem ele, as mensagens só ficam na lista.
