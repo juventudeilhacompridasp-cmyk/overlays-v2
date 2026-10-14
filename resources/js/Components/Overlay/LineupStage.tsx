@@ -1,4 +1,4 @@
-import { LineupTransition, stageEnterClass, stageExitClass, transitionTiming } from '@/lib/lineupStage';
+import { LineupTransition, stageEnterClass, stageExitClass, stageMasked, transitionTiming } from '@/lib/lineupStage';
 import { CSSProperties, ReactNode, useEffect, useRef, useState } from 'react';
 
 /**
@@ -36,7 +36,7 @@ export function LineupStage({ id, transition, motion, speed = 100, children }: {
     const style = { '--lineup-in': `${timing.enter}ms`, '--lineup-out': `${timing.exit}ms` } as CSSProperties;
 
     return (
-        <div className="lineup-stage" style={style} data-testid="lineup-stage" data-stage={id} data-leaving={leaving?.id ?? ''}>
+        <div className={`lineup-stage ${stageMasked(transition) ? 'lineup-stage-mask' : ''}`} style={style} data-testid="lineup-stage" data-stage={id} data-leaving={leaving?.id ?? ''}>
             {leaving && <div key={`out-${leaving.id}`} className={stageExitClass(transition)} aria-hidden="true">{leaving.node}</div>}
             <div key={`in-${id}`} className={first ? undefined : stageEnterClass(transition)}>{node}</div>
         </div>

@@ -2,7 +2,7 @@ import { AthletePhoto, FormationPitch } from '@/Components/Overlay/Formation';
 import { CardsGrid, FormationCard, IndividualCard, lineupLook } from '@/Components/Overlay/LineupShow';
 import { SponsorBarCard } from '@/Components/Overlay/SponsorBarCard';
 import { LineupStage } from '@/Components/Overlay/LineupStage';
-import { PackageAnimation, LineupTransition, packageTiming, stageEnterClass, stageExitClass, stageKey } from '@/lib/lineupStage';
+import { cardLeaveTotal, PackageAnimation, packageEnterClass, packageExitClass, packageTiming, stageKey } from '@/lib/lineupStage';
 import { Realtime } from '@/lib/echo';
 import { LineupSide, OverlayState, useOverlay } from '@/lib/overlay';
 import { currentStep, individuals, nextChangeAt, stepContent } from '@/lib/overlayLineup';
@@ -63,7 +63,7 @@ const TEAM_PRESENTATIONS = ['cards', 'individual', 'show', 'full'];
  * Apresentação de uma equipe por vez. A etapa (grade, esquema tático ou jogador) sai do relógio do servidor (ou do passo manual)
  * e a troca entre etapas é animada pelo palco; a faixa de patrocinadores fica fixa por baixo e não reinicia a cada etapa.
  */
-export function TeamShow({ state, skew }: { state: OverlayState; skew: number }) {
+export function TeamShow({ state, skew, exiting = false }: { state: OverlayState; skew: number; exiting?: boolean }) {
     const settings = state.lineup_settings;
     const side = state.lineup?.[settings.team];
     const [, tick] = useState(0);
@@ -100,7 +100,7 @@ export function TeamShow({ state, skew }: { state: OverlayState; skew: number })
                         ) : content.kind === 'individual' && players[content.index] ? (
                             <IndividualCard side={side} player={players[content.index]} appearance={appearance} sponsors={state.sponsors} showSponsor={false} look={look} entrance={first} />
                         ) : (
-                            <CardsGrid side={side} players={players} appearance={appearance} sponsors={state.sponsors} showSponsor={false} look={look} entrance={first} />
+                            <CardsGrid side={side} players={players} appearance={appearance} sponsors={state.sponsors} showSponsor={false} look={look} entrance={first} exiting={exiting} />
                         )}
                     </LineupStage>
                     {settings.sponsor_banner && state.sponsors.items.length > 0 && <SponsorBarCard sponsors={state.sponsors} appearance={appearance} scale={settings.sponsor_size} testId="lineup-sponsor-bar" />}
@@ -110,8 +110,8 @@ export function TeamShow({ state, skew }: { state: OverlayState; skew: number })
     );
 }
 
-export default function Lineup({ token, state: initial, realtime }: { token: string; state: OverlayState; realtime: Realtime }) {
-    const { state, skew } = useOverlay(token, initial, realtime);
+/** O pacote da escalação (apresentação, barra de patrocinadores, entrada e saída). Separado da página para poder ser montado sem o tempo real. */
+export function LineupPackage({ state, skew }: { state: OverlayState; skew: number }) {
     const visible = state.lineup !== null;
     const formationAvailable = Boolean(state.lineup?.home.formation_ready && state.lineup?.away.formation_ready);
     const requested = state.lineup_settings.presentation;
@@ -134,6 +134,8 @@ export default function Lineup({ token, state: initial, realtime }: { token: str
     const pkg = (settings.package_animation ?? 'fade') as PackageAnimation;
     const timing = packageTiming(pkg, appearance.motion, settings.motion_speed ?? 100);
     const animated = pkg !== 'none' && appearance.motion !== 'none';
+    // Cartões em cascata saem um a um (na ordem inversa) antes de o bloco sair.
+    const leaveMs = appearance.motion === 'none' ? 0 : cardLeaveTotal(settings.animation ?? 'slide', 11);
     const [mounted, setMounted] = useState(visible);
     const last = useRef(state);
 
@@ -148,24 +150,23 @@ export default function Lineup({ token, state: initial, realtime }: { token: str
             return;
         }
 
-        const timer = window.setTimeout(() => setMounted(false), timing.exit + 40);
+        const timer = window.setTimeout(() => setMounted(false), timing.exit + leaveMs + 60);
 
         return () => window.clearTimeout(timer);
-    }, [visible, timing.exit]);
+    }, [visible, timing.exit, leaveMs]);
 
     const showing = visible || mounted;
     const shown = visible ? state : last.current;
     const numberOnly = shown.lineup_settings.formation_mark === 'number';
     const zoom = shown.lineup_settings.formation_photo_size ?? 100;
-    const packageStyle = { '--lineup-in': `${timing.enter}ms`, '--lineup-out': `${timing.exit}ms` } as CSSProperties;
+    const packageStyle = { '--lineup-in': `${timing.enter}ms`, '--lineup-out': `${timing.exit}ms`, '--lineup-delay': `${leaveMs}ms` } as CSSProperties;
 
     return (
         <div className="fixed inset-0 overflow-hidden font-sans" style={{ ...overlayStyle(appearance), color: appearance.text_color, opacity: showing ? 1 : 0, textShadow: '0 1px 2px rgba(0,0,0,.55)' }} data-testid="overlay-lineup" data-visible={visible} data-phase={phase} data-package={pkg}>
-            <Head title="Escalação" />
             {showing && shown.lineup && shown.game && (
-                <div className={`absolute inset-0 ${animated ? (visible ? stageEnterClass(pkg as LineupTransition) : stageExitClass(pkg as LineupTransition)) : ''}`} style={packageStyle} data-testid="lineup-package" data-state={visible ? 'in' : 'out'}>
+                <div className={`absolute inset-0 ${animated ? (visible ? packageEnterClass(pkg) : packageExitClass(pkg)) : ''}`} style={packageStyle} data-testid="lineup-package" data-state={visible ? 'in' : 'out'}>
                     {TEAM_PRESENTATIONS.includes(requested) ? (
-                        <TeamShow state={shown} skew={skew} />
+                        <TeamShow state={shown} skew={skew} exiting={!visible} />
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center" style={{ transform: `scale(${appearance.scale})` }}>
                             <div className="flex flex-col items-center gap-3">
@@ -189,5 +190,16 @@ export default function Lineup({ token, state: initial, realtime }: { token: str
                 </div>
             )}
         </div>
+    );
+}
+
+export default function Lineup({ token, state: initial, realtime }: { token: string; state: OverlayState; realtime: Realtime }) {
+    const { state, skew } = useOverlay(token, initial, realtime);
+
+    return (
+        <>
+            <Head title="Escalação" />
+            <LineupPackage state={state} skew={skew} />
+        </>
     );
 }

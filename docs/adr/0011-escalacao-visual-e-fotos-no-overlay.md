@@ -44,6 +44,9 @@ A faixa de patrocínio da escalação passou a ser a barra de 1500 x 200 (`Spons
 todos em loop, com a moldura e a transição de `sponsor_settings.bar_*`. `lineup_settings.package_animation` (`none` ou uma das oito animações) é a
 entrada e a saída do pacote inteiro, `motion_speed` (50–200 %) escala todas as animações e `transition` ganhou `rise`, `curtain` e `split`.
 `lib/lineupMotion.ts` guarda os pacotes de animação prontos; são só atalhos (gravam `animation`, `transition` e `package_animation`).
+Todas as animações da escalação rodam só em `transform`/`opacity` (compositor da GPU), por causa do navegador do OBS: as cortinas deslizam dentro de uma máscara
+de recorte, a abertura central é `scaleX`, o brilho da carta de coleção é um `::after` que desliza e o estilo vidro não usa `backdrop-filter`. Os cartões em cascata
+saem na ordem inversa da entrada antes de o pacote sair, e a entrada/saída do pacote inteiro usa movimentos curtos (`lineup-pkg-*`), não varreduras de tela cheia.
 
 ## Adendo — apresentação completa e palco com transições
 

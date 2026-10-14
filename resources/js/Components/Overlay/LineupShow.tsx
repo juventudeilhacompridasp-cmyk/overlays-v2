@@ -1,5 +1,6 @@
 import { AthletePhoto, FormationPitch } from '@/Components/Overlay/Formation';
 import { enterMotion, LineupLook, lineupSkin } from '@/lib/lineupSkin';
+import { cardLeaveDelay } from '@/lib/lineupStage';
 import { Individual } from '@/lib/overlayLineup';
 import { LineupSide, OverlayAppearance, OverlayState } from '@/lib/overlay';
 import { nextSponsorIndex, overlayMotion } from '@/lib/overlayVisual';
@@ -95,7 +96,7 @@ export function IndividualCard({ side, player, appearance, sponsors, showSponsor
 }
 
 /** Grade de cartões da equipe: titulares e comissão (e reservas, se o escopo pedir), no conceito visual escolhido. */
-export function CardsGrid({ side, players, appearance, sponsors, showSponsor, look, sponsorSize = 100, entrance = true }: { side: LineupSide; players: Individual[]; appearance: OverlayAppearance; sponsors: OverlayState['sponsors']; showSponsor: boolean; look: LineupLook; sponsorSize?: number; entrance?: boolean }) {
+export function CardsGrid({ side, players, appearance, sponsors, showSponsor, look, sponsorSize = 100, entrance = true, exiting = false }: { side: LineupSide; players: Individual[]; appearance: OverlayAppearance; sponsors: OverlayState['sponsors']; showSponsor: boolean; look: LineupLook; sponsorSize?: number; entrance?: boolean; exiting?: boolean }) {
     const color = side.color ?? appearance.accent_color;
     const athletes = players.filter((player) => player.kind === 'player');
     const coach = players.find((player) => player.kind === 'coach');
@@ -111,10 +112,11 @@ export function CardsGrid({ side, players, appearance, sponsors, showSponsor, lo
             <div className={`grid ${skin.grid} ${skin.list ? 'gap-0 pb-2' : 'gap-3 px-5 pb-4'}`}>
                 {athletes.map((player, index) => {
                     const enter = enterMotion(look.animation, index);
+                    const leave = exiting ? cardLeaveDelay(look.animation, index, athletes.length) : null;
                     const picture = player.photo_large_url ?? player.photo_url;
 
                     return (
-                        <figure key={`${player.shirt}-${player.name}-${index}`} className={`${skin.card.className} ${entrance ? enter.className : ''}`} style={{ ...skin.card.style(color), ...(entrance ? { animationDelay: `${enter.delay}ms` } : {}) }}>
+                        <figure key={`${player.shirt}-${player.name}-${index}`} className={`${skin.card.className} ${leave !== null ? 'lineup-leave-cascade' : entrance ? enter.className : ''}`} style={{ ...skin.card.style(color), ...(leave !== null ? { animationDelay: `${leave}ms` } : entrance ? { animationDelay: `${enter.delay}ms` } : {}) }}>
                             {skin.list ? (
                                 <>
                                     <span className={skin.number.className} style={skin.number.style(color)}>{pad(player.shirt)}</span>

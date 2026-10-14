@@ -34,6 +34,22 @@ export function transitionTiming(transition: LineupTransition, motion: 'dynamic'
 export const stageEnterClass = (transition: LineupTransition) => `lineup-stage-in-${transition}`;
 export const stageExitClass = (transition: LineupTransition) => `lineup-stage-out-${transition}`;
 
+export const packageEnterClass = (animation: PackageAnimation) => (animation === 'none' ? '' : `lineup-pkg-in-${animation}`);
+export const packageExitClass = (animation: PackageAnimation) => (animation === 'none' ? '' : `lineup-pkg-out-${animation}`);
+
+/** Cortinas deslizam dentro de uma máscara de recorte (sem animar clip-path, que não roda na GPU). */
+export const stageMasked = (transition: LineupTransition) => transition === 'wipe' || transition === 'curtain';
+
+/** Saída dos cartões em cascata: o último a entrar é o primeiro a sair; as demais animações saem junto com o bloco. */
+export function cardLeaveDelay(animation: string, index: number, count: number): number | null {
+    return animation === 'cascade' ? Math.max(0, count - 1 - Math.min(index, 19)) * 40 : null;
+}
+
+/** Quanto tempo (ms) a saída em cascata dos cartões adiciona antes de o bloco sair. */
+export function cardLeaveTotal(animation: string, count: number): number {
+    return animation === 'cascade' ? Math.min(count, 20) * 40 + 240 : 0;
+}
+
 /** Chave da etapa: muda quando o conteúdo muda (grade, esquema ou outro jogador) e dispara a troca animada. */
 export function stageKey(content: { kind: string; index: number }, team: string): string {
     return `${team}:${content.kind}:${content.index}`;
