@@ -5,7 +5,8 @@
     "scripts": {
         "build": "tsc && vite build && vite build --ssr",
         "dev": "vite",
-        "test:js": "node --test tests/js/*.test.mjs"
+        "test:js": "node --test tests/js/*.test.mjs",
+        "marketing:shots": "node scripts/marketing/shots.mjs"
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",

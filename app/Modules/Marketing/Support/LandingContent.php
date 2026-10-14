@@ -38,6 +38,7 @@ class LandingContent
                 ['title' => 'Artes das partidas', 'text' => 'Jogo do dia, resultado, escalação, classificação e artilharia em qualquer proporção, com a identidade visual da sua organização.'],
                 ['title' => 'Marca própria', 'text' => 'Portal com o seu nome, cores e logotipo, e domínio próprio quando o pacote permitir.'],
             ],
+            'gallery' => self::gallery(),
             'overlays' => [
                 'Placar completo com comemoração de gol',
                 'Faixas de lances: gol, cartões e substituições',
@@ -67,6 +68,33 @@ class LandingContent
             ],
             'interests' => array_map(fn (string $key, string $label) => ['value' => $key, 'label' => $label], array_keys(self::INTERESTS), self::INTERESTS),
         ];
+    }
+
+    /**
+     * Galeria da landing: prints REAIS do produto com dados fictícios, gerados por `npm run marketing:shots`
+     * (`scripts/marketing/shots.config.mjs` é a lista de origem; o teste confere que os nomes batem e que os arquivos existem).
+     *
+     * @return list<array{src: string, title: string, text: string, alt: string}>
+     */
+    public static function gallery(): array
+    {
+        $items = [
+            'placar' => ['Placar ao vivo', 'Placar completo com relógio, gols de cada jogador e a identidade da sua organização.'],
+            'gol' => ['Faixa de lance', 'Gol, cartão e substituição saem sozinhos da súmula, com o placar na hora.'],
+            'escalacao' => ['Escalação e esquema tático', 'Grade, esquema tático com fotos e jogador a jogador, com animações leves para o OBS.'],
+            'tabela' => ['Classificação', 'Tabela sempre atualizada, com destaque para as equipes do jogo no ar.'],
+            'penaltis' => ['Disputa de pênaltis', 'Cobrança a cobrança, com a vez de cada equipe e a morte súbita.'],
+            'patrocinio' => ['Barra de patrocinadores', 'Barra 1500 x 200 com vários banners em loop, no ritmo que você escolher.'],
+            'operador' => ['Modo operador', 'Tudo o que vai ao ar numa tela só, sem rolagem, com blocos que você move e redimensiona.'],
+        ];
+
+        $gallery = [];
+
+        foreach ($items as $name => [$title, $text]) {
+            $gallery[] = ['src' => "/marketing/{$name}.webp", 'title' => $title, 'text' => $text, 'alt' => "{$title}: exemplo com dados fictícios"];
+        }
+
+        return $gallery;
     }
 
     /** @return list<array{key: string, label: string, features: list<string>}> */

@@ -85,6 +85,38 @@ describe('landing page', function () {
     });
 });
 
+describe('gallery', function () {
+    it('lists the same screenshots the generator produces, and every file exists as a light WebP', function () {
+        $config = (string) file_get_contents(base_path('scripts/marketing/shots.config.mjs'));
+        preg_match_all("/name: '([a-z0-9-]+)'/", $config, $matches);
+        $generated = $matches[1];
+        $listed = array_map(fn (array $item) => basename($item['src'], '.webp'), LandingContent::gallery());
+
+        expect($generated)->not->toBeEmpty()->and($listed)->toBe($generated);
+
+        foreach (LandingContent::gallery() as $item) {
+            $path = public_path(ltrim($item['src'], '/'));
+            $bytes = (string) file_get_contents($path);
+
+            expect(file_exists($path))->toBeTrue("falta {$item['src']}")
+                ->and(substr($bytes, 0, 4).substr($bytes, 8, 4))->toBe('RIFFWEBP')
+                ->and(strlen($bytes))->toBeLessThan(300 * 1024)
+                ->and($item['alt'])->toContain('dados fictícios');
+        }
+    });
+
+    it('reaches the page and has no file without a listing', function () {
+        $this->get('/produto')->assertOk()->assertInertia(fn ($page) => $page->has('content.gallery', count(LandingContent::gallery())));
+
+        $files = array_map(fn (string $path) => '/marketing/'.basename($path), glob(public_path('marketing/*.webp')) ?: []);
+        sort($files);
+        $listed = array_column(LandingContent::gallery(), 'src');
+        sort($listed);
+
+        expect($files)->toBe($listed);
+    });
+});
+
 describe('contact form', function () {
     it('stores the lead with consent, normalizes the e-mail and warns the team', function () {
         Mail::fake();
