@@ -237,7 +237,7 @@ class PortalController extends Controller
     /** Página pública do local: endereço e os jogos (de edições publicadas) que acontecem ou aconteceram lá. */
     public function venue(Venue $venue): Response
     {
-        $published = fn (Builder $query) => $query->whereHas('division.season', fn ($season) => $season->published());
+        $published = fn ($query) => $query->whereHas('division.season', fn ($season) => $season->published());
         $games = Game::query()->where('venue_id', $venue->getKey())->tap($published)
             ->with(['homeEntry.team', 'awayEntry.team', 'venue', 'group'])
             ->orderByRaw('scheduled_at is null')->orderBy('scheduled_at')->limit(60)->get();
@@ -268,7 +268,7 @@ class PortalController extends Controller
             ->orderByDesc('finished_at')->orderByDesc('updated_at')->limit(30)->get();
 
         $e = fn (string $text): string => htmlspecialchars($text, ENT_XML1 | ENT_QUOTES, 'UTF-8');
-        $updated = ($games->first()?->finished_at ?? now())->toAtomString();
+        $updated = ($games->first()->finished_at ?? now())->toAtomString();
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n".'<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="pt-BR">'."\n";
         $xml .= '  <title>'.$e("Resultados · {$theme['name']}").'</title>'."\n";
