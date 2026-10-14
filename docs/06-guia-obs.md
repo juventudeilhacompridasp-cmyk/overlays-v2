@@ -18,7 +18,7 @@ O **token é a senha do canal**: quem tem a URL vê o canal. Se vazar, use *Reno
 
 Em cada canal, a seção **Visual do overlay** configura o placar:
 
-- estilo: **Arena** (alto contraste), **Clássico** (barra de TV chapada) ou **Minimal** (pílula translúcida);
+- estilo: **Arena** (alto contraste), **Clássico** (barra de TV chapada), **Minimal** (pílula translúcida) ou **Studio** (editorial compacto com linhas retas); o Studio também muda lances, tabela e todas as apresentações da escalação;
 - formato do placar: **barra horizontal**, **equipes empilhadas** (duas linhas, bom para o canto da tela), **compacto** (pílula pequena com siglas) ou **faixa larga** (de ponta a ponta, para o rodapé);
 - cores de destaque, fundo e texto;
 - placar no canto esquerdo, centro ou canto direito, no alto ou embaixo da tela;

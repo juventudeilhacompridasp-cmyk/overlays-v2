@@ -17,6 +17,8 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
   desenhados nas posições definidas pelo gestor; controle pelo painel e pela API, com URLs privadas curtas e sem IDs no estado público.
 - Painel de overlays com estúdio de pré-visualização: quatro telas organizadas em cards, URL real renderizada em 1920 x 1080,
   fundos de conferência, status operacional e ações para copiar/abrir; só uma prévia ao vivo por canal para preservar recursos.
+- Preset Studio completo: linguagem editorial compacta no placar, nos lances, na tabela e em todas as apresentações da
+  escalação, compatível com formatos, fontes, cenas, patrocinadores e comandos ao vivo existentes.
 
 ## Em andamento
 - **Leitura de súmulas enviadas depois do jogo (ADR 0004)**: partes 1 (envio e guarda), 2 (leitura) e 3 (conferência) entregues — leitor estruturado CSV/XLSX sem IA, leitor por IA com visão (Claude, `ANTHROPIC_API_KEY`), `ExtractedSheet`, job em fila, interruptor e limite por jogo da organização, limite mensal da plataforma, aviso de privacidade e texto nos Termos; **recurso segue sob demanda (desligado para todos até o Super Admin liberar)**. Parte 3 entregue (revisão humana da leitura com registro das correções, relatório de conferência na tela e em CSV, sem alterar o jogo). Falta a parte 4 (notificação ao terminar a leitura e métricas de uso na área da plataforma).
@@ -34,8 +36,8 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 - Fila offline: escalação, pênaltis e resultado rápido ainda exigem internet; a página não abre sem internet se for
   recarregada (o service worker não guarda páginas por causa da LGPD).
 - Gestor de equipe: avisos por push/WhatsApp (hoje só e-mail).
-- Overlays: presets Clássico e Minimal, posições inferiores e **patrocinadores (tela com rotação de logotipos) e fontes (10 embutidas + fontes próprias da organização)** entregues; **comandos de exibir/ocultar em tempo real (placar, lances, escalação, tabela e patrocinadores, sem fila)** **escalação jogador a jogador/cartões (automática por x segundos ou manual, comandos ao vivo)** **overlays de campeonato (com controle ao vivo opcional; 8 telas, 7 estilos, 9 animações, modelos e Meus modelos, quadro de configurações com rolagem horizontal)** e **cenas (visual + camadas + patrocinadores guardados com nome e trocados com um clique, também pela API)** entregues; **variações de layout do placar (barra, empilhado, compacto e faixa larga)** entregues; mais variações visuais continuam para os
-  próximos PRs; Arena agora cobre placar, lances, tabela e escalação tática.
+- Overlays: presets Clássico e Minimal, posições inferiores e **patrocinadores (tela com rotação de logotipos) e fontes (10 embutidas + fontes próprias da organização)** entregues; **comandos de exibir/ocultar em tempo real (placar, lances, escalação, tabela e patrocinadores, sem fila)** **escalação jogador a jogador/cartões (automática por x segundos ou manual, comandos ao vivo)** **overlays de campeonato (com controle ao vivo opcional; 8 telas, 7 estilos, 9 animações, modelos e Meus modelos, quadro de configurações com rolagem horizontal)** e **cenas (visual + camadas + patrocinadores guardados com nome e trocados com um clique, também pela API)** entregues; **variações de layout do placar (barra, empilhado, compacto e faixa larga)** e **preset Studio completo nas quatro telas** entregues; mais variações visuais continuam para os
+  próximos PRs.
 - Dashboard: insights e gráficos ilustrados/animados ficam para uma etapa futura; a prioridade atual continua sendo lapidar
   os overlays e, depois, criar variações visuais.
 - Cobrança automática (fora do MVP).

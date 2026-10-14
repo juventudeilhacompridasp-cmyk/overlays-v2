@@ -7,14 +7,16 @@ export default function Standings({ token, state: initial, realtime }: { token: 
     const { state } = useOverlay(token, initial, realtime);
     const table = state.standings;
     const visible = table !== null;
+    const studio = state.appearance.preset === 'studio';
 
     return (
         <div className="fixed inset-y-0 right-0 flex items-center p-10 font-sans transition-opacity duration-500" style={{ ...overlayStyle(state.appearance), color: state.appearance.text_color, opacity: visible ? 1 : 0, textShadow: '0 1px 2px rgba(0,0,0,.55)' }} data-testid="overlay-standings" data-visible={visible}>
             <Head title="Tabela" />
             {table && (
                 <div style={{ transform: `scale(${state.appearance.scale})`, transformOrigin: 'right center' }}>
-                    <div className={`w-[34rem] overflow-hidden rounded-2xl border border-white/15 shadow-2xl ${overlayMotion(state.appearance.motion)}`} style={{ background: `linear-gradient(160deg, ${state.appearance.background_color}f5, ${state.appearance.background_color}df)` }}>
-                        <div className="px-5 py-2 text-xl font-black uppercase tracking-wide" style={{ backgroundColor: state.appearance.accent_color }}>{table.title}</div>
+                    <div className={`relative w-[34rem] overflow-hidden border border-white/15 shadow-2xl ${studio ? 'rounded-sm' : 'rounded-2xl'} ${overlayMotion(state.appearance.motion)}`} style={{ background: studio ? `${state.appearance.background_color}f7` : `linear-gradient(160deg, ${state.appearance.background_color}f5, ${state.appearance.background_color}df)` }}>
+                        {studio && <span className="absolute inset-x-0 top-0 h-[3px]" style={{ backgroundColor: state.appearance.accent_color }} />}
+                        <div className={`px-5 py-2 text-xl font-black uppercase ${studio ? 'tracking-[0.14em]' : 'tracking-wide'}`} style={studio ? { borderBottom: `1px solid ${state.appearance.accent_color}80` } : { backgroundColor: state.appearance.accent_color }}>{table.title}</div>
                         <table className="w-full text-lg">
                         <thead className="text-xs uppercase text-gray-400">
                             <tr>
@@ -27,7 +29,7 @@ export default function Standings({ token, state: initial, realtime }: { token: 
                         </thead>
                         <tbody>
                             {table.rows.map((row) => (
-                                <tr key={row.team} className={row.highlight ? 'font-bold' : ''} style={row.highlight ? { backgroundColor: `${state.appearance.accent_color}3f` } : undefined}>
+                                <tr key={row.team} className={`${row.highlight ? 'font-bold' : ''} ${studio ? 'border-t border-white/10' : ''}`} style={row.highlight ? { backgroundColor: `${state.appearance.accent_color}3f`, boxShadow: studio ? `inset 3px 0 ${state.appearance.accent_color}` : undefined } : undefined}>
                                     <td className="px-3 py-1 text-right tabular-nums text-gray-300">{row.position}</td>
                                     <td className="px-2 py-1">
                                         <span className="flex items-center gap-2">

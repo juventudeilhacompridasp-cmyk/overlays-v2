@@ -8,7 +8,7 @@ import ChampionshipStudio, { ChampionshipSeason, StyleModel } from './Championsh
 import OverlayPreviewStudio from './OverlayPreviewStudio';
 
 interface Appearance {
-    preset: 'arena' | 'classic' | 'minimal';
+    preset: 'arena' | 'classic' | 'minimal' | 'studio';
     accent_color: string;
     background_color: string;
     text_color: string;
@@ -306,6 +306,7 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                                 <option value="arena">Arena (alto contraste)</option>
                                 <option value="classic">Clássico (barra de TV)</option>
                                 <option value="minimal">Minimal (pílula translúcida)</option>
+                                <option value="studio">Studio (editorial compacto)</option>
                             </Select>
                         </Field>
                         <Field label="Formato do placar" htmlFor={`layout-${channel.id}`}>

@@ -23,6 +23,7 @@ test('each preset has its own frame over the same data', () => {
     const arena = scoreboardFrame(appearance());
     const classic = scoreboardFrame(appearance({ preset: 'classic' }));
     const minimal = scoreboardFrame(appearance({ preset: 'minimal' }));
+    const studio = scoreboardFrame(appearance({ preset: 'studio' }));
 
     assert.match(arena.className, /rounded-2xl/);
     assert.ok(arena.style.background.includes('linear-gradient'));
@@ -30,6 +31,8 @@ test('each preset has its own frame over the same data', () => {
     assert.equal(classic.style.backgroundColor, '#0f172a');
     assert.match(minimal.className, /rounded-full/);
     assert.equal(minimal.style.backgroundColor, '#0f172ab3');
+    assert.match(studio.className, /rounded-sm/);
+    assert.equal(studio.style.backgroundColor, '#0f172af7');
 });
 
 test('the sponsor rotation loops, and survives an empty or shrunken list', () => {
@@ -43,6 +46,7 @@ test('the sponsor card follows the preset corners', () => {
     assert.equal(sponsorFrameClass('arena'), 'rounded-2xl');
     assert.equal(sponsorFrameClass('classic'), 'rounded-md');
     assert.equal(sponsorFrameClass('minimal'), 'rounded-full');
+    assert.equal(sponsorFrameClass('studio'), 'rounded-sm');
 });
 
 test('the font choice maps to a stack, a custom id to the registered family, and the default to nothing', () => {

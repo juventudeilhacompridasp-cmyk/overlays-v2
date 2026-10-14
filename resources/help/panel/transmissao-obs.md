@@ -41,7 +41,7 @@ Cadastre os logotipos em **Patrocinadores dos overlays** (quem gerencia competi�
 
 ## Dicas
 - Cartões, disciplina e documentos nunca aparecem nos overlays.
-- O **estilo do placar** pode ser Arena, Clássico ou Minimal, e o placar pode ficar no alto ou embaixo da tela; as cores valem para os três.
+- O **estilo visual** pode ser Arena, Clássico, Minimal ou Studio. O Studio aplica a linguagem editorial ao placar, aos lances, à tabela e às apresentações da escalação; o placar pode ficar no alto ou embaixo da tela e as cores valem para todos.
 - Alterações de visual aparecem na prévia assim que você clica em **Aplicar visual**.
 - Se a conexão em tempo real falhar, a tela continua atualizando por consulta periódica.
 - O passo a passo completo com imagens está no guia do OBS que acompanha o projeto.
