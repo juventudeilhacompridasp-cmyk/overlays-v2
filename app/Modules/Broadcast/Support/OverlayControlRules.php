@@ -42,6 +42,23 @@ final class OverlayControlRules
             'appearance.layout' => ['sometimes', 'string', Rule::in(OverlayAppearance::LAYOUTS)],
             'appearance.scorers' => ['sometimes', 'boolean'],
             'appearance.motion' => ['sometimes', 'string', Rule::in(OverlayAppearance::MOTIONS)],
+            'appearance.x' => ['sometimes', 'nullable', 'integer', 'between:0,100'],
+            'appearance.y' => ['sometimes', 'nullable', 'integer', 'between:0,100'],
+            'appearance.text_scale' => ['sometimes', 'integer', 'between:50,200'],
+            'appearance.show_badge' => ['sometimes', 'boolean'],
+            'appearance.radius' => ['sometimes', 'nullable', 'integer', 'between:0,40'],
+            'appearance.surface' => ['sometimes', 'integer', 'between:30,100'],
+            'appearance.accent_size' => ['sometimes', 'integer', 'between:0,8'],
+            'appearance.shadow' => ['sometimes', 'string', Rule::in(OverlayAppearance::SHADOWS)],
+            'appearance.entrance' => ['sometimes', 'string', Rule::in(OverlayAppearance::ENTRANCES)],
+            'appearance.entrance_speed' => ['sometimes', 'integer', 'between:50,200'],
+            'appearance.period_scale' => ['sometimes', 'integer', 'between:60,200'],
+            'appearance.extra_time_scale' => ['sometimes', 'integer', 'between:60,200'],
+            'appearance.goal_celebration' => ['sometimes', 'boolean'],
+            'appearance.goal_text' => ['sometimes', 'string', 'max:20'],
+            'appearance.goal_word_seconds' => ['sometimes', 'integer', 'between:1,6'],
+            'appearance.goal_team_seconds' => ['sometimes', 'integer', 'between:0,6'],
+            'appearance.goal_animation' => ['sometimes', 'string', Rule::in(OverlayAppearance::GOAL_ANIMATIONS)],
             'appearance.font' => ['sometimes', 'string', function (string $attribute, mixed $value, \Closure $fail) use ($channel): void {
                 $known = in_array($value, OverlayAppearance::FONTS, true)
                     || OverlayFont::query()->where('organization_id', $channel->organization_id)->whereKey(is_string($value) ? strtolower($value) : '')->exists();

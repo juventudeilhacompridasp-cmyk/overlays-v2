@@ -12,7 +12,7 @@ export interface OverlayTeam {
 }
 
 export interface OverlayAppearance {
-    preset: 'arena' | 'classic' | 'minimal';
+    preset: 'arena' | 'classic' | 'minimal' | 'glass' | 'contrast' | 'neon' | 'ribbon' | 'gradient';
     accent_color: string;
     background_color: string;
     text_color: string;
@@ -22,6 +22,24 @@ export interface OverlayAppearance {
     layout: 'bar' | 'stacked' | 'compact' | 'wide';
     scorers: boolean;
     font: string;
+    /** Posição livre em % da tela; nulo = vale `position`. */
+    x?: number | null;
+    y?: number | null;
+    text_scale?: number;
+    show_badge?: boolean;
+    radius?: number | null;
+    surface?: number;
+    accent_size?: number;
+    shadow?: 'none' | 'soft' | 'strong';
+    entrance?: 'none' | 'fade' | 'slide' | 'zoom' | 'assemble';
+    entrance_speed?: number;
+    period_scale?: number;
+    extra_time_scale?: number;
+    goal_celebration?: boolean;
+    goal_text?: string;
+    goal_word_seconds?: number;
+    goal_team_seconds?: number;
+    goal_animation?: 'typewriter' | 'bounce' | 'sweep';
 }
 
 export interface OverlayFontFace {

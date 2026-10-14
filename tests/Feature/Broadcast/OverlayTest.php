@@ -59,6 +59,23 @@ it('builds the overlay state with the score, the clock and the logos', function 
             'font' => 'system',
             'layout' => 'bar',
             'scorers' => false,
+            'x' => null,
+            'y' => null,
+            'text_scale' => 100,
+            'show_badge' => true,
+            'radius' => null,
+            'surface' => 100,
+            'accent_size' => 4,
+            'shadow' => 'soft',
+            'entrance' => 'fade',
+            'entrance_speed' => 100,
+            'period_scale' => 100,
+            'extra_time_scale' => 100,
+            'goal_celebration' => false,
+            'goal_text' => 'GOOOL',
+            'goal_word_seconds' => 2,
+            'goal_team_seconds' => 2,
+            'goal_animation' => 'typewriter',
         ])
         ->and($state['lineup_settings'])->toBe(['presentation' => 'sequence', 'list_seconds' => 6, 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'step' => 0, 'anchor_ms' => 0])
         ->and($state['game']['id'])->toBe($game->id)
@@ -323,14 +340,14 @@ describe('panel', function () {
         $channel = channelFor();
         $this->actingAs(panelUser(Role::Operator));
 
-        foreach (['classic', 'minimal', 'arena'] as $preset) {
+        foreach (['classic', 'minimal', 'arena', 'glass', 'contrast', 'neon', 'ribbon', 'gradient'] as $preset) {
             foreach (['bottom-left', 'bottom-center', 'bottom-right'] as $position) {
                 $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['preset' => $preset, 'position' => $position]])->assertSessionHasNoErrors();
                 expect($channel->fresh()->appearance['preset'])->toBe($preset)->and($channel->fresh()->appearance['position'])->toBe($position);
             }
         }
 
-        $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['preset' => 'neon']])->assertSessionHasErrors('appearance.preset');
+        $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['preset' => 'holografico']])->assertSessionHasErrors('appearance.preset');
         $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['position' => 'center']])->assertSessionHasErrors('appearance.position');
     });
 
