@@ -1,4 +1,4 @@
-import { CardsGrid, IndividualCard } from '@/Components/Overlay/LineupShow';
+import { CardsGrid, IndividualCard, lineupLook } from '@/Components/Overlay/LineupShow';
 import { Realtime } from '@/lib/echo';
 import { LineupSide, OverlayState, useOverlay } from '@/lib/overlay';
 import { currentStep, individuals, nextChangeAt } from '@/lib/overlayLineup';
@@ -8,12 +8,12 @@ import { useEffect, useState } from 'react';
 
 type Player = LineupSide['starters'][number];
 
-function AthletePhoto({ player, size = 'large' }: { player: Pick<Player, 'photo_url' | 'shirt'>; size?: 'small' | 'large' }) {
+function AthletePhoto({ player, size = 'large', numberOnly = false, zoom = 100 }: { player: Pick<Player, 'photo_url' | 'shirt'>; size?: 'small' | 'large'; numberOnly?: boolean; zoom?: number }) {
     const dimension = size === 'large' ? 'h-[4.6rem] w-[4.6rem]' : 'h-11 w-11';
 
     return (
-        <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white/80 bg-slate-900 font-black shadow-lg ${dimension}`}>
-            {player.photo_url ? <img src={player.photo_url} alt="" className="h-full w-full object-cover" /> : <span className={size === 'large' ? 'text-2xl' : 'text-base'}>{player.shirt ?? '—'}</span>}
+        <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white/80 bg-slate-900 font-black shadow-lg ${dimension}`} style={zoom === 100 ? undefined : { zoom: zoom / 100 }}>
+            {player.photo_url && !numberOnly ? <img src={player.photo_url} alt="" className="h-full w-full object-cover" /> : <span className={size === 'large' ? 'text-2xl' : 'text-base'}>{player.shirt ?? '—'}</span>}
         </span>
     );
 }
@@ -67,7 +67,7 @@ function SurfaceMarkings({ sport }: { sport: string }) {
     return <><span className="absolute inset-x-0 top-1/2 border-t-2 border-white/30" /><span className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/30" /><span className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40" /><span className="absolute inset-x-[22%] top-0 h-[17%] border-x-2 border-b-2 border-white/30" /><span className="absolute inset-x-[22%] bottom-0 h-[17%] border-x-2 border-t-2 border-white/30" /></>;
 }
 
-function TacticalPlayer({ player, accent }: { player: Player; accent: string }) {
+function TacticalPlayer({ player, accent, numberOnly, zoom }: { player: Player; accent: string; numberOnly: boolean; zoom: number }) {
     if (player.x === null || player.y === null) return null;
     const x = Math.min(90, Math.max(10, player.x));
     const y = Math.min(84, Math.max(12, player.y));
@@ -75,7 +75,7 @@ function TacticalPlayer({ player, accent }: { player: Player; accent: string }) 
     return (
         <div className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center" style={{ left: `${x}%`, top: `${y}%` }}>
             <div className="relative">
-                <AthletePhoto player={player} />
+                <AthletePhoto player={player} numberOnly={numberOnly} zoom={zoom} />
                 {player.captain && <span className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-amber-300 text-xs font-black text-slate-900 shadow">C</span>}
             </div>
             <span className="mt-1 max-w-40 truncate rounded-full border border-white/20 bg-slate-950/90 px-3 py-1 text-sm font-black shadow-lg">{player.name}</span>
@@ -84,7 +84,7 @@ function TacticalPlayer({ player, accent }: { player: Player; accent: string }) 
     );
 }
 
-function TacticalSide({ side, sport, background, accent }: { side: LineupSide; sport: string; background: string; accent: string }) {
+function TacticalSide({ side, sport, background, accent, numberOnly, zoom }: { side: LineupSide; sport: string; background: string; accent: string; numberOnly: boolean; zoom: number }) {
     const court = sport === 'basketball' || sport === 'volleyball';
 
     return (
@@ -93,7 +93,7 @@ function TacticalSide({ side, sport, background, accent }: { side: LineupSide; s
             <div className={`relative m-4 overflow-hidden rounded-2xl border-2 border-white/45 ${court ? 'h-[31rem] w-[36rem]' : 'h-[43rem] w-[31rem]'}`} style={{ background: sport === 'basketball' ? 'linear-gradient(90deg,#a85f2d,#c77a3b,#a85f2d)' : sport === 'volleyball' ? 'linear-gradient(90deg,#d1943d 0 50%,#3b82a0 50%)' : 'linear-gradient(90deg,#087443,#0a8150,#087443)' }}>
                 <div className="absolute inset-3 border-2 border-white/35" />
                 <SurfaceMarkings sport={sport} />
-                {side.starters.map((player, index) => <TacticalPlayer key={`${player.shirt}-${player.name}-${index}`} player={player} accent={accent} />)}
+                {side.starters.map((player, index) => <TacticalPlayer key={`${player.shirt}-${player.name}-${index}`} player={player} accent={accent} numberOnly={numberOnly} zoom={zoom} />)}
             </div>
         </section>
     );
@@ -122,14 +122,16 @@ function TeamShow({ state, skew }: { state: OverlayState; skew: number }) {
     const showCards = settings.presentation === 'cards' || (settings.presentation === 'show' && step === 0);
     const player = settings.presentation === 'individual' ? players[step] : players[step - 1];
     const appearance = state.appearance;
+    const look = lineupLook(settings);
+    const free = typeof settings.x === 'number' && typeof settings.y === 'number';
 
     return (
-        <div className={`absolute inset-0 flex p-12 ${overlayPosition(appearance.position)}`} data-step={step}>
-            <div style={{ transform: `scale(${appearance.scale})`, transformOrigin: overlayOrigin(appearance.position) }}>
+        <div className={`absolute inset-0 ${free ? '' : `flex p-12 ${overlayPosition(appearance.position)}`}`} data-step={step}>
+            <div style={{ ...(free ? { position: 'absolute', left: `${settings.x}%`, top: `${settings.y}%` } : {}), transform: `scale(${appearance.scale})`, transformOrigin: free ? 'top left' : overlayOrigin(appearance.position) }}>
                 {showCards ? (
-                    <CardsGrid side={side} players={players} appearance={appearance} sponsors={state.sponsors} showSponsor={settings.sponsor_banner} />
+                    <CardsGrid side={side} players={players} appearance={appearance} sponsors={state.sponsors} showSponsor={settings.sponsor_banner} look={look} sponsorSize={settings.sponsor_size} />
                 ) : player ? (
-                    <IndividualCard side={side} player={player} appearance={appearance} sponsors={state.sponsors} showSponsor={settings.sponsor_banner} />
+                    <IndividualCard side={side} player={player} appearance={appearance} sponsors={state.sponsors} showSponsor={settings.sponsor_banner} look={look} sponsorSize={settings.sponsor_size} />
                 ) : null}
             </div>
         </div>
@@ -170,8 +172,8 @@ export default function Lineup({ token, state: initial, realtime }: { token: str
                     </div>
                     <div className={`${common} ${phase === 'formation' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0 pointer-events-none'}`}>
                         <div className={`flex gap-8 ${phase === 'formation' ? overlayMotion(state.appearance.motion) : ''}`}>
-                            <TacticalSide side={state.lineup.home} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} />
-                            <TacticalSide side={state.lineup.away} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} />
+                            <TacticalSide side={state.lineup.home} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} numberOnly={state.lineup_settings.formation_mark === 'number'} zoom={state.lineup_settings.formation_photo_size ?? 100} />
+                            <TacticalSide side={state.lineup.away} sport={state.game.sport} background={state.appearance.background_color} accent={state.appearance.accent_color} numberOnly={state.lineup_settings.formation_mark === 'number'} zoom={state.lineup_settings.formation_photo_size ?? 100} />
                         </div>
                     </div>
                 </div>

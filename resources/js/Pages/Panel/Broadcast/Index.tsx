@@ -3,6 +3,7 @@ import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
 import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent, useEffect, useState } from 'react';
+import { LINEUP_ANIMATIONS, LINEUP_LAYOUTS, LINEUP_STYLES, LineupAnimation, LineupLayout, LineupStyle } from '@/lib/lineupSkin';
 import { LowerThirdSettings } from '@/lib/lowerThird';
 import { OBS_VIEWS } from '@/lib/obsChampionship';
 import ChampionshipStudio, { ChampionshipSeason, StyleModel } from './ChampionshipStudio';
@@ -74,6 +75,17 @@ interface LineupSettings {
     individual_seconds: number;
     individual_scope: 'starters' | 'all';
     sponsor_banner: boolean;
+    layout: LineupLayout;
+    style: LineupStyle;
+    animation: LineupAnimation;
+    formation_mark: 'photo' | 'number';
+    formation_photo_size: number;
+    sponsor_size: number;
+    x: number | null;
+    y: number | null;
+    surface: number;
+    radius: number | null;
+    text_scale: number;
     step: number;
     anchor_ms: number;
 }
@@ -592,6 +604,69 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                             </div>
                         )}
                     </div>
+                    <details className="mt-4 rounded-lg border border-gray-200 p-3" data-testid="lineup-visual">
+                        <summary className="cursor-pointer text-sm font-medium text-gray-800">Visual da apresentação: conceito, estilo, animação, posição e esquema tático</summary>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                            <div className="sm:col-span-2" role="group" aria-label="Conceito da apresentação">
+                                <div className="mb-1 text-sm font-medium text-gray-700">Conceito (cartões e jogador a jogador)</div>
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                    {LINEUP_LAYOUTS.map((item) => (
+                                        <button key={item.key} type="button" disabled={!canOperate} aria-pressed={lineupSettings.layout === item.key} onClick={() => setLineupSettings({ ...lineupSettings, layout: item.key })}
+                                            className={`rounded-lg border p-2 text-left text-sm ${lineupSettings.layout === item.key ? 'border-teal-600 bg-teal-50 text-teal-900' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                            <div className="font-semibold">{item.label}</div>
+                                            <div className="text-xs text-gray-500">{item.hint}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <Field label="Estilo (conceito Clássico)" htmlFor={`lineup-style-${channel.id}`}>
+                                <Select id={`lineup-style-${channel.id}`} disabled={!canOperate || lineupSettings.layout !== 'classic'} value={lineupSettings.style} onChange={(event) => setLineupSettings({ ...lineupSettings, style: event.target.value as LineupStyle })}>
+                                    {LINEUP_STYLES.map((item) => <option key={item.key} value={item.key}>{item.label} — {item.hint}</option>)}
+                                </Select>
+                            </Field>
+                            <Field label="Animação de entrada" htmlFor={`lineup-animation-${channel.id}`}>
+                                <Select id={`lineup-animation-${channel.id}`} disabled={!canOperate} value={lineupSettings.animation} onChange={(event) => setLineupSettings({ ...lineupSettings, animation: event.target.value as LineupAnimation })}>
+                                    {LINEUP_ANIMATIONS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+                                </Select>
+                            </Field>
+                            <Field label={`Tamanho do texto · ${lineupSettings.text_scale}%`} htmlFor={`lineup-text-${channel.id}`}>
+                                <Input id={`lineup-text-${channel.id}`} type="range" min="50" max="200" step="5" disabled={!canOperate} value={lineupSettings.text_scale} onChange={(event) => setLineupSettings({ ...lineupSettings, text_scale: Number(event.target.value) })} />
+                            </Field>
+                            <Field label={`Opacidade do fundo · ${lineupSettings.surface}%`} htmlFor={`lineup-surface-${channel.id}`}>
+                                <Input id={`lineup-surface-${channel.id}`} type="range" min="40" max="100" step="2" disabled={!canOperate} value={lineupSettings.surface} onChange={(event) => setLineupSettings({ ...lineupSettings, surface: Number(event.target.value) })} />
+                            </Field>
+                            <Field label={lineupSettings.radius === null ? 'Cantos · automático' : `Cantos · ${lineupSettings.radius}px`} htmlFor={`lineup-radius-${channel.id}`}>
+                                <Input id={`lineup-radius-${channel.id}`} type="range" min="0" max="40" disabled={!canOperate} value={lineupSettings.radius ?? 12} onChange={(event) => setLineupSettings({ ...lineupSettings, radius: Number(event.target.value) })} />
+                                {lineupSettings.radius !== null && canOperate && <button type="button" className="mt-1 text-xs text-teal-700 underline" onClick={() => setLineupSettings({ ...lineupSettings, radius: null })}>Voltar ao automático</button>}
+                            </Field>
+                            <Field label={`Faixa de patrocinadores · ${lineupSettings.sponsor_size}%`} htmlFor={`lineup-sponsor-size-${channel.id}`}>
+                                <Input id={`lineup-sponsor-size-${channel.id}`} type="range" min="60" max="180" step="5" disabled={!canOperate} value={lineupSettings.sponsor_size} onChange={(event) => setLineupSettings({ ...lineupSettings, sponsor_size: Number(event.target.value) })} />
+                            </Field>
+                            <label className="flex items-center gap-2 text-sm text-gray-700 sm:col-span-2">
+                                <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={lineupSettings.x !== null && lineupSettings.y !== null} onChange={(event) => setLineupSettings({ ...lineupSettings, x: event.target.checked ? 5 : null, y: event.target.checked ? 10 : null })} />
+                                Posição livre da apresentação por equipe (X e Y em % da tela)
+                            </label>
+                            {lineupSettings.x !== null && lineupSettings.y !== null && (
+                                <>
+                                    <Field label={`Horizontal · ${lineupSettings.x}%`} htmlFor={`lineup-x-${channel.id}`}>
+                                        <Input id={`lineup-x-${channel.id}`} type="range" min="0" max="100" disabled={!canOperate} value={lineupSettings.x} onChange={(event) => setLineupSettings({ ...lineupSettings, x: Number(event.target.value) })} />
+                                    </Field>
+                                    <Field label={`Vertical · ${lineupSettings.y}%`} htmlFor={`lineup-y-${channel.id}`}>
+                                        <Input id={`lineup-y-${channel.id}`} type="range" min="0" max="100" disabled={!canOperate} value={lineupSettings.y} onChange={(event) => setLineupSettings({ ...lineupSettings, y: Number(event.target.value) })} />
+                                    </Field>
+                                </>
+                            )}
+                            <Field label="Jogadores no esquema tático" htmlFor={`lineup-mark-${channel.id}`}>
+                                <Select id={`lineup-mark-${channel.id}`} disabled={!canOperate} value={lineupSettings.formation_mark} onChange={(event) => setLineupSettings({ ...lineupSettings, formation_mark: event.target.value as LineupSettings['formation_mark'] })}>
+                                    <option value="photo">Foto do atleta (sem foto habilitada, o número)</option>
+                                    <option value="number">Sempre o número da camisa</option>
+                                </Select>
+                            </Field>
+                            <Field label={`Tamanho no esquema · ${lineupSettings.formation_photo_size}%`} htmlFor={`lineup-mark-size-${channel.id}`}>
+                                <Input id={`lineup-mark-size-${channel.id}`} type="range" min="60" max="200" step="5" disabled={!canOperate} value={lineupSettings.formation_photo_size} onChange={(event) => setLineupSettings({ ...lineupSettings, formation_photo_size: Number(event.target.value) })} />
+                            </Field>
+                        </div>
+                    </details>
                     {canOperate && <Button small className="mt-4" onClick={() => patch({ lineup_settings: lineupSettings })}>Aplicar escalação</Button>}
                 </div>
                     </section>

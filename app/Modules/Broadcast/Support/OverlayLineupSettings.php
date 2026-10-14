@@ -18,7 +18,18 @@ final class OverlayLineupSettings
 
     public const COMMANDS = ['next', 'previous', 'reset'];
 
-    /** @return array{presentation: string, list_seconds: int, photo_person_ids: list<string>, team: string, individual_mode: string, individual_seconds: int, individual_scope: string, sponsor_banner: bool, step: int, anchor_ms: int} */
+    /** Conceito visual das apresentações por equipe (cartões e jogador a jogador). */
+    public const LAYOUTS = ['classic', 'tunnel', 'poster', 'sidebar', 'stadium', 'matchday'];
+
+    /** Estilo do conceito `classic` (os outros conceitos têm visual próprio). */
+    public const STYLES = ['editorial', 'cards', 'glass', 'premier', 'champions', 'diagonal'];
+
+    public const ANIMATIONS = ['slide', 'wipe', 'rise', 'zoom', 'split', 'cascade'];
+
+    /** photo = foto do atleta quando habilitada (senão o número); number = sempre o número da camisa. */
+    public const FORMATION_MARKS = ['photo', 'number'];
+
+    /** @return array<string, mixed> */
     public static function defaults(): array
     {
         return [
@@ -30,6 +41,18 @@ final class OverlayLineupSettings
             'individual_seconds' => 6,
             'individual_scope' => 'starters',
             'sponsor_banner' => false,
+            'layout' => 'classic',
+            'style' => 'editorial',
+            'animation' => 'slide',
+            'formation_mark' => 'photo',
+            'formation_photo_size' => 100,
+            'sponsor_size' => 100,
+            // Posição livre em % da tela (nulo = centralizada como sempre).
+            'x' => null,
+            'y' => null,
+            'surface' => 96,
+            'radius' => null,
+            'text_scale' => 100,
             'step' => 0,
             'anchor_ms' => 0,
         ];
@@ -37,7 +60,7 @@ final class OverlayLineupSettings
 
     /**
      * @param  array<string, mixed>|null  $settings
-     * @return array{presentation: string, list_seconds: int, photo_person_ids: list<string>, team: string, individual_mode: string, individual_seconds: int, individual_scope: string, sponsor_banner: bool, step: int, anchor_ms: int}
+     * @return array<string, mixed>
      */
     public static function normalize(?array $settings): array
     {
@@ -45,6 +68,7 @@ final class OverlayLineupSettings
         $values = array_merge($defaults, array_intersect_key($settings ?? [], $defaults));
         $choice = fn (mixed $value, array $allowed, string $fallback): string => is_string($value) && in_array($value, $allowed, true) ? $value : $fallback;
         $number = fn (mixed $value, int $fallback): int => is_numeric($value) ? (int) $value : $fallback;
+        $free = is_numeric($values['x'] ?? null) && is_numeric($values['y'] ?? null);
         $ids = is_array($values['photo_person_ids']) ? $values['photo_person_ids'] : [];
 
         return [
@@ -56,6 +80,17 @@ final class OverlayLineupSettings
             'individual_seconds' => min(30, max(3, $number($values['individual_seconds'], $defaults['individual_seconds']))),
             'individual_scope' => $choice($values['individual_scope'], self::SCOPES, $defaults['individual_scope']),
             'sponsor_banner' => (bool) $values['sponsor_banner'],
+            'layout' => $choice($values['layout'], self::LAYOUTS, $defaults['layout']),
+            'style' => $choice($values['style'], self::STYLES, $defaults['style']),
+            'animation' => $choice($values['animation'], self::ANIMATIONS, $defaults['animation']),
+            'formation_mark' => $choice($values['formation_mark'], self::FORMATION_MARKS, $defaults['formation_mark']),
+            'formation_photo_size' => min(200, max(60, $number($values['formation_photo_size'], 100))),
+            'sponsor_size' => min(180, max(60, $number($values['sponsor_size'], 100))),
+            'x' => $free ? min(100, max(0, $number($values['x'], 0))) : null,
+            'y' => $free ? min(100, max(0, $number($values['y'], 0))) : null,
+            'surface' => min(100, max(40, $number($values['surface'], 96))),
+            'radius' => $values['radius'] === null || $values['radius'] === '' ? null : min(40, max(0, $number($values['radius'], 0))),
+            'text_scale' => min(200, max(50, $number($values['text_scale'], 100))),
             'step' => max(0, $number($values['step'], 0)),
             'anchor_ms' => max(0, $number($values['anchor_ms'], 0)),
         ];
@@ -65,7 +100,7 @@ final class OverlayLineupSettings
      * O que o OBS recebe (nunca os IDs das fotos habilitadas).
      *
      * @param  array<string, mixed>|null  $settings
-     * @return array{presentation: string, list_seconds: int, team: string, individual_mode: string, individual_seconds: int, individual_scope: string, sponsor_banner: bool, step: int, anchor_ms: int}
+     * @return array<string, mixed>
      */
     public static function public(?array $settings): array
     {
