@@ -11,6 +11,9 @@ Os overlays são telas de vídeo que o OBS carrega como **fonte de navegador**, 
 ## Escalação jogador a jogador
 Em **Escalação visual** escolha *Cartões*, *Jogador a jogador* ou *Show completo* e a equipe. No modo **automático** cada jogador fica o tempo que você definir (3 a 30 s); no **manual** use **Anterior**, **Próximo** e **Reiniciar** para passar na hora. A foto grande só aparece para quem você habilitou, e a faixa de patrocinadores é opcional.
 
+## Overlays de campeonato
+Na coluna **Campeonato** do canal escolha a tela (tabela, próximos jogos, resultados, artilharia, cartões, jogo em destaque, faixa de placares ou campeão), a edição e o estilo. Os **modelos** aplicam um visual pronto de uma vez; em **Meus modelos** você guarda o seu, exporta e importa. A prévia mostra exatamente o que o OBS vai exibir: copie a URL para uma Fonte de navegador. O estilo vive na URL, então cada tela do OBS tem a sua. Cartões só aparecem se o administrador liberar em Painel > Portal público.
+
 ## Configurar
 1. Em [Transmissão](route:panel.broadcast.index) crie um **canal** (quem gerencia competições). Cada canal tem uma URL fixa por tela: placar, eventos, escalação e tabela.
 2. No OBS, adicione uma fonte **Navegador** com a URL da tela e o tamanho do vídeo (1920 x 1080).

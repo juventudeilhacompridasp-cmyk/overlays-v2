@@ -3,6 +3,7 @@ import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
 import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent, useEffect, useState } from 'react';
+import ChampionshipStudio, { ChampionshipSeason, StyleModel } from './ChampionshipStudio';
 import OverlayPreviewStudio from './OverlayPreviewStudio';
 
 interface Appearance {
@@ -88,6 +89,7 @@ interface Channel {
     sponsor_settings: SponsorSettings;
     has_control_token: boolean;
     control_url: string;
+    championship_base: string;
     overlays: { slug: string; title: string; url: string }[];
 }
 
@@ -174,7 +176,7 @@ function ScenesBlock({ channel, scenes, limit, canManage, canOperate }: { channe
     );
 }
 
-function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, canOperate, issuedControl }: { channel: Channel; games: GameOption[]; fonts: CustomFont[]; scenes: Scene[]; sceneLimit: number; canManage: boolean; canOperate: boolean; issuedControl?: IssuedControl }) {
+function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, styleModels, styleModelLimit, canManage, canOperate, issuedControl }: { channel: Channel; games: GameOption[]; fonts: CustomFont[]; scenes: Scene[]; sceneLimit: number; seasons: ChampionshipSeason[]; styleModels: StyleModel[]; styleModelLimit: number; canManage: boolean; canOperate: boolean; issuedControl?: IssuedControl }) {
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
@@ -440,6 +442,10 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, can
                     {canOperate && <Button small className="mt-4" onClick={() => patch({ lineup_settings: lineupSettings })}>Aplicar escalação</Button>}
                 </div>
                     </section>
+                    <section className="w-[34rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Campeonato">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Campeonato (tabela, jogos, artilharia…)</h3>
+                        <ChampionshipStudio channelId={channel.id} base={channel.championship_base} seasons={seasons} models={styleModels} modelLimit={styleModelLimit} canManage={canManage} />
+                    </section>
                     <section className="w-[26rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Patrocinadores">
                         <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Patrocinadores</h3>
                 <div className="rounded-lg border border-gray-200 p-4">
@@ -602,7 +608,7 @@ function FontsCard({ fonts, limit, canManage }: { fonts: CustomFont[]; limit: nu
     );
 }
 
-export default function Index({ channels, games, issued_control, sponsors, sponsor_limit, fonts, font_limit, scenes, scene_limit }: { channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl; sponsors: Sponsor[]; sponsor_limit: number; fonts: CustomFont[]; font_limit: number; scenes: Scene[]; scene_limit: number }) {
+export default function Index({ channels, games, issued_control, sponsors, sponsor_limit, fonts, font_limit, scenes, scene_limit, style_models, style_model_limit, championship_seasons }: { channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl; sponsors: Sponsor[]; sponsor_limit: number; fonts: CustomFont[]; font_limit: number; scenes: Scene[]; scene_limit: number; style_models: StyleModel[]; style_model_limit: number; championship_seasons: ChampionshipSeason[] }) {
     const canManage = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
     const { data, setData, post, processing, errors, reset } = useForm({ name: '' });
@@ -621,7 +627,7 @@ export default function Index({ channels, games, issued_control, sponsors, spons
                 {channels.length === 0 && <Empty title="Nenhum canal de transmissão ainda.">{canManage ? 'Crie um canal abaixo para gerar as URLs do OBS.' : 'Peça a um organizador para criar um canal.'}</Empty>}
 
                 {channels.map((channel) => (
-                    <ChannelCard key={channel.id} channel={channel} games={games} fonts={fonts} scenes={scenes} sceneLimit={scene_limit} canManage={canManage} canOperate={canOperate} issuedControl={issued_control} />
+                    <ChannelCard key={channel.id} channel={channel} games={games} fonts={fonts} scenes={scenes} sceneLimit={scene_limit} seasons={championship_seasons} styleModels={style_models} styleModelLimit={style_model_limit} canManage={canManage} canOperate={canOperate} issuedControl={issued_control} />
                 ))}
 
                 <SponsorsCard sponsors={sponsors} limit={sponsor_limit} canManage={canManage} />

@@ -8,12 +8,14 @@ use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Models\OverlayFont;
 use App\Modules\Broadcast\Models\OverlayScene;
 use App\Modules\Broadcast\Models\OverlaySponsor;
+use App\Modules\Broadcast\Models\OverlayStyleModel;
 use App\Modules\Broadcast\Support\OverlayAppearance;
 use App\Modules\Broadcast\Support\OverlayControlRules;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
 use App\Modules\Broadcast\Support\OverlayLineupTimeline;
 use App\Modules\Broadcast\Support\OverlaySponsorSettings;
 use App\Modules\Broadcast\Support\OverlayState;
+use App\Modules\Competitions\Models\Season;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Models\Game;
@@ -78,6 +80,7 @@ class ChannelController extends Controller
                     'sponsor_settings' => OverlaySponsorSettings::normalize($channel->sponsor_settings),
                     'lineup_people' => $people,
                     'lineup_steps' => OverlayLineupTimeline::steps(OverlayLineupSettings::normalize($channel->lineup_settings)['presentation'], OverlayState::individualCount($channel)),
+                    'championship_base' => substr(route('overlay.championship', ['channel' => $channel->token, 'view' => 'standings']), 0, -strlen('/standings')),
                     'has_control_token' => $channel->control_token_hash !== null,
                     'control_url' => route('api.v1.overlay-channels.state.update', ['channel' => $channel]),
                     'overlays' => collect(OverlayChannel::OVERLAYS)->map(fn (string $title, string $slug) => [
@@ -93,6 +96,15 @@ class ChannelController extends Controller
             'font_limit' => OverlayFont::LIMIT,
             'scenes' => OverlayScene::query()->orderBy('name')->get()->map(fn (OverlayScene $scene) => ['id' => $scene->id, 'name' => $scene->name])->values(),
             'scene_limit' => OverlayScene::LIMIT,
+            'style_models' => OverlayStyleModel::query()->orderBy('name')->get()->map(fn (OverlayStyleModel $model) => ['id' => $model->id, 'name' => $model->name, 'options' => $model->options])->values(),
+            'style_model_limit' => OverlayStyleModel::LIMIT,
+            'championship_seasons' => Season::query()->published()->with(['competition', 'divisions' => fn ($query) => $query->orderBy('name')])
+                ->orderByDesc('year')->orderByDesc('created_at')->limit(40)->get()
+                ->map(fn (Season $season) => [
+                    'id' => $season->getKey(),
+                    'label' => $season->competition->name.' · '.$season->name,
+                    'divisions' => $season->divisions->map(fn ($division) => ['id' => $division->getKey(), 'name' => $division->name])->values(),
+                ])->values(),
             'games' => $candidates->map(fn (Game $game) => ['id' => $game->id, 'label' => $label($game)])->values(),
             'issued_control' => session()->pull('overlay_issued_control'),
         ]);

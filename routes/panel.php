@@ -8,6 +8,7 @@ use App\Modules\Broadcast\Http\Controllers\ChannelController;
 use App\Modules\Broadcast\Http\Controllers\FontController;
 use App\Modules\Broadcast\Http\Controllers\SceneController;
 use App\Modules\Broadcast\Http\Controllers\SponsorController;
+use App\Modules\Broadcast\Http\Controllers\StyleModelController;
 use App\Modules\Competitions\Http\Controllers\CompetitionController;
 use App\Modules\Competitions\Http\Controllers\DivisionController;
 use App\Modules\Competitions\Http\Controllers\EntryController;
@@ -165,6 +166,9 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::patch('broadcast/patrocinadores/{sponsor}', [SponsorController::class, 'update'])->name('broadcast.sponsors.update');
         Route::post('broadcast/cenas', [SceneController::class, 'store'])->name('broadcast.scenes.store');
         Route::delete('broadcast/cenas/{scene}', [SceneController::class, 'destroy'])->name('broadcast.scenes.destroy');
+        Route::post('broadcast/modelos', [StyleModelController::class, 'store'])->name('broadcast.models.store');
+        Route::post('broadcast/modelos/importar', [StyleModelController::class, 'import'])->name('broadcast.models.import');
+        Route::delete('broadcast/modelos/{model}', [StyleModelController::class, 'destroy'])->name('broadcast.models.destroy');
         Route::post('broadcast/fontes', [FontController::class, 'store'])->name('broadcast.fonts.store');
         Route::delete('broadcast/fontes/{font}', [FontController::class, 'destroy'])->name('broadcast.fonts.destroy');
         Route::delete('broadcast/patrocinadores/{sponsor}', [SponsorController::class, 'destroy'])->name('broadcast.sponsors.destroy');

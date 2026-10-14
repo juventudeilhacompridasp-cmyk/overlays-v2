@@ -49,6 +49,8 @@ const FONT_STACKS: Record<string, string> = {
     marker: '"Permanent Marker","Comic Sans MS",cursive',
 };
 
+export const OVERLAY_FONT_KEYS = Object.keys(FONT_STACKS);
+
 /** Pilha de fontes da escolha do canal; `undefined` = fonte padrão do sistema. Fonte própria (ID) usa a família registrada. */
 export function overlayFontFamily(font: string): string | undefined {
     if (font === 'system' || font === '') return undefined;
