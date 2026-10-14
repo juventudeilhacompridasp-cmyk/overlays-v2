@@ -54,6 +54,14 @@ final class VoidGameEvent
                 }
             }
 
+            if ($event->type === GameEventType::ShotClockReset) {
+                $lastReset = $game->events()->effective()->where('type', GameEventType::ShotClockReset)->orderByDesc('id')->first();
+
+                if ($lastReset?->getKey() !== $event->getKey()) {
+                    throw new InvalidArgumentException('Só o último reinício do relógio de posse pode ser desfeito.');
+                }
+            }
+
             $alreadyVoided = $game->events()->where('compensates_event_id', $event->getKey())->exists();
 
             if ($alreadyVoided) {
@@ -82,7 +90,7 @@ final class VoidGameEvent
 
             $this->projectScore->handle($game);
 
-            if ($isMark || $event->type === GameEventType::Foul) {
+            if ($isMark || in_array($event->type, [...GameEventType::personalFouls(), GameEventType::ShotClockReset], true)) {
                 event(GameUpdated::for($game));
             }
 

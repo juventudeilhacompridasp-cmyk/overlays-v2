@@ -1,5 +1,5 @@
 import { ConnectionState, Realtime, subscribeToGame } from '@/lib/echo';
-import { GameClock, formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
+import { GameClock, ShotClock, formatClock, isInterval, periodLabel, shownSeconds, useGameClock, useShotClock } from '@/lib/clock';
 import PushButton from '@/Components/Portal/PushButton';
 import ShareButtons from '@/Components/Portal/ShareButtons';
 import { Head, Link, router } from '@inertiajs/react';
@@ -36,6 +36,7 @@ export interface Snapshot {
     division: string;
     stage: string;
     clock: GameClock;
+    shot_clock: ShotClock | null;
     sport: string;
     score_model: string;
     quarters: { period: number; home: number; away: number }[] | null;
@@ -198,6 +199,7 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
     }, [connection, snapshot.finished, initial.id]);
 
     const seconds = shownSeconds(snapshot.clock, useGameClock(snapshot.clock, skew.current));
+    const shotSeconds = useShotClock(snapshot.shot_clock ?? { state: 'not_started', period: null, base_seconds: 0, running_since_ms: null }, skew.current);
     const home = snapshot.home?.name ?? 'A definir';
     const away = snapshot.away?.name ?? 'A definir';
 
@@ -249,6 +251,12 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
                 <p className="mt-4 text-center text-lg font-semibold tabular-nums text-emerald-400" data-testid="live-clock" suppressHydrationWarning>
                     {ready || snapshot.clock.state !== 'running' ? clockText : '—'}
                 </p>
+                {snapshot.shot_clock && snapshot.shot_clock.state !== 'not_started' && (
+                    <p className={`mx-auto mt-2 w-fit rounded-lg border px-4 py-1 text-center text-2xl font-black tabular-nums ${shotSeconds <= 5 ? 'border-red-500 text-red-400' : 'border-amber-400 text-amber-300'}`} data-testid="live-shot-clock" suppressHydrationWarning>
+                        {ready || snapshot.shot_clock.state !== 'running' ? shotSeconds : '—'}
+                        <span className="ml-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400">posse</span>
+                    </p>
+                )}
                 {snapshot.sets && snapshot.sets.length > 0 && (
                     <p className="mt-1 text-center text-sm tabular-nums text-gray-400" data-testid="live-sets">
                         {snapshot.sets.map((set) => `${set.home}-${set.away}${set.finished ? '' : ' (em andamento)'}`).join(' · ')}

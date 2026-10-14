@@ -128,6 +128,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::post('games/{game}/events/{event}/void', [SheetController::class, 'voidEvent'])->name('games.events.void');
         Route::post('games/{game}/periods', [SheetController::class, 'period'])->name('games.periods.store');
         Route::post('games/{game}/clock', [SheetController::class, 'clockPause'])->name('games.clock.pause');
+        Route::post('games/{game}/shot-clock', [SheetController::class, 'shotClock'])->name('games.shot-clock.reset');
         Route::post('games/{game}/shootout', [SheetController::class, 'shootout'])->name('games.shootout');
         Route::post('games/{game}/finish', [SheetController::class, 'finish'])->name('games.finish');
     });

@@ -1,4 +1,4 @@
-import { GameClock } from '@/lib/clock';
+import { GameClock, ShotClock } from '@/lib/clock';
 import { ConnectionState, Realtime, subscribeToChannel } from '@/lib/echo';
 import './artFonts';
 import { useEffect, useRef, useState } from 'react';
@@ -40,6 +40,7 @@ export interface OverlayGame {
     home_penalties: number | null;
     away_penalties: number | null;
     clock: GameClock;
+    shot_clock: ShotClock | null;
     sport: string;
     score_model: string;
     quarters: { period: number; home: number; away: number }[] | null;

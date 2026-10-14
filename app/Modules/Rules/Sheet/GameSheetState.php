@@ -83,10 +83,11 @@ final class GameSheetState
             GameEventType::Goal, GameEventType::OwnGoal => $this->checkOnField($event, 'marcar gol'),
             GameEventType::FreeThrow, GameEventType::FieldGoal, GameEventType::ThreePointer => $this->checkOnField($event, 'pontuar') ?? $this->checkNotFouledOut($event),
             GameEventType::Foul => $this->checkInLineup($event) ?? $this->checkNotFouledOut($event),
+            GameEventType::TechnicalFoul, GameEventType::UnsportsmanlikeFoul => $this->checkAthleteInLineup($event) ?? $this->checkNotFouledOut($event),
             GameEventType::YellowCard, GameEventType::RedCard, GameEventType::BlueCard, GameEventType::Warning => $this->checkInLineup($event),
             GameEventType::Substitution => $this->checkSubstitution($event),
             GameEventType::PenaltyKick => $this->checkOnField($event, 'cobrar pênalti'),
-            GameEventType::PeriodStart, GameEventType::PeriodEnd, GameEventType::Point, GameEventType::ClockPause, GameEventType::ClockResume, GameEventType::Timeout => null,
+            GameEventType::PeriodStart, GameEventType::PeriodEnd, GameEventType::Point, GameEventType::ClockPause, GameEventType::ClockResume, GameEventType::Timeout, GameEventType::ShotClockReset => null,
         };
     }
 
@@ -112,6 +113,8 @@ final class GameSheetState
                 break;
 
             case GameEventType::Foul:
+            case GameEventType::TechnicalFoul:
+            case GameEventType::UnsportsmanlikeFoul:
                 $this->fouls[$team][$person] = ($this->fouls[$team][$person] ?? 0) + 1;
 
                 // Basquete: a falta que completa o limite elimina o atleta (ele segue em quadra até ser substituído).
@@ -244,6 +247,19 @@ final class GameSheetState
             || isset($this->used[$event->teamId][$event->personId]);
 
         return $inLineup ? null : 'Esta pessoa não está na escalação do jogo.';
+    }
+
+    private function checkAthleteInLineup(SheetEvent $event): ?string
+    {
+        if ($event->personId === null) {
+            return 'Informe o atleta.';
+        }
+
+        $isAthlete = in_array($event->personId, $this->onField[$event->teamId], true)
+            || in_array($event->personId, $this->bench[$event->teamId], true)
+            || isset($this->used[$event->teamId][$event->personId]);
+
+        return $isAthlete ? null : 'Esta pessoa não é atleta da escalação do jogo.';
     }
 
     private function checkNotFouledOut(SheetEvent $event): ?string

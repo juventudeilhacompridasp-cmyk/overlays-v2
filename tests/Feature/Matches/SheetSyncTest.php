@@ -8,6 +8,7 @@ use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Models\SheetCommand;
+use App\Modules\Matches\Support\PublicGameSnapshot;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
@@ -161,6 +162,28 @@ describe('applying the queue', function () {
 
         expect(collect($response->json('results'))->pluck('status')->all())->toBe(['applied', 'applied', 'applied'])
             ->and($basket->events()->whereIn('type', ['clock_pause', 'clock_resume'])->count())->toBe(2);
+    });
+
+    it('syncs basketball shot-clock resets from the offline queue', function () {
+        ['stage' => $stage] = fixtureDivision(2);
+        $stage->division->season->competition->update(['sport' => Sport::Basketball]);
+        app(GenerateStageFixtures::class)->handle($stage);
+        $basket = Game::query()->where('stage_id', $stage->id)->firstOrFail();
+        $start = now()->subSeconds(20)->startOfSecond();
+
+        $response = $this->actingAs(panelUser(Role::Operator))->postJson(route('panel.games.sync', $basket), ['items' => [
+            queueItem('period', ['start' => true, 'period' => 1], $start),
+            queueItem('shot_clock', ['seconds' => 14], $start->copy()->addSeconds(8)),
+            queueItem('clock', ['pause' => true], $start->copy()->addSeconds(13)),
+        ]])->assertOk();
+
+        $shotClock = PublicGameSnapshot::for($basket->fresh())['shot_clock'];
+
+        expect(collect($response->json('results'))->pluck('status')->all())->toBe(['applied', 'applied', 'applied'])
+            ->and($basket->events()->where('type', GameEventType::ShotClockReset)->count())->toBe(1)
+            ->and(SheetCommand::query()->where('kind', 'shot_clock')->count())->toBe(1)
+            ->and($shotClock['state'])->toBe('paused')
+            ->and($shotClock['base_seconds'])->toBe(9);
     });
 });
 

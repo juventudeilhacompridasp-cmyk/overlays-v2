@@ -8,6 +8,7 @@ use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Portal\Support\PublicName;
 use App\Modules\Rules\Sheet\ClockMark;
+use App\Modules\Rules\Sheet\ShotClock;
 use App\Modules\Teams\Models\Person;
 
 /**
@@ -56,6 +57,7 @@ final class PublicGameSnapshot
             'score_model' => $game->sport()->profile()->scoreModel,
             'sets' => $game->sport()->profile()->scoreModel === 'sets' ? ($game->sets ?? []) : null,
             'clock' => $game->clock()->snapshot($marks) + self::clockDisplay($game, $marks),
+            'shot_clock' => self::shotClock($game),
             'quarters' => self::quarters($game),
             'fouls' => self::fouls($game, $marks, $side),
             'goals' => $goals->map(function (GameEvent $event) use ($side, $names) {
@@ -94,7 +96,7 @@ final class PublicGameSnapshot
         $group = $profile->foulGroup((int) $current);
         $counts = ['home' => 0, 'away' => 0];
 
-        $game->events()->effective()->where('type', GameEventType::Foul)->get()->each(function (GameEvent $event) use (&$counts, $side, $profile, $group): void {
+        $game->events()->effective()->whereIn('type', GameEventType::personalFouls())->get()->each(function (GameEvent $event) use (&$counts, $side, $profile, $group): void {
             $team = $side($event->entry_id);
 
             if ($team !== null && $profile->foulGroup((int) $event->period) === $group) {
@@ -103,6 +105,24 @@ final class PublicGameSnapshot
         });
 
         return ['home' => $counts['home'], 'away' => $counts['away'], 'limit' => $profile->teamFoulLimit, 'period' => $group];
+    }
+
+    /** @return array{state: string, period: int|null, base_seconds: int, running_since_ms: int|null}|null */
+    private static function shotClock(Game $game): ?array
+    {
+        if ($game->sport()->profile()->scoreModel !== 'points') {
+            return null;
+        }
+
+        $types = [...GameEventType::clockMarks(), GameEventType::ShotClockReset];
+        $events = $game->events()->effective()->whereIn('type', $types)->orderBy('id')->get()->map(fn (GameEvent $event) => [
+            'type' => $event->type->value,
+            'period' => (int) $event->period,
+            'at_ms' => $event->created_at->getTimestampMs(),
+            'seconds' => (int) ($event->payload['seconds'] ?? 24),
+        ])->all();
+
+        return (new ShotClock)->snapshot($events);
     }
 
     /**

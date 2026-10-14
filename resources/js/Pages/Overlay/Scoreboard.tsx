@@ -1,4 +1,4 @@
-import { formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
+import { formatClock, isInterval, periodLabel, shownSeconds, useGameClock, useShotClock } from '@/lib/clock';
 import { Realtime } from '@/lib/echo';
 import { OverlayState, OverlayTeam, useOverlay } from '@/lib/overlay';
 import { overlayMotion, overlayOrigin, overlayPosition, overlayStyle, scoreboardFrame } from '@/lib/overlayVisual';
@@ -54,6 +54,7 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
     const game = state.game;
     const elapsed = useGameClock(game?.clock ?? { state: 'not_started', period: null, base_seconds: 0, running_since_ms: null }, skew);
     const seconds = game ? shownSeconds(game.clock, elapsed) : elapsed;
+    const shotSeconds = useShotClock(game?.shot_clock ?? { state: 'not_started', period: null, base_seconds: 0, running_since_ms: null }, skew);
 
     // Comando de ocultar: o placar sai na hora, sem animação (fiel ao clique do operador).
     if (!game || !game.home || !game.away || !state.layers.scoreboard) {
@@ -130,6 +131,11 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
                             <span className={game.fouls.home >= game.fouls.limit ? 'font-bold text-amber-300' : ''}>{game.fouls.home}</span>
                             <span className="text-white/30">×</span>
                             <span className={game.fouls.away >= game.fouls.limit ? 'font-bold text-amber-300' : ''}>{game.fouls.away}</span>
+                        </div>
+                    )}
+                    {game.shot_clock && game.shot_clock.state !== 'not_started' && (
+                        <div className={`mt-1 inline-flex min-w-16 items-center justify-center rounded-lg border px-3 py-1 text-xl font-black tabular-nums shadow-lg ${shotSeconds <= 5 ? 'border-red-400 text-red-300' : 'border-amber-300/50 text-amber-200'}`} style={{ backgroundColor: `${appearance.background_color}f2` }} data-testid="overlay-shot-clock" aria-label={`Posse: ${shotSeconds} segundos`}>
+                            {shotSeconds}
                         </div>
                     )}
                     {game.home_penalties !== null && game.away_penalties !== null && (
