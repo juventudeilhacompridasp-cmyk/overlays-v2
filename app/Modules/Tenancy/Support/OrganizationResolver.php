@@ -14,7 +14,7 @@ use App\Modules\Tenancy\Models\OrganizationDomain;
 final class OrganizationResolver
 {
     /** Subdomínios que nunca viram organização. */
-    public const RESERVED_SLUGS = ['www', 'app', 'api', 'admin', 'painel', 'plataforma', 'mail', 'static', 'cdn', 'ws', 'reverb', 'default'];
+    public const RESERVED_SLUGS = ['www', 'app', 'api', 'admin', 'painel', 'plataforma', 'mail', 'static', 'cdn', 'ws', 'reverb', 'default', 'status'];
 
     public static function forHost(string $host): Organization
     {
@@ -31,6 +31,12 @@ final class OrganizationResolver
 
         if ($base !== null && str_ends_with($host, ".{$base}")) {
             $slug = substr($host, 0, -strlen(".{$base}"));
+
+            // `status.{base}` é a status page da plataforma: não é organização, mas precisa de uma organização ativa para o pipeline web.
+            if ($slug === 'status') {
+                return self::defaultOrganization();
+            }
+
             $organization = $slug !== '' && ! str_contains($slug, '.') && ! in_array($slug, self::RESERVED_SLUGS, true)
                 ? Organization::query()->where('slug', $slug)->first()
                 : null;
@@ -40,6 +46,11 @@ final class OrganizationResolver
             return $organization;
         }
 
+        return self::defaultOrganization();
+    }
+
+    private static function defaultOrganization(): Organization
+    {
         return Organization::query()->firstOrCreate(
             ['slug' => config('platform.default_organization_slug')],
             ['name' => 'Organização padrão', 'plan' => 'pro'],

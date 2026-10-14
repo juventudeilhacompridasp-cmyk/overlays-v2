@@ -33,6 +33,8 @@ x-env: &env
   REVERB_PUBLIC_PORT: ${REVERB_PUBLIC_PORT:-443}
   REVERB_PUBLIC_SCHEME: ${REVERB_PUBLIC_SCHEME:-https}
   REVERB_SCALING_ENABLED: "true"
+  # Status page (opcional): disco que recebe o retrato estático status/status.json (ex.: s3) e limites das sondagens.
+  STATUS_PUBLISH_DISK: ${STATUS_PUBLISH_DISK:-}
   # Avisos push (Web Push/VAPID): sem as chaves o recurso fica desligado. Gere com `php artisan webpush:keys`.
   VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
   VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}

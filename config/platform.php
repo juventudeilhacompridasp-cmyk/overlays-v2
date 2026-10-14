@@ -38,6 +38,20 @@ return [
     ],
 
     /*
+    | Status page (docs/14): limites das sondagens. `fail_threshold` falhas seguidas abrem um incidente automático e
+    | `recover_threshold` sucessos seguidos o resolvem. `publish_disk` (opcional) recebe o retrato estático `status/status.json`
+    | a cada sondagem (contingência quando a aplicação cai); `storage_disk` é o disco consultado pela sonda de arquivos.
+    */
+    'status' => [
+        'fail_threshold' => (int) env('STATUS_FAIL_THRESHOLD', 3),
+        'recover_threshold' => (int) env('STATUS_RECOVER_THRESHOLD', 2),
+        'retention_days' => 90,
+        'queue_max_age' => (int) env('STATUS_QUEUE_MAX_AGE', 180),
+        'publish_disk' => env('STATUS_PUBLISH_DISK'),
+        'storage_disk' => env('STATUS_STORAGE_DISK', 's3'),
+    ],
+
+    /*
     | Leitura de súmulas enviadas (ADR 0004). Limites de custo da leitura por IA (a estruturada CSV/XLSX é gratuita):
     | teto de leituras por jogo (a organização pode baixar) e leituras por organização por mês.
     */

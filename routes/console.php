@@ -16,3 +16,7 @@ Schedule::command('managers:remind-lineups')->everyTenMinutes()->withoutOverlapp
 
 // Perfis do Mercado sem revalidação há 60 dias saem da busca (o atleta pode publicar de novo).
 Schedule::command('market:expire')->daily();
+
+// Status page: sonda os componentes a cada minuto (o comando sai com erro se algum falhar, sem derrubar o agendador) e apaga o histórico antigo.
+Schedule::command('status:probe')->everyMinute()->withoutOverlapping()->runInBackground();
+Schedule::command('status:prune')->daily();

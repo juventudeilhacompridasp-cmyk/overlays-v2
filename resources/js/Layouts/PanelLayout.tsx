@@ -1,60 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
 import FlashToasts from '@/Components/FlashToasts';
 import ThemeToggle from '@/Components/ThemeToggle';
-import { FeatureKey, useCan } from '@/lib/can';
+import { useCan } from '@/lib/can';
+import { activeGroupOf, buildNav, groupOpen, NavGroup, NavGroupId, NavItem } from '@/lib/panelNav';
 import { registerServiceWorker, useOnline } from '@/lib/pwa';
 import { PropsWithChildren, useEffect, useState } from 'react';
 
-type NavItem = { label: string; route: string; match: string; icon: string; feature?: FeatureKey };
-
-const nav: NavItem[] = [
-    { label: 'Painel', route: 'panel.dashboard', match: 'panel.dashboard', icon: 'M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10' },
-    { label: 'Competições', route: 'panel.competitions.index', match: 'panel.competitions.*', icon: 'M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4zM5 4H3v2a3 3 0 003 3M19 4h2v2a3 3 0 01-3 3' },
-    { label: 'Equipes', route: 'panel.teams.index', match: 'panel.teams.*', icon: 'M17 20h5v-2a4 4 0 00-5-3.9M9 11a4 4 0 100-8 4 4 0 000 8zM2 20v-2a4 4 0 014-4h6a4 4 0 014 4v2' },
-    { label: 'Atletas e comissão', route: 'panel.people.index', match: 'panel.people.*', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1' },
-    { label: 'Estádios', route: 'panel.venues.index', match: 'panel.venues.*', icon: 'M12 21s-7-6.2-7-11a7 7 0 1114 0c0 4.8-7 11-7 11zM12 12a2 2 0 100-4 2 2 0 000 4z' },
-    { label: 'Transmissão', route: 'panel.broadcast.index', match: 'panel.broadcast.*', feature: 'overlays', icon: 'M3 7a2 2 0 012-2h9a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7zM15 10l6-3v10l-6-3' },
-];
-
-const registrationsNav: NavItem = { feature: 'online_registration', label: 'Inscrições', route: 'panel.registrations.index', match: 'panel.registrations.*', icon: 'M9 12l2 2 4-4M7 4h10a2 2 0 012 2v14l-3-2-2 2-2-2-2 2-2-2-3 2V6a2 2 0 012-2z' };
-
-const reportsNav: NavItem = { feature: 'reports', label: 'Relatórios', route: 'panel.reports.index', match: 'panel.reports.*', icon: 'M9 17v-6M13 17V7M17 17v-4M4 4v16h16' };
-
-const widgetsNav: NavItem = { label: 'Widgets', route: 'panel.widgets.index', match: 'panel.widgets.*', feature: 'embeds', icon: 'M8 9l-4 3 4 3M16 9l4 3-4 3M13 6l-2 12' };
-
-const artsNav: NavItem = { label: 'Artes', route: 'panel.arts.index', match: 'panel.arts.*', feature: 'arts', icon: 'M4 16l4-4 4 4 3-3 5 5M4 5h16v14H4zM15 9h.01' };
-
-const mesarioNav: NavItem = { label: 'Mesário', route: 'panel.mesario', match: 'panel.mesario', icon: 'M12 18h.01M8 3h8a2 2 0 012 2v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2z' };
-
-// Gestor de equipe (ADR 0003): menu próprio, sem nada do painel do organizador.
-const managerNav: NavItem[] = [
-    { label: 'Início', route: 'manager.dashboard', match: 'manager.dashboard', icon: 'M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10' },
-    { label: 'Jogos e escalações', route: 'manager.games.index', match: 'manager.games.*', icon: 'M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z' },
-    { label: 'Mercado de jogadores', route: 'manager.market.index', match: 'manager.market.*', feature: 'market', icon: 'M17 20h5v-2a4 4 0 00-5-3.9M9 11a4 4 0 100-8 4 4 0 000 8zM2 20v-2a4 4 0 014-4h6a4 4 0 014 4v2' },
-];
-
-// Atleta do Mercado (ADR 0008): menu próprio, sem nada do painel do organizador.
-const athleteNav: NavItem[] = [
-    { label: 'Meu perfil', route: 'athlete.dashboard', match: 'athlete.dashboard', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1' },
-];
-
-const platformNav: NavItem = { label: 'Plataforma', route: 'platform.organizations.index', match: 'platform.*', icon: 'M4 7l8-4 8 4-8 4-8-4zM4 12l8 4 8-4M4 17l8 4 8-4' };
-
-const adminNav: NavItem[] = [
-    { label: 'Comunicações', route: 'panel.communications.edit', match: 'panel.communications.*', icon: 'M3 8l9 6 9-6M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z' },
-    { label: 'Termos e privacidade', route: 'panel.legal.edit', match: 'panel.legal.*', icon: 'M9 12h6M9 16h6M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z' },
-    { label: 'Portal público', route: 'panel.organization.edit', match: 'panel.organization.*', icon: 'M12 21a9 9 0 100-18 9 9 0 000 18zM3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 010 18M12 3a14 14 0 000 18' },
-];
-
-const marketNav: NavItem = { label: 'Mercado de jogadores', route: 'panel.market.index', match: 'panel.market.*', feature: 'market', icon: 'M17 20h5v-2a4 4 0 00-5-3.9M9 11a4 4 0 100-8 4 4 0 000 8zM2 20v-2a4 4 0 014-4h6a4 4 0 014 4v2' };
-
-const usersNav: NavItem = { label: 'Usuários', route: 'panel.users.index', match: 'panel.users.*', icon: 'M16 11a3 3 0 100-6 3 3 0 000 6zM8 11a3 3 0 100-6 3 3 0 000 6zM2 20v-1a4 4 0 014-4h4a4 4 0 014 4v1M15 15h3a4 4 0 014 4v1' };
-
-const profilesNav: NavItem = { label: 'Perfis de acesso', route: 'panel.profiles.index', match: 'panel.profiles.*', icon: 'M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3zM9 12l2 2 4-4' };
-
-const helpIcon = 'M9.1 9a3 3 0 115.8 1c0 2-3 2-3 4M12 17.5h.01M12 21a9 9 0 100-18 9 9 0 000 18z';
-
-const apiDocsNav: NavItem = { label: 'Documentação das APIs', route: 'platform.api-docs.index', match: 'platform.api-docs.*', icon: 'M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14' };
+const NAV_KEY = 'panel:nav-groups';
 
 function Icon({ path }: { path: string }) {
     return (
@@ -76,39 +28,66 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const canManageCompetitions = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
     const canModerateMarket = useCan('manage-market');
-    const base = canManageCompetitions ? [...nav.slice(0, 2), registrationsNav, ...nav.slice(2), reportsNav, widgetsNav] : nav;
     const { features } = usePage().props;
-    const withMesario = canOperate ? [nav[0], mesarioNav, ...base.slice(1)] : base;
-    const withArts = [...withMesario, artsNav];
-    const withMarket = canModerateMarket ? [...withArts, marketNav] : withArts;
-    const all = canManageUsers ? [...withMarket, ...adminNav, usersNav, profilesNav] : withMarket;
-    const withPlatform = auth.platform_admin ? [...all, platformNav, apiDocsNav] : all;
-    const items = auth.role === 'manager' ? managerNav.filter((item) => !item.feature || features.includes(item.feature)) : auth.role === 'athlete' ? athleteNav : withPlatform.filter((item) => !item.feature || features.includes(item.feature));
-    // Ajuda para todos: cada público tem a própria central (painel, gestor ou plataforma).
-    const helpArea = auth.role === 'manager' ? 'manager' : auth.role === 'athlete' ? 'athlete' : auth.role ? 'panel' : 'platform';
-    const helpItem: NavItem = { label: 'Ajuda', route: `${helpArea}.help.index`, match: `${helpArea}.help.*`, icon: helpIcon };
-    // Sem papel e sem ser Super Admin (ex.: só abriu o perfil) não há central de ajuda a abrir.
-    const navItems = auth.role || auth.platform_admin ? [...items, helpItem] : items;
+    const menuData = buildNav({ role: auth.role ?? null, platformAdmin: auth.platform_admin === true, features, can: { competitions: canManageCompetitions, operate: canOperate, users: canManageUsers, market: canModerateMarket } });
+    const activeGroup = activeGroupOf(menuData, (match) => route().current(match));
+    // Grupos abertos/fechados pela pessoa ficam neste navegador; o grupo da página atual abre sempre.
+    const [saved, setSaved] = useState<Partial<Record<NavGroupId, boolean>>>(() => {
+        try {
+            return JSON.parse(window.localStorage.getItem(NAV_KEY) ?? '{}') ?? {};
+        } catch {
+            return {};
+        }
+    });
+    const toggleGroup = (group: NavGroup) => {
+        const next = { ...saved, [group.id]: !groupOpen(group, saved, activeGroup) };
+        setSaved(next);
+
+        try {
+            window.localStorage.setItem(NAV_KEY, JSON.stringify(next));
+        } catch {
+            /* sem armazenamento: vale só nesta visita */
+        }
+    };
+
+    const link = (entry: NavItem, nested = false) => {
+        const active = route().current(entry.match);
+
+        return (
+            <Link
+                key={entry.route}
+                href={route(entry.route)}
+                onClick={() => setOpen(false)}
+                aria-current={active ? 'page' : undefined}
+                className={`flex items-center gap-3 rounded-md py-2 pr-3 text-sm font-medium ${nested ? 'pl-5' : 'pl-3'} ${active ? 'bg-emerald-50 text-emerald-800' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
+            >
+                <Icon path={entry.icon} />
+                {entry.label}
+            </Link>
+        );
+    };
 
     const menu = (
-        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 pb-2">
-            {navItems.map((item) => {
-                const active = route().current(item.match);
+        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 pb-2" aria-label="Menu principal">
+            {menuData.top.map((entry) => link(entry))}
+            {menuData.groups.map((group) => {
+                const expanded = groupOpen(group, saved, activeGroup);
+                const separated = group.area !== 'main';
 
                 return (
-                    <Link
-                        key={item.route}
-                        href={route(item.route)}
-                        onClick={() => setOpen(false)}
-                        className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${
-                            active ? 'bg-emerald-50 text-emerald-800' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                        }`}
-                    >
-                        <Icon path={item.icon} />
-                        {item.label}
-                    </Link>
+                    <div key={group.id} className={separated ? 'mt-2 border-t border-gray-100 pt-2' : 'mt-1'} data-nav-group={group.id} data-area={group.area}>
+                        <button type="button" onClick={() => toggleGroup(group)} aria-expanded={expanded} aria-controls={`nav-${group.id}`} className="flex w-full items-center justify-between rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-400 hover:bg-gray-50 hover:text-gray-600">
+                            <span className="flex items-center gap-1.5">
+                                {separated && <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M7 11V8a5 5 0 0110 0v3M6 11h12v9H6z" /></svg>}
+                                {group.label}
+                            </span>
+                            <svg className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.4} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" /></svg>
+                        </button>
+                        {expanded && <div id={`nav-${group.id}`} className="mt-0.5 flex flex-col gap-0.5">{group.items.map((entry) => link(entry, true))}</div>}
+                    </div>
                 );
             })}
+            {menuData.bottom.length > 0 && <div className="mt-2 border-t border-gray-100 pt-2">{menuData.bottom.map((entry) => link(entry))}</div>}
         </nav>
     );
 
