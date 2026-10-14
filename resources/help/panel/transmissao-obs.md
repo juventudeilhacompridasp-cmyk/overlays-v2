@@ -11,6 +11,9 @@ Os overlays são telas de vídeo que o OBS carrega como **fonte de navegador**, 
 ## Escalação jogador a jogador
 Em **Escalação visual** escolha *Cartões*, *Jogador a jogador* ou *Show completo* e a equipe. No modo **automático** cada jogador fica o tempo que você definir (3 a 30 s); no **manual** use **Anterior**, **Próximo** e **Reiniciar** para passar na hora. A foto grande só aparece para quem você habilitou, e a faixa de patrocinadores é opcional.
 
+## Gols sob o placar, acréscimos e avisos rápidos
+Marque **Mostrar autores dos gols sob o placar** em *Visual do overlay* para listar os goleadores de cada equipe. Em *Acréscimos no relógio* escolha +1 a +8 e o número aparece ao lado do relógio. Na coluna **Lances** há avisos de um clique: VAR, Pênalti, Cartão em análise, Jogo paralisado, Intervalo e Fim de jogo.
+
 ## Telas extras (pré-jogo, comparativo e cartela)
 Na coluna **Telas extras** use *Mostrar* e *Ocultar* para a cartela pré-jogo (com contagem regressiva), o comparativo de equipes e a cartela de transmissão em tela cheia (“Começamos em breve”, “Intervalo”…). Na cartela escolha um modelo, ajuste título e subtítulo e, se quiser, uma contagem regressiva em minutos. Cada tela tem a sua URL para uma Fonte de navegador no OBS.
 

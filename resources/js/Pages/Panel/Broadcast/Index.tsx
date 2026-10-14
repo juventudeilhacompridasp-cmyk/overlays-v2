@@ -19,6 +19,7 @@ interface Appearance {
     scale: number;
     motion: 'dynamic' | 'subtle' | 'none';
     layout: 'bar' | 'stacked' | 'compact' | 'wide';
+    scorers: boolean;
     font: string;
 }
 
@@ -88,6 +89,7 @@ interface Channel {
     game_label: string | null;
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     championship_live: Record<string, boolean>;
+    stoppage: number;
     screens_live: Record<string, boolean>;
     screen_settings: { title: string; subtitle: string; until_ms: number | null };
     appearance: Appearance;
@@ -189,7 +191,7 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
-    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; championship_live?: Record<string, boolean>; screens_live?: Record<string, boolean>; screen_settings?: { title?: string; subtitle?: string; minutes?: number }; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings>; lower_third_settings?: Partial<LowerThirdSettings>; lower_third_show?: { kind: string; title?: string; subtitle?: string; person_id?: string } }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
+    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; championship_live?: Record<string, boolean>; stoppage_minutes?: number; screens_live?: Record<string, boolean>; screen_settings?: { title?: string; subtitle?: string; minutes?: number }; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings>; lower_third_settings?: Partial<LowerThirdSettings>; lower_third_show?: { kind: string; title?: string; subtitle?: string; person_id?: string } }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
 
     // Comandos de exibir/ocultar: o botão muda no clique e a mudança segue direto para o OBS; se o servidor recusar, volta ao estado real.
     const [layers, setLayers] = useState(channel.layers);
@@ -282,6 +284,16 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                     <p className="mt-1 text-xs text-gray-500">Cada clique vale na hora no OBS, sem esperar. {!channel.game_id && 'Escolha um jogo no ar para liberar a escalação e a tabela.'}</p>
                 </div>
                 <div>
+                    <div className="mb-2 text-sm font-medium text-gray-700">Acréscimos no relógio</div>
+                    <div className="flex flex-wrap gap-2">
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((minutes) => (
+                            <Button key={minutes} small variant={channel.stoppage === minutes ? 'primary' : 'secondary'} disabled={!canOperate || !channel.game_id} aria-pressed={channel.stoppage === minutes} onClick={() => patch({ stoppage_minutes: minutes })}>{minutes === 0 ? 'Sem' : `+${minutes}`}</Button>
+                        ))}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Aparece ao lado do relógio do placar enquanto o jogo corre; trocar o jogo zera.</p>
+                </div>
+
+                <div>
                     <div className="mb-2 text-sm font-medium text-gray-700">Telas de campeonato no ar</div>
                     <div className="flex flex-wrap gap-2">
                         {OBS_VIEWS.map((view) => (
@@ -322,6 +334,10 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                                 <option value="wide">Faixa larga (ponta a ponta)</option>
                             </Select>
                         </Field>
+                        <label className="flex items-center gap-2 self-end pb-2 text-sm text-gray-700">
+                            <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={appearance.scorers} onChange={(event) => setAppearance({ ...appearance, scorers: event.target.checked })} />
+                            Mostrar autores dos gols sob o placar
+                        </label>
                         <Field label="Fonte" htmlFor={`font-${channel.id}`}>
                             <Select id={`font-${channel.id}`} disabled={!canOperate} value={appearance.font} onChange={(event) => setAppearance({ ...appearance, font: event.target.value })}>
                                 {catalogFonts.map((font) => (

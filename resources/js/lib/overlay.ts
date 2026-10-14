@@ -20,6 +20,7 @@ export interface OverlayAppearance {
     scale: number;
     motion: 'dynamic' | 'subtle' | 'none';
     layout: 'bar' | 'stacked' | 'compact' | 'wide';
+    scorers: boolean;
     font: string;
 }
 
@@ -87,6 +88,7 @@ export interface OverlayState {
     lower_third_settings: LowerThirdSettings;
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     championship: Record<string, boolean>;
+    stoppage: number;
     screens: { pregame: boolean; compare: boolean; cartela: boolean };
     cartela: { title: string; subtitle: string; until_ms: number | null };
     compare: {

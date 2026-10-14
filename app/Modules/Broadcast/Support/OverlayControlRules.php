@@ -17,6 +17,7 @@ final class OverlayControlRules
             'scene' => ['sometimes', 'string', Rule::exists('overlay_scenes', 'id')->where('organization_id', $channel->organization_id)],
             'layers' => ['sometimes', 'array'],
             'layers.*' => ['boolean'],
+            'stoppage_minutes' => ['sometimes', 'integer', 'between:0,15'],
             'screens_live' => ['sometimes', 'array'],
             'screens_live.*' => ['boolean'],
             'screen_settings' => ['sometimes', 'array'],
@@ -33,6 +34,7 @@ final class OverlayControlRules
             'appearance.position' => ['sometimes', 'string', Rule::in(OverlayAppearance::POSITIONS)],
             'appearance.scale' => ['sometimes', 'numeric', 'between:0.75,1.5'],
             'appearance.layout' => ['sometimes', 'string', Rule::in(OverlayAppearance::LAYOUTS)],
+            'appearance.scorers' => ['sometimes', 'boolean'],
             'appearance.motion' => ['sometimes', 'string', Rule::in(OverlayAppearance::MOTIONS)],
             'appearance.font' => ['sometimes', 'string', function (string $attribute, mixed $value, \Closure $fail) use ($channel): void {
                 $known = in_array($value, OverlayAppearance::FONTS, true)

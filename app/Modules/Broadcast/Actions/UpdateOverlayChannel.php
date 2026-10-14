@@ -49,6 +49,11 @@ final class UpdateOverlayChannel
             );
         }
 
+        // Acréscimos: valor do operador para o jogo no ar; trocar de jogo zera.
+        if ($gameChanged || array_key_exists('stoppage_minutes', $data)) {
+            $channel->screen_settings = OverlayScreenSettings::normalize([...OverlayScreenSettings::normalize($channel->screen_settings), 'stoppage' => $gameChanged ? 0 : (int) $data['stoppage_minutes']]);
+        }
+
         if (isset($data['screens_live']) && is_array($data['screens_live'])) {
             $channel->layers = array_merge($channel->layers ?? [], [
                 'screens' => array_merge($channel->screensLive(), array_intersect_key(array_map('boolval', $data['screens_live']), array_flip(OverlayChannel::SCREENS))),

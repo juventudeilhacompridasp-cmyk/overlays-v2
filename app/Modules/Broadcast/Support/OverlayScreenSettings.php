@@ -8,15 +8,15 @@ namespace App\Modules\Broadcast\Support;
  */
 final class OverlayScreenSettings
 {
-    /** @return array{title: string, subtitle: string, until_ms: int|null} */
+    /** @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int} */
     public static function defaults(): array
     {
-        return ['title' => 'Começamos em breve', 'subtitle' => '', 'until_ms' => null];
+        return ['title' => 'Começamos em breve', 'subtitle' => '', 'until_ms' => null, 'stoppage' => 0];
     }
 
     /**
      * @param  array<string, mixed>|null  $settings
-     * @return array{title: string, subtitle: string, until_ms: int|null}
+     * @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int}
      */
     public static function normalize(?array $settings): array
     {
@@ -27,6 +27,7 @@ final class OverlayScreenSettings
             'title' => mb_substr(trim((string) $values['title']), 0, 60),
             'subtitle' => mb_substr(trim((string) $values['subtitle']), 0, 80),
             'until_ms' => $until,
+            'stoppage' => is_numeric($values['stoppage']) ? min(15, max(0, (int) $values['stoppage'])) : 0,
         ];
     }
 
@@ -35,7 +36,7 @@ final class OverlayScreenSettings
      *
      * @param  array<string, mixed>|null  $current
      * @param  array<string, mixed>  $command
-     * @return array{title: string, subtitle: string, until_ms: int|null}
+     * @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int}
      */
     public static function apply(?array $current, array $command, int $nowMs): array
     {

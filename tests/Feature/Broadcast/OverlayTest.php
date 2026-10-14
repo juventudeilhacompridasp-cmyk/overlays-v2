@@ -58,6 +58,7 @@ it('builds the overlay state with the score, the clock and the logos', function 
             'motion' => 'dynamic',
             'font' => 'system',
             'layout' => 'bar',
+            'scorers' => false,
         ])
         ->and($state['lineup_settings'])->toBe(['presentation' => 'sequence', 'list_seconds' => 6, 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'step' => 0, 'anchor_ms' => 0])
         ->and($state['game']['id'])->toBe($game->id)
