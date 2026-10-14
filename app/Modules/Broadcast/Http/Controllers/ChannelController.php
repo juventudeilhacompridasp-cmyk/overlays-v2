@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Broadcast\Actions\UpdateOverlayChannel;
 use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Models\OverlayFont;
+use App\Modules\Broadcast\Models\OverlayScene;
 use App\Modules\Broadcast\Models\OverlaySponsor;
 use App\Modules\Broadcast\Support\OverlayAppearance;
 use App\Modules\Broadcast\Support\OverlayControlRules;
@@ -87,6 +88,8 @@ class ChannelController extends Controller
             'sponsor_limit' => OverlaySponsor::LIMIT,
             'fonts' => OverlayFont::query()->orderBy('name')->get()->map(fn (OverlayFont $font) => ['id' => $font->id, 'name' => $font->name, 'format' => $font->format])->values(),
             'font_limit' => OverlayFont::LIMIT,
+            'scenes' => OverlayScene::query()->orderBy('name')->get()->map(fn (OverlayScene $scene) => ['id' => $scene->id, 'name' => $scene->name])->values(),
+            'scene_limit' => OverlayScene::LIMIT,
             'games' => $candidates->map(fn (Game $game) => ['id' => $game->id, 'label' => $label($game)])->values(),
             'issued_control' => session()->pull('overlay_issued_control'),
         ]);

@@ -196,11 +196,12 @@ return [
     ],
     'api.v1.overlay-channels.state.update' => [
         'summary' => 'Atualiza o estado e o visual de um canal de overlay',
-        'description' => 'Controle privado para automações da transmissão. Aceita atualizações parciais do jogo no ar, camadas, aparência, rotação de patrocinadores e apresentação da escalação. Use a chave de controle do canal como Bearer; ela é diferente do token público usado pelo OBS.',
+        'description' => 'Controle privado para automações da transmissão. Aceita atualizações parciais do jogo no ar, camadas, aparência, rotação de patrocinadores, apresentação da escalação e a aplicação de uma cena salva. Use a chave de controle do canal como Bearer; ela é diferente do token público usado pelo OBS.',
         'parameters' => ['channel' => 'ID (ULID) do canal de overlay.'],
         'request' => [
             'schema' => ['type' => 'object', 'properties' => [
                 'game_id' => ['type' => ['string', 'null']],
+                'scene' => ['type' => 'string', 'description' => 'ID de uma cena da organização: aplica o visual, as camadas, os patrocinadores e a apresentação da escalação guardados nela. Os demais campos enviados junto valem por cima da cena.'],
                 'layers' => ['type' => 'object', 'properties' => [
                     'scoreboard' => ['type' => 'boolean'],
                     'lower_third' => ['type' => 'boolean'],

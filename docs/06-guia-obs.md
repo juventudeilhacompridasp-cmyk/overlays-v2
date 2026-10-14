@@ -27,6 +27,14 @@ Em cada canal, a seção **Visual do overlay** configura o placar:
 Clique em **Aplicar visual**. As fontes que já estão abertas no OBS recebem a mudança por Reverb, sem recarregar. As animações
 usam somente opacidade e transformação para reduzir o trabalho de renderização do Chromium do OBS.
 
+### Cenas
+
+Em cada canal, a seção **Cenas** guarda o visual atual (estilo, cores, posição, escala, animação, fonte, camadas ligadas,
+patrocinadores e apresentação da escalação) com um nome — por exemplo *Pré-jogo*, *Jogo* e *Intervalo*. Durante a transmissão,
+um clique no nome da cena troca tudo de uma vez, em qualquer canal da organização; o jogo no ar e as fotos de atletas escolhidas
+não mudam. Quem gerencia competições salva e exclui cenas (até 12); o operador só aplica. Pela API de controle, o campo `scene`
+aplica a cena e os outros campos enviados junto valem por cima dela.
+
 ### Fontes
 
 Cada canal tem a opção **Fonte** no visual: a padrão do sistema, dez fontes embutidas (Inter, Montserrat, Oswald, Bebas Neue,

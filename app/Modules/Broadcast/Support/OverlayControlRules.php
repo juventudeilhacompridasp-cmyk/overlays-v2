@@ -14,6 +14,7 @@ final class OverlayControlRules
     {
         return [
             'game_id' => ['sometimes', 'nullable', 'string', Rule::exists('games', 'id')->where('organization_id', $channel->organization_id)],
+            'scene' => ['sometimes', 'string', Rule::exists('overlay_scenes', 'id')->where('organization_id', $channel->organization_id)],
             'layers' => ['sometimes', 'array'],
             'layers.*' => ['boolean'],
             'appearance' => ['sometimes', 'array'],
