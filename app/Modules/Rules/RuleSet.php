@@ -30,6 +30,7 @@ final readonly class RuleSet
         /** Limite por período (ex.: 6 substituições por set no vôlei); nulo = só limite do jogo. */
         public ?int $maxSubstitutionsPerPeriod = null,
         public int $maxSubstitutionWindows = 3,
+        public bool $allowLiberoReplacements = false,
         public int $maxStarters = 11,
         public int $maxBench = 11,
         public int $maxStaff = 3,
@@ -142,6 +143,7 @@ final readonly class RuleSet
             maxSubstitutions: (int) $merged['substitutions']['max'],
             maxSubstitutionsPerPeriod: isset($merged['substitutions']['max_per_period']) ? (int) $merged['substitutions']['max_per_period'] : null,
             maxSubstitutionWindows: (int) $merged['substitutions']['max_windows'],
+            allowLiberoReplacements: (bool) ($merged['substitutions']['allow_libero_replacements'] ?? false),
             maxStarters: (int) $merged['lineup']['max_starters'],
             maxBench: (int) $merged['lineup']['max_bench'],
             maxStaff: (int) $merged['lineup']['max_staff'],
@@ -177,7 +179,7 @@ final readonly class RuleSet
                 'second_yellow_counts_for_series' => $this->secondYellowCountsForSeries,
             ],
             'walkover' => ['winner_goals' => $this->walkoverWinnerGoals, 'loser_goals' => $this->walkoverLoserGoals],
-            'substitutions' => ['max' => $this->maxSubstitutions, 'max_per_period' => $this->maxSubstitutionsPerPeriod, 'max_windows' => $this->maxSubstitutionWindows, 'allow_reentry' => $this->allowSubstitutionReentry],
+            'substitutions' => ['max' => $this->maxSubstitutions, 'max_per_period' => $this->maxSubstitutionsPerPeriod, 'max_windows' => $this->maxSubstitutionWindows, 'allow_reentry' => $this->allowSubstitutionReentry, 'allow_libero_replacements' => $this->allowLiberoReplacements],
             'lineup' => ['max_starters' => $this->maxStarters, 'max_bench' => $this->maxBench, 'max_staff' => $this->maxStaff, 'manager_deadline_minutes' => $this->managerLineupDeadlineMinutes],
             'scoring' => [
                 'model' => $this->scoreModel,
