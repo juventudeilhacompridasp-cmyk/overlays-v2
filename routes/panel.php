@@ -6,6 +6,7 @@ use App\Modules\Arts\Http\Controllers\AssetController as ArtAssetController;
 use App\Modules\Arts\Http\Controllers\TemplateController as ArtTemplateController;
 use App\Modules\Broadcast\Http\Controllers\ChannelController;
 use App\Modules\Broadcast\Http\Controllers\FontController;
+use App\Modules\Broadcast\Http\Controllers\SceneController;
 use App\Modules\Broadcast\Http\Controllers\SponsorController;
 use App\Modules\Competitions\Http\Controllers\CompetitionController;
 use App\Modules\Competitions\Http\Controllers\DivisionController;
@@ -153,6 +154,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
     Route::middleware('feature:overlays')->group(function () {
         Route::get('broadcast', [ChannelController::class, 'index'])->name('broadcast.index');
         Route::patch('broadcast/{channel}', [ChannelController::class, 'update'])->middleware('panel.can:operate-games')->name('broadcast.update');
+        Route::patch('broadcast/{channel}/cenas/{scene}', [SceneController::class, 'apply'])->middleware('panel.can:operate-games')->name('broadcast.scenes.apply');
     });
     Route::middleware(['panel.can:manage-competitions', 'feature:overlays'])->group(function () {
         Route::post('broadcast', [ChannelController::class, 'store'])->name('broadcast.store');
@@ -161,6 +163,8 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::delete('broadcast/{channel}', [ChannelController::class, 'destroy'])->name('broadcast.destroy');
         Route::post('broadcast/patrocinadores', [SponsorController::class, 'store'])->name('broadcast.sponsors.store');
         Route::patch('broadcast/patrocinadores/{sponsor}', [SponsorController::class, 'update'])->name('broadcast.sponsors.update');
+        Route::post('broadcast/cenas', [SceneController::class, 'store'])->name('broadcast.scenes.store');
+        Route::delete('broadcast/cenas/{scene}', [SceneController::class, 'destroy'])->name('broadcast.scenes.destroy');
         Route::post('broadcast/fontes', [FontController::class, 'store'])->name('broadcast.fonts.store');
         Route::delete('broadcast/fontes/{font}', [FontController::class, 'destroy'])->name('broadcast.fonts.destroy');
         Route::delete('broadcast/patrocinadores/{sponsor}', [SponsorController::class, 'destroy'])->name('broadcast.sponsors.destroy');

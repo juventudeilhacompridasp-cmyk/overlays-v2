@@ -16,6 +16,11 @@ interface Appearance {
     font: string;
 }
 
+interface Scene {
+    id: string;
+    name: string;
+}
+
 interface CustomFont {
     id: string;
     name: string;
@@ -112,7 +117,52 @@ function CopyButton({ text }: { text: string }) {
     );
 }
 
-function ChannelCard({ channel, games, fonts, canManage, canOperate, issuedControl }: { channel: Channel; games: GameOption[]; fonts: CustomFont[]; canManage: boolean; canOperate: boolean; issuedControl?: IssuedControl }) {
+function ScenesBlock({ channel, scenes, limit, canManage, canOperate }: { channel: Channel; scenes: Scene[]; limit: number; canManage: boolean; canOperate: boolean }) {
+    const [name, setName] = useState('');
+    const [error, setError] = useState<string | null>(null);
+
+    const save = (event: FormEvent) => {
+        event.preventDefault();
+        router.post(route('panel.broadcast.scenes.store'), { name, channel_id: channel.id }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setName('');
+                setError(null);
+            },
+            onError: (errors) => setError(errors.name ?? errors.channel_id ?? 'Não foi possível salvar a cena.'),
+        });
+    };
+
+    return (
+        <div className="rounded-lg border border-gray-200 p-4">
+            <div className="mb-3">
+                <div className="font-medium text-gray-900">Cenas</div>
+                <p className="text-xs text-gray-500">Uma cena guarda o visual, as camadas, os patrocinadores e a apresentação da escalação. Um clique troca tudo de uma vez; o jogo no ar e as fotos escolhidas não mudam.</p>
+            </div>
+            {scenes.length === 0 && <p className="text-sm text-gray-500">Nenhuma cena salva ainda.</p>}
+            <div className="flex flex-wrap gap-2">
+                {scenes.map((scene) => (
+                    <span key={scene.id} className="inline-flex items-center gap-1">
+                        <Button small variant="secondary" disabled={!canOperate} onClick={() => router.patch(route('panel.broadcast.scenes.apply', { channel: channel.id, scene: scene.id }), {}, { preserveScroll: true })}>{scene.name}</Button>
+                        {canManage && (
+                            <button type="button" aria-label={`Excluir a cena ${scene.name}`} className="rounded px-1 text-xs text-gray-400 hover:text-red-600" onClick={() => window.confirm(`Excluir a cena ${scene.name}?`) && router.delete(route('panel.broadcast.scenes.destroy', scene.id), { preserveScroll: true })}>✕</button>
+                        )}
+                    </span>
+                ))}
+            </div>
+            {canManage && scenes.length < limit && (
+                <form onSubmit={save} className="mt-3 flex flex-wrap items-end gap-3" aria-label="Salvar cena">
+                    <Field label="Salvar o visual atual deste canal como cena" htmlFor={`scene-name-${channel.id}`} error={error ?? undefined}>
+                        <Input id={`scene-name-${channel.id}`} value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="Ex.: Pré-jogo" required />
+                    </Field>
+                    <Button type="submit" small disabled={name.trim() === ''}>Salvar cena</Button>
+                </form>
+            )}
+        </div>
+    );
+}
+
+function ChannelCard({ channel, games, fonts, scenes, sceneLimit, canManage, canOperate, issuedControl }: { channel: Channel; games: GameOption[]; fonts: CustomFont[]; scenes: Scene[]; sceneLimit: number; canManage: boolean; canOperate: boolean; issuedControl?: IssuedControl }) {
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
@@ -181,6 +231,8 @@ function ChannelCard({ channel, games, fonts, canManage, canOperate, issuedContr
                         </Select>
                     </Field>
                 </div>
+
+                <ScenesBlock channel={channel} scenes={scenes} limit={sceneLimit} canManage={canManage} canOperate={canOperate} />
 
                 <div className="rounded-lg border border-gray-200 p-4">
                     <div className="mb-3">
@@ -460,7 +512,7 @@ function FontsCard({ fonts, limit, canManage }: { fonts: CustomFont[]; limit: nu
     );
 }
 
-export default function Index({ channels, games, issued_control, sponsors, sponsor_limit, fonts, font_limit }: { channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl; sponsors: Sponsor[]; sponsor_limit: number; fonts: CustomFont[]; font_limit: number }) {
+export default function Index({ channels, games, issued_control, sponsors, sponsor_limit, fonts, font_limit, scenes, scene_limit }: { channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl; sponsors: Sponsor[]; sponsor_limit: number; fonts: CustomFont[]; font_limit: number; scenes: Scene[]; scene_limit: number }) {
     const canManage = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
     const { data, setData, post, processing, errors, reset } = useForm({ name: '' });
@@ -479,7 +531,7 @@ export default function Index({ channels, games, issued_control, sponsors, spons
                 {channels.length === 0 && <Empty title="Nenhum canal de transmissão ainda.">{canManage ? 'Crie um canal abaixo para gerar as URLs do OBS.' : 'Peça a um organizador para criar um canal.'}</Empty>}
 
                 {channels.map((channel) => (
-                    <ChannelCard key={channel.id} channel={channel} games={games} fonts={fonts} canManage={canManage} canOperate={canOperate} issuedControl={issued_control} />
+                    <ChannelCard key={channel.id} channel={channel} games={games} fonts={fonts} scenes={scenes} sceneLimit={scene_limit} canManage={canManage} canOperate={canOperate} issuedControl={issued_control} />
                 ))}
 
                 <SponsorsCard sponsors={sponsors} limit={sponsor_limit} canManage={canManage} />

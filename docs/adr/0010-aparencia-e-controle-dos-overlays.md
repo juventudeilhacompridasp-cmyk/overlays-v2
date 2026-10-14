@@ -64,4 +64,16 @@ integrações com controladores externos sem dar poder de escrita a quem apenas 
   que a usavam e atualiza os abertos no OBS.
 - A licença da fonte é responsabilidade da organização (aviso na tela de envio).
 
+## Addendum — cenas (14/10/2026)
+
+- `overlay_scenes` (`OverlayScene`, até 12 por organização, nome único) guarda uma **foto do visual de um canal**: aparência
+  (preset, cores, posição, escala, movimento, fonte), camadas ligadas, rotação de patrocinadores e apresentação da escalação
+  (modo e duração). **Nunca** guarda o jogo no ar nem as fotos de atletas habilitadas: são decisões de cada transmissão.
+- Salvar a cena a partir de um canal e excluí-la é `manage-competitions`; aplicar é operação ao vivo (`operate-games`).
+  Aplicar é a MESMA via de mudança do canal (`UpdateOverlayChannel`), então valem as mesmas normalizações e o `OverlayUpdated`
+  chega às fontes abertas no OBS; uma cena vale para qualquer canal da organização.
+- API de controle: `scene` (ID) aplica a cena e os demais campos enviados junto valem POR CIMA dela
+  (`array_replace_recursive`); ID de outra organização ou inexistente é 422.
+- Fonte própria excluída depois de salva na cena não quebra: o estado simplesmente não traz `font_face` e vale a fonte padrão.
+
 - Preset novo = entrada em `PRESETS` + moldura em `scoreboardFrame` + opção na tela de transmissão + teste.

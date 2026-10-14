@@ -21,6 +21,9 @@ Você pode trocar o fundo entre campo, quadra, escuro e a grade de transparênci
 
 > O endereço do canal é o segredo: quem tem a URL vê a tela. Se vazar, use **Renovar** para gerar outra (a antiga para de funcionar).
 
+## Cenas
+Ajuste o visual de um canal do jeito que quer (estilo, cores, posição, fonte, camadas, patrocinadores) e use **Salvar cena** para guardá-lo com um nome, como *Pré-jogo*, *Jogo* ou *Intervalo*. Na hora da transmissão, clique no nome da cena para trocar tudo de uma vez — vale para qualquer canal. O jogo no ar e as fotos escolhidas na escalação não mudam. Quem gerencia competições salva e exclui cenas; o operador só aplica.
+
 ## Fontes
 No visual do canal escolha a **Fonte** do placar, dos lances, da escalação e da tabela: a padrão, uma das fontes embutidas ou uma fonte própria. Quem gerencia competições envia as fontes da organização (WOFF2, WOFF, TTF ou OTF, até 2 MB, no máximo 4) em **Fontes próprias dos overlays** — envie só fontes que a organização pode usar na transmissão. Excluir uma fonte devolve à padrão os canais que a usavam.
 

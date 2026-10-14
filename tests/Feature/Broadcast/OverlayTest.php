@@ -4,6 +4,7 @@ use App\Modules\Broadcast\Events\OverlayLowerThird;
 use App\Modules\Broadcast\Events\OverlayUpdated;
 use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Models\OverlayFont;
+use App\Modules\Broadcast\Models\OverlayScene;
 use App\Modules\Broadcast\Models\OverlaySponsor;
 use App\Modules\Broadcast\Support\OverlayState;
 use App\Modules\Competitions\Enums\StageType;
@@ -603,5 +604,116 @@ describe('fonts', function () {
 
         Storage::disk('s3')->delete($font->path);
         $this->get("/overlay/{$channel->token}/fonte/{$font->id}")->assertNotFound();
+    });
+});
+
+describe('scenes', function () {
+    function styledChannel(): OverlayChannel
+    {
+        $channel = channelFor(null, ['lineup' => true]);
+        $channel->update([
+            'appearance' => ['preset' => 'classic', 'accent_color' => '#ff5500', 'background_color' => '#101010', 'text_color' => '#ffffff', 'position' => 'bottom-center', 'scale' => 1.2, 'motion' => 'subtle', 'font' => 'bebas'],
+            'sponsor_settings' => ['enabled' => true, 'seconds' => 12],
+            'lineup_settings' => ['presentation' => 'formation', 'list_seconds' => 9, 'photo_person_ids' => ['01jabc']],
+        ]);
+
+        return $channel;
+    }
+
+    it('saves the visual of a channel as a scene, without the game or the chosen photos', function () {
+        $this->actingAs(panelUser(Role::Organizer));
+        $channel = styledChannel();
+
+        $this->post(route('panel.broadcast.scenes.store'), ['name' => 'Pré-jogo', 'channel_id' => $channel->id])->assertSessionHas('success');
+
+        $scene = OverlayScene::query()->firstOrFail();
+        expect($scene->name)->toBe('Pré-jogo')
+            ->and($scene->config['appearance']['preset'])->toBe('classic')
+            ->and($scene->config['appearance']['font'])->toBe('bebas')
+            ->and($scene->config['layers'])->toBe(['lineup' => true, 'standings' => false])
+            ->and($scene->config['sponsor_settings'])->toBe(['enabled' => true, 'seconds' => 12])
+            ->and($scene->config['lineup_settings'])->toBe(['presentation' => 'formation', 'list_seconds' => 9])
+            ->and(array_keys($scene->config))->not->toContain('game_id')
+            ->and(json_encode($scene->config))->not->toContain('01jabc');
+    });
+
+    it('applies a scene with one click to another channel, keeping its game, and tells the OBS', function () {
+        $this->actingAs(panelUser(Role::Organizer));
+        $this->post(route('panel.broadcast.scenes.store'), ['name' => 'Jogo', 'channel_id' => styledChannel()->id]);
+        $scene = OverlayScene::query()->firstOrFail();
+
+        ['game' => $game] = sheetGame();
+        $target = channelFor($game);
+        Event::fake([OverlayUpdated::class]);
+
+        $this->actingAs(panelUser(Role::Operator))->patch(route('panel.broadcast.scenes.apply', ['channel' => $target, 'scene' => $scene]))->assertSessionHas('success');
+
+        $target->refresh();
+        expect($target->game_id)->toBe($game->id)
+            ->and($target->appearance['preset'])->toBe('classic')
+            ->and($target->appearance['position'])->toBe('bottom-center')
+            ->and($target->layers['lineup'])->toBeTrue()
+            ->and($target->sponsor_settings)->toBe(['enabled' => true, 'seconds' => 12])
+            ->and($target->lineup_settings['presentation'])->toBe('formation');
+        Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->token === $target->token && $event->state['appearance']['preset'] === 'classic');
+    });
+
+    it('lets the API apply a scene and override a field on top of it', function () {
+        $this->actingAs(panelUser(Role::Organizer));
+        $this->post(route('panel.broadcast.scenes.store'), ['name' => 'Intervalo', 'channel_id' => styledChannel()->id]);
+        $scene = OverlayScene::query()->firstOrFail();
+        $target = channelFor();
+        $key = OverlayChannel::newControlToken();
+        $target->update(['control_token_hash' => OverlayChannel::controlTokenHash($key)]);
+
+        $this->withHeader('Authorization', "Bearer {$key}")
+            ->patchJson("/api/v1/overlay-channels/{$target->id}/state", ['scene' => $scene->id, 'appearance' => ['accent_color' => '#00ff00']])
+            ->assertOk()
+            ->assertJsonPath('data.appearance.preset', 'classic')
+            ->assertJsonPath('data.appearance.accent_color', '#00ff00')
+            ->assertJsonPath('data.sponsors.enabled', true);
+
+        $this->withHeader('Authorization', "Bearer {$key}")->patchJson("/api/v1/overlay-channels/{$target->id}/state", ['scene' => 'inexistente'])->assertStatus(422);
+    });
+
+    it('only organizers save and delete scenes, operators apply them', function () {
+        $channel = styledChannel();
+
+        $this->actingAs(panelUser(Role::Operator))->post(route('panel.broadcast.scenes.store'), ['name' => 'X', 'channel_id' => $channel->id])->assertSessionHas('error');
+        expect(OverlayScene::query()->count())->toBe(0);
+
+        $this->actingAs(panelUser(Role::Organizer))->post(route('panel.broadcast.scenes.store'), ['name' => 'Y', 'channel_id' => $channel->id]);
+        $scene = OverlayScene::query()->firstOrFail();
+
+        $this->actingAs(panelUser(Role::Viewer))->patch(route('panel.broadcast.scenes.apply', ['channel' => $channel, 'scene' => $scene]))->assertSessionHas('error');
+        $this->actingAs(panelUser(Role::Operator))->delete(route('panel.broadcast.scenes.destroy', $scene))->assertSessionHas('error');
+        expect(OverlayScene::query()->count())->toBe(1);
+
+        $this->actingAs(panelUser(Role::Organizer))->delete(route('panel.broadcast.scenes.destroy', $scene))->assertSessionHas('success');
+        expect(OverlayScene::query()->count())->toBe(0);
+    });
+
+    it('needs a unique name, stops at the limit and never mixes organizations', function () {
+        $this->actingAs(panelUser(Role::Admin));
+        $channel = channelFor();
+
+        $this->post(route('panel.broadcast.scenes.store'), ['name' => 'Única', 'channel_id' => $channel->id]);
+        $this->post(route('panel.broadcast.scenes.store'), ['name' => 'Única', 'channel_id' => $channel->id])->assertSessionHasErrors('name');
+        $this->post(route('panel.broadcast.scenes.store'), ['name' => '', 'channel_id' => $channel->id])->assertSessionHasErrors('name');
+
+        foreach (range(2, OverlayScene::LIMIT) as $i) {
+            $this->post(route('panel.broadcast.scenes.store'), ['name' => "Cena {$i}", 'channel_id' => $channel->id]);
+        }
+        expect(OverlayScene::query()->count())->toBe(OverlayScene::LIMIT);
+        $this->post(route('panel.broadcast.scenes.store'), ['name' => 'De sobra', 'channel_id' => $channel->id])->assertSessionHasErrors('name');
+
+        $other = Organization::factory()->create(['slug' => 'outra-cena']);
+        $foreignChannel = CurrentOrganization::using($other, fn () => channelFor());
+        $this->post(route('panel.broadcast.scenes.store'), ['name' => 'Alheio', 'channel_id' => $foreignChannel->id])->assertSessionHasErrors('channel_id');
+        CurrentOrganization::using($other, function () {
+            expect(OverlayScene::query()->count())->toBe(0);
+        });
+
+        $this->get('/painel/broadcast')->assertInertia(fn ($page) => $page->has('scenes', OverlayScene::LIMIT)->where('scene_limit', OverlayScene::LIMIT));
     });
 });
