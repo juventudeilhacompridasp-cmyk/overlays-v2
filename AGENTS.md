@@ -86,5 +86,10 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 
 - O layout da grade é salvo por usuário e canal em `users.operator_layouts`; o navegador continua como cache local, mas o servidor é a fonte para restaurar a configuração em outro dispositivo.
 
+## Dashboard do painel
+
+- Indicadores e gráficos usam somente agregados da organização atual; não expor dados pessoais nem criar consultas por atleta sem necessidade.
+- Gráficos devem ser leves e progressivos (CSS/SVG, sem bibliotecas pesadas) para manter o painel responsivo.
+
 ## Qualidade
 Testes Pest para toda regra de negócio (as regras de campeonato têm testes baseados em exemplos reais). PHPStan/Larastan (nível sobe gradualmente até 8). PRs pequenos, descrição em português, sem segredos no repositório.
