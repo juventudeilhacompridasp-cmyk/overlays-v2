@@ -158,6 +158,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
     // escolhe o jogo no ar e liga camadas durante o jogo.
     Route::middleware('feature:overlays')->group(function () {
         Route::get('broadcast', [ChannelController::class, 'index'])->name('broadcast.index');
+        Route::patch('broadcast/operator-layout', [ChannelController::class, 'operatorLayout'])->middleware('panel.can:operate-games')->name('broadcast.operator-layout');
         Route::patch('broadcast/{channel}', [ChannelController::class, 'update'])->middleware('panel.can:operate-games')->name('broadcast.update');
         Route::patch('broadcast/{channel}/cenas/{scene}', [SceneController::class, 'apply'])->middleware('panel.can:operate-games')->name('broadcast.scenes.apply');
     });

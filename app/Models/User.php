@@ -91,6 +91,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'is_platform_admin' => 'boolean',
             'password' => 'hashed',
+            'operator_layouts' => 'array',
         ];
     }
 }

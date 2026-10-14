@@ -130,7 +130,28 @@ class ChannelController extends Controller
                 ])->values(),
             'games' => $candidates->map(fn (Game $game) => ['id' => $game->id, 'label' => $label($game)])->values(),
             'issued_control' => session()->pull('overlay_issued_control'),
+            'operator_layouts' => auth()->user()->operator_layouts ?? [],
         ]);
+    }
+
+    public function operatorLayout(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'channel_id' => ['required', 'string', Rule::exists('overlay_channels', 'id')->where('organization_id', CurrentOrganization::id())],
+            'layout' => ['required', 'array', 'max:12'],
+            'layout.*.id' => ['required', 'string', 'max:30'],
+            'layout.*.x' => ['required', 'integer', 'min:0', 'max:24'],
+            'layout.*.y' => ['required', 'integer', 'min:0', 'max:16'],
+            'layout.*.w' => ['required', 'integer', 'min:1', 'max:24'],
+            'layout.*.h' => ['required', 'integer', 'min:1', 'max:16'],
+        ]);
+
+        $user = $request->user();
+        $layouts = (array) $user->operator_layouts;
+        $layouts[$validated['channel_id']] = array_values($validated['layout']);
+        $user->forceFill(['operator_layouts' => $layouts])->save();
+
+        return back()->with('success', 'Layout do modo operador salvo.');
     }
 
     public function store(Request $request): RedirectResponse

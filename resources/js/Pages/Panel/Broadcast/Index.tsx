@@ -1047,7 +1047,7 @@ function FontsCard({ fonts, limit, canManage }: { fonts: CustomFont[]; limit: nu
     );
 }
 
-export default function Index({ channels, games, issued_control, sponsors, sponsor_limit, custom_items, custom_limit, fonts, font_limit, scenes, scene_limit, style_models, style_model_limit, championship_seasons, defaults }: { defaults: Defaults; channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl; sponsors: Sponsor[]; sponsor_limit: number; custom_items: CustomItem[]; custom_limit: number; fonts: CustomFont[]; font_limit: number; scenes: Scene[]; scene_limit: number; style_models: StyleModel[]; style_model_limit: number; championship_seasons: ChampionshipSeason[] }) {
+export default function Index({ channels, games, issued_control, sponsors, sponsor_limit, custom_items, custom_limit, fonts, font_limit, scenes, scene_limit, style_models, style_model_limit, championship_seasons, defaults, operator_layouts }: { defaults: Defaults; channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl; sponsors: Sponsor[]; sponsor_limit: number; custom_items: CustomItem[]; custom_limit: number; fonts: CustomFont[]; font_limit: number; scenes: Scene[]; scene_limit: number; style_models: StyleModel[]; style_model_limit: number; championship_seasons: ChampionshipSeason[]; operator_layouts: Record<string, import('@/lib/operatorLayout').Layout> }) {
     const canManage = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
     const { data, setData, post, processing, errors, reset } = useForm({ name: '' });
@@ -1078,7 +1078,7 @@ export default function Index({ channels, games, issued_control, sponsors, spons
         <PanelLayout>
             <Head title="Transmissão" />
             <PageHeader title="Transmissão" subtitle="Overlays para o OBS com fundo transparente. Cada canal tem URLs fixas; durante a transmissão você só escolhe o jogo no ar e liga as camadas." actions={channels.length > 0 ? <Button onClick={() => setView('operator')} data-testid="open-operator">Modo operador</Button> : undefined} />
-            {view === 'operator' && channels.length > 0 && <OperatorConsole channels={channels} games={games} scenes={scenes} canOperate={canOperate} onExit={() => setView('board')} />}
+            {view === 'operator' && channels.length > 0 && <OperatorConsole channels={channels} games={games} scenes={scenes} canOperate={canOperate} operatorLayouts={operator_layouts} onExit={() => setView('board')} />}
 
             <div className="space-y-6">
                 {channels.length === 0 && <Empty title="Nenhum canal de transmissão ainda.">{canManage ? 'Crie um canal abaixo para gerar as URLs do OBS.' : 'Peça a um organizador para criar um canal.'}</Empty>}
