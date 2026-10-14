@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 /**
- * @property array<string, bool>|null $layers
+ * @property array<string, bool|array<string, bool>>|null $layers
  * @property array<string, mixed>|null $appearance
  * @property array<string, mixed>|null $lineup_settings
  * @property array<string, mixed>|null $sponsor_settings
