@@ -263,7 +263,7 @@ function Controls({ channel, games, scenes, canOperate, onExit, layout, editing,
 }
 
 /** Modo operador: tela cheia, tudo compacto e visível ao mesmo tempo, sem rolagem (no desktop). O quadro kanban continua disponível. */
-export default function OperatorConsole({ channels, games, scenes, canOperate, onExit }: { channels: Channel[]; games: GameOption[]; scenes: Scene[]; canOperate: boolean; onExit: () => void }) {
+export default function OperatorConsole({ channels, games, scenes, canOperate, operatorLayouts, onExit }: { channels: Channel[]; games: GameOption[]; scenes: Scene[]; canOperate: boolean; operatorLayouts: Record<string, Layout>; onExit: () => void }) {
     const online = useOnline();
     const [channelId, setChannelId] = useState<string | null>(() => {
         try {
@@ -282,6 +282,11 @@ export default function OperatorConsole({ channels, games, scenes, canOperate, o
     });
     const [editing, setEditing] = useState(false);
     const [notice, setNotice] = useState<string | null>(null);
+    useEffect(() => {
+        if (!channel) return;
+        const saved = operatorLayouts[channel.id];
+        if (saved) setLayout(sanitizeLayout(saved));
+    }, [channel?.id, operatorLayouts]);
     const saveLayout = (next: Layout) => {
         setLayout(next);
         setNotice(null);
@@ -290,6 +295,15 @@ export default function OperatorConsole({ channels, games, scenes, canOperate, o
             window.localStorage.setItem(LAYOUT_KEY, JSON.stringify(next));
         } catch {
             /* sem armazenamento: vale só nesta visita */
+        }
+
+        if (channel && canOperate) {
+            router.patch(route('panel.broadcast.operator-layout'), { channel_id: channel.id, layout: next }, {
+                async: true,
+                preserveState: true,
+                preserveScroll: true,
+                onError: () => setNotice('Não foi possível salvar o layout no servidor.'),
+            });
         }
     };
     const hasCustom = (channel?.custom_overlays.length ?? 0) > 0;
