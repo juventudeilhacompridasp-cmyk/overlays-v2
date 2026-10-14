@@ -104,6 +104,10 @@ camadas (atalhos **1 a 5**), telas extras, campeonato, overlays livres, controle
 destaque, cartelas prontas, acréscimos, saque e contadores das estatísticas. **Esc** volta ao quadro kanban, que continua com todos os ajustes.
 A escolha de visualização fica no navegador (`broadcast:view`).
 
+**Layout editável:** em "Editar layout" os blocos se movem (arrastar o título) e redimensionam (canto ◢) numa grade de 12 x 16 com encaixe; vizinhos
+são empurrados ou trocam de lugar, e o contorno vermelho indica posição impossível. "Blocos" mostra/oculta, "Modelos" aplica Padrão, Escalação em foco
+ou Jogo rolando, e o layout fica em `broadcast:operator-layout:v1` (navegador). Com a edição ligada os atalhos e botões ficam travados.
+
 ### Escalação visual
 
 Na seção **Escalação visual**, escolha entre lista, esquema tático ou a sequência automática **lista → esquema** e defina de
