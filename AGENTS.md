@@ -63,5 +63,9 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 - `ResolveOrganization` roda ANTES do route model binding (`prepend` no grupo `web`): não mude essa ordem, ela garante que `{team}`, `{season}`... só resolvam registros da organização.
 - Fábricas criam dados na organização atual (`CurrentOrganization`) quando houver uma; nos testes do painel defina-a no `beforeEach`.
 
+## Regra adicional de basquete
+
+- O relógio de posse usa `ShotClock` e eventos `shot_clock_reset` de 14 ou 24 segundos; derive o estado pelos marcos do relógio principal e exponha apenas contagens agregadas em snapshots/overlays. Só o último reinício pode ser anulado.
+
 ## Qualidade
 Testes Pest para toda regra de negócio (as regras de campeonato têm testes baseados em exemplos reais). PHPStan/Larastan (nível sobe gradualmente até 8). PRs pequenos, descrição em português, sem segredos no repositório.
