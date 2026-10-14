@@ -13,6 +13,7 @@ import ChampionshipStudio, { ChampionshipSeason, StyleModel } from './Championsh
 import { ChannelCustom, CustomEditorCard, CustomItem, CustomLiveList } from './CustomStudio';
 import ExtraScreensStudio from './ExtraScreensStudio';
 import LowerThirdStudio from './LowerThirdStudio';
+import OperatorConsole from './OperatorConsole';
 import OverlayPreviewStudio from './OverlayPreviewStudio';
 import StatsStudio, { StatsSettings } from './StatsStudio';
 
@@ -46,7 +47,7 @@ interface Appearance {
     goal_animation: 'typewriter' | 'bounce' | 'sweep';
 }
 
-interface Scene {
+export interface Scene {
     id: string;
     name: string;
 }
@@ -143,7 +144,7 @@ interface Sponsor {
 
 type Defaults = Record<'appearance' | 'lower_third_settings' | 'lineup_settings' | 'sponsor_settings' | 'stats_settings', Record<string, unknown>>;
 
-interface Channel {
+export interface Channel {
     id: string;
     name: string;
     game_id: string | null;
@@ -172,7 +173,7 @@ interface IssuedControl {
     token: string;
 }
 
-interface GameOption {
+export interface GameOption {
     id: string;
     label: string;
 }
@@ -1050,6 +1051,23 @@ export default function Index({ channels, games, issued_control, sponsors, spons
     const canManage = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
     const { data, setData, post, processing, errors, reset } = useForm({ name: '' });
+    // Duas formas de operar: o quadro (kanban, com todos os ajustes) e o modo operador (compacto, tudo visível sem rolar). A escolha fica neste navegador.
+    const [view, setViewState] = useState<'board' | 'operator'>(() => {
+        try {
+            return window.localStorage.getItem('broadcast:view') === 'operator' ? 'operator' : 'board';
+        } catch {
+            return 'board';
+        }
+    });
+    const setView = (next: 'board' | 'operator') => {
+        setViewState(next);
+
+        try {
+            window.localStorage.setItem('broadcast:view', next);
+        } catch {
+            /* sem armazenamento: vale só nesta visita */
+        }
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -1059,7 +1077,8 @@ export default function Index({ channels, games, issued_control, sponsors, spons
     return (
         <PanelLayout>
             <Head title="Transmissão" />
-            <PageHeader title="Transmissão" subtitle="Overlays para o OBS com fundo transparente. Cada canal tem URLs fixas; durante a transmissão você só escolhe o jogo no ar e liga as camadas." />
+            <PageHeader title="Transmissão" subtitle="Overlays para o OBS com fundo transparente. Cada canal tem URLs fixas; durante a transmissão você só escolhe o jogo no ar e liga as camadas." actions={channels.length > 0 ? <Button onClick={() => setView('operator')} data-testid="open-operator">Modo operador</Button> : undefined} />
+            {view === 'operator' && channels.length > 0 && <OperatorConsole channels={channels} games={games} scenes={scenes} canOperate={canOperate} onExit={() => setView('board')} />}
 
             <div className="space-y-6">
                 {channels.length === 0 && <Empty title="Nenhum canal de transmissão ainda.">{canManage ? 'Crie um canal abaixo para gerar as URLs do OBS.' : 'Peça a um organizador para criar um canal.'}</Empty>}
