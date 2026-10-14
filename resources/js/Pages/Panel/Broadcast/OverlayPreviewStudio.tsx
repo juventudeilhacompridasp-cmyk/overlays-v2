@@ -120,6 +120,9 @@ export default function OverlayPreviewStudio({ overlays, hasGame, layers }: { ov
         }
     }, [activeSlug, overlays]);
 
+    const activeOverlay = overlays.find((overlay) => overlay.slug === activeSlug) ?? overlays[0];
+    const activeStatus = activeOverlay ? overlayPreviewStatus(activeOverlay.slug, hasGame, layers) : null;
+
     return (
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70">
             <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-5">
@@ -145,50 +148,34 @@ export default function OverlayPreviewStudio({ overlays, hasGame, layers }: { ov
                 </div>
             </div>
 
-            <div className="grid gap-4 p-4 xl:grid-cols-2">
-                {overlays.map((overlay, index) => {
-                    const active = overlay.slug === activeSlug;
-                    const status = overlayPreviewStatus(overlay.slug, hasGame, layers);
-
-                    return (
-                        <article key={overlay.slug} className={`overflow-hidden rounded-xl bg-white shadow-sm ring-1 transition ${active ? 'ring-2 ring-emerald-500' : 'ring-slate-200 hover:ring-slate-300'}`}>
-                            <div className="flex items-start justify-between gap-3 px-4 py-3">
-                                <div className="min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-xs font-black tabular-nums text-slate-300">0{index + 1}</span>
-                                        <h4 className="truncate text-sm font-semibold text-slate-900">{overlay.title}</h4>
-                                    </div>
-                                    <p className="mt-1 text-xs text-slate-500">{status.description}</p>
-                                </div>
-                                <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${toneClasses[status.tone]}`}>{status.label}</span>
+            {activeOverlay && activeStatus ? (
+                <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_15rem]">
+                    <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+                        <div className="flex flex-wrap items-start justify-between gap-3 px-4 py-3">
+                            <div className="min-w-0">
+                                <h4 className="truncate text-sm font-semibold text-slate-900">{activeOverlay.title}</h4>
+                                <p className="mt-1 text-xs text-slate-500">{activeStatus.description}</p>
                             </div>
-
-                            {active ? <LivePreview overlay={overlay} backdrop={backdrop} /> : <PreviewPlaceholder index={index} />}
-
-                            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-3 py-3">
-                                <Button small variant={active ? 'primary' : 'secondary'} onClick={() => setActiveSlug(overlay.slug)} disabled={active}>
-                                    {active ? 'Prévia ativa' : 'Visualizar ao vivo'}
-                                </Button>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        small
-                                        variant="ghost"
-                                        onClick={() => copyUrl(overlay.url, () => {
-                                            setCopiedSlug(overlay.slug);
-                                            window.setTimeout(() => setCopiedSlug(null), 1500);
-                                        })}
-                                    >
-                                        {copiedSlug === overlay.slug ? 'Copiado!' : 'Copiar URL'}
-                                    </Button>
-                                    <a href={overlay.url} target="_blank" rel="noreferrer" className="inline-flex items-center rounded-md bg-white px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-300 transition hover:bg-slate-50">
-                                        Abrir
-                                    </a>
-                                </div>
+                            <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${toneClasses[activeStatus.tone]}`}>{activeStatus.label}</span>
+                        </div>
+                        <LivePreview overlay={activeOverlay} backdrop={backdrop} />
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-3 py-3">
+                            <span className="text-xs text-slate-500">Uma única conexão ao vivo é mantida para preservar recursos.</span>
+                            <div className="flex items-center gap-2">
+                                <Button small variant="ghost" onClick={() => copyUrl(activeOverlay.url, () => { setCopiedSlug(activeOverlay.slug); window.setTimeout(() => setCopiedSlug(null), 1500); })}>{copiedSlug === activeOverlay.slug ? 'Copiado!' : 'Copiar URL'}</Button>
+                                <a href={activeOverlay.url} target="_blank" rel="noreferrer" className="inline-flex items-center rounded-md bg-white px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-300 transition hover:bg-slate-50">Abrir</a>
                             </div>
-                        </article>
-                    );
-                })}
-            </div>
+                        </div>
+                    </div>
+                    <nav aria-label="Telas do visualizador" className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-2 lg:overflow-visible">
+                        {overlays.map((overlay, index) => {
+                            const status = overlayPreviewStatus(overlay.slug, hasGame, layers);
+                            const active = overlay.slug === activeOverlay.slug;
+                            return <button type="button" key={overlay.slug} onClick={() => setActiveSlug(overlay.slug)} aria-current={active ? 'page' : undefined} className={`flex min-w-[11rem] items-center gap-2 rounded-lg px-3 py-2 text-left text-xs transition lg:w-full ${active ? 'bg-emerald-50 text-emerald-900 ring-1 ring-emerald-400' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'}`}><span className="text-[10px] font-black tabular-nums text-slate-300">{String(index + 1).padStart(2, '0')}</span><span className="min-w-0 flex-1 truncate font-semibold">{overlay.title}</span><span className={`h-2 w-2 rounded-full ${status.tone === 'live' ? 'bg-emerald-500' : status.tone === 'hidden' ? 'bg-amber-400' : 'bg-slate-300'}`} /></button>;
+                        })}
+                    </nav>
+                </div>
+            ) : <PreviewPlaceholder index={0} />}
         </section>
     );
 }
