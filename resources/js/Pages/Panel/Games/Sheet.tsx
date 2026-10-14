@@ -488,7 +488,7 @@ function EventForm({ home, away, eventTypes, send }: { home: Team; away: Team; e
     );
 }
 
-function TeamCard({ game, team, limits }: { game: Props['game']; team: Team; limits: Props['limits'] }) {
+function TeamCard({ game, team, limits, period, send }: { game: Props['game']; team: Team; limits: Props['limits']; period: number; send: Send }) {
     const [editing, setEditing] = useState(!team.has_lineup);
 
     return (
@@ -506,6 +506,14 @@ function TeamCard({ game, team, limits }: { game: Props['game']; team: Team; lim
                 <div className="mb-3 flex flex-wrap gap-2 text-xs">
                     {team.tactic.confirmed && <Badge tone="green">Escalação confirmada pelo gestor</Badge>}
                     {team.tactic.formation && <Badge tone="blue">Formação {team.tactic.formation}</Badge>}
+                </div>
+            )}
+            {team.timeouts && game.open && (
+                <div className="mb-3 flex items-center justify-between text-sm" data-testid={`timeouts-${team.id}`}>
+                    <span className="text-gray-600">Pedidos de tempo: {team.timeouts.used}/{team.timeouts.limit}</span>
+                    <Button small variant="secondary" disabled={team.timeouts.used >= team.timeouts.limit} onClick={() => send('event', { type: 'timeout', entry_id: team.id, person_id: null, period }, `Pedido de tempo (${team.name})`)}>
+                        Pedir tempo
+                    </Button>
                 </div>
             )}
             {editing ? (
@@ -765,8 +773,8 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
                     )}
 
                     <div className="grid gap-6 lg:grid-cols-2">
-                        <TeamCard game={game} team={home} limits={limits} />
-                        <TeamCard game={game} team={away} limits={limits} />
+                        <TeamCard game={game} team={home} limits={limits} period={clock.period ?? 1} send={send} />
+                        <TeamCard game={game} team={away} limits={limits} period={clock.period ?? 1} send={send} />
                     </div>
 
                     {game.open && game.knockout && score_model !== 'sets' && <ShootoutCard game={game} home={home} away={away} />}

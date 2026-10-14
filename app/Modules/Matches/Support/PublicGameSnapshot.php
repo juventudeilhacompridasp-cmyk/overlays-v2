@@ -123,7 +123,9 @@ final class PublicGameSnapshot
             return null;
         }
 
-        $current = (int) ($game->clock()->snapshot($marks)['period'] ?? 1);
+        $current = $profile->scoreModel === 'sets'
+            ? max(1, count($game->sets ?? []))
+            : (int) ($game->clock()->snapshot($marks)['period'] ?? 1);
         $group = $profile->timeoutGroup($current);
         $used = ['home' => 0, 'away' => 0];
 

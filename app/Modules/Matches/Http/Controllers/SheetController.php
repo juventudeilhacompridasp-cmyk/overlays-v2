@@ -46,7 +46,9 @@ class SheetController extends Controller
         $state = $buildSheet->handle($game);
         $open = ! $game->status->isDecided();
         $snapshot = PublicGameSnapshot::for($game);
-        $currentPeriod = max(1, (int) ($snapshot['clock']['period'] ?? 1));
+        $currentPeriod = $game->sport()->profile()->scoreModel === 'sets'
+            ? max(1, (int) ($snapshot['timeouts']['period'] ?? 1))
+            : max(1, (int) ($snapshot['clock']['period'] ?? 1));
 
         $team = function (?Entry $entry) use ($game, $state, $discipline, $currentPeriod): ?array {
             if ($entry === null) {
@@ -185,7 +187,7 @@ class SheetController extends Controller
             'fouls' => $snapshot['fouls'],
             'quarters' => $snapshot['quarters'],
             'event_types' => collect(match ($game->sport()->profile()->scoreModel) {
-                'sets' => [GameEventType::Substitution, GameEventType::YellowCard, GameEventType::RedCard],
+                'sets' => [GameEventType::Substitution, GameEventType::YellowCard, GameEventType::RedCard, ...($game->sport()->profile()->tracksTimeouts() ? [GameEventType::Timeout] : [])],
                 'points' => [GameEventType::FieldGoal, GameEventType::ThreePointer, GameEventType::FreeThrow, GameEventType::Foul, GameEventType::TechnicalFoul, GameEventType::UnsportsmanlikeFoul, GameEventType::Substitution],
                 default => [
                     GameEventType::Goal, GameEventType::OwnGoal, GameEventType::YellowCard, GameEventType::RedCard,
