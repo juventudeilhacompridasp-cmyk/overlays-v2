@@ -12,6 +12,6 @@ class SyncOverlays
     public function handle(GameUpdated $event): void
     {
         OverlayChannel::query()->where('game_id', $event->gameId)->get()
-            ->each(fn (OverlayChannel $channel) => event(OverlayUpdated::for($channel)));
+            ->each(fn (OverlayChannel $channel) => OverlayUpdated::dispatchFor($channel));
     }
 }

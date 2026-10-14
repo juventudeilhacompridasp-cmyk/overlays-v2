@@ -33,3 +33,10 @@ test('event screen is automatic and score is continuously live', () => {
     assert.equal(overlayPreviewStatus('eventos', true, layers).tone, 'automatic');
     assert.equal(overlayPreviewStatus('placar', true, layers).tone, 'live');
 });
+
+test('the scoreboard and the event banners can be hidden by the operator', () => {
+    assert.equal(overlayPreviewStatus('placar', true, { ...layers, scoreboard: false }).tone, 'hidden');
+    assert.equal(overlayPreviewStatus('eventos', true, { ...layers, lower_third: false }).tone, 'hidden');
+    assert.equal(overlayPreviewStatus('placar', true, { ...layers, scoreboard: true }).tone, 'live');
+    assert.equal(overlayPreviewStatus('eventos', true, { ...layers, lower_third: true }).tone, 'automatic');
+});

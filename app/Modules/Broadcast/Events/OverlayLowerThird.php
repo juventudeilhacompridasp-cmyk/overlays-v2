@@ -3,12 +3,12 @@
 namespace App\Modules\Broadcast\Events;
 
 use Illuminate\Broadcasting\Channel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 
 /** Faixa de lance (gol, cartão, substituição) para a tela de eventos. Some sozinha no cliente. */
-class OverlayLowerThird implements ShouldBroadcast, ShouldDispatchAfterCommit
+class OverlayLowerThird implements ShouldBroadcastNow, ShouldDispatchAfterCommit
 {
     use Dispatchable;
 

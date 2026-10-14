@@ -61,7 +61,7 @@ final class SaveOverlayFont
 
         $font->delete();
 
-        OverlayChannel::query()->get()->each(fn (OverlayChannel $channel) => event(OverlayUpdated::for($channel)));
+        OverlayChannel::query()->get()->each(fn (OverlayChannel $channel) => OverlayUpdated::dispatchFor($channel));
     }
 
     public static function contents(OverlayFont $font): ?string

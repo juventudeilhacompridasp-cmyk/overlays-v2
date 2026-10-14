@@ -18,9 +18,11 @@ use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 beforeEach(function () {
     CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug')]));
@@ -58,7 +60,7 @@ it('builds the overlay state with the score, the clock and the logos', function 
         ->and($state['game']['id'])->toBe($game->id)
         ->and($state['game']['home']['color'])->toBe('#ff0000')
         ->and($state['game']['clock']['state'])->toBe('not_started')
-        ->and($state['layers'])->toBe(['lineup' => false, 'standings' => false])
+        ->and($state['layers'])->toBe(['lineup' => false, 'standings' => false, 'scoreboard' => true, 'lower_third' => true])
         ->and($state['lineup'])->toBeNull()
         ->and($state['standings'])->toBeNull();
 });
@@ -78,7 +80,7 @@ it('only fills the lineup when the layer is on, with shirt numbers and nicknames
 
     $lineup = OverlayState::for(channelFor($game, ['lineup' => true]))['lineup'];
 
-    expect(OverlayState::for(channelFor($game, ['lineup' => true]))['layers'])->toBe(['lineup' => true, 'standings' => false]);
+    expect(OverlayState::for(channelFor($game, ['lineup' => true]))['layers'])->toBe(['lineup' => true, 'standings' => false, 'scoreboard' => true, 'lower_third' => true]);
 
     expect($lineup['home']['starters'])->toHaveCount(11)
         ->and($lineup['home']['bench'])->toHaveCount(3)
@@ -194,6 +196,39 @@ it('does not send lower thirds when no channel has the game on air', function ()
     Event::assertNotDispatched(OverlayLowerThird::class);
 });
 
+it('does not send lower thirds to a channel where the operator hid them, but keeps sending to the others', function () {
+    ['game' => $game, 'home' => $home, 'hp' => $hp] = sheetGame();
+    $hidden = channelFor($game, ['lower_third' => false]);
+    $visible = channelFor($game);
+    Event::fake([OverlayLowerThird::class]);
+
+    app(RecordGameEvent::class)->handle($game, GameEventType::Goal, $home->id, $hp[0]);
+
+    Event::assertDispatchedTimes(OverlayLowerThird::class, 1);
+    Event::assertDispatched(OverlayLowerThird::class, fn (OverlayLowerThird $event) => $event->token === $visible->token);
+    Event::assertNotDispatched(OverlayLowerThird::class, fn (OverlayLowerThird $event) => $event->token === $hidden->token);
+});
+
+it('broadcasts the commands without going through the queue', function () {
+    expect(new OverlayUpdated('t', []))->toBeInstanceOf(ShouldBroadcastNow::class)
+        ->and(new OverlayLowerThird('t', ['id' => 'x', 'kind' => 'goal', 'title' => 'GOL!', 'subtitle' => null, 'team' => null, 'color' => null, 'minute' => null]))->toBeInstanceOf(ShouldBroadcastNow::class);
+});
+
+it('keeps the command and the súmula working when the broadcaster is down', function () {
+    ['game' => $game, 'home' => $home, 'hp' => $hp] = sheetGame();
+    $channel = channelFor($game);
+    Event::listen(OverlayUpdated::class, fn () => throw new RuntimeException('Reverb fora do ar'));
+    Event::listen(OverlayLowerThird::class, fn () => throw new RuntimeException('Reverb fora do ar'));
+    $this->actingAs(panelUser(Role::Operator));
+
+    $this->patch("/painel/broadcast/{$channel->id}", ['layers' => ['scoreboard' => false]])->assertSessionHas('success');
+    app(RecordGameEvent::class)->handle($game, GameEventType::Goal, $home->id, $hp[0]);
+
+    expect($channel->fresh()->layerOn('scoreboard'))->toBeFalse()
+        ->and(OverlayState::for($channel->fresh())['layers']['scoreboard'])->toBeFalse()
+        ->and($game->fresh()->home_score)->toBe(1);
+});
+
 it('refreshes the overlay when the clock starts', function () {
     ['game' => $game] = sheetGame();
     $channel = channelFor($game);
@@ -231,7 +266,7 @@ describe('panel', function () {
             ->where('channels.0.has_control_token', true)
             ->where('issued_control.channel_id', $channel->id)
             ->has('issued_control.token')
-            ->where('channels.0.layers', ['lineup' => false, 'standings' => false]));
+            ->where('channels.0.layers', ['lineup' => false, 'standings' => false, 'scoreboard' => true, 'lower_third' => true]));
 
         $this->get('/painel/broadcast')->assertInertia(fn ($page) => $page->where('issued_control', null));
 
@@ -260,7 +295,7 @@ describe('panel', function () {
             ->and($channel->appearance['accent_color'])->toBe('#ff5500')
             ->and($channel->appearance['position'])->toBe('top-right')
             ->and($channel->lineup_settings)->toBe(['presentation' => 'formation', 'list_seconds' => 9, 'photo_person_ids' => [$hp[0]]]);
-        $this->get('/painel/broadcast')->assertInertia(fn ($page) => $page->where('channels.0.layers', ['lineup' => true, 'standings' => false]));
+        $this->get('/painel/broadcast')->assertInertia(fn ($page) => $page->where('channels.0.layers', ['lineup' => true, 'standings' => false, 'scoreboard' => true, 'lower_third' => true]));
         Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['lineup'] !== null && $event->state['game']['id'] === $game->id);
 
         $this->patch("/painel/broadcast/{$channel->id}", ['layers' => ['lineup' => false]]);
@@ -607,6 +642,40 @@ describe('fonts', function () {
     });
 });
 
+describe('show and hide commands', function () {
+    it('starts with the scoreboard and the lower thirds on air, and the lineup and the standings hidden', function () {
+        $channel = channelFor();
+
+        expect($channel->layerStates())->toBe(['lineup' => false, 'standings' => false, 'scoreboard' => true, 'lower_third' => true])
+            ->and(OverlayState::for($channel)['layers'])->toBe(['lineup' => false, 'standings' => false, 'scoreboard' => true, 'lower_third' => true]);
+    });
+
+    it('lets the operator hide and show the scoreboard even with no game, and tells the OBS at once', function () {
+        $channel = channelFor();
+        $this->actingAs(panelUser(Role::Operator));
+        Event::fake([OverlayUpdated::class]);
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['layers' => ['scoreboard' => false, 'lower_third' => false]])->assertSessionHasNoErrors();
+
+        expect($channel->fresh()->layerOn('scoreboard'))->toBeFalse()->and($channel->fresh()->layerOn('lower_third'))->toBeFalse();
+        Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['layers']['scoreboard'] === false && $event->state['layers']['lower_third'] === false);
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['layers' => ['scoreboard' => true]]);
+        expect($channel->fresh()->layerOn('scoreboard'))->toBeTrue()->and($channel->fresh()->layerOn('lower_third'))->toBeFalse();
+    });
+
+    it('accepts the same commands from the control API and keeps the unknown layers out', function () {
+        $channel = channelFor();
+        $key = OverlayChannel::newControlToken();
+        $channel->update(['control_token_hash' => OverlayChannel::controlTokenHash($key)]);
+
+        $this->withToken($key)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", ['layers' => ['scoreboard' => false, 'inventada' => true]])
+            ->assertOk()
+            ->assertJsonPath('data.layers.scoreboard', false)
+            ->assertJsonMissingPath('data.layers.inventada');
+    });
+});
+
 describe('scenes', function () {
     function styledChannel(): OverlayChannel
     {
@@ -630,7 +699,7 @@ describe('scenes', function () {
         expect($scene->name)->toBe('Pré-jogo')
             ->and($scene->config['appearance']['preset'])->toBe('classic')
             ->and($scene->config['appearance']['font'])->toBe('bebas')
-            ->and($scene->config['layers'])->toBe(['lineup' => true, 'standings' => false])
+            ->and($scene->config['layers'])->toBe(['lineup' => true, 'standings' => false, 'scoreboard' => true, 'lower_third' => true])
             ->and($scene->config['sponsor_settings'])->toBe(['enabled' => true, 'seconds' => 12])
             ->and($scene->config['lineup_settings'])->toBe(['presentation' => 'formation', 'list_seconds' => 9])
             ->and(array_keys($scene->config))->not->toContain('game_id')

@@ -36,7 +36,7 @@ final class OverlayState
             'font_face' => self::fontFace($channel, $appearance['font']),
             'lineup_settings' => OverlayLineupSettings::public($channel->lineup_settings),
             'sponsors' => OverlaySponsorSettings::public($channel->sponsor_settings),
-            'layers' => array_merge(array_fill_keys(OverlayChannel::LAYERS, false), array_map('boolval', $channel->layers ?? [])),
+            'layers' => $channel->layerStates(),
             'game' => $game ? PublicGameSnapshot::for($game) : null,
             'lineup' => $game && $channel->layerOn('lineup') ? self::lineup($game, OverlayLineupSettings::normalize($channel->lineup_settings)['photo_person_ids']) : null,
             'standings' => $game && $channel->layerOn('standings') ? self::standings($game) : null,

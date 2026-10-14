@@ -56,7 +56,7 @@ final class UpdateOverlayChannel
         }
 
         $channel->save();
-        event(OverlayUpdated::for($channel));
+        OverlayUpdated::dispatchFor($channel);
 
         return $channel;
     }

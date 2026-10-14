@@ -24,7 +24,8 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
     const elapsed = useGameClock(game?.clock ?? { state: 'not_started', period: null, base_seconds: 0, running_since_ms: null }, skew);
     const seconds = game ? shownSeconds(game.clock, elapsed) : elapsed;
 
-    if (!game || !game.home || !game.away) {
+    // Comando de ocultar: o placar sai na hora, sem animação (fiel ao clique do operador).
+    if (!game || !game.home || !game.away || !state.layers.scoreboard) {
         return <Head title="Placar" />;
     }
 

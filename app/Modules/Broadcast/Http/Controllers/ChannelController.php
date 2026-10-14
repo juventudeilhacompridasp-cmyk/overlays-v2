@@ -70,7 +70,7 @@ class ChannelController extends Controller
                     'name' => $channel->name,
                     'game_id' => $channel->game_id,
                     'game_label' => $game ? $label($game) : null,
-                    'layers' => array_merge(array_fill_keys(OverlayChannel::LAYERS, false), array_map('boolval', $channel->layers ?? [])),
+                    'layers' => $channel->layerStates(),
                     'appearance' => OverlayAppearance::normalize($channel->appearance),
                     'lineup_settings' => OverlayLineupSettings::normalize($channel->lineup_settings),
                     'sponsor_settings' => OverlaySponsorSettings::normalize($channel->sponsor_settings),

@@ -10,13 +10,14 @@ use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Teams\Models\Person;
 use Illuminate\Support\Str;
+use Throwable;
 
 /** Gol, cartão ou substituição lançado na súmula vira uma faixa na tela de eventos dos canais com este jogo no ar. */
 class ShowLowerThird
 {
     public function handle(GameEventRecorded $recorded): void
     {
-        $channels = OverlayChannel::query()->where('game_id', $recorded->gameId)->get();
+        $channels = OverlayChannel::query()->where('game_id', $recorded->gameId)->get()->filter(fn (OverlayChannel $channel) => $channel->layerOn('lower_third'));
 
         if ($channels->isEmpty()) {
             return;
@@ -64,6 +65,13 @@ class ShowLowerThird
             'minute' => $event->minute,
         ];
 
-        $channels->each(fn (OverlayChannel $channel) => event(new OverlayLowerThird($channel->token, $banner)));
+        $channels->each(function (OverlayChannel $channel) use ($banner): void {
+            try {
+                event(new OverlayLowerThird($channel->token, $banner));
+            } catch (Throwable $exception) {
+                // O lance já está na súmula; a falta da faixa no OBS não pode desfazê-lo.
+                report($exception);
+            }
+        });
     }
 }

@@ -25,8 +25,14 @@ class OverlayChannel extends Model
     /** @var list<string> */
     protected $hidden = ['control_token_hash'];
 
-    /** Camadas que o operador liga e desliga (as demais telas ficam sempre ativas). */
-    public const LAYERS = ['lineup', 'standings'];
+    /**
+     * Camadas que o operador liga e desliga ao vivo. Escalação e tabela começam ocultas; placar e lances começam no ar (o
+     * operador pode tirá-los da tela na hora). Telas sem camada (patrocinadores) têm a própria chave de ligar/desligar.
+     */
+    public const LAYERS = ['lineup', 'standings', 'scoreboard', 'lower_third'];
+
+    /** Camadas que valem como ligadas quando o operador nunca mexeu nelas. */
+    public const DEFAULT_ON = ['scoreboard', 'lower_third'];
 
     /** Telas disponíveis para colocar no OBS: slug da URL => rótulo. */
     public const OVERLAYS = [
@@ -76,7 +82,13 @@ class OverlayChannel extends Model
 
     public function layerOn(string $layer): bool
     {
-        return (bool) ($this->layers[$layer] ?? false);
+        return (bool) ($this->layers[$layer] ?? in_array($layer, self::DEFAULT_ON, true));
+    }
+
+    /** @return array<string, bool> todas as camadas, com o padrão de cada uma onde o operador não mexeu */
+    public function layerStates(): array
+    {
+        return array_combine(self::LAYERS, array_map(fn (string $layer) => $this->layerOn($layer), self::LAYERS));
     }
 
     public function overlayUrl(string $overlay): string
