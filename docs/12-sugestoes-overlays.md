@@ -2,7 +2,7 @@
 
 Levantamento de 14/10/2026, depois de concluir placar (4 formatos), lances/lower thirds (6 estilos), escalação (lista, esquema,
 cartões e jogador a jogador), tabela, patrocinadores e as 8 telas de campeonato. Cada ideia diz o que já existe para reaproveitar,
-o esforço (P/M/G) e o cuidado com a LGPD. Entregues depois deste levantamento: itens **3** (resumo do jogo com craque), **6** (chaveamento), **1** (cartela pré-jogo), **2** (comparativo de equipes) e **9** (cartelas de transmissão), em *Telas extras*; **4** (gols sob o placar), **7** (acréscimos) e **8** (avisos de um clique) no placar e em *Lances*.
+o esforço (P/M/G) e o cuidado com a LGPD. Entregues depois deste levantamento: itens **10** (chamada para redes sociais), **3** (resumo do jogo com craque), **6** (chaveamento), **1** (cartela pré-jogo), **2** (comparativo de equipes) e **9** (cartelas de transmissão), em *Telas extras*; **4** (gols sob o placar), **7** (acréscimos) e **8** (avisos de um clique) no placar e em *Lances*.
 
 ## Prioridade alta (muito valor, quase tudo pronto)
 

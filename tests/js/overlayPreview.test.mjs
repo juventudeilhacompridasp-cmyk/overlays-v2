@@ -48,3 +48,8 @@ test('extra screens wait for their own switch and the cartela needs no game', ()
     assert.equal(overlayPreviewStatus('cartela', false, layers).tone, 'hidden');
     assert.equal(overlayPreviewStatus('cartela', false, { ...layers, screens: { cartela: true } }).tone, 'live');
 });
+
+test('the social call to action needs no game, only its own switch', () => {
+    assert.equal(overlayPreviewStatus('social', false, layers).tone, 'hidden');
+    assert.equal(overlayPreviewStatus('social', false, { ...layers, screens: { social: true } }).tone, 'live');
+});

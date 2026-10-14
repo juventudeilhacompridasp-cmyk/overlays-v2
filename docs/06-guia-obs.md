@@ -38,6 +38,8 @@ Também em **Telas extras**: **Resumo do jogo** (título “Intervalo”/“Fim 
 *Cartões* no portal — e o **craque do jogo**, escolhido por você entre os atletas da escalação) e **Chaveamento do mata-mata** (confrontos por rodada com
 placar agregado, vencedor em destaque, pênaltis e campeão; vale também a partir de um jogo da fase de pontos corridos, se a divisão tiver mata-mata).
 
+**Chamada para redes sociais**: faixa que alterna até 4 linhas (ex.: *Instagram · @juventude*) com o **QR code** de um link https; fica oculta até você mostrar.
+
 ### Gols sob o placar e acréscimos
 Em *Visual do overlay*, **Mostrar autores dos gols sob o placar** lista os goleadores de cada lado (“Rafa 12', 55'”), por nome público. Em
 *Acréscimos no relógio* (coluna Ao vivo) escolha de +1 a +8: o número aparece junto ao relógio enquanto o jogo corre e zera ao trocar o jogo.

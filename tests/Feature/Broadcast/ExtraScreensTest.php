@@ -34,7 +34,7 @@ it('starts with every extra screen hidden and no comparison data', function () {
     ['game' => $game] = sheetGame();
     $state = OverlayState::for(screensChannel($game));
 
-    expect($state['screens'])->toBe(['pregame' => false, 'compare' => false, 'cartela' => false, 'summary' => false, 'bracket' => false])
+    expect($state['screens'])->toBe(['pregame' => false, 'compare' => false, 'cartela' => false, 'summary' => false, 'bracket' => false, 'social' => false])
         ->and($state['compare'])->toBeNull()
         ->and($state['cartela'])->toBe(['title' => 'Começamos em breve', 'subtitle' => '', 'until_ms' => null])
         ->and($state['layers'])->toBe(['lineup' => false, 'standings' => false, 'scoreboard' => true, 'lower_third' => true]);
@@ -49,7 +49,7 @@ it('lets the operator show and hide the screens, ignores unknown ones and tells 
     $this->patch("/painel/broadcast/{$channel->id}", ['screens_live' => ['cartela' => false]])->assertSessionHasNoErrors();
 
     $live = $channel->fresh()->screensLive();
-    expect($live)->toBe(['pregame' => true, 'compare' => false, 'cartela' => false, 'summary' => false, 'bracket' => false])
+    expect($live)->toBe(['pregame' => true, 'compare' => false, 'cartela' => false, 'summary' => false, 'bracket' => false, 'social' => false])
         ->and($channel->fresh()->layerStates())->toBe(['lineup' => false, 'standings' => false, 'scoreboard' => true, 'lower_third' => true]);
     Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['screens']['pregame'] === true);
 
@@ -117,5 +117,47 @@ describe('cartela', function () {
 
         $this->patch("/painel/broadcast/{$channel->id}", ['screens_live' => ['cartela' => true]])->assertSessionHas('error');
         expect($channel->fresh()->screensLive()['cartela'])->toBeFalse();
+    });
+});
+
+describe('social call to action', function () {
+    it('keeps up to four lines and only an https link, and shows them to the OBS', function () {
+        $channel = screensChannel();
+        $this->actingAs(panelUser(Role::Operator));
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['screens_live' => ['social' => true], 'screen_settings' => ['social' => [
+            'items' => [['label' => 'Instagram', 'value' => ' @juventude '], ['label' => '', 'value' => 'juventude.tech']],
+            'url' => 'https://juventude.tech/jogos',
+        ]]])->assertSessionHasNoErrors();
+
+        $state = OverlayState::for($channel->fresh());
+
+        expect($state['screens']['social'])->toBeTrue()
+            ->and($state['social'])->toBe(['items' => [['label' => 'Instagram', 'value' => '@juventude'], ['label' => '', 'value' => 'juventude.tech']], 'url' => 'https://juventude.tech/jogos'])
+            ->and($state['cartela'])->toBe(['title' => 'Começamos em breve', 'subtitle' => '', 'until_ms' => null]);
+
+        $this->get($channel->overlayUrl('social'))->assertOk()->assertInertia(fn ($page) => $page->component('Overlay/Social')->has('state.social'));
+    });
+
+    it('refuses more than four lines, empty text and links that are not https', function () {
+        $channel = screensChannel();
+        $this->actingAs(panelUser(Role::Operator));
+
+        $five = array_fill(0, 5, ['label' => 'X', 'value' => 'y']);
+        $this->patch("/painel/broadcast/{$channel->id}", ['screen_settings' => ['social' => ['items' => $five]]])->assertSessionHasErrors('screen_settings.social.items');
+        $this->patch("/painel/broadcast/{$channel->id}", ['screen_settings' => ['social' => ['items' => [['label' => 'X', 'value' => '']]]]])->assertSessionHasErrors('screen_settings.social.items.0.value');
+
+        foreach (['http://x.com', 'javascript:alert(1)', 'https://', 'ftp://x.com/a', 'https://x.com/a b'] as $url) {
+            $this->patch("/painel/broadcast/{$channel->id}", ['screen_settings' => ['social' => ['url' => $url]]])->assertSessionHasErrors('screen_settings.social.url');
+        }
+
+        expect($channel->fresh()->screen_settings)->toBeNull();
+    });
+
+    it('drops an invalid link that got into the settings by other means', function () {
+        $channel = screensChannel();
+        $channel->update(['screen_settings' => ['social' => ['items' => [['label' => 'A', 'value' => 'b']], 'url' => 'javascript:alert(1)']]]);
+
+        expect(OverlayState::for($channel->fresh())['social'])->toBe(['items' => [['label' => 'A', 'value' => 'b']], 'url' => null]);
     });
 });

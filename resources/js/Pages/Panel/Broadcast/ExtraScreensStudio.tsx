@@ -5,6 +5,7 @@ interface CartelaSettings {
     title: string;
     subtitle: string;
     until_ms: number | null;
+    social?: { items: { label: string; value: string }[]; url: string | null };
 }
 
 interface Person {
@@ -14,13 +15,14 @@ interface Person {
     team: string;
 }
 
-type Patch = (data: { screens_live?: Record<string, boolean>; screen_settings?: { title?: string; subtitle?: string; minutes?: number; mvp_person_id?: string | null } }) => void;
+type Patch = (data: { screens_live?: Record<string, boolean>; screen_settings?: { title?: string; subtitle?: string; minutes?: number; mvp_person_id?: string | null; social?: { items: { label: string; value: string }[]; url: string | null } } }) => void;
 
 const SCREENS: { key: string; label: string; hint: string; needsGame: boolean }[] = [
     { key: 'pregame', label: 'Cartela pré-jogo', hint: 'Escudos, competição, local, horário e contagem regressiva para o início.', needsGame: true },
     { key: 'compare', label: 'Comparativo de equipes', hint: 'Posição na tabela, forma recente e confronto direto.', needsGame: true },
     { key: 'summary', label: 'Resumo do jogo', hint: 'Intervalo ou fim: placar, gols, cartões (se liberados) e craque do jogo.', needsGame: true },
     { key: 'bracket', label: 'Chaveamento do mata-mata', hint: 'Confrontos por rodada, placares, vencedor e campeão.', needsGame: true },
+    { key: 'social', label: 'Chamada para redes sociais', hint: 'Faixa com @, site e QR code do link.', needsGame: false },
     { key: 'cartela', label: 'Cartela de transmissão', hint: 'Tela cheia com título, contagem e patrocinadores.', needsGame: false },
 ];
 
@@ -36,6 +38,9 @@ export default function ExtraScreensStudio({ channelId, screens, settings, peopl
     const [subtitle, setSubtitle] = useState(settings.subtitle);
     const [minutes, setMinutes] = useState(0);
     const [mvp, setMvp] = useState('');
+    const blank = { label: '', value: '' };
+    const [lines, setLines] = useState(() => [...(settings.social?.items ?? []), blank, blank, blank, blank].slice(0, 4));
+    const [link, setLink] = useState(settings.social?.url ?? '');
 
     useEffect(() => {
         setTitle(settings.title);
@@ -64,6 +69,21 @@ export default function ExtraScreensStudio({ channelId, screens, settings, peopl
                     })}
                 </div>
                 {!hasGame && <p className="mt-2 text-xs text-gray-500">Escolha um jogo no ar para liberar o pré-jogo e o comparativo.</p>}
+            </div>
+
+            <div className="rounded-lg border border-gray-200 p-4">
+                <div className="mb-1 font-medium text-gray-900">Chamada para redes sociais</div>
+                <p className="mb-3 text-xs text-gray-500">Até 4 linhas que se alternam (ex.: Instagram · @juventude) e, se quiser, um QR code para um link https.</p>
+                <div className="space-y-2">
+                    {lines.map((line, position) => (
+                        <div key={position} className="grid grid-cols-[7rem_1fr] gap-2">
+                            <Input aria-label={`Rótulo da linha ${position + 1}`} maxLength={20} placeholder="Instagram" disabled={!canOperate} value={line.label} onChange={(event) => setLines(lines.map((item, at) => (at === position ? { ...item, label: event.target.value } : item)))} />
+                            <Input aria-label={`Texto da linha ${position + 1}`} maxLength={60} placeholder="@seuperfil" disabled={!canOperate} value={line.value} onChange={(event) => setLines(lines.map((item, at) => (at === position ? { ...item, value: event.target.value } : item)))} />
+                        </div>
+                    ))}
+                    <Field label="Link do QR code (https, opcional)" htmlFor={`social-url-${channelId}`}><Input id={`social-url-${channelId}`} maxLength={200} placeholder="https://" disabled={!canOperate} value={link} onChange={(event) => setLink(event.target.value)} /></Field>
+                </div>
+                <Button small className="mt-3" disabled={!canOperate} onClick={() => patch({ screen_settings: { social: { items: lines.filter((line) => line.value.trim() !== ''), url: link.trim() || null } } })}>Salvar chamada</Button>
             </div>
 
             <div className="rounded-lg border border-gray-200 p-4">

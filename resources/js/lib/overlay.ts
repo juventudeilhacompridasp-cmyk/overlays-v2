@@ -97,7 +97,8 @@ export interface OverlayState {
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     championship: Record<string, boolean>;
     stoppage: number;
-    screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean };
+    social: { items: { label: string; value: string }[]; url: string | null };
+    screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean; social: boolean };
     cartela: { title: string; subtitle: string; until_ms: number | null };
     summary: {
         headline: string;
