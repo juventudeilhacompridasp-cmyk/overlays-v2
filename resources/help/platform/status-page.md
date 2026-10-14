@@ -20,6 +20,12 @@ Use **Novo comunicado**: título, impacto (*Instabilidade* ou *Fora do ar*), sit
 ## Agendar manutenção
 Troque para **Mudar para manutenção**, informe início e fim previstos e os componentes. Ela aparece em "Manutenções programadas" antes de começar e muda o componente para *Em manutenção* dentro da janela (ou quando você marcar *Em andamento*). Conclua pelo formulário de atualização.
 
+## Avisos por e-mail
+Quem quiser se inscreve na própria status page: informa o e-mail, **confirma pelo link recebido** (sem confirmação nada é enviado; o pedido expira em 7 dias) e passa a receber um e-mail quando um incidente é aberto, atualizado ou resolvido e quando uma manutenção é agendada. Todo e-mail traz o link para **cancelar** (em duas etapas, para leitores de e-mail não cancelarem sozinhos). A quantidade de inscritos aparece em [Status page](route:platform.status.index); a lista de e-mails não é exibida. `STATUS_NOTIFY=false` desliga os envios.
+
+## Selo de status
+`/status/selo.svg` é uma imagem "status | operacional" que muda de cor sozinha. O código pronto para colar em outros sites está em [Status page](route:platform.status.index). Nos portais das organizações **sem marca própria** o selo já aparece no rodapé.
+
 ## Integrações e contingência
 - `GET /status.json` (aberto a qualquer origem) e `/status.atom` (feed) trazem o mesmo conteúdo da página.
 - Com a variável `STATUS_PUBLISH_DISK` (ex.: `s3`), a cada minuto o retrato vai para `status/status.json` nesse disco, permitindo servir a página por CDN mesmo com a aplicação fora do ar.

@@ -3,8 +3,12 @@
 namespace App\Modules\Status\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Status\Actions\SubscriberActions;
+use App\Modules\Status\Http\Requests\SubscribeRequest;
+use App\Modules\Status\Support\StatusBadge;
 use App\Modules\Status\Support\StatusSummary;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -15,6 +19,53 @@ class StatusPageController extends Controller
     public function index(): InertiaResponse
     {
         return Inertia::render('Status/Index', ['status' => StatusSummary::get(), 'json_url' => route('status.json')]);
+    }
+
+    /** Pedido de inscrição nos avisos por e-mail. A resposta é sempre a mesma: não revela se o e-mail já está na lista. */
+    public function subscribe(SubscribeRequest $request, SubscriberActions $subscribers): RedirectResponse
+    {
+        $subscribers->request($request->validated('email'));
+
+        return redirect()->route('status.index')->with('success', 'Se o e-mail for válido, enviamos um link de confirmação. Os avisos só começam depois que você confirmar.');
+    }
+
+    public function confirm(string $token, SubscriberActions $subscribers): InertiaResponse
+    {
+        return $subscribers->confirm($token)
+            ? $this->notice('Inscrição confirmada', 'Pronto! Você vai receber um e-mail quando houver incidente ou manutenção. Dá para cancelar a qualquer momento pelo link no final de cada aviso.')
+            : $this->notice('Link inválido ou expirado', 'Não encontramos esta inscrição. Faça o pedido de novo na status page.');
+    }
+
+    /** Cancelar é em duas etapas (GET mostra o botão, POST cancela) para que leitores de e-mail não cancelem sozinhos ao abrir o link. */
+    public function unsubscribeShow(string $token, SubscriberActions $subscribers): InertiaResponse
+    {
+        return $subscribers->exists($token)
+            ? $this->notice('Cancelar avisos de status', 'Clique no botão para parar de receber avisos de incidentes e manutenções.', ['label' => 'Cancelar avisos', 'url' => route('status.unsubscribe', $token)])
+            : $this->notice('Inscrição não encontrada', 'Este link já foi usado ou a inscrição não existe mais.');
+    }
+
+    public function unsubscribe(string $token, SubscriberActions $subscribers): InertiaResponse
+    {
+        $subscribers->cancel($token);
+
+        return $this->notice('Avisos cancelados', 'Seu e-mail foi removido da lista. Você pode voltar a se inscrever quando quiser na status page.');
+    }
+
+    /** Selo "status | operacional" em SVG, para <img> em qualquer site (cache curto, aberto a qualquer origem). */
+    public function badge(): Response
+    {
+        return response(StatusBadge::svg((string) StatusSummary::get()['overall']), 200, [
+            'Content-Type' => 'image/svg+xml; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=60',
+            'Access-Control-Allow-Origin' => '*',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    /** @param  array{label: string, url: string}|null  $action */
+    private function notice(string $title, string $message, ?array $action = null): InertiaResponse
+    {
+        return Inertia::render('Status/Notice', ['title' => $title, 'message' => $message, 'action' => $action, 'status_url' => route('status.index')]);
     }
 
     public function json(): JsonResponse

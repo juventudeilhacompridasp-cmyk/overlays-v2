@@ -10,6 +10,7 @@ use App\Modules\Status\Http\Requests\StoreIncidentRequest;
 use App\Modules\Status\Http\Requests\StoreIncidentUpdateRequest;
 use App\Modules\Status\Models\Incident;
 use App\Modules\Status\Models\IncidentUpdate;
+use App\Modules\Status\Models\Subscriber;
 use App\Modules\Status\Support\StatusComponents;
 use App\Modules\Status\Support\StatusPublisher;
 use App\Modules\Status\Support\StatusSummary;
@@ -49,6 +50,8 @@ class PlatformStatusController extends Controller
                 'maintenance' => array_map(fn (IncidentState $state) => ['value' => $state->value, 'label' => $state->label()], IncidentState::forMaintenance()),
             ],
             'public_url' => route('status.index'),
+            'badge_url' => route('status.badge'),
+            'subscribers' => ['confirmed' => Subscriber::query()->whereNotNull('confirmed_at')->count(), 'pending' => Subscriber::query()->whereNull('confirmed_at')->count()],
         ]);
     }
 

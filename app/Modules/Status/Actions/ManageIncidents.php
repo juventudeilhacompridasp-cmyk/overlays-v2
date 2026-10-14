@@ -22,7 +22,9 @@ class ManageIncidents
             $state = $maintenance ? IncidentState::Scheduled : IncidentState::Investigating;
         }
 
-        return DB::transaction(function () use ($title, $impact, $state, $componentIds, $body, $startsAt, $endsAt) {
+        $update = null;
+
+        $incident = DB::transaction(function () use ($title, $impact, $state, $componentIds, $body, $startsAt, $endsAt, &$update) {
             $incident = Incident::query()->create([
                 'title' => $title,
                 'impact' => $impact,
@@ -33,11 +35,18 @@ class ManageIncidents
                 'resolved_at' => $state->isClosed() ? now() : null,
             ]);
             $incident->components()->sync($componentIds);
-            $incident->updates()->create(['state' => $state, 'body' => $body, 'created_at' => now()]);
+            $update = $incident->updates()->create(['state' => $state, 'body' => $body, 'created_at' => now()]);
             StatusSummary::forget();
 
             return $incident;
         });
+
+        // Fora da transação: o e-mail só sai com o incidente já gravado.
+        if ($update !== null) {
+            app(NotifySubscribers::class)->handle($incident, $update);
+        }
+
+        return $incident;
     }
 
     /** Novo comunicado na linha do tempo; resolver/concluir fecha o incidente. */
@@ -49,11 +58,13 @@ class ManageIncidents
             $state = $incident->state;
         }
 
-        DB::transaction(function () use ($incident, $state, $body) {
+        $update = DB::transaction(function () use ($incident, $state, $body) {
             $incident->update(['state' => $state, 'resolved_at' => $state->isClosed() ? ($incident->resolved_at ?? now()) : null]);
-            $incident->updates()->create(['state' => $state, 'body' => $body, 'created_at' => now()]);
+
+            return $incident->updates()->create(['state' => $state, 'body' => $body, 'created_at' => now()]);
         });
         StatusSummary::forget();
+        app(NotifySubscribers::class)->handle($incident, $update);
 
         return $incident->refresh();
     }

@@ -85,7 +85,7 @@ class RunProbes
 
     private function open(Component $component): void
     {
-        DB::transaction(function () use ($component) {
+        [$incident, $update] = DB::transaction(function () use ($component) {
             $incident = Incident::query()->create([
                 'title' => "Instabilidade: {$component->name}",
                 'impact' => Impact::Major,
@@ -94,15 +94,22 @@ class RunProbes
                 'starts_at' => now(),
             ]);
             $incident->components()->attach($component->getKey());
-            $incident->updates()->create(['state' => IncidentState::Investigating, 'body' => 'Detectamos falhas neste serviço e estamos investigando.', 'created_at' => now()]);
+            $update = $incident->updates()->create(['state' => IncidentState::Investigating, 'body' => 'Detectamos falhas neste serviço e estamos investigando.', 'created_at' => now()]);
+
+            return [$incident, $update];
         });
+
+        app(NotifySubscribers::class)->handle($incident, $update);
     }
 
     private function resolve(Incident $incident): void
     {
-        DB::transaction(function () use ($incident) {
+        $update = DB::transaction(function () use ($incident) {
             $incident->update(['state' => IncidentState::Resolved, 'resolved_at' => now()]);
-            $incident->updates()->create(['state' => IncidentState::Resolved, 'body' => 'O serviço voltou ao normal.', 'created_at' => now()]);
+
+            return $incident->updates()->create(['state' => IncidentState::Resolved, 'body' => 'O serviço voltou ao normal.', 'created_at' => now()]);
         });
+
+        app(NotifySubscribers::class)->handle($incident, $update);
     }
 }
