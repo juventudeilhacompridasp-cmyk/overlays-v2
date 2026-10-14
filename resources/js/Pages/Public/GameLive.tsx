@@ -1,4 +1,5 @@
 import { ConnectionState, Realtime, subscribeToGame } from '@/lib/echo';
+import { safeJsonLd } from '@/lib/jsonLd';
 import { GameClock, formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
 import PushButton from '@/Components/Portal/PushButton';
 import ShareButtons from '@/Components/Portal/ShareButtons';
@@ -144,7 +145,7 @@ function GoalList({ goals, side }: { goals: Goal[]; side: 'home' | 'away' }) {
     );
 }
 
-export default function GameLive({ snapshot: initial, realtime, push_key, insights }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null; insights?: Insights }) {
+export default function GameLive({ snapshot: initial, realtime, push_key, insights, json_ld }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null; insights?: Insights; json_ld?: Record<string, unknown> | null }) {
     const [snapshot, setSnapshot] = useState(initial);
     const [connection, setConnection] = useState<ConnectionState>('connecting');
     // Diferença entre o relógio do navegador e o do servidor, medida na carga da página (não nos deltas, que podem atrasar na fila).
@@ -219,6 +220,7 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
                 <meta property="og:description" content={`${snapshot.competition} · ${snapshot.division} · ${snapshot.stage}`} />
                 <meta property="og:url" content={route('public.games.show', snapshot.id)} />
                 {snapshot.home?.logo_url && <meta property="og:image" content={snapshot.home.logo_url} />}
+                {json_ld && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(json_ld) }} />}
             </Head>
             <main className="mx-auto max-w-3xl">
                 <Link href={route('portal.home')} className="text-sm text-gray-400 hover:text-white">

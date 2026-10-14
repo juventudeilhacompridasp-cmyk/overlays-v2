@@ -13,6 +13,7 @@ use App\Modules\Portal\Push\PushConfig;
 use App\Modules\Portal\Support\CompetitionPage;
 use App\Modules\Portal\Support\GamePresenter;
 use App\Modules\Portal\Support\IcsCalendar;
+use App\Modules\Portal\Support\JsonLd;
 use App\Modules\Portal\Support\PortalSettings;
 use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Portal\Support\SeasonExtras;
@@ -103,7 +104,7 @@ class PortalController extends Controller
 
         return Inertia::render('Portal/Season', [
             'theme' => $theme,
-            'seo' => $this->seo("{$title} · {$theme['name']}", "Classificação, jogos, resultados e artilharia — {$title}.", route('portal.season', [$competition->slug, $season->getKey()])),
+            'seo' => $this->seo("{$title} · {$theme['name']}", "Classificação, jogos, resultados e artilharia — {$title}.", route('portal.season', [$competition->slug, $season->getKey()]), null, JsonLd::season($competition, $season, Game::query()->whereIn('division_id', $season->divisions()->pluck('id'))->with(['homeEntry.team', 'awayEntry.team', 'venue', 'division.season.competition', 'stage'])->orderByRaw('scheduled_at is null')->orderBy('scheduled_at')->limit(20)->get())),
             ...$data,
             'extras' => $extras->for($season),
             'stats_url' => route('portal.stats', [$competition->slug, $season->getKey()]),
@@ -148,7 +149,7 @@ class PortalController extends Controller
 
         return Inertia::render('Portal/Team', [
             'theme' => $theme,
-            'seo' => $this->seo("{$team->name} · {$theme['name']}", "Jogos e resultados de {$team->name}.", route('portal.team', $team->getKey()), $team->logoUrl(512)),
+            'seo' => $this->seo("{$team->name} · {$theme['name']}", "Jogos e resultados de {$team->name}.", route('portal.team', $team->getKey()), $team->logoUrl(512), JsonLd::teamPage($team)),
             'push_key' => PushConfig::publicKeyFor(),
             'team' => ['id' => $team->getKey(), 'name' => $team->name, 'city' => $team->city, 'logo_url' => $team->logoUrl(512), 'color' => $team->primary_color],
             'participations' => $entries->map(fn (Entry $entry) => [
@@ -231,8 +232,9 @@ class PortalController extends Controller
     }
 
     /** @return array{title: string, description: string, url: string, image: string|null} */
-    private function seo(string $title, string $description, string $url, ?string $image = null): array
+    /** @param  array<string, mixed>|null  $jsonLd  dados estruturados (schema.org) da página */
+    private function seo(string $title, string $description, string $url, ?string $image = null, ?array $jsonLd = null): array
     {
-        return ['title' => $title, 'description' => $description, 'url' => $url, 'image' => $image];
+        return ['title' => $title, 'description' => $description, 'url' => $url, 'image' => $image] + ($jsonLd === null ? [] : ['json_ld' => $jsonLd]);
     }
 }

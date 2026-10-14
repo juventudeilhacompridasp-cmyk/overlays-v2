@@ -1,4 +1,5 @@
 import ThemeToggle from '@/Components/ThemeToggle';
+import { safeJsonLd } from '@/lib/jsonLd';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren } from 'react';
 
@@ -16,6 +17,8 @@ export interface Seo {
     description: string;
     url: string;
     image: string | null;
+    /** Dados estruturados (schema.org) montados pelo servidor. */
+    json_ld?: Record<string, unknown>;
 }
 
 /** Título, descrição, canonical e Open Graph: renderizados no servidor (SSR) para buscadores e pré-visualização de links. */
@@ -31,6 +34,7 @@ export function SeoHead({ seo }: { seo: Seo }) {
             <meta property="og:url" content={seo.url} />
             {seo.image && <meta property="og:image" content={seo.image} />}
             <meta name="twitter:card" content={seo.image ? 'summary_large_image' : 'summary'} />
+            {seo.json_ld && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(seo.json_ld) }} />}
         </Head>
     );
 }
