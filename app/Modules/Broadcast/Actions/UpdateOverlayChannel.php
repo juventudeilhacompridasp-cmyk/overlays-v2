@@ -6,6 +6,7 @@ use App\Modules\Broadcast\Events\OverlayUpdated;
 use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Support\OverlayAppearance;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
+use App\Modules\Broadcast\Support\OverlaySponsorSettings;
 
 final class UpdateOverlayChannel
 {
@@ -37,6 +38,10 @@ final class UpdateOverlayChannel
 
         if (isset($data['lineup_settings']) && is_array($data['lineup_settings'])) {
             $channel->lineup_settings = OverlayLineupSettings::normalize(array_merge($channel->lineup_settings ?? [], $data['lineup_settings']));
+        }
+
+        if (isset($data['sponsor_settings']) && is_array($data['sponsor_settings'])) {
+            $channel->sponsor_settings = OverlaySponsorSettings::normalize(array_merge($channel->sponsor_settings ?? [], $data['sponsor_settings']));
         }
 
         $channel->save();

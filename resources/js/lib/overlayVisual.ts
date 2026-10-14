@@ -44,3 +44,13 @@ export function overlayStyle(appearance: OverlayAppearance): CSSProperties {
     } as CSSProperties;
 }
 
+
+/** Próximo patrocinador da rotação (volta ao primeiro; lista vazia ou que encolheu não quebra). */
+export function nextSponsorIndex(current: number, count: number): number {
+    return count <= 0 ? 0 : (current + 1) % count;
+}
+
+/** Moldura do cartão de patrocínio por preset: fundo claro sempre, para qualquer logotipo ficar legível. */
+export function sponsorFrameClass(preset: OverlayAppearance['preset']): string {
+    return preset === 'classic' ? 'rounded-md' : preset === 'minimal' ? 'rounded-full' : 'rounded-2xl';
+}

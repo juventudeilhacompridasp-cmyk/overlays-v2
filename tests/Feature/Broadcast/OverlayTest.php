@@ -3,6 +3,7 @@
 use App\Modules\Broadcast\Events\OverlayLowerThird;
 use App\Modules\Broadcast\Events\OverlayUpdated;
 use App\Modules\Broadcast\Models\OverlayChannel;
+use App\Modules\Broadcast\Models\OverlaySponsor;
 use App\Modules\Broadcast\Support\OverlayState;
 use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Matches\Actions\ChangeGamePeriod;
@@ -15,6 +16,7 @@ use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 
@@ -218,7 +220,8 @@ describe('panel', function () {
             ->where('channels.0.overlays.1.slug', 'eventos')
             ->where('channels.0.overlays.2.slug', 'escalacao')
             ->where('channels.0.overlays.3.slug', 'tabela')
-            ->has('channels.0.overlays', 4)
+            ->where('channels.0.overlays.4.slug', 'patrocinadores')
+            ->has('channels.0.overlays', 5)
             ->where('channels.0.appearance.preset', 'arena')
             ->where('channels.0.lineup_settings.presentation', 'sequence')
             ->where('channels.0.lineup_settings.photo_person_ids', [])
@@ -394,5 +397,100 @@ describe('control api', function () {
         $this->withToken($token)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", [
             'lineup_settings' => ['photo_person_ids' => [$person->id]],
         ])->assertUnprocessable()->assertJsonValidationErrors('lineup_settings.photo_person_ids.0');
+    });
+});
+
+describe('sponsors', function () {
+    function sponsorLogo(string $name = 'logo.png'): UploadedFile
+    {
+        return UploadedFile::fake()->image($name, 300, 120);
+    }
+
+    beforeEach(function () {
+        Storage::fake('s3');
+    });
+
+    it('keeps the rotation off by default and sends no logos to the OBS while it is off', function () {
+        $organizer = panelUser(Role::Organizer);
+        $this->actingAs($organizer)->post(route('panel.broadcast.sponsors.store'), ['name' => 'Padaria Central', 'logo' => sponsorLogo()])->assertSessionHas('success');
+        $channel = channelFor();
+
+        expect(OverlayState::for($channel)['sponsors'])->toBe(['enabled' => false, 'seconds' => 8, 'items' => []]);
+
+        $channel->update(['sponsor_settings' => ['enabled' => true, 'seconds' => 12]]);
+        $sponsors = OverlayState::for($channel->fresh())['sponsors'];
+
+        expect($sponsors['enabled'])->toBeTrue()
+            ->and($sponsors['seconds'])->toBe(12)
+            ->and($sponsors['items'])->toHaveCount(1)
+            ->and($sponsors['items'][0]['name'])->toBe('Padaria Central')
+            ->and($sponsors['items'][0]['logo_url'])->toContain('-512.webp')
+            ->and(array_keys($sponsors['items'][0]))->toBe(['name', 'logo_url']);
+    });
+
+    it('lets the operator turn the rotation on and set the time, with limits, and tells the OBS', function () {
+        $channel = channelFor();
+        $this->actingAs(panelUser(Role::Operator));
+        Event::fake([OverlayUpdated::class]);
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['sponsor_settings' => ['enabled' => true, 'seconds' => 15]])->assertSessionHasNoErrors();
+
+        expect($channel->fresh()->sponsor_settings)->toBe(['enabled' => true, 'seconds' => 15]);
+        Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['sponsors']['enabled'] === true);
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['sponsor_settings' => ['seconds' => 2]])->assertSessionHasErrors('sponsor_settings.seconds');
+        $this->patch("/painel/broadcast/{$channel->id}", ['sponsor_settings' => ['seconds' => 31]])->assertSessionHasErrors('sponsor_settings.seconds');
+    });
+
+    it('registers, pauses and deletes sponsors, only for who manages competitions, and refreshes the open channels', function () {
+        $channel = channelFor();
+        $this->actingAs(panelUser(Role::Operator))->post(route('panel.broadcast.sponsors.store'), ['name' => 'X', 'logo' => sponsorLogo()])->assertSessionHas('error');
+        expect(OverlaySponsor::query()->count())->toBe(0);
+
+        $this->actingAs(panelUser(Role::Organizer));
+        Event::fake([OverlayUpdated::class]);
+        $this->post(route('panel.broadcast.sponsors.store'), ['name' => 'Loja Azul', 'logo' => sponsorLogo()])->assertSessionHas('success');
+        $sponsor = OverlaySponsor::query()->firstOrFail();
+        Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->token === $channel->token);
+
+        $channel->update(['sponsor_settings' => ['enabled' => true, 'seconds' => 8]]);
+        $this->patch(route('panel.broadcast.sponsors.update', $sponsor), ['active' => false])->assertSessionHas('success');
+        expect(OverlayState::for($channel->fresh())['sponsors']['items'])->toBe([]);
+
+        $this->delete(route('panel.broadcast.sponsors.destroy', $sponsor))->assertSessionHas('success');
+        expect(OverlaySponsor::query()->count())->toBe(0);
+        Storage::disk('s3')->assertDirectoryEmpty("organizations/{$sponsor->organization_id}/sponsors");
+    });
+
+    it('refuses a missing logo, a file that is not an image and more sponsors than the limit', function () {
+        $this->actingAs(panelUser(Role::Admin));
+
+        $this->post(route('panel.broadcast.sponsors.store'), ['name' => 'Sem logo'])->assertSessionHasErrors('logo');
+        $this->post(route('panel.broadcast.sponsors.store'), ['name' => 'PDF', 'logo' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf')])->assertSessionHasErrors('logo');
+
+        foreach (range(1, OverlaySponsor::LIMIT) as $i) {
+            $this->post(route('panel.broadcast.sponsors.store'), ['name' => "Patrocinador {$i}", 'logo' => sponsorLogo("l{$i}.png")]);
+        }
+        expect(OverlaySponsor::query()->count())->toBe(OverlaySponsor::LIMIT);
+
+        $this->post(route('panel.broadcast.sponsors.store'), ['name' => 'De sobra', 'logo' => sponsorLogo()])->assertSessionHasErrors('logo');
+    });
+
+    it('is isolated by organization and listed on the broadcast screen', function () {
+        $this->actingAs(panelUser(Role::Admin))->post(route('panel.broadcast.sponsors.store'), ['name' => 'Meu', 'logo' => sponsorLogo()]);
+        $mine = OverlaySponsor::query()->firstOrFail();
+
+        $other = Organization::factory()->create(['slug' => 'outra-org']);
+        CurrentOrganization::using($other, function () {
+            expect(OverlaySponsor::query()->count())->toBe(0);
+        });
+
+        $this->get('/painel/broadcast')->assertInertia(fn ($page) => $page->has('sponsors', 1)->where('sponsors.0.id', $mine->id)->where('sponsor_limit', OverlaySponsor::LIMIT));
+    });
+
+    it('serves the sponsors screen at its own OBS URL', function () {
+        $channel = channelFor();
+
+        $this->get($channel->overlayUrl('patrocinadores'))->assertOk()->assertInertia(fn ($page) => $page->component('Overlay/Sponsors')->has('state.sponsors'));
     });
 });

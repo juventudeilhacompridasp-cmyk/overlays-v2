@@ -27,6 +27,14 @@ Em cada canal, a seção **Visual do overlay** configura o placar:
 Clique em **Aplicar visual**. As fontes que já estão abertas no OBS recebem a mudança por Reverb, sem recarregar. As animações
 usam somente opacidade e transformação para reduzir o trabalho de renderização do Chromium do OBS.
 
+### Patrocinadores
+
+Em **Patrocinadores dos overlays** (abaixo dos canais) cadastre até 12 logotipos — nome e imagem JPG, PNG ou WebP de até 5 MB. Eles
+valem para todos os canais. Em cada canal, a seção **Patrocinadores** liga a rotação e define de 3 a 30 segundos por logotipo.
+Adicione no OBS uma fonte de navegador com a URL da tela **Patrocinadores**; ela mostra um logotipo por vez, na posição e na
+escala do visual do canal, e fica vazia quando a rotação está desligada ou não há patrocinador ativo. Pausar um patrocinador o
+tira da rotação sem perder o cadastro.
+
 ### Escalação visual
 
 Na seção **Escalação visual**, escolha entre lista, esquema tático ou a sequência automática **lista → esquema** e defina de

@@ -30,6 +30,18 @@ interface LineupPerson {
     photo_url: string | null;
 }
 
+interface SponsorSettings {
+    enabled: boolean;
+    seconds: number;
+}
+
+interface Sponsor {
+    id: string;
+    name: string;
+    active: boolean;
+    logo_url: string | null;
+}
+
 interface Channel {
     id: string;
     name: string;
@@ -39,6 +51,7 @@ interface Channel {
     appearance: Appearance;
     lineup_settings: LineupSettings;
     lineup_people: LineupPerson[];
+    sponsor_settings: SponsorSettings;
     has_control_token: boolean;
     control_url: string;
     overlays: { slug: string; title: string; url: string }[];
@@ -81,14 +94,16 @@ function CopyButton({ text }: { text: string }) {
 function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: { channel: Channel; games: GameOption[]; canManage: boolean; canOperate: boolean; issuedControl?: IssuedControl }) {
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
-    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings> }) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true });
+    const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
+    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; sponsor_settings?: Partial<SponsorSettings> }) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true });
     // O jogo atual pode já ter saído da lista de candidatos (ex.: encerrado): mantém a opção para o select refletir o estado real.
     const options = channel.game_id && !games.some((game) => game.id === channel.game_id) ? [{ id: channel.game_id, label: channel.game_label ?? 'Jogo atual' }, ...games] : games;
 
     useEffect(() => {
         setAppearance(channel.appearance);
         setLineupSettings(channel.lineup_settings);
-    }, [channel.appearance, channel.lineup_settings]);
+        setSponsorSettings(channel.sponsor_settings);
+    }, [channel.appearance, channel.lineup_settings, channel.sponsor_settings]);
 
     const togglePhoto = (personId: string) => {
         const selected = lineupSettings.photo_person_ids.includes(personId);
@@ -256,6 +271,23 @@ function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: {
                     {!channel.game_id && <p className="mt-1 text-xs text-gray-500">Escolha um jogo no ar para liberar as camadas.</p>}
                 </div>
 
+                <div className="rounded-lg border border-gray-200 p-4">
+                    <div className="mb-3">
+                        <div className="font-medium text-gray-900">Patrocinadores</div>
+                        <p className="text-xs text-gray-500">Gira um logotipo por vez na tela <strong>Patrocinadores</strong> do OBS. A lista fica logo abaixo dos canais; a posição, a escala e o estilo seguem o visual acima.</p>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <label className="flex items-center gap-2 text-sm text-gray-700">
+                            <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={sponsorSettings.enabled} onChange={(event) => setSponsorSettings({ ...sponsorSettings, enabled: event.target.checked })} />
+                            Rotacionar patrocinadores neste canal
+                        </label>
+                        <Field label={`Tempo de cada logotipo · ${sponsorSettings.seconds}s`} htmlFor={`sponsor-seconds-${channel.id}`}>
+                            <Input id={`sponsor-seconds-${channel.id}`} type="range" min="3" max="30" step="1" disabled={!canOperate} value={sponsorSettings.seconds} onChange={(event) => setSponsorSettings({ ...sponsorSettings, seconds: Number(event.target.value) })} />
+                        </Field>
+                    </div>
+                    {canOperate && <Button small className="mt-3" onClick={() => patch({ sponsor_settings: sponsorSettings })}>Aplicar patrocinadores</Button>}
+                </div>
+
                 {canManage && (
                     <div className="rounded-lg border border-gray-200 p-4">
                         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -291,7 +323,61 @@ function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: {
     );
 }
 
-export default function Index({ channels, games, issued_control }: { channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl }) {
+function SponsorsCard({ sponsors, limit, canManage }: { sponsors: Sponsor[]; limit: number; canManage: boolean }) {
+    const [name, setName] = useState('');
+    const [logo, setLogo] = useState<File | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const add = (event: FormEvent) => {
+        event.preventDefault();
+        if (!logo) return;
+        router.post(route('panel.broadcast.sponsors.store'), { name, logo }, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                setName('');
+                setLogo(null);
+                setError(null);
+            },
+            onError: (errors) => setError(errors.logo ?? errors.name ?? 'Não foi possível cadastrar.'),
+        });
+    };
+
+    return (
+        <Card title="Patrocinadores dos overlays">
+            <p className="mb-3 text-xs text-gray-500">Os logotipos valem para todos os canais da organização ({sponsors.length}/{limit}). Aparecem na tela Patrocinadores do OBS quando a rotação está ligada no canal e o patrocinador está ativo.</p>
+            {sponsors.length === 0 && <p className="text-sm text-gray-500">Nenhum patrocinador cadastrado.</p>}
+            <ul className="divide-y divide-gray-100">
+                {sponsors.map((sponsor) => (
+                    <li key={sponsor.id} className="flex items-center gap-3 py-2">
+                        <span className="grid h-12 w-20 place-items-center rounded bg-[#ffffff] p-1 ring-1 ring-gray-200">{sponsor.logo_url && <img src={sponsor.logo_url} alt="" className="max-h-full max-w-full object-contain" />}</span>
+                        <span className="flex-1 text-sm font-medium text-gray-900">{sponsor.name}</span>
+                        {sponsor.active ? <Badge>Ativo</Badge> : <Badge>Pausado</Badge>}
+                        {canManage && (
+                            <>
+                                <Button small variant="secondary" onClick={() => router.patch(route('panel.broadcast.sponsors.update', sponsor.id), { active: !sponsor.active }, { preserveScroll: true })}>{sponsor.active ? 'Pausar' : 'Ativar'}</Button>
+                                <Button small variant="danger" onClick={() => window.confirm(`Excluir ${sponsor.name}?`) && router.delete(route('panel.broadcast.sponsors.destroy', sponsor.id), { preserveScroll: true })}>Excluir</Button>
+                            </>
+                        )}
+                    </li>
+                ))}
+            </ul>
+            {canManage && sponsors.length < limit && (
+                <form onSubmit={add} className="mt-4 flex flex-wrap items-end gap-3" aria-label="Novo patrocinador">
+                    <Field label="Nome" htmlFor="sponsor-name">
+                        <Input id="sponsor-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={80} required />
+                    </Field>
+                    <Field label="Logotipo (JPG, PNG ou WebP, até 5 MB)" htmlFor="sponsor-logo" error={error ?? undefined}>
+                        <input id="sponsor-logo" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setLogo(event.target.files?.[0] ?? null)} className="text-sm" required />
+                    </Field>
+                    <Button type="submit" disabled={!logo || name.trim() === ''}>Cadastrar</Button>
+                </form>
+            )}
+        </Card>
+    );
+}
+
+export default function Index({ channels, games, issued_control, sponsors, sponsor_limit }: { channels: Channel[]; games: GameOption[]; issued_control?: IssuedControl; sponsors: Sponsor[]; sponsor_limit: number }) {
     const canManage = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
     const { data, setData, post, processing, errors, reset } = useForm({ name: '' });
@@ -312,6 +398,8 @@ export default function Index({ channels, games, issued_control }: { channels: C
                 {channels.map((channel) => (
                     <ChannelCard key={channel.id} channel={channel} games={games} canManage={canManage} canOperate={canOperate} issuedControl={issued_control} />
                 ))}
+
+                <SponsorsCard sponsors={sponsors} limit={sponsor_limit} canManage={canManage} />
 
                 {canManage && (
                     <Card title="Novo canal">
@@ -335,7 +423,7 @@ export default function Index({ channels, games, issued_control }: { channels: C
                             Use <strong>largura 1920</strong> e <strong>altura 1080</strong> (o fundo já é transparente; não precisa de CSS personalizado).
                         </li>
                         <li>
-                            Deixe as fontes sempre ativas: <Badge>Placar</Badge> <Badge>Lances</Badge> <Badge>Escalação</Badge> <Badge>Tabela</Badge>. Elas só aparecem quando há o que mostrar.
+                            Deixe as fontes sempre ativas: <Badge>Placar</Badge> <Badge>Lances</Badge> <Badge>Escalação</Badge> <Badge>Tabela</Badge> <Badge>Patrocinadores</Badge>. Elas só aparecem quando há o que mostrar.
                         </li>
                         <li>Escalação e tabela ficam escondidas até você clicar em "Mostrar" aqui; os lances (gol, cartão, substituição) aparecem sozinhos quando a súmula é lançada.</li>
                         <li>
