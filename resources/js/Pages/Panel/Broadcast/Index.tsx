@@ -6,11 +6,11 @@ import { FormEvent, useEffect, useState } from 'react';
 import OverlayPreviewStudio from './OverlayPreviewStudio';
 
 interface Appearance {
-    preset: 'arena';
+    preset: 'arena' | 'classic' | 'minimal';
     accent_color: string;
     background_color: string;
     text_color: string;
-    position: 'top-left' | 'top-center' | 'top-right';
+    position: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
     scale: number;
     motion: 'dynamic' | 'subtle' | 'none';
 }
@@ -148,10 +148,17 @@ function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: {
 
                 <div className="rounded-lg border border-gray-200 p-4">
                     <div className="mb-3">
-                        <div className="font-medium text-gray-900">Visual do overlay · Arena</div>
+                        <div className="font-medium text-gray-900">Visual do overlay</div>
                         <p className="text-xs text-gray-500">As fontes abertas no OBS recebem as mudanças sem recarregar.</p>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        <Field label="Estilo do placar" htmlFor={`preset-${channel.id}`}>
+                            <Select id={`preset-${channel.id}`} disabled={!canOperate} value={appearance.preset} onChange={(event) => setAppearance({ ...appearance, preset: event.target.value as Appearance['preset'] })}>
+                                <option value="arena">Arena (alto contraste)</option>
+                                <option value="classic">Clássico (barra de TV)</option>
+                                <option value="minimal">Minimal (pílula translúcida)</option>
+                            </Select>
+                        </Field>
                         <Field label="Cor de destaque" htmlFor={`accent-${channel.id}`}>
                             <Input id={`accent-${channel.id}`} type="color" disabled={!canOperate} value={appearance.accent_color} onChange={(event) => setAppearance({ ...appearance, accent_color: event.target.value })} className="h-10" />
                         </Field>
@@ -166,6 +173,9 @@ function ChannelCard({ channel, games, canManage, canOperate, issuedControl }: {
                                 <option value="top-left">Superior esquerdo</option>
                                 <option value="top-center">Superior central</option>
                                 <option value="top-right">Superior direito</option>
+                                <option value="bottom-left">Inferior esquerdo</option>
+                                <option value="bottom-center">Inferior central</option>
+                                <option value="bottom-right">Inferior direito</option>
                             </Select>
                         </Field>
                         <Field label={`Escala · ${Math.round(appearance.scale * 100)}%`} htmlFor={`scale-${channel.id}`}>

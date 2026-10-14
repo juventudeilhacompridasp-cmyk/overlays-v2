@@ -23,6 +23,7 @@ Você pode trocar o fundo entre campo, quadra, escuro e a grade de transparênci
 
 ## Dicas
 - Cartões, disciplina e documentos nunca aparecem nos overlays.
+- O **estilo do placar** pode ser Arena, Clássico ou Minimal, e o placar pode ficar no alto ou embaixo da tela; as cores valem para os três.
 - Alterações de visual aparecem na prévia assim que você clica em **Aplicar visual**.
 - Se a conexão em tempo real falhar, a tela continua atualizando por consulta periódica.
 - O passo a passo completo com imagens está no guia do OBS que acompanha o projeto.

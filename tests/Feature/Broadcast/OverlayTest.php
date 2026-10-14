@@ -265,6 +265,21 @@ describe('panel', function () {
             ->and($channel->fresh()->lineup_settings['photo_person_ids'])->toBe([]);
     });
 
+    it('accepts the classic and minimal presets and the bottom positions, and refuses unknown ones', function () {
+        $channel = channelFor();
+        $this->actingAs(panelUser(Role::Operator));
+
+        foreach (['classic', 'minimal', 'arena'] as $preset) {
+            foreach (['bottom-left', 'bottom-center', 'bottom-right'] as $position) {
+                $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['preset' => $preset, 'position' => $position]])->assertSessionHasNoErrors();
+                expect($channel->fresh()->appearance['preset'])->toBe($preset)->and($channel->fresh()->appearance['position'])->toBe($position);
+            }
+        }
+
+        $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['preset' => 'neon']])->assertSessionHasErrors('appearance.preset');
+        $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['position' => 'center']])->assertSessionHasErrors('appearance.position');
+    });
+
     it('refuses games from another organization', function () {
         $channel = channelFor();
         $foreign = Game::factory()->create();

@@ -1,7 +1,7 @@
 import { formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
 import { Realtime } from '@/lib/echo';
 import { OverlayState, OverlayTeam, useOverlay } from '@/lib/overlay';
-import { overlayMotion, overlayPosition, overlayStyle } from '@/lib/overlayVisual';
+import { overlayMotion, overlayOrigin, overlayPosition, overlayStyle, scoreboardFrame } from '@/lib/overlayVisual';
 import { Head } from '@inertiajs/react';
 
 function Side({ team, align }: { team: OverlayTeam; align: 'left' | 'right' }) {
@@ -40,14 +40,16 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
 
     const appearance = state.appearance;
     const hasMotion = appearance.motion !== 'none';
+    const frame = scoreboardFrame(appearance);
+    const clockStyle = appearance.preset === 'minimal' ? { color: appearance.accent_color } : { background: `linear-gradient(145deg, ${appearance.accent_color}, ${appearance.accent_color}cc)` };
 
     return (
         <div className={`fixed inset-0 flex p-8 font-sans ${overlayPosition(appearance.position)}`} style={{ ...overlayStyle(appearance), color: appearance.text_color, textShadow: '0 1px 2px rgba(0,0,0,.65)' }}>
             <Head title="Placar" />
-            <div style={{ transform: `scale(${appearance.scale})`, transformOrigin: appearance.position === 'top-right' ? 'top right' : appearance.position === 'top-center' ? 'top center' : 'top left' }}>
+            <div style={{ transform: `scale(${appearance.scale})`, transformOrigin: overlayOrigin(appearance.position) }}>
                 <div className={overlayMotion(appearance.motion)}>
-                    <div className="relative inline-flex items-stretch overflow-hidden rounded-2xl border border-white/15 shadow-2xl" style={{ background: `linear-gradient(135deg, ${appearance.background_color}f2, ${appearance.background_color}d9)` }} data-testid="overlay-scoreboard" data-preset={appearance.preset} data-motion={appearance.motion}>
-                        <div className="absolute inset-x-0 top-0 h-0.5" style={{ background: `linear-gradient(90deg, transparent, ${appearance.accent_color}, transparent)` }} />
+                    <div className={frame.className} style={frame.style} data-testid="overlay-scoreboard" data-preset={appearance.preset} data-motion={appearance.motion}>
+                        {appearance.preset === 'arena' && <div className="absolute inset-x-0 top-0 h-0.5" style={{ background: `linear-gradient(90deg, transparent, ${appearance.accent_color}, transparent)` }} />}
                         <Side team={game.home} align="left" />
                         <div key={`${game.home_score}-${game.away_score}`} className={`flex items-center gap-3 border-x border-white/10 bg-black/30 px-6 text-4xl font-black tabular-nums ${hasMotion ? 'overlay-score-pulse' : ''}`} data-testid="overlay-score">
                             <span>{game.home_score}</span>
@@ -55,7 +57,7 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
                             <span>{game.away_score}</span>
                         </div>
                         <Side team={game.away} align="right" />
-                        <div className="flex min-w-[8.5rem] flex-col items-center justify-center px-5 py-1 text-center" style={{ background: `linear-gradient(145deg, ${appearance.accent_color}, ${appearance.accent_color}cc)` }} data-testid="overlay-clock">
+                        <div className="flex min-w-[8.5rem] flex-col items-center justify-center px-5 py-1 text-center" style={clockStyle} data-testid="overlay-clock">
                             <span className="text-xl font-black tabular-nums">{clock}</span>
                             {sets && currentSet && !game.finished && <span className="text-[10px] font-bold uppercase tracking-[0.18em]">Set {sets.length}</span>}
                             {!sets && (game.clock.state === 'running' || game.clock.state === 'paused') && (

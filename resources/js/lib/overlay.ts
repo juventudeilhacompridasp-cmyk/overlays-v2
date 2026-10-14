@@ -10,11 +10,11 @@ export interface OverlayTeam {
 }
 
 export interface OverlayAppearance {
-    preset: 'arena';
+    preset: 'arena' | 'classic' | 'minimal';
     accent_color: string;
     background_color: string;
     text_color: string;
-    position: 'top-left' | 'top-center' | 'top-right';
+    position: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
     scale: number;
     motion: 'dynamic' | 'subtle' | 'none';
 }

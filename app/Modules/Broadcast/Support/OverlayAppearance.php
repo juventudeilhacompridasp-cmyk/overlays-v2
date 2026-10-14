@@ -4,9 +4,10 @@ namespace App\Modules\Broadcast\Support;
 
 final class OverlayAppearance
 {
-    public const PRESETS = ['arena'];
+    /** arena = painel de alto contraste; classic = barra de TV compacta e chapada; minimal = pílula translúcida só com o essencial. */
+    public const PRESETS = ['arena', 'classic', 'minimal'];
 
-    public const POSITIONS = ['top-left', 'top-center', 'top-right'];
+    public const POSITIONS = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'];
 
     public const MOTIONS = ['dynamic', 'subtle', 'none'];
 
