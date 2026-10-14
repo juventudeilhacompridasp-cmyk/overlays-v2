@@ -9,6 +9,7 @@ use App\Modules\Competitions\Models\Entry;
 use App\Modules\Competitions\Models\Season;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Matches\Models\Venue;
 use App\Modules\Portal\Push\PushConfig;
 use App\Modules\Portal\Support\CompetitionPage;
 use App\Modules\Portal\Support\GamePresenter;
@@ -218,6 +219,12 @@ class PortalController extends Controller
             $urls[] = route('portal.team', $id);
         }
 
+        $venues = Venue::query()->whereHas('games', fn (Builder $game) => $game->whereHas('division.season', fn ($season) => $season->published()))->pluck('id');
+
+        foreach ($venues as $id) {
+            $urls[] = route('portal.venue', $id);
+        }
+
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n".'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
 
         foreach ($urls as $url) {
@@ -225,6 +232,65 @@ class PortalController extends Controller
         }
 
         return response($xml.'</urlset>'."\n", 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
+    }
+
+    /** Página pública do local: endereço e os jogos (de edições publicadas) que acontecem ou aconteceram lá. */
+    public function venue(Venue $venue): Response
+    {
+        $published = fn ($query) => $query->whereHas('division.season', fn ($season) => $season->published());
+        $games = Game::query()->where('venue_id', $venue->getKey())->tap($published)
+            ->with(['homeEntry.team', 'awayEntry.team', 'venue', 'group'])
+            ->orderByRaw('scheduled_at is null')->orderBy('scheduled_at')->limit(60)->get();
+
+        abort_if($games->isEmpty(), 404);
+
+        $theme = PublicTheme::current();
+        $upcoming = $games->filter(fn (Game $game) => ! $game->status->isDecided() && $game->status !== GameStatus::Cancelled);
+        $past = $games->filter(fn (Game $game) => $game->status->isDecided())->reverse();
+
+        return Inertia::render('Portal/Venue', [
+            'theme' => $theme,
+            'seo' => $this->seo("{$venue->name} · {$theme['name']}", "Jogos no local {$venue->name}.", route('portal.venue', $venue->getKey())),
+            'venue' => ['name' => $venue->name, 'city' => $venue->city, 'address' => $venue->address],
+            'upcoming' => $upcoming->map(fn (Game $game) => GamePresenter::game($game))->values(),
+            'recent' => $past->take(15)->map(fn (Game $game) => GamePresenter::game($game))->values(),
+        ]);
+    }
+
+    /** Feed Atom com os resultados mais recentes de edições publicadas (só times, placar e links públicos). */
+    public function feed(): HttpResponse
+    {
+        $theme = PublicTheme::current();
+        $games = Game::query()->whereIn('status', [GameStatus::Finished, GameStatus::Walkover])
+            ->whereHas('division.season', fn ($season) => $season->published())
+            ->whereNotNull('home_entry_id')->whereNotNull('away_entry_id')
+            ->with(['homeEntry.team', 'awayEntry.team', 'division.season.competition', 'stage'])
+            ->orderByDesc('finished_at')->orderByDesc('updated_at')->limit(30)->get();
+
+        $e = fn (string $text): string => htmlspecialchars($text, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $updated = ($games->first()->finished_at ?? now())->toAtomString();
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n".'<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="pt-BR">'."\n";
+        $xml .= '  <title>'.$e("Resultados · {$theme['name']}").'</title>'."\n";
+        $xml .= '  <id>'.$e(route('portal.feed')).'</id>'."\n";
+        $xml .= '  <link rel="self" type="application/atom+xml" href="'.$e(route('portal.feed')).'"/>'."\n";
+        $xml .= '  <link rel="alternate" type="text/html" href="'.$e(route('portal.home')).'"/>'."\n";
+        $xml .= '  <updated>'.$updated.'</updated>'."\n";
+
+        foreach ($games as $game) {
+            $home = $game->homeEntry->team->name;
+            $away = $game->awayEntry->team->name;
+            $url = route('public.games.show', $game->getKey());
+            $xml .= '  <entry>'."\n";
+            $xml .= '    <title>'.$e("{$home} {$game->home_score} x {$game->away_score} {$away}").'</title>'."\n";
+            $xml .= '    <id>'.$e($url).'</id>'."\n";
+            $xml .= '    <link rel="alternate" type="text/html" href="'.$e($url).'"/>'."\n";
+            $xml .= '    <updated>'.($game->finished_at ?? $game->updated_at)->toAtomString().'</updated>'."\n";
+            $xml .= '    <summary>'.$e("{$game->division->season->competition->name} · {$game->division->name} · {$game->stage->name}").'</summary>'."\n";
+            $xml .= '  </entry>'."\n";
+        }
+
+        return response($xml.'</feed>'."\n", 200, ['Content-Type' => 'application/atom+xml; charset=UTF-8']);
     }
 
     /** Busca do portal: competições e equipes de edições publicadas pelo nome (nunca atletas). Página sem indexação. */
@@ -235,6 +301,7 @@ class PortalController extends Controller
         $theme = PublicTheme::current();
         $competitions = collect();
         $teams = collect();
+        $venues = collect();
 
         if (mb_strlen($term) >= 2) {
             $like = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($term)).'%';
@@ -246,6 +313,11 @@ class PortalController extends Controller
                 ->whereHas('entries', fn ($query) => $query->where('status', EntryStatus::Confirmed)->whereHas('division.season', fn ($season) => $season->published()))
                 ->where(fn (Builder $query) => $query->whereRaw("lower(name) like ? escape '\\'", [$like])->orWhereRaw("lower(city) like ? escape '\\'", [$like]))
                 ->orderBy('name')->limit(self::SEARCH_LIMIT)->get();
+
+            $venues = Venue::query()
+                ->whereHas('games', fn (Builder $game) => $game->whereHas('division.season', fn ($season) => $season->published()))
+                ->where(fn (Builder $query) => $query->whereRaw("lower(name) like ? escape '\\'", [$like])->orWhereRaw("lower(city) like ? escape '\\'", [$like]))
+                ->orderBy('name')->limit(self::SEARCH_LIMIT)->get();
         }
 
         return Inertia::render('Portal/Search', [
@@ -254,6 +326,7 @@ class PortalController extends Controller
             'query' => $term,
             'competitions' => $competitions->map(fn (Competition $competition) => ['name' => $competition->name, 'url' => route('portal.competition', $competition->slug)])->values(),
             'teams' => $teams->map(fn (Team $team) => ['name' => $team->name, 'city' => $team->city, 'logo_url' => $team->logoUrl(128), 'url' => route('portal.team', $team->getKey())])->values(),
+            'venues' => $venues->map(fn (Venue $venue) => ['name' => $venue->name, 'city' => $venue->city, 'url' => route('portal.venue', $venue->getKey())])->values(),
         ]);
     }
 

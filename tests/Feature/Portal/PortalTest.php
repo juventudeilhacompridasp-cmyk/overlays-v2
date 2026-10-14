@@ -11,6 +11,7 @@ use App\Modules\Matches\Actions\RecordQuickResult;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Matches\Models\Venue;
 use App\Modules\Portal\Support\PublicName;
 use App\Modules\Teams\Models\Person;
 use App\Modules\Teams\Models\RosterEntry;
@@ -307,5 +308,59 @@ describe('search', function () {
 
     it('is kept out of the robots file', function () {
         $this->get('/robots.txt')->assertSee('Disallow: /busca');
+    });
+});
+
+describe('feed', function () {
+    it('lists the latest decided games of published editions as an Atom feed, escaped and without drafts', function () {
+        ['game' => $game, 'home' => $home] = publishedGame();
+        Team::query()->whereKey($home->team_id)->update(['name' => 'Leões & <Cia>']);
+        $game->forceFill(['status' => GameStatus::Finished, 'home_score' => 2, 'away_score' => 1, 'finished_at' => now()])->save();
+        $draft = sheetGame()['game'];
+        $draft->forceFill(['status' => GameStatus::Finished, 'home_score' => 9, 'away_score' => 9, 'finished_at' => now()])->save();
+
+        $response = $this->get('/feed.xml')->assertOk()->assertHeader('Content-Type', 'application/atom+xml; charset=UTF-8');
+        $xml = simplexml_load_string($response->getContent());
+
+        expect($xml->getName())->toBe('feed')
+            ->and(count($xml->entry))->toBe(1)
+            ->and((string) $xml->entry[0]->title)->toContain('Leões & <Cia> 2 x 1')
+            ->and((string) $xml->entry[0]->id)->toBe(route('public.games.show', $game->getKey()))
+            ->and($response->getContent())->not->toContain('9 x 9');
+    });
+
+    it('is valid and empty when nothing was decided yet', function () {
+        publishedGame();
+
+        $xml = simplexml_load_string($this->get('/feed.xml')->assertOk()->getContent());
+
+        expect(count($xml->entry))->toBe(0)->and((string) $xml->title)->toContain('Liga Local');
+    });
+});
+
+describe('venue page', function () {
+    it('shows the address and the games of published editions only, and is found by the search and the sitemap', function () {
+        ['game' => $game] = publishedGame();
+        $venue = Venue::factory()->create(['name' => 'Ginásio das Ilhas', 'city' => 'Ilhabela', 'address' => 'Rua das Palmeiras, 10']);
+        $game->update(['venue_id' => $venue->id, 'scheduled_at' => now()->addDay()]);
+        $draftGame = sheetGame()['game'];
+        $draftGame->update(['venue_id' => $venue->id]);
+
+        $this->get("/locais/{$venue->id}")->assertOk()->assertInertia(fn ($page) => $page
+            ->component('Portal/Venue')->where('venue.name', 'Ginásio das Ilhas')->where('venue.address', 'Rua das Palmeiras, 10')
+            ->has('upcoming', 1)->where('upcoming.0.id', $game->id)->has('recent', 0));
+
+        $this->get('/busca?q=gin%C3%A1sio')->assertInertia(fn ($page) => $page->has('venues', 1)->where('venues.0.url', route('portal.venue', $venue->id)));
+        $this->get('/sitemap.xml')->assertSee(route('portal.venue', $venue->id), false);
+    });
+
+    it('is 404 when the venue has no games or only draft ones, and the search ignores it', function () {
+        $venue = Venue::factory()->create();
+        $this->get("/locais/{$venue->id}")->assertNotFound();
+
+        $draftGame = sheetGame()['game'];
+        $draftGame->update(['venue_id' => $venue->id]);
+        $this->get("/locais/{$venue->id}")->assertNotFound();
+        $this->get('/busca?q='.urlencode($venue->name))->assertInertia(fn ($page) => $page->has('venues', 0));
     });
 });

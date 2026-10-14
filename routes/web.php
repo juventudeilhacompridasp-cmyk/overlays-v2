@@ -22,6 +22,8 @@ Route::get('/', [PortalController::class, 'home'])->name('portal.home');
 Route::get('/competicoes/{competition:slug}', [PortalController::class, 'competition'])->name('portal.competition');
 Route::get('/competicoes/{competition:slug}/edicoes/{season}', [PortalController::class, 'season'])->name('portal.season');
 Route::get('/competicoes/{competition:slug}/edicoes/{season}/estatisticas', [PortalController::class, 'stats'])->name('portal.stats');
+Route::get('/locais/{venue}', [PortalController::class, 'venue'])->name('portal.venue');
+Route::get('/feed.xml', [PortalController::class, 'feed'])->name('portal.feed')->middleware('throttle:60,1');
 Route::get('/busca', [PortalController::class, 'search'])->name('portal.search')->middleware('throttle:60,1');
 Route::get('/equipes/{team}', [PortalController::class, 'team'])->name('portal.team');
 Route::get('/equipes/{team}/calendario.ics', [PortalController::class, 'teamCalendar'])->name('portal.team.calendar');
