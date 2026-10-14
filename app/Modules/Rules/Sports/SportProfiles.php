@@ -28,7 +28,7 @@ final class SportProfiles
                 'tiebreakers' => ['wins', 'set_ratio', 'point_ratio', 'head_to_head', 'draw'],
                 'scoring' => ['model' => 'sets', 'sets_to_win' => 3, 'set_points' => 25, 'deciding_set_points' => 15, 'min_lead' => 2, 'points_narrow_win' => 2, 'points_narrow_loss' => 1],
                 'walkover' => ['winner_goals' => 3, 'loser_goals' => 0],
-                'substitutions' => ['max' => 99, 'max_per_period' => 6, 'max_windows' => 99, 'allow_reentry' => true],
+                'substitutions' => ['max' => 99, 'max_per_period' => 6, 'max_windows' => 99, 'allow_reentry' => false, 'allow_libero_replacements' => true],
                 'lineup' => ['max_starters' => 6, 'max_bench' => 6, 'max_staff' => 3],
             ], scoreModel: 'sets', timeoutGroups: [1, 2, 3, 4, 5], timeoutLimits: [1 => 2, 2 => 2, 3 => 2, 4 => 2, 5 => 2], positions: [
                 'setter' => 'Levantador', 'outside_hitter' => 'Ponteiro', 'opposite' => 'Oposto', 'middle_blocker' => 'Central', 'libero' => 'Líbero',

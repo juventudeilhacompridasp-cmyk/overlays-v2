@@ -25,7 +25,8 @@ final class BuildGameSheet
         foreach ($lineups as $entryId => $rows) {
             $ids = fn (LineupSlot $slot): array => $rows->where('slot', $slot)->pluck('person_id')->map(fn ($id) => (string) $id)->values()->all();
 
-            $state->setLineup((string) $entryId, $ids(LineupSlot::Starter), $ids(LineupSlot::Bench), $ids(LineupSlot::Staff));
+            $positions = $rows->where('slot', '!=', LineupSlot::Staff)->pluck('position', 'person_id')->map(fn ($position): ?string => $position === null ? null : (string) $position)->all();
+            $state->setLineup((string) $entryId, $ids(LineupSlot::Starter), $ids(LineupSlot::Bench), $ids(LineupSlot::Staff), $positions);
         }
 
         $events = $game->events()->effective()->orderBy('id')->get();

@@ -53,6 +53,9 @@ final class GameSheetState
     /** @var array<string, array<string, true>> pessoas que já entraram ou saíram (não voltam a ser reservas) */
     private array $used = [];
 
+    /** @var array<string, array<string, true>> */
+    private array $liberos = [];
+
     public function __construct(private readonly RuleSet $rules) {}
 
     /**
@@ -60,7 +63,8 @@ final class GameSheetState
      * @param  list<string>  $bench
      * @param  list<string>  $staff
      */
-    public function setLineup(string $teamId, array $starters, array $bench = [], array $staff = []): void
+    /** @param array<string, string|null> $positions */
+    public function setLineup(string $teamId, array $starters, array $bench = [], array $staff = [], array $positions = []): void
     {
         $this->onField[$teamId] = $starters;
         $this->bench[$teamId] = $bench;
@@ -74,6 +78,12 @@ final class GameSheetState
         $this->substitutionsByPeriod[$teamId] ??= [];
         $this->windows[$teamId] ??= [];
         $this->used[$teamId] ??= [];
+        $this->liberos[$teamId] = [];
+        foreach ($positions as $person => $position) {
+            if ($position === 'lib') {
+                $this->liberos[$teamId][(string) $person] = true;
+            }
+        }
     }
 
     /**
@@ -149,11 +159,15 @@ final class GameSheetState
                     $this->bench[$team][] = (string) $person;
                 }
 
-                $this->substitutions[$team]++;
-                $this->substitutionsByPeriod[$team][$event->period] = ($this->substitutionsByPeriod[$team][$event->period] ?? 0) + 1;
-                $this->windows[$team][$this->windowKey($event)] = true;
-                $this->used[$team][(string) $person] = true;
-                $this->used[$team][(string) $event->secondaryPersonId] = true;
+                if (! $this->isLiberoReplacement($event)) {
+                    $this->substitutions[$team]++;
+                    $this->substitutionsByPeriod[$team][$event->period] = ($this->substitutionsByPeriod[$team][$event->period] ?? 0) + 1;
+                    $this->windows[$team][$this->windowKey($event)] = true;
+                    $this->used[$team][(string) $person] = true;
+                    $this->used[$team][(string) $event->secondaryPersonId] = true;
+                } else {
+                    $this->bench[$team][] = (string) $person;
+                }
                 break;
 
             default:
@@ -294,7 +308,17 @@ final class GameSheetState
             return 'Quem sai precisa estar em campo.';
         }
 
-        if (! $this->rules->allowSubstitutionReentry && isset($this->used[$team][$in])) {
+        $liberoReplacement = $this->isLiberoReplacement($event);
+
+        if (! $liberoReplacement && $this->substitutions[$team] >= $this->rules->maxSubstitutions) {
+            return "Limite de {$this->rules->maxSubstitutions} substituições por jogo atingido.";
+        }
+
+        if (! $liberoReplacement && $this->rules->maxSubstitutionsPerPeriod !== null && ($this->substitutionsByPeriod[$team][$event->period] ?? 0) >= $this->rules->maxSubstitutionsPerPeriod) {
+            return "Limite de {$this->rules->maxSubstitutionsPerPeriod} substituições neste período atingido.";
+        }
+
+        if (! $liberoReplacement && ! $this->rules->allowSubstitutionReentry && isset($this->used[$team][$in])) {
             return 'Quem já jogou e saiu não pode voltar ao jogo.';
         }
 
@@ -306,12 +330,8 @@ final class GameSheetState
             return 'Quem entra precisa estar entre os reservas da escalação.';
         }
 
-        if ($this->substitutions[$team] >= $this->rules->maxSubstitutions) {
-            return "Limite de {$this->rules->maxSubstitutions} substituições por jogo atingido.";
-        }
-
-        if ($this->rules->maxSubstitutionsPerPeriod !== null && ($this->substitutionsByPeriod[$team][$event->period] ?? 0) >= $this->rules->maxSubstitutionsPerPeriod) {
-            return "Limite de {$this->rules->maxSubstitutionsPerPeriod} substituições neste período atingido.";
+        if ($liberoReplacement) {
+            return null;
         }
 
         $key = $this->windowKey($event);
@@ -321,6 +341,13 @@ final class GameSheetState
         }
 
         return null;
+    }
+
+    private function isLiberoReplacement(SheetEvent $event): bool
+    {
+        return $this->rules->allowLiberoReplacements
+            && (isset($this->liberos[$event->teamId][(string) $event->personId])
+                || isset($this->liberos[$event->teamId][(string) $event->secondaryPersonId]));
     }
 
     private function expel(string $team, string $person): void

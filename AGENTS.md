@@ -78,6 +78,7 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 ## Regra adicional do vôlei
 
 - O limite de substituições do vôlei é por set (`substitutions.max_per_period = 6`), reinicia no próximo set e deve ser aplicado pelo estado da súmula, nunca somente pelo front.
+- O líbero usa a vaga `lib` no banco: suas trocas de entrada e saída são reentradas especiais, não consomem o limite de substituições nem atos, e devem ser validadas pelo estado da súmula.
 
 ## Qualidade
 Testes Pest para toda regra de negócio (as regras de campeonato têm testes baseados em exemplos reais). PHPStan/Larastan (nível sobe gradualmente até 8). PRs pequenos, descrição em português, sem segredos no repositório.

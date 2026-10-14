@@ -4,6 +4,7 @@ use App\Modules\Competitions\Actions\CalculateStandings;
 use App\Modules\Competitions\Enums\Sport;
 use App\Modules\Competitions\Models\Competition;
 use App\Modules\Competitions\Models\Season;
+use App\Modules\Matches\Actions\BuildGameSheet;
 use App\Modules\Matches\Actions\FinishGame;
 use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Actions\RecordGameEvent;
@@ -195,6 +196,22 @@ it('limits substitutions to six per set and resets the count on the next set', f
 
     expect(fn () => app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Substitution, $game->home_entry_id, $bench[0], $starters[0], 1))
         ->toThrow(InvalidArgumentException::class, 'Limite de 6 substituições neste período');
+});
+
+it('allows libero replacements to return without consuming the substitution limit', function () {
+    $game = volleyballGame();
+    $people = RosterEntry::factory()->count(7)->create(['entry_id' => $game->home_entry_id])->pluck('person_id')->all();
+    $positions = array_combine(array_slice($people, 0, 6), ['z1', 'z2', 'z3', 'z4', 'z5', 'z6']);
+    $positions[$people[6]] = 'lib';
+
+    app(SaveGameLineup::class)->handle($game, $game->homeEntry, array_slice($people, 0, 6), [$people[6]], positions: $positions);
+    app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Substitution, $game->home_entry_id, $people[5], $people[6], 1);
+    app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Substitution, $game->home_entry_id, $people[6], $people[5], 1);
+
+    $state = app(BuildGameSheet::class)->handle($game->fresh());
+    expect($state->substitutionsUsed($game->home_entry_id))->toBe(0)
+        ->and($state->onField($game->home_entry_id))->toContain($people[5])
+        ->and($state->onField($game->home_entry_id))->not->toContain($people[6]);
 });
 
 it('scores from the sheet screen with a button per team and undoes the last point', function () {
