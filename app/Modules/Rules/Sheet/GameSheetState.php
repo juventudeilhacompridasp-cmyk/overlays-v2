@@ -38,6 +38,9 @@ final class GameSheetState
     /** @var array<string, array<string, true>> eliminados por faltas (ainda em quadra até a troca) */
     private array $fouledOut = [];
 
+    /** @var array<string, array<string, int>> faltas técnicas + antidesportivas (a segunda desqualifica) */
+    private array $disqualifying = [];
+
     /** @var array<string, int> */
     private array $substitutions = [];
 
@@ -63,6 +66,7 @@ final class GameSheetState
         $this->expelled[$teamId] ??= [];
         $this->fouls[$teamId] ??= [];
         $this->fouledOut[$teamId] ??= [];
+        $this->disqualifying[$teamId] ??= [];
         $this->substitutions[$teamId] ??= 0;
         $this->windows[$teamId] ??= [];
         $this->used[$teamId] ??= [];
@@ -82,8 +86,7 @@ final class GameSheetState
         return match ($event->type) {
             GameEventType::Goal, GameEventType::OwnGoal => $this->checkOnField($event, 'marcar gol'),
             GameEventType::FreeThrow, GameEventType::FieldGoal, GameEventType::ThreePointer => $this->checkOnField($event, 'pontuar') ?? $this->checkNotFouledOut($event),
-            GameEventType::Foul => $this->checkInLineup($event) ?? $this->checkNotFouledOut($event),
-            GameEventType::TechnicalFoul, GameEventType::UnsportsmanlikeFoul => $this->checkAthleteInLineup($event) ?? $this->checkNotFouledOut($event),
+            GameEventType::Foul, GameEventType::TechnicalFoul, GameEventType::UnsportsmanlikeFoul => $this->checkInLineup($event) ?? $this->checkNotFouledOut($event),
             GameEventType::YellowCard, GameEventType::RedCard, GameEventType::BlueCard, GameEventType::Warning => $this->checkInLineup($event),
             GameEventType::Substitution => $this->checkSubstitution($event),
             GameEventType::PenaltyKick => $this->checkOnField($event, 'cobrar pênalti'),
@@ -120,6 +123,15 @@ final class GameSheetState
                 // Basquete: a falta que completa o limite elimina o atleta (ele segue em quadra até ser substituído).
                 if ($this->rules->maxPlayerFouls !== null && $this->fouls[$team][$person] >= $this->rules->maxPlayerFouls) {
                     $this->fouledOut[$team][(string) $person] = true;
+                }
+
+                // Segunda falta técnica/antidesportiva (em qualquer combinação) desqualifica: sai na hora e não volta.
+                if ($event->type->isDisqualifying()) {
+                    $this->disqualifying[$team][$person] = ($this->disqualifying[$team][$person] ?? 0) + 1;
+
+                    if ($this->disqualifying[$team][$person] >= $this->rules->maxDisqualifyingFouls) {
+                        $this->expel($team, (string) $person);
+                    }
                 }
                 break;
 
@@ -247,19 +259,6 @@ final class GameSheetState
             || isset($this->used[$event->teamId][$event->personId]);
 
         return $inLineup ? null : 'Esta pessoa não está na escalação do jogo.';
-    }
-
-    private function checkAthleteInLineup(SheetEvent $event): ?string
-    {
-        if ($event->personId === null) {
-            return 'Informe o atleta.';
-        }
-
-        $isAthlete = in_array($event->personId, $this->onField[$event->teamId], true)
-            || in_array($event->personId, $this->bench[$event->teamId], true)
-            || isset($this->used[$event->teamId][$event->personId]);
-
-        return $isAthlete ? null : 'Esta pessoa não é atleta da escalação do jogo.';
     }
 
     private function checkNotFouledOut(SheetEvent $event): ?string

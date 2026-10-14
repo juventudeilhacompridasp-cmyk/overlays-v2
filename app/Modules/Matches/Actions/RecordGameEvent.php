@@ -40,12 +40,8 @@ final class RecordGameEvent
             throw new InvalidArgumentException('Este tipo de lançamento não é suportado na súmula.');
         }
 
-        if (in_array($type, GameEventType::personalFouls(), true) && ! $game->sport()->profile()->tracksTeamFouls()) {
+        if ($type->isPersonalFoul() && ! $game->sport()->profile()->tracksTeamFouls()) {
             throw new InvalidArgumentException('Este esporte não registra faltas na súmula.');
-        }
-
-        if (in_array($type, [GameEventType::TechnicalFoul, GameEventType::UnsportsmanlikeFoul], true) && $game->sport()->profile()->scoreModel !== 'points') {
-            throw new InvalidArgumentException('Este tipo de falta é exclusivo do basquete.');
         }
 
         if ($type === GameEventType::Timeout && ! $game->sport()->profile()->tracksTimeouts()) {
@@ -115,7 +111,7 @@ final class RecordGameEvent
         });
 
         // Falta não muda o placar: transmite o contador explicitamente.
-        if (in_array($type, GameEventType::personalFouls(), true)) {
+        if ($type->isPersonalFoul()) {
             event(GameUpdated::for($game));
         }
 

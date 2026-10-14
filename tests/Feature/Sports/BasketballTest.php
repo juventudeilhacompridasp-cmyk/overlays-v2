@@ -4,7 +4,6 @@ use App\Modules\Competitions\Actions\CalculateStandings;
 use App\Modules\Competitions\Enums\Sport;
 use App\Modules\Competitions\Models\Competition;
 use App\Modules\Competitions\Models\Season;
-use App\Modules\Matches\Actions\BuildGameSheet;
 use App\Modules\Matches\Actions\ChangeGamePeriod;
 use App\Modules\Matches\Actions\FinishGame;
 use App\Modules\Matches\Actions\GenerateStageFixtures;
@@ -12,7 +11,6 @@ use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Actions\RecordQuickResult;
 use App\Modules\Matches\Actions\RegisterWalkover;
 use App\Modules\Matches\Actions\ReopenGame;
-use App\Modules\Matches\Actions\ResetShotClock;
 use App\Modules\Matches\Actions\SaveGameLineup;
 use App\Modules\Matches\Actions\VoidGameEvent;
 use App\Modules\Matches\Enums\GameEventType;
@@ -85,17 +83,6 @@ it('does not allow baskets in football', function () {
 });
 
 describe('fouls', function () {
-    it('counts technical and unsportsmanlike fouls as personal and team fouls', function () {
-        ['game' => $game, 'hp' => $hp] = basketballGame();
-
-        basket($game, GameEventType::TechnicalFoul, 'home', $hp[0]);
-        basket($game, GameEventType::UnsportsmanlikeFoul, 'home', $hp[0]);
-        app(ChangeGamePeriod::class)->handle($game->fresh(), true, 1);
-
-        $snapshot = PublicGameSnapshot::for($game->fresh());
-        expect($snapshot['fouls']['home'])->toBe(2)
-            ->and(app(BuildGameSheet::class)->handle($game->fresh())->foulsOf($game->home_entry_id))->toBe([$hp[0] => 2]);
-    });
     it('eliminates a player on the fifth foul, who stays on court until replaced', function () {
         ['game' => $game, 'hp' => $hp] = basketballGame();
 
@@ -151,32 +138,58 @@ describe('fouls', function () {
         basket($game, GameEventType::FieldGoal, 'home', $hp[0]);
         expect($game->fresh()->home_score)->toBe(2);
     });
+
+    it('counts the unsportsmanlike foul in the team total but not the technical one', function () {
+        ['game' => $game, 'hp' => $hp] = basketballGame();
+
+        basket($game, GameEventType::Foul, 'home', $hp[0]);
+        basket($game, GameEventType::UnsportsmanlikeFoul, 'home', $hp[1]);
+        basket($game, GameEventType::TechnicalFoul, 'home', $hp[2]);
+
+        expect(PublicGameSnapshot::for($game->fresh())['fouls']['home'])->toBe(2);
+    });
+
+    it('disqualifies on the second technical or unsportsmanlike foul, in any mix, and takes the player off court', function () {
+        ['game' => $game, 'hp' => $hp] = basketballGame();
+
+        basket($game, GameEventType::TechnicalFoul, 'home', $hp[0]);
+        basket($game, GameEventType::FieldGoal, 'home', $hp[0]); // uma só ainda não desqualifica
+        basket($game, GameEventType::UnsportsmanlikeFoul, 'home', $hp[0]);
+
+        expect(fn () => basket($game, GameEventType::FieldGoal, 'home', $hp[0]))->toThrow(InvalidArgumentException::class, 'expulso')
+            ->and(fn () => app(RecordGameEvent::class)->handle($game->fresh(), GameEventType::Substitution, $game->home_entry_id, $hp[0], $hp[5], 1, 3))
+            ->toThrow(InvalidArgumentException::class);
+    });
+
+    it('also adds technical and unsportsmanlike fouls to the personal foul limit', function () {
+        ['game' => $game, 'hp' => $hp] = basketballGame();
+
+        foreach ([GameEventType::Foul, GameEventType::Foul, GameEventType::Foul, GameEventType::TechnicalFoul, GameEventType::Foul] as $type) {
+            basket($game, $type, 'home', $hp[1]);
+        }
+
+        expect(fn () => basket($game, GameEventType::FieldGoal, 'home', $hp[1]))->toThrow(InvalidArgumentException::class, 'eliminado por faltas');
+    });
+
+    it('gives the unsportsmanlike foul back when voided', function () {
+        ['game' => $game, 'hp' => $hp] = basketballGame();
+        basket($game, GameEventType::UnsportsmanlikeFoul, 'home', $hp[0]);
+        $event = $game->events()->where('type', GameEventType::UnsportsmanlikeFoul)->firstOrFail();
+
+        app(VoidGameEvent::class)->handle($game->fresh(), $event);
+
+        expect(PublicGameSnapshot::for($game->fresh())['fouls']['home'])->toBe(0);
+    });
+
+    it('is refused in football', function () {
+        ['game' => $game, 'hp' => $hp] = sheetGame();
+
+        expect(fn () => app(RecordGameEvent::class)->handle($game, GameEventType::TechnicalFoul, $game->home_entry_id, $hp[0]))
+            ->toThrow(InvalidArgumentException::class, 'não registra faltas');
+    });
 });
 
 describe('countdown clock that stops', function () {
-    it('projects the shot clock and accepts resets to 14 and 24 seconds', function () {
-        ['game' => $game] = basketballGame();
-
-        expect(fn () => app(ResetShotClock::class)->handle($game, 24))->toThrow(InvalidArgumentException::class, 'Inicie um período');
-        app(ChangeGamePeriod::class)->handle($game->fresh(), true, 1, null, now()->subSeconds(8));
-        app(ResetShotClock::class)->handle($game->fresh(), 14, null, now()->subSeconds(5));
-        app(ChangeGamePeriod::class)->pause($game->fresh(), true, null, now());
-
-        $shot = PublicGameSnapshot::for($game->fresh())['shot_clock'];
-        expect($shot['state'])->toBe('paused')->and($shot['base_seconds'])->toBe(9);
-
-        app(ResetShotClock::class)->handle($game->fresh(), 24);
-        expect(PublicGameSnapshot::for($game->fresh())['shot_clock']['base_seconds'])->toBe(24);
-    });
-
-    it('refuses invalid shot-clock resets and use outside basketball', function () {
-        ['game' => $game] = basketballGame();
-        app(ChangeGamePeriod::class)->handle($game, true, 1);
-        expect(fn () => app(ResetShotClock::class)->handle($game->fresh(), 20))->toThrow(InvalidArgumentException::class, '14 ou 24');
-
-        ['game' => $football] = sheetGame();
-        expect(fn () => app(ResetShotClock::class)->handle($football, 24))->toThrow(InvalidArgumentException::class, 'não usa relógio de posse');
-    });
     it('shows the remaining time of the quarter and survives pause and resume', function () {
         ['game' => $game] = basketballGame();
         $this->actingAs(panelUser(Role::Operator));
@@ -280,7 +293,6 @@ describe('result, table and sheet', function () {
             ->where('clock.max_period', 8)
             ->where('clock.pausable', true)
             ->where('home.player_fouls', [$hp[0] => 1])
-            ->where('shot_clock.state', 'not_started')
             ->where('event_types', fn ($types) => collect($types)->pluck('value')->all() === ['field_goal', 'three_pointer', 'free_throw', 'foul', 'technical_foul', 'unsportsmanlike_foul', 'substitution']));
     });
 
@@ -387,5 +399,35 @@ describe('team timeouts', function () {
             ->where('home.timeouts.used', 1)
             ->where('home.timeouts.limit', 2)
             ->where('away.timeouts.used', 0));
+    });
+});
+
+describe('timeouts in the public snapshot', function () {
+    it('shows how many timeouts each team still has in the current half, as numbers only', function () {
+        ['game' => $game] = basketballGame();
+        app(ChangeGamePeriod::class)->handle($game->fresh(), true, 1);
+
+        expect(PublicGameSnapshot::for($game->fresh())['timeouts'])->toBe(['home' => 2, 'away' => 2, 'limit' => 2, 'period' => 1]);
+
+        basketTimeout($game, 'home', 1);
+        $snapshot = PublicGameSnapshot::for($game->fresh());
+
+        expect($snapshot['timeouts'])->toBe(['home' => 1, 'away' => 2, 'limit' => 2, 'period' => 1])
+            ->and(json_encode($snapshot['timeouts']))->not->toContain('person');
+    });
+
+    it('gives the timeout back when it is voided and has no entry in sports without timeouts', function () {
+        ['game' => $game] = basketballGame();
+        app(ChangeGamePeriod::class)->handle($game->fresh(), true, 1);
+        basketTimeout($game, 'away', 1);
+        $event = $game->fresh()->events()->where('type', GameEventType::Timeout)->firstOrFail();
+
+        expect(PublicGameSnapshot::for($game->fresh())['timeouts']['away'])->toBe(1);
+
+        app(VoidGameEvent::class)->handle($game->fresh(), $event);
+        expect(PublicGameSnapshot::for($game->fresh())['timeouts']['away'])->toBe(2);
+
+        ['game' => $football] = sheetGame();
+        expect(PublicGameSnapshot::for($football)['timeouts'])->toBeNull();
     });
 });

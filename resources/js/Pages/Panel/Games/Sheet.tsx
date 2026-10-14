@@ -1,7 +1,7 @@
 import { Badge, Button, Card, Field, Input, LinkButton, Logo, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan, useFeature } from '@/lib/can';
-import { GameClock, ShotClock, formatClock, periodLabel, shownSeconds, useGameClock, useShotClock } from '@/lib/clock';
+import { GameClock, formatClock, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
 import { SheetView, project, ProjectionRules, QueueItem, QueueKind } from '@/lib/sheetProject';
 import { SheetQueue, useSheetQueue } from '@/lib/sheetQueue';
 import { Option } from '@/types/panel';
@@ -51,7 +51,6 @@ interface SheetEvent {
     secondary_person: string | null;
     period: number;
     minute: number | null;
-    seconds: number | null;
     quick: boolean;
     voidable: boolean;
 }
@@ -89,7 +88,6 @@ interface Props {
     sets_to_win: number;
     fouls: { home: number; away: number; limit: number; period: number } | null;
     clock: GameClock & { server_time_ms: number; max_period: number };
-    shot_clock: ShotClock | null;
     public_url: string;
 }
 
@@ -112,8 +110,8 @@ const typeIcon: Record<string, string> = {
     period_start: '▶️',
     period_end: '⏸️',
     foul: '🚫',
-    technical_foul: '🟨 T',
-    unsportsmanlike_foul: '🟧 U',
+    technical_foul: '🅣',
+    unsportsmanlike_foul: '🅤',
     timeout: '⏱️',
     point: '🏐',
     free_throw: '🏀 (1)',
@@ -121,7 +119,6 @@ const typeIcon: Record<string, string> = {
     three_pointer: '🏀 (3)',
     clock_pause: '⏱️⏸️',
     clock_resume: '⏱️▶️',
-    shot_clock_reset: '⏱️ 24',
 };
 
 function personName(team: Team, id: string): string {
@@ -268,30 +265,6 @@ function ClockCard({ game, clock, publicUrl, sport, send }: { game: Props['game'
     );
 }
 
-function ShotClockCard({ clock, skew, open, send }: { clock: ShotClock; skew: number; open: boolean; send: Send }) {
-    const seconds = useShotClock(clock, skew);
-    const active = clock.state === 'running' || clock.state === 'paused';
-
-    return (
-        <Card title="Relógio de posse">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className={`grid h-24 w-24 place-items-center rounded-2xl bg-neutral-950 text-5xl font-black tabular-nums text-white ring-4 ${seconds <= 5 && active ? 'ring-red-500' : 'ring-amber-400'}`} data-testid="panel-shot-clock">
-                    {seconds}
-                </div>
-                <div className="max-w-md flex-1 text-sm text-gray-500">
-                    <p>Sincronizado ao cronômetro: pausa, retoma e encerra junto com o relógio principal.</p>
-                    {open && active && (
-                        <div className="mt-3 flex gap-2">
-                            <Button onClick={() => send('shot_clock', { seconds: 24 }, 'Relógio de posse reiniciado em 24 s')}>Reiniciar 24 s</Button>
-                            <Button variant="secondary" onClick={() => send('shot_clock', { seconds: 14 }, 'Relógio de posse reiniciado em 14 s')}>Reiniciar 14 s</Button>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </Card>
-    );
-}
-
 const basketLabel: Record<string, string> = { free_throw: 'Lance livre (+1)', field_goal: 'Cesta de 2', three_pointer: 'Cesta de 3', foul: 'Falta', technical_foul: 'Falta técnica', unsportsmanlike_foul: 'Falta antidesportiva', timeout: 'Pedido de tempo' };
 
 /** Basquete: toque rápido por atleta em quadra (+1, +2, +3 e falta). Quem foi eliminado por faltas não pontua nem comete falta. */
@@ -323,7 +296,7 @@ function BasketPad({ game, team, period, send: enqueue }: { game: Props['game'];
                                 {out && <span className="ml-1 text-xs text-red-600">eliminado</span>}
                             </span>
                             {game.open && (
-                                <span className="flex flex-wrap justify-end gap-1">
+                                <span className="flex gap-1">
                                     {[['free_throw', '+1'], ['field_goal', '+2'], ['three_pointer', '+3']].map(([type, label]) => (
                                         <Button key={type} small disabled={out} onClick={() => send(type, id)}>
                                             {label}
@@ -332,11 +305,11 @@ function BasketPad({ game, team, period, send: enqueue }: { game: Props['game'];
                                     <Button small variant="secondary" disabled={out} onClick={() => send('foul', id)}>
                                         Falta
                                     </Button>
-                                    <Button small variant="secondary" disabled={out} onClick={() => send('technical_foul', id)} title="Falta técnica">
-                                        Técnica
+                                    <Button small variant="secondary" disabled={out} onClick={() => send('technical_foul', id)}>
+                                        T
                                     </Button>
-                                    <Button small variant="secondary" disabled={out} onClick={() => send('unsportsmanlike_foul', id)} title="Falta antidesportiva">
-                                        Antidesp.
+                                    <Button small variant="secondary" disabled={out} onClick={() => send('unsportsmanlike_foul', id)}>
+                                        U
                                     </Button>
                                 </span>
                             )}
@@ -660,7 +633,7 @@ const teamFields = (team: Team) => ({
     timeouts: team.timeouts,
 });
 
-export default function Sheet({ game: serverGame, home: serverHome, away: serverAway, events: serverEvents, limits, clock_offsets, event_types, sport, score_model, quarters, sets, fouls, clock: serverClock, shot_clock: serverShotClock, public_url }: Props) {
+export default function Sheet({ game: serverGame, home: serverHome, away: serverAway, events: serverEvents, limits, clock_offsets, event_types, sport, score_model, quarters, sets, fouls, clock: serverClock, public_url }: Props) {
     // Quem não opera jogos só consulta a súmula: o servidor também recusa as ações, aqui só se escondem os controles.
     const canOperate = useCan('operate-games');
     const canImport = useFeature('sheet_import');
@@ -679,16 +652,15 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
         [serverHome, serverAway].forEach((team) => team && (teams[team.id] = teamFields(team)));
 
         return project<Props['clock']>(
-            { home_id: serverHome?.id ?? null, away_id: serverAway?.id ?? null, home_score: serverGame.home_score, away_score: serverGame.away_score, teams, clock: serverClock, shot_clock: serverShotClock, finishing: false, voided: [], partial: false },
+            { home_id: serverHome?.id ?? null, away_id: serverAway?.id ?? null, home_score: serverGame.home_score, away_score: serverGame.away_score, teams, clock: serverClock, finishing: false, voided: [], partial: false },
             queue.items,
             rules,
         );
-    }, [serverHome, serverAway, serverGame.home_score, serverGame.away_score, serverClock, serverShotClock, queue.items, rules]);
+    }, [serverHome, serverAway, serverGame.home_score, serverGame.away_score, serverClock, queue.items, rules]);
 
     const home = serverHome ? { ...serverHome, ...view.teams[serverHome.id] } : null;
     const away = serverAway ? { ...serverAway, ...view.teams[serverAway.id] } : null;
     const clock = view.clock;
-    const shotClock = view.shot_clock;
     const game = canOperate ? { ...serverGame, home_score: view.home_score, away_score: view.away_score, open: serverGame.open && !view.finishing } : { ...serverGame, open: false };
     const events = canOperate ? serverEvents.map((event) => (view.voided.includes(event.id) ? { ...event, voidable: false } : event)) : serverEvents.map((event) => ({ ...event, voidable: false }));
     const teamOf = (entryId: string | null) => (entryId === null ? null : home && entryId === home.id ? home : away);
@@ -764,7 +736,6 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
                     ) : (
                         <ClockCard game={game} clock={clock} publicUrl={public_url} sport={sport} send={send} />
                     )}
-                    {score_model === 'points' && shotClock && <ShotClockCard clock={shotClock} skew={skew} open={game.open} send={send} />}
                     {score_model === 'points' && quarters && quarters.length > 0 && (
                         <p className="text-center text-sm tabular-nums text-gray-600" data-testid="panel-quarters">
                             {quarters.map((quarter) => `${periodLabel(quarter.period, sport)}: ${quarter.home}-${quarter.away}`).join(' · ')}
@@ -789,7 +760,7 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
                                     </div>
                                 ))}
                             </div>
-                            <p className="mt-2 text-xs text-gray-500">A partir da {fouls.limit}ª falta acumulada no período, a equipe entra no bônus. Faltas pessoais, técnicas e antidesportivas entram neste contador.</p>
+                            <p className="mt-2 text-xs text-gray-500">A partir da {fouls.limit}ª falta acumulada no tempo, cada nova falta é tiro livre direto sem barreira. Lance as faltas pelo formulário de lançamentos.</p>
                         </Card>
                     )}
 
@@ -823,7 +794,7 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
                                                     {event.minute !== null ? `${event.minute}'` : '—'} · {event.period}T
                                                 </span>
                                                 <span className="mr-2">{typeIcon[event.type] ?? event.type}</span>
-                                                <strong>{event.type === 'point' ? 'Ponto' : event.type === 'clock_pause' ? 'Relógio parado' : event.type === 'clock_resume' ? 'Relógio em andamento' : event.type === 'shot_clock_reset' ? `Posse reiniciada em ${event.seconds} s` : event.type === 'timeout' ? 'Pedido de tempo' : event.type === 'period_start' || event.type === 'period_end' ? `${event.type === 'period_start' ? 'Início do' : 'Fim do'} ${periodLabel(event.period, sport)}` : (event.person ?? 'Anônimo')}</strong>
+                                                <strong>{event.type === 'point' ? 'Ponto' : event.type === 'clock_pause' ? 'Relógio parado' : event.type === 'clock_resume' ? 'Relógio em andamento' : event.type === 'timeout' ? 'Pedido de tempo' : event.type === 'period_start' || event.type === 'period_end' ? `${event.type === 'period_start' ? 'Início do' : 'Fim do'} ${periodLabel(event.period, sport)}` : (event.person ?? 'Anônimo')}</strong>
                                                 {event.secondary_person && <span> ⇄ {event.secondary_person}</span>}
                                                 {team && <span className="ml-2 text-gray-500">({team.name})</span>}
                                                 {event.quick && <span className="ml-2"><Badge>Resultado rápido</Badge></span>}

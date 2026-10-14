@@ -212,6 +212,7 @@ export default function Form({ competition, season, rules, options, defaults }: 
                     <Card title="Regulamento: basquete">
                         <div className="grid gap-4 sm:grid-cols-2">
                             {numberField('Faltas pessoais que eliminam o atleta', 'rules.fouls.max_player', data.rules.fouls.max_player ?? 5, (d, v) => (d.fouls.max_player = v))}
+                            {numberField('Faltas técnicas/antidesportivas que desqualificam', 'rules.fouls.max_disqualifying', data.rules.fouls.max_disqualifying ?? 2, (d, v) => (d.fouls.max_disqualifying = v))}
                             {numberField('Pontos da equipe que perde por W.O.', 'rules.points.walkover_loss', data.rules.points.walkover_loss ?? data.rules.points.loss, (d, v) => (d.points.walkover_loss = v))}
                         </div>
                         <p className="mt-2 text-xs text-gray-500">Vitória e derrota (pontos da tabela), W.O. e desempates ficam nos blocos acima. O basquete não tem empate: o jogo vai à prorrogação.</p>

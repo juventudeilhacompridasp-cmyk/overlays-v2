@@ -58,6 +58,7 @@ it('builds the overlay state with the score, the clock and the logos', function 
             'motion' => 'dynamic',
             'font' => 'system',
             'layout' => 'bar',
+            'scorers' => false,
         ])
         ->and($state['lineup_settings'])->toBe(['presentation' => 'sequence', 'list_seconds' => 6, 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'step' => 0, 'anchor_ms' => 0])
         ->and($state['game']['id'])->toBe($game->id)
@@ -118,7 +119,8 @@ it('shows the standings of the league or group of the game and nothing for knock
     $state = OverlayState::for(channelFor($game, ['standings' => true]));
 
     expect($state['standings']['rows'])->toHaveCount(2)
-        ->and(collect($state['standings']['rows'])->every(fn (array $row) => $row['highlight']))->toBeTrue();
+        ->and(collect($state['standings']['rows'])->every(fn (array $row) => $row['highlight']))->toBeTrue()
+        ->and(array_keys($state['standings']['rows'][0]))->toBe(['position', 'team', 'logo_url', 'points', 'played', 'goal_difference', 'won', 'drawn', 'lost', 'color', 'highlight']);
 
     ['stage' => $stage] = fixtureDivision(4, StageType::Knockout);
     app(GenerateStageFixtures::class)->handle($stage);
@@ -170,7 +172,7 @@ it('refreshes the channels that have the game on air when the score changes', fu
 
 it('sends a lower third for goals, cards and substitutions of the game on air', function () {
     ['game' => $game, 'home' => $home, 'hp' => $hp] = sheetGame();
-    Person::query()->whereKey($hp[0])->update(['nickname' => 'Rafa']);
+    Person::query()->whereKey($hp[0])->update(['nickname' => 'Rafa', 'birth_date' => '1990-01-01']);
     Team::query()->whereKey($home->team_id)->update(['primary_color' => '#00aa00']);
     $channel = channelFor($game);
     Event::fake([OverlayLowerThird::class]);
@@ -262,7 +264,13 @@ describe('panel', function () {
             ->where('channels.0.overlays.2.slug', 'escalacao')
             ->where('channels.0.overlays.3.slug', 'tabela')
             ->where('channels.0.overlays.4.slug', 'patrocinadores')
-            ->has('channels.0.overlays', 5)
+            ->where('channels.0.overlays.5.slug', 'prejogo')
+            ->where('channels.0.overlays.6.slug', 'comparativo')
+            ->where('channels.0.overlays.7.slug', 'cartela')
+            ->where('channels.0.overlays.8.slug', 'resumo')
+            ->where('channels.0.overlays.9.slug', 'chaveamento')
+            ->where('channels.0.overlays.10.slug', 'social')
+            ->has('channels.0.overlays', 11)
             ->where('channels.0.appearance.preset', 'arena')
             ->where('channels.0.lineup_settings.presentation', 'sequence')
             ->where('channels.0.lineup_settings.photo_person_ids', [])

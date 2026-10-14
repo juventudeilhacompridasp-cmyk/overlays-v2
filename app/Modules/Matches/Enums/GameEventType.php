@@ -15,8 +15,6 @@ enum GameEventType: string
     case PenaltyKick = 'penalty_kick';
     case Warning = 'warning';
     case Foul = 'foul';
-    case TechnicalFoul = 'technical_foul';
-    case UnsportsmanlikeFoul = 'unsportsmanlike_foul';
     /** Ponto de rally (esportes de sets); o período é o número do set. */
     case Point = 'point';
     /** Basquete: lance livre (1), cesta de quadra (2) e cesta de três (3). */
@@ -28,6 +26,9 @@ enum GameEventType: string
     case ClockResume = 'clock_resume';
     /** Basquete: pedido de tempo da equipe (sem atleta). */
     case Timeout = 'timeout';
+    /** Basquete: falta técnica (não conta como falta de equipe) e antidesportiva (conta); ambas contam na falta pessoal e desqualificam na segunda. */
+    case TechnicalFoul = 'technical_foul';
+    case UnsportsmanlikeFoul = 'unsportsmanlike_foul';
     /** Basquete: reinício do relógio de posse; duração (14 ou 24) fica no payload. */
     case ShotClockReset = 'shot_clock_reset';
 
@@ -45,8 +46,6 @@ enum GameEventType: string
             self::PenaltyKick => 'Cobrança de pênalti',
             self::Warning => 'Advertência',
             self::Foul => 'Falta',
-            self::TechnicalFoul => 'Falta técnica',
-            self::UnsportsmanlikeFoul => 'Falta antidesportiva',
             self::Point => 'Ponto',
             self::FreeThrow => 'Lance livre (1)',
             self::FieldGoal => 'Cesta de 2',
@@ -54,6 +53,8 @@ enum GameEventType: string
             self::ClockPause => 'Relógio parado',
             self::ClockResume => 'Relógio em andamento',
             self::Timeout => 'Pedido de tempo',
+            self::TechnicalFoul => 'Falta técnica',
+            self::UnsportsmanlikeFoul => 'Falta antidesportiva',
             self::ShotClockReset => 'Reinício do relógio de posse',
         };
     }
@@ -67,6 +68,24 @@ enum GameEventType: string
             self::ThreePointer => 3,
             default => null,
         };
+    }
+
+    /** Faltas que somam no contador de faltas da equipe (a técnica não soma). */
+    public function countsAsTeamFoul(): bool
+    {
+        return in_array($this, [self::Foul, self::UnsportsmanlikeFoul], true);
+    }
+
+    /** Falta pessoal de qualquer tipo (soma no limite de faltas do atleta). */
+    public function isPersonalFoul(): bool
+    {
+        return in_array($this, [self::Foul, self::TechnicalFoul, self::UnsportsmanlikeFoul], true);
+    }
+
+    /** Falta que desqualifica o atleta na segunda ocorrência (técnica ou antidesportiva). */
+    public function isDisqualifying(): bool
+    {
+        return in_array($this, [self::TechnicalFoul, self::UnsportsmanlikeFoul], true);
     }
 
     /** Eventos que só movem o relógio (não passam pela súmula). */
@@ -89,11 +108,5 @@ enum GameEventType: string
     public static function scoring(): array
     {
         return [self::FreeThrow, self::FieldGoal, self::ThreePointer];
-    }
-
-    /** @return list<self> */
-    public static function personalFouls(): array
-    {
-        return [self::Foul, self::TechnicalFoul, self::UnsportsmanlikeFoul];
     }
 }

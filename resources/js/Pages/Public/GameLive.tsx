@@ -1,5 +1,6 @@
 import { ConnectionState, Realtime, subscribeToGame } from '@/lib/echo';
-import { GameClock, ShotClock, formatClock, isInterval, periodLabel, shownSeconds, useGameClock, useShotClock } from '@/lib/clock';
+import { safeJsonLd } from '@/lib/jsonLd';
+import { GameClock, formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
 import PushButton from '@/Components/Portal/PushButton';
 import ShareButtons from '@/Components/Portal/ShareButtons';
 import { Head, Link, router } from '@inertiajs/react';
@@ -36,12 +37,12 @@ export interface Snapshot {
     division: string;
     stage: string;
     clock: GameClock;
-    shot_clock: ShotClock | null;
     sport: string;
     score_model: string;
     quarters: { period: number; home: number; away: number }[] | null;
     sets: { home: number; away: number; winner: 'home' | 'away' | null; finished: boolean }[] | null;
     fouls: { home: number; away: number; limit: number; period: number } | null;
+    timeouts: { home: number; away: number; limit: number; period: number } | null;
     goals: Goal[];
     server_time_ms: number;
 }
@@ -144,7 +145,7 @@ function GoalList({ goals, side }: { goals: Goal[]; side: 'home' | 'away' }) {
     );
 }
 
-export default function GameLive({ snapshot: initial, realtime, push_key, insights }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null; insights?: Insights }) {
+export default function GameLive({ snapshot: initial, realtime, push_key, insights, json_ld, share_image }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null; insights?: Insights; json_ld?: Record<string, unknown> | null; share_image?: string | null }) {
     const [snapshot, setSnapshot] = useState(initial);
     const [connection, setConnection] = useState<ConnectionState>('connecting');
     // Diferença entre o relógio do navegador e o do servidor, medida na carga da página (não nos deltas, que podem atrasar na fila).
@@ -199,7 +200,6 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
     }, [connection, snapshot.finished, initial.id]);
 
     const seconds = shownSeconds(snapshot.clock, useGameClock(snapshot.clock, skew.current));
-    const shotSeconds = useShotClock(snapshot.shot_clock ?? { state: 'not_started', period: null, base_seconds: 0, running_since_ms: null }, skew.current);
     const home = snapshot.home?.name ?? 'A definir';
     const away = snapshot.away?.name ?? 'A definir';
 
@@ -219,7 +219,11 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
                 <meta property="og:title" content={`${home} ${snapshot.home_score} x ${snapshot.away_score} ${away}`} />
                 <meta property="og:description" content={`${snapshot.competition} · ${snapshot.division} · ${snapshot.stage}`} />
                 <meta property="og:url" content={route('public.games.show', snapshot.id)} />
-                {snapshot.home?.logo_url && <meta property="og:image" content={snapshot.home.logo_url} />}
+                {share_image && <meta property="og:image" content={share_image} />}
+                {share_image && <meta property="og:image:width" content="1200" />}
+                {share_image && <meta property="og:image:height" content="630" />}
+                {share_image && <meta name="twitter:card" content="summary_large_image" />}
+                {json_ld && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(json_ld) }} />}
             </Head>
             <main className="mx-auto max-w-3xl">
                 <Link href={route('portal.home')} className="text-sm text-gray-400 hover:text-white">
@@ -251,12 +255,6 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
                 <p className="mt-4 text-center text-lg font-semibold tabular-nums text-emerald-400" data-testid="live-clock" suppressHydrationWarning>
                     {ready || snapshot.clock.state !== 'running' ? clockText : '—'}
                 </p>
-                {snapshot.shot_clock && snapshot.shot_clock.state !== 'not_started' && (
-                    <p className={`mx-auto mt-2 w-fit rounded-lg border px-4 py-1 text-center text-2xl font-black tabular-nums ${shotSeconds <= 5 ? 'border-red-500 text-red-400' : 'border-amber-400 text-amber-300'}`} data-testid="live-shot-clock" suppressHydrationWarning>
-                        {ready || snapshot.shot_clock.state !== 'running' ? shotSeconds : '—'}
-                        <span className="ml-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400">posse</span>
-                    </p>
-                )}
                 {snapshot.sets && snapshot.sets.length > 0 && (
                     <p className="mt-1 text-center text-sm tabular-nums text-gray-400" data-testid="live-sets">
                         {snapshot.sets.map((set) => `${set.home}-${set.away}${set.finished ? '' : ' (em andamento)'}`).join(' · ')}
@@ -270,6 +268,11 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
                 {snapshot.fouls && (
                     <p className="mt-1 text-center text-sm text-gray-400" data-testid="live-fouls">
                         Faltas: {snapshot.fouls.home} x {snapshot.fouls.away}
+                    </p>
+                )}
+                {snapshot.timeouts && (
+                    <p className="mt-1 text-center text-sm text-gray-400" data-testid="live-timeouts">
+                        Pedidos de tempo restantes: {snapshot.timeouts.home} x {snapshot.timeouts.away}
                     </p>
                 )}
                 {insights?.timeline ? (

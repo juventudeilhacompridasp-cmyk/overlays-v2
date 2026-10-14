@@ -81,6 +81,7 @@ export default function Game({ options, snapshot: initial, realtime, portal_url 
                 {status}
                 {currentSet && !snapshot.finished && ` · ${currentSet.home}-${currentSet.away}`}
                 {snapshot.fouls && ` · faltas ${snapshot.fouls.home}-${snapshot.fouls.away}`}
+                {snapshot.timeouts && ` · tempos ${snapshot.timeouts.home}-${snapshot.timeouts.away}`}
             </div>
         </Frame>
     );

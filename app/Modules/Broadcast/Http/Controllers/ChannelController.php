@@ -13,6 +13,8 @@ use App\Modules\Broadcast\Support\OverlayAppearance;
 use App\Modules\Broadcast\Support\OverlayControlRules;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
 use App\Modules\Broadcast\Support\OverlayLineupTimeline;
+use App\Modules\Broadcast\Support\OverlayLowerThirdSettings;
+use App\Modules\Broadcast\Support\OverlayScreenSettings;
 use App\Modules\Broadcast\Support\OverlaySponsorSettings;
 use App\Modules\Broadcast\Support\OverlayState;
 use App\Modules\Competitions\Models\Season;
@@ -76,9 +78,12 @@ class ChannelController extends Controller
                     'game_label' => $game ? $label($game) : null,
                     'layers' => $channel->layerStates(),
                     'championship_live' => $channel->championshipLive(),
+                    'screens_live' => $channel->screensLive(),
+                    'screen_settings' => OverlayScreenSettings::normalize($channel->screen_settings),
                     'appearance' => OverlayAppearance::normalize($channel->appearance),
                     'lineup_settings' => OverlayLineupSettings::normalize($channel->lineup_settings),
                     'sponsor_settings' => OverlaySponsorSettings::normalize($channel->sponsor_settings),
+                    'lower_third_settings' => OverlayLowerThirdSettings::normalize($channel->lower_third_settings),
                     'lineup_people' => $people,
                     'lineup_steps' => OverlayLineupTimeline::steps(OverlayLineupSettings::normalize($channel->lineup_settings)['presentation'], OverlayState::individualCount($channel)),
                     'championship_base' => substr(route('overlay.championship', ['channel' => $channel->token, 'view' => 'standings']), 0, -strlen('/standings')),

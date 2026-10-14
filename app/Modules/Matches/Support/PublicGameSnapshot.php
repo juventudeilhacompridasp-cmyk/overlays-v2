@@ -60,6 +60,7 @@ final class PublicGameSnapshot
             'shot_clock' => self::shotClock($game),
             'quarters' => self::quarters($game),
             'fouls' => self::fouls($game, $marks, $side),
+            'timeouts' => self::timeouts($game, $marks, $side),
             'goals' => $goals->map(function (GameEvent $event) use ($side, $names) {
                 $own = $event->type === GameEventType::OwnGoal;
                 $scoringSide = $side($event->entry_id);
@@ -96,7 +97,7 @@ final class PublicGameSnapshot
         $group = $profile->foulGroup((int) $current);
         $counts = ['home' => 0, 'away' => 0];
 
-        $game->events()->effective()->whereIn('type', GameEventType::personalFouls())->get()->each(function (GameEvent $event) use (&$counts, $side, $profile, $group): void {
+        $game->events()->effective()->whereIn('type', [GameEventType::Foul, GameEventType::UnsportsmanlikeFoul])->get()->each(function (GameEvent $event) use (&$counts, $side, $profile, $group): void {
             $team = $side($event->entry_id);
 
             if ($team !== null && $profile->foulGroup((int) $event->period) === $group) {
@@ -107,22 +108,36 @@ final class PublicGameSnapshot
         return ['home' => $counts['home'], 'away' => $counts['away'], 'limit' => $profile->teamFoulLimit, 'period' => $group];
     }
 
-    /** @return array{state: string, period: int|null, base_seconds: int, running_since_ms: int|null}|null */
-    private static function shotClock(Game $game): ?array
+    /**
+     * Pedidos de tempo que restam a cada equipe no grupo de períodos em andamento (null se o esporte não conta pedidos).
+     * Só números: o pedido é da equipe, sem atleta.
+     *
+     * @param  list<ClockMark>  $marks
+     * @return array{home: int, away: int, limit: int, period: int}|null
+     */
+    private static function timeouts(Game $game, array $marks, \Closure $side): ?array
     {
-        if ($game->sport()->profile()->scoreModel !== 'points') {
+        $profile = $game->sport()->profile();
+
+        if (! $profile->tracksTimeouts()) {
             return null;
         }
 
-        $types = [...GameEventType::clockMarks(), GameEventType::ShotClockReset];
-        $events = $game->events()->effective()->whereIn('type', $types)->orderBy('id')->get()->map(fn (GameEvent $event) => [
-            'type' => $event->type->value,
-            'period' => (int) $event->period,
-            'at_ms' => $event->created_at->getTimestampMs(),
-            'seconds' => (int) ($event->payload['seconds'] ?? 24),
-        ])->all();
+        $current = (int) ($game->clock()->snapshot($marks)['period'] ?? 1);
+        $group = $profile->timeoutGroup($current);
+        $used = ['home' => 0, 'away' => 0];
 
-        return (new ShotClock)->snapshot($events);
+        $game->events()->effective()->where('type', GameEventType::Timeout)->get()->each(function (GameEvent $event) use (&$used, $side, $profile, $group): void {
+            $team = $side($event->entry_id);
+
+            if ($team !== null && $profile->timeoutGroup((int) $event->period) === $group) {
+                $used[$team]++;
+            }
+        });
+
+        $limit = $profile->timeoutLimit($current);
+
+        return ['home' => max(0, $limit - $used['home']), 'away' => max(0, $limit - $used['away']), 'limit' => $limit, 'period' => $group];
     }
 
     /**
@@ -149,6 +164,26 @@ final class PublicGameSnapshot
             'offset_seconds' => $clock->offsetSeconds($period),
             'period_seconds' => $clock->periodMinutes($period) * 60,
         ];
+    }
+
+    /** @return array<string, mixed>|null */
+    private static function shotClock(Game $game): ?array
+    {
+        if ($game->sport()->value !== 'basketball') {
+            return null;
+        }
+
+        $events = $game->events()->effective()
+            ->whereIn('type', [GameEventType::PeriodStart, GameEventType::PeriodEnd, GameEventType::ClockPause, GameEventType::ClockResume, GameEventType::ShotClockReset])
+            ->orderBy('id')->get()
+            ->map(fn (GameEvent $event): array => [
+                'type' => $event->type->value,
+                'period' => (int) $event->period,
+                'at_ms' => $event->created_at?->getTimestampMs() ?? 0,
+                'seconds' => isset($event->payload['seconds']) ? (int) $event->payload['seconds'] : null,
+            ])->all();
+
+        return (new ShotClock)->snapshot($events);
     }
 
     /**

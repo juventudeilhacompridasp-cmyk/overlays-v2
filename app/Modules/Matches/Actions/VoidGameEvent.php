@@ -90,7 +90,7 @@ final class VoidGameEvent
 
             $this->projectScore->handle($game);
 
-            if ($isMark || in_array($event->type, [...GameEventType::personalFouls(), GameEventType::ShotClockReset], true)) {
+            if ($isMark || $event->type->isPersonalFoul() || $event->type === GameEventType::ShotClockReset) {
                 event(GameUpdated::for($game));
             }
 

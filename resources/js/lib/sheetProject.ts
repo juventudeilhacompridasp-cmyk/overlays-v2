@@ -156,6 +156,7 @@ function applyEvent(view: SheetView, item: QueueItem, rules: ProjectionRules): v
         case 'technical_foul':
         case 'unsportsmanlike_foul': {
             // Faltas acumuladas da equipe (contador por tempo) só o servidor calcula.
+            // Desqualificação (2ª técnica/antidesportiva) também só vale depois do envio.
             view.partial = true;
             if (team && personId) {
                 const total = (team.player_fouls[personId] ?? 0) + 1;

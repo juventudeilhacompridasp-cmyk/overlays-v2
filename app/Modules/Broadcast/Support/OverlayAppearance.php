@@ -17,7 +17,7 @@ final class OverlayAppearance
 
     public const MOTIONS = ['dynamic', 'subtle', 'none'];
 
-    /** @return array{preset: string, accent_color: string, background_color: string, text_color: string, position: string, scale: float, motion: string, font: string, layout: string} */
+    /** @return array{preset: string, accent_color: string, background_color: string, text_color: string, position: string, scale: float, motion: string, font: string, layout: string, scorers: bool} */
     public static function defaults(): array
     {
         return [
@@ -30,12 +30,13 @@ final class OverlayAppearance
             'motion' => 'dynamic',
             'font' => 'system',
             'layout' => 'bar',
+            'scorers' => false,
         ];
     }
 
     /**
      * @param  array<string, mixed>|null  $appearance
-     * @return array{preset: string, accent_color: string, background_color: string, text_color: string, position: string, scale: float, motion: string, font: string, layout: string}
+     * @return array{preset: string, accent_color: string, background_color: string, text_color: string, position: string, scale: float, motion: string, font: string, layout: string, scorers: bool}
      */
     public static function normalize(?array $appearance): array
     {
@@ -51,6 +52,7 @@ final class OverlayAppearance
             'motion' => (string) $values['motion'],
             'font' => self::font($values['font']),
             'layout' => in_array($values['layout'], self::LAYOUTS, true) ? (string) $values['layout'] : 'bar',
+            'scorers' => (bool) $values['scorers'],
         ];
     }
 

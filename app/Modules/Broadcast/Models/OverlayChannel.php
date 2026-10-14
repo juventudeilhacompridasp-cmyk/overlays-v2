@@ -15,6 +15,8 @@ use Illuminate\Support\Str;
  * @property array<string, mixed>|null $appearance
  * @property array<string, mixed>|null $lineup_settings
  * @property array<string, mixed>|null $sponsor_settings
+ * @property array<string, mixed>|null $lower_third_settings
+ * @property array<string, mixed>|null $screen_settings
  * @property string|null $control_token_hash
  */
 #[Unguarded]
@@ -34,6 +36,9 @@ class OverlayChannel extends Model
     /** Telas de campeonato que o operador pode mostrar/ocultar ao vivo (URLs com `live=1`); começam ocultas. */
     public const CHAMPIONSHIP_VIEWS = ['standings', 'fixtures', 'results', 'scorers', 'discipline', 'matchcard', 'ticker', 'champion'];
 
+    /** Telas extras sob demanda (começam ocultas): cartela pré-jogo, comparativo, cartela de transmissão, resumo do jogo e chaveamento. */
+    public const SCREENS = ['pregame', 'compare', 'cartela', 'summary', 'bracket', 'social'];
+
     /** Camadas que valem como ligadas quando o operador nunca mexeu nelas. */
     public const DEFAULT_ON = ['scoreboard', 'lower_third'];
 
@@ -44,6 +49,12 @@ class OverlayChannel extends Model
         'escalacao' => 'Escalação (sob demanda)',
         'tabela' => 'Tabela de classificação (sob demanda)',
         'patrocinadores' => 'Patrocinadores (rotação de logotipos)',
+        'prejogo' => 'Cartela pré-jogo com contagem regressiva (sob demanda)',
+        'comparativo' => 'Comparativo de equipes (sob demanda)',
+        'cartela' => 'Cartela de transmissão (sob demanda)',
+        'resumo' => 'Resumo do jogo: intervalo e fim (sob demanda)',
+        'chaveamento' => 'Chaveamento do mata-mata (sob demanda)',
+        'social' => 'Chamada para redes sociais com QR code (sob demanda)',
     ];
 
     /**
@@ -51,7 +62,7 @@ class OverlayChannel extends Model
      */
     protected function casts(): array
     {
-        return ['layers' => 'array', 'appearance' => 'array', 'lineup_settings' => 'array', 'sponsor_settings' => 'array'];
+        return ['layers' => 'array', 'appearance' => 'array', 'lineup_settings' => 'array', 'sponsor_settings' => 'array', 'lower_third_settings' => 'array', 'screen_settings' => 'array'];
     }
 
     public static function newToken(): string
@@ -92,6 +103,14 @@ class OverlayChannel extends Model
     public function layerStates(): array
     {
         return array_combine(self::LAYERS, array_map(fn (string $layer) => $this->layerOn($layer), self::LAYERS));
+    }
+
+    /** @return array<string, bool> cada tela extra: no ar (true) ou oculta (padrão) */
+    public function screensLive(): array
+    {
+        $saved = is_array($this->layers['screens'] ?? null) ? $this->layers['screens'] : [];
+
+        return array_combine(self::SCREENS, array_map(fn (string $screen) => ($saved[$screen] ?? false) === true, self::SCREENS));
     }
 
     /** @return array<string, bool> cada tela de campeonato: no ar (true) ou oculta (padrão) */

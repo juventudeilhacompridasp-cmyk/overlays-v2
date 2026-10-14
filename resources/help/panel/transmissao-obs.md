@@ -11,6 +11,15 @@ Os overlays são telas de vídeo que o OBS carrega como **fonte de navegador**, 
 ## Escalação jogador a jogador
 Em **Escalação visual** escolha *Cartões*, *Jogador a jogador* ou *Show completo* e a equipe. No modo **automático** cada jogador fica o tempo que você definir (3 a 30 s); no **manual** use **Anterior**, **Próximo** e **Reiniciar** para passar na hora. A foto grande só aparece para quem você habilitou, e a faixa de patrocinadores é opcional.
 
+## Gols sob o placar, acréscimos e avisos rápidos
+Marque **Mostrar autores dos gols sob o placar** em *Visual do overlay* para listar os goleadores de cada equipe. Em *Acréscimos no relógio* escolha +1 a +8 e o número aparece ao lado do relógio. Na coluna **Lances** há avisos de um clique: VAR, Pênalti, Cartão em análise, Jogo paralisado, Intervalo e Fim de jogo.
+
+## Telas extras (pré-jogo, comparativo e cartela)
+Na coluna **Telas extras** use *Mostrar* e *Ocultar* para a cartela pré-jogo (com contagem regressiva), o comparativo de equipes e a cartela de transmissão em tela cheia (“Começamos em breve”, “Intervalo”…). Na cartela escolha um modelo, ajuste título e subtítulo e, se quiser, uma contagem regressiva em minutos. Há também a **Chamada para redes sociais** (até 4 linhas e um QR code), o **Resumo do jogo** (intervalo ou fim, com o craque do jogo que você escolher) e o **Chaveamento do mata-mata**. Cada tela tem a sua URL para uma Fonte de navegador no OBS.
+
+## Faixas de lance (lower thirds)
+Na coluna **Lances** escolha o estilo da faixa (seis opções), a animação, o tempo no ar e quais lances aparecem. Gols e cartões lançados na súmula viram faixa sozinhos, com o jogador, a camisa e, no gol, o placar. **Testar o estilo** dispara um exemplo no OBS; **Jogador em destaque** apresenta um atleta da escalação; **Aviso manual** mostra qualquer texto. Se você ocultar *Lances*, nada aparece.
+
 ## Overlays de campeonato
 Na coluna **Campeonato** do canal escolha a tela (tabela, próximos jogos, resultados, artilharia, cartões, jogo em destaque, faixa de placares ou campeão), a edição e o estilo. Os **modelos** aplicam um visual pronto de uma vez; em **Meus modelos** você guarda o seu, exporta e importa. A prévia mostra exatamente o que o OBS vai exibir: copie a URL para uma Fonte de navegador. O estilo vive na URL, então cada tela do OBS tem a sua. Ligue **Controle ao vivo** para a tela só aparecer quando você clicar em *Mostrar…* em **Telas de campeonato no ar** (coluna Ao vivo); desligado, ela fica sempre no ar. Cartões só aparecem se o administrador liberar em Painel > Portal público.
 

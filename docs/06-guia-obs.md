@@ -28,6 +28,34 @@ Em cada canal, a seção **Visual do overlay** configura o placar:
 Clique em **Aplicar visual**. As fontes que já estão abertas no OBS recebem a mudança por Reverb, sem recarregar. As animações
 usam somente opacidade e transformação para reduzir o trabalho de renderização do Chromium do OBS.
 
+### Telas extras: pré-jogo, comparativo e cartela
+Na coluna **Telas extras** estão três telas sob demanda, cada uma com a sua URL (Fonte de navegador): **Cartela pré-jogo** (escudos, competição,
+local, horário e contagem regressiva para o início), **Comparativo de equipes** (posição na tabela, forma dos últimos 5 jogos e confronto
+direto — os mesmos dados e interruptores do portal) e **Cartela de transmissão** (tela cheia: “Começamos em breve”, “Intervalo”, “Voltamos
+já”, “Fim da transmissão”, com contagem regressiva opcional e os patrocinadores). Todas começam ocultas e o clique em *Mostrar* vale na hora.
+
+Também em **Telas extras**: **Resumo do jogo** (título “Intervalo”/“Fim de jogo”, placar, autores dos gols, cartões — só se a organização liberar
+*Cartões* no portal — e o **craque do jogo**, escolhido por você entre os atletas da escalação) e **Chaveamento do mata-mata** (confrontos por rodada com
+placar agregado, vencedor em destaque, pênaltis e campeão; vale também a partir de um jogo da fase de pontos corridos, se a divisão tiver mata-mata).
+
+**Chamada para redes sociais**: faixa que alterna até 4 linhas (ex.: *Instagram · @juventude*) com o **QR code** de um link https; fica oculta até você mostrar.
+
+### Gols sob o placar e acréscimos
+Em *Visual do overlay*, **Mostrar autores dos gols sob o placar** lista os goleadores de cada lado (“Rafa 12', 55'”), por nome público. Em
+*Acréscimos no relógio* (coluna Ao vivo) escolha de +1 a +8: o número aparece junto ao relógio enquanto o jogo corre e zera ao trocar o jogo.
+
+### Tabela e pedidos de tempo
+A tela **Tabela** segue a posição, a escala e o movimento do canal, mostra V/E/D e saldo, destaca as duas equipes do jogo, usa a cor
+de cada equipe e reduz o espaçamento quando passa de 10 linhas. No basquete o placar mostra, abaixo, os **pedidos de tempo que restam** a
+cada equipe na metade em andamento.
+
+### Lower thirds (faixas de lance)
+Na coluna **Lances (lower thirds)** escolha entre seis estilos — Arena, Barra de TV, Cartão do jogador, Minimal, Esportivo e Flash de
+gol — e sete animações, o tempo no ar (3 a 15 s) e quais lances aparecem (gol, gol contra, cartões, substituição). A faixa traz o jogador
+(nome público, camisa e posição), a equipe e, no gol, o placar, além de avisos como “2º gol do jogador” e “HAT-TRICK”. Use **Testar o
+estilo** para ver cada tipo no OBS, **Jogador em destaque** para apresentar um atleta da escalação e **Aviso manual** para qualquer texto
+(narrador, patrocinador, “Intervalo”). Ocultar *Lances* tira tudo da tela. Detalhes no ADR 0013.
+
 ### Overlays de campeonato
 Na coluna **Campeonato** do canal escolha a tela — tabela, próximos jogos, resultados, artilharia, cartões, jogo em destaque,
 faixa de placares ou campeão —, a edição (sem escolher, vale a do jogo no ar), um modelo de estilo e os ajustes. A **prévia** usa

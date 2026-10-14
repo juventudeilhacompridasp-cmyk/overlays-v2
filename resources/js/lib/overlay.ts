@@ -1,6 +1,7 @@
 import { GameClock, ShotClock } from '@/lib/clock';
 import { ConnectionState, Realtime, subscribeToChannel } from '@/lib/echo';
 import './artFonts';
+import { LowerThirdBannerData, LowerThirdSettings } from './lowerThird';
 import { useEffect, useRef, useState } from 'react';
 
 export interface OverlayTeam {
@@ -19,6 +20,7 @@ export interface OverlayAppearance {
     scale: number;
     motion: 'dynamic' | 'subtle' | 'none';
     layout: 'bar' | 'stacked' | 'compact' | 'wide';
+    scorers: boolean;
     font: string;
 }
 
@@ -39,6 +41,11 @@ export interface OverlayGame {
     away_score: number;
     home_penalties: number | null;
     away_penalties: number | null;
+    scheduled_at: string | null;
+    venue: string | null;
+    competition: string;
+    division: string;
+    stage: string;
     clock: GameClock;
     shot_clock: ShotClock | null;
     sport: string;
@@ -46,6 +53,7 @@ export interface OverlayGame {
     quarters: { period: number; home: number; away: number }[] | null;
     sets: { home: number; away: number; winner: 'home' | 'away' | null; finished: boolean }[] | null;
     fouls: { home: number; away: number; limit: number; period: number } | null;
+    timeouts: { home: number; away: number; limit: number; period: number } | null;
     goals: { side: 'home' | 'away' | null; player: string | null; minute: number | null; own_goal: boolean }[];
 }
 
@@ -72,35 +80,54 @@ export interface LineupPublicSettings {
     anchor_ms: number;
 }
 
+export interface BracketSide {
+    name: string;
+    short: string | null;
+    logo: string | null;
+    score: number | null;
+    winner: boolean;
+}
+
 export interface OverlayState {
     channel: string;
     appearance: OverlayAppearance;
     font_face: OverlayFontFace | null;
     lineup_settings: LineupPublicSettings;
     sponsors: { enabled: boolean; seconds: number; items: { name: string; logo_url: string }[] };
+    lower_third_settings: LowerThirdSettings;
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     championship: Record<string, boolean>;
+    stoppage: number;
+    social: { items: { label: string; value: string }[]; url: string | null };
+    screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean; social: boolean };
+    cartela: { title: string; subtitle: string; until_ms: number | null };
+    summary: {
+        headline: string;
+        cards: { side: 'home' | 'away'; kind: string; player: string | null; minute: number | null }[] | null;
+        mvp: { name: string; shirt: number | null; team: string | null; side: 'home' | 'away' | null } | null;
+    } | null;
+    bracket: {
+        title: string;
+        rounds: { label: string; ties: { a: BracketSide; b: BracketSide; decided: boolean; live: boolean; penalties: { a: number; b: number } | null }[] }[];
+        champion: string | null;
+    } | null;
+    compare: {
+        standings: { title: string; home: { position: number; points: number; played: number; of: number } | null; away: { position: number; points: number; played: number; of: number } | null } | null;
+        form: { home: string[]; away: string[] } | null;
+        head_to_head: { home_wins: number; draws: number; away_wins: number } | null;
+    } | null;
     game: OverlayGame | null;
     lineup: { home: LineupSide; away: LineupSide } | null;
     standings: {
         title: string;
-        rows: { position: number; team: string; logo_url: string | null; points: number; played: number; goal_difference: number; highlight: boolean }[];
+        rows: { position: number; team: string; logo_url: string | null; points: number; played: number; goal_difference: number; won: number; drawn: number; lost: number; color: string | null; highlight: boolean }[];
     } | null;
     server_time_ms: number;
 }
 
-export interface Banner {
-    id: string;
-    kind: string;
-    title: string;
-    subtitle: string | null;
-    team: string | null;
-    color: string | null;
-    minute: number | null;
-}
+export type Banner = LowerThirdBannerData;
 
 const POLL_MS = 3000;
-const BANNER_MS = 7000;
 
 /**
  * Estado de um canal de transmissão: recebe o estado completo pelo Reverb e, se o WebSocket não conectar,
@@ -180,7 +207,7 @@ export function useOverlay(token: string, initial: OverlayState, realtime: Realt
             return;
         }
 
-        const timer = window.setTimeout(() => setBanner(null), BANNER_MS);
+        const timer = window.setTimeout(() => setBanner(null), (state.lower_third_settings?.seconds ?? 7) * 1000);
 
         return () => window.clearTimeout(timer);
     }, [banner]);

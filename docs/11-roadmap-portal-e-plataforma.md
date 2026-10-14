@@ -15,12 +15,12 @@ Hoje: home (ao vivo/próximos/recentes), edição (tabela, jogos, artilharia), e
 | Tela | Acrescentar (todos opcionais por organização em `settings.portal`) |
 |---|---|
 | Jogo (**feito**: linha do tempo, tabela, forma, confronto direto; falta o resto da linha) | linha do tempo completa (gols, cartões **se a organização permitir**, substituições), confronto direto (histórico), posição das duas equipes na tabela, forma recente, local com mapa/endereço, árbitros, escalações públicas (nomes via `PublicName`; menores só inicial), mídia (vídeo/transmissão), compartilhar/calendário (.ics) |
-| Equipe (**feito**: campanhas, forma, artilheiros, .ics, elenco opcional; falta calendário completo paginado, estádio e redes sociais) | histórico por edição, calendário completo, forma, elenco público (`PublicName`, camisa, posição; sem foto de menor), artilheiros da equipe, campanhas, estádio, redes sociais |
+| Equipe (**feito**: campanhas, forma, artilheiros, .ics, elenco opcional; falta calendário completo paginado, estádio e redes sociais) | histórico por edição, calendário completo, forma, elenco público (`PublicName`, camisa, posição; sem foto de menor), artilheiros da equipe, campanhas, estádio (**página do local feita**), redes sociais |
 | Edição (**feito**: chaveamento visual, campeão, regras e desempates explicados) | **chaveamento visual** do mata-mata, tabela com critérios de desempate explicados, melhor ataque/defesa, artilharia **e assistências**, disciplina "fair play" (só se a organização permitir), calendário por rodada/dia/local, regulamento e notícias, melhores momentos |
 | Competição | ✅ histórico de edições, campeões e vice, títulos e recordes (`CompetitionPage`); falta: regulamento permanente |
 | Atleta | **fora** (LGPD), exceto ranking de artilharia com `PublicName` |
 | Estádio | página com endereço, mapa, jogos agendados |
-| Geral | busca global (equipes/competições), calendário .ics por equipe/competição, feeds RSS/Atom, JSON-LD (`SportsEvent`/`SportsTeam`), imagens Open Graph por jogo, modo TV (placar grande rotativo), PWA do torcedor |
+| Geral | busca global (equipes/competições, **feita**), calendário .ics por equipe/competição, feeds RSS/Atom (**Atom de resultados feito**), JSON-LD (`SportsEvent`/`SportsTeam`, **feito** nas páginas do jogo, da equipe e da edição), imagens Open Graph por jogo (**feito**), modo TV (placar grande rotativo), PWA do torcedor |
 Dependências de dados: **assistências** (novo evento/campo opcional), **árbitros** (já há `game_officials`), **posição** do atleta, **mídia/transmissão** do jogo
 (URL), **notícias** simples por edição, endereço/mapa do local. Todo dado novo respeita: edição publicada, `PublicName`, nada de CPF/documentos/disciplina
 sem interruptor explícito da organização (`portal.show_cards`).

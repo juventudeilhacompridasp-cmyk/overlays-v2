@@ -1,5 +1,6 @@
-import { formatClock, isInterval, periodLabel, shownSeconds, useGameClock, useShotClock } from '@/lib/clock';
+import { formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
 import { Realtime } from '@/lib/echo';
+import { scorerLines } from '@/lib/scorerLines';
 import { OverlayState, OverlayTeam, useOverlay } from '@/lib/overlay';
 import { overlayMotion, overlayOrigin, overlayPosition, overlayStyle, scoreboardFrame } from '@/lib/overlayVisual';
 import { Head } from '@inertiajs/react';
@@ -54,7 +55,6 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
     const game = state.game;
     const elapsed = useGameClock(game?.clock ?? { state: 'not_started', period: null, base_seconds: 0, running_since_ms: null }, skew);
     const seconds = game ? shownSeconds(game.clock, elapsed) : elapsed;
-    const shotSeconds = useShotClock(game?.shot_clock ?? { state: 'not_started', period: null, base_seconds: 0, running_since_ms: null }, skew);
 
     // Comando de ocultar: o placar sai na hora, sem animação (fiel ao clique do operador).
     if (!game || !game.home || !game.away || !state.layers.scoreboard) {
@@ -108,7 +108,7 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
                             </>
                         )}
                         <div className={`flex flex-col items-center justify-center text-center ${layout === 'compact' ? 'min-w-[5.5rem] px-3 py-0.5' : layout === 'wide' ? 'min-w-[12rem] px-8 py-1' : 'min-w-[8.5rem] px-5 py-1'}`} style={clockStyle} data-testid="overlay-clock">
-                            <span className={`${layout === 'compact' ? 'text-base' : layout === 'wide' ? 'text-3xl' : 'text-xl'} font-black tabular-nums`}>{clock}</span>
+                            <span className={`${layout === 'compact' ? 'text-base' : layout === 'wide' ? 'text-3xl' : 'text-xl'} font-black tabular-nums`}>{clock}{state.stoppage > 0 && game.clock.state === 'running' && <sup className="ml-1 text-xs font-black" data-testid="overlay-stoppage">+{state.stoppage}</sup>}</span>
                             {layout !== 'compact' && sets && currentSet && !game.finished && <span className="text-[10px] font-bold uppercase tracking-[0.18em]">Set {sets.length}</span>}
                             {layout !== 'compact' && !sets && (game.clock.state === 'running' || game.clock.state === 'paused') && (
                                 <span className="text-[10px] font-bold uppercase tracking-[0.16em]">
@@ -118,6 +118,15 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
                             )}
                         </div>
                     </div>
+                    {appearance.scorers && game.score_model === 'goals' && game.goals.length > 0 && (
+                        <div className="mt-1 grid grid-cols-2 gap-6 rounded-lg border border-white/10 px-4 py-1.5 text-base shadow-lg" style={{ backgroundColor: `${appearance.background_color}e6` }} data-testid="overlay-scorers">
+                            {(['home', 'away'] as const).map((side) => (
+                                <div key={side} className={side === 'away' ? 'text-right' : ''}>
+                                    {scorerLines(game.goals, side).map((line) => <div key={line} className="truncate">⚽ {line}</div>)}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     {sets && sets.some((set) => set.finished) && (
                         <div className="mt-1 inline-flex items-center gap-3 rounded-lg border border-white/10 px-3 py-1 text-sm tabular-nums shadow-lg" style={{ backgroundColor: `${appearance.background_color}e6` }} data-testid="overlay-sets">
                             {sets.filter((set) => set.finished).map((set, index) => (
@@ -133,9 +142,12 @@ export default function Scoreboard({ token, state: initial, realtime }: { token:
                             <span className={game.fouls.away >= game.fouls.limit ? 'font-bold text-amber-300' : ''}>{game.fouls.away}</span>
                         </div>
                     )}
-                    {game.shot_clock && game.shot_clock.state !== 'not_started' && (
-                        <div className={`mt-1 inline-flex min-w-16 items-center justify-center rounded-lg border px-3 py-1 text-xl font-black tabular-nums shadow-lg ${shotSeconds <= 5 ? 'border-red-400 text-red-300' : 'border-amber-300/50 text-amber-200'}`} style={{ backgroundColor: `${appearance.background_color}f2` }} data-testid="overlay-shot-clock" aria-label={`Posse: ${shotSeconds} segundos`}>
-                            {shotSeconds}
+                    {game.timeouts && (
+                        <div className="mt-1 inline-flex items-center gap-3 rounded-lg border border-white/10 px-3 py-1 text-sm shadow-lg" style={{ backgroundColor: `${appearance.background_color}e6` }} data-testid="overlay-timeouts">
+                            <span className="text-white/60">TEMPOS</span>
+                            <span className={game.timeouts.home === 0 ? 'text-white/40' : 'font-bold'}>{game.timeouts.home}</span>
+                            <span className="text-white/30">×</span>
+                            <span className={game.timeouts.away === 0 ? 'text-white/40' : 'font-bold'}>{game.timeouts.away}</span>
                         </div>
                     )}
                     {game.home_penalties !== null && game.away_penalties !== null && (
