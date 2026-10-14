@@ -1,6 +1,8 @@
 <?php
 
 use App\Modules\Broadcast\Models\OverlayChannel;
+use App\Modules\Broadcast\Models\OverlayStyleModel;
+use App\Modules\Broadcast\Support\ChampionshipStyle;
 use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Models\Game;
