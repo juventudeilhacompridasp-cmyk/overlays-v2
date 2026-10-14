@@ -10,6 +10,9 @@ A **landing page** apresenta a plataforma a quem ainda não é cliente. Ela est�
 ## O que a página mostra
 Recursos, overlays, esportes, **pacotes** e perguntas frequentes. A tabela de pacotes é montada a partir dos próprios pacotes e recursos do sistema: quando você muda um pacote ou cria um recurso novo, a página acompanha sozinha. Recursos **sob demanda** aparecem marcados e fora de todos os pacotes. Não há preços: a cobrança é combinada diretamente.
 
+## Galeria "O produto em ação"
+São 7 prints das telas reais (placar, faixa de lance, escalação, classificação, pênaltis, barra de patrocinadores e Modo operador), feitos com **dados fictícios** e guardados em `public/marketing`. Quando uma dessas telas mudar de aparência, quem desenvolve roda `npm run marketing:shots` e publica as imagens novas junto com a mudança.
+
 ## Receber os contatos
 - Cada mensagem fica guardada com nome, e-mail, organização, assunto, texto e a data do **aceite da política de privacidade**. Não guardamos IP, telefone nem CPF.
 - Defina `PLATFORM_CONTACT_EMAIL` para receber um e-mail a cada contato. Sem ele, as mensagens só ficam na lista.

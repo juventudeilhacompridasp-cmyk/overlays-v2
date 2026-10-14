@@ -1,6 +1,6 @@
 import { Seo, SeoHead } from '@/Components/Portal/PortalLayout';
 import { useForm, usePage } from '@inertiajs/react';
-import { FormEvent, ReactNode } from 'react';
+import { FormEvent, ReactNode, useEffect, useRef, useState } from 'react';
 
 interface Plan {
     key: string;
@@ -14,8 +14,16 @@ interface MatrixRow {
     on_demand: boolean;
 }
 
+interface GalleryItem {
+    src: string;
+    title: string;
+    text: string;
+    alt: string;
+}
+
 interface Content {
     hero: { title: string; subtitle: string };
+    gallery: GalleryItem[];
     pillars: { title: string; text: string }[];
     overlays: string[];
     sports: string[];
@@ -129,6 +137,65 @@ function OperatorMock() {
     );
 }
 
+/** Galeria de prints reais (dados fictícios). Clicar abre a imagem grande numa janela; Esc, clique fora ou o botão fecham. */
+function Gallery({ items }: { items: GalleryItem[] }) {
+    const [open, setOpen] = useState<number | null>(null);
+    const closeRef = useRef<HTMLButtonElement>(null);
+    const opener = useRef<HTMLElement | null>(null);
+
+    useEffect(() => {
+        if (open === null) return;
+
+        closeRef.current?.focus();
+        const onKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setOpen(null);
+            else if (event.key === 'ArrowRight') setOpen((current) => (current === null ? null : (current + 1) % items.length));
+            else if (event.key === 'ArrowLeft') setOpen((current) => (current === null ? null : (current + items.length - 1) % items.length));
+        };
+        window.addEventListener('keydown', onKey);
+
+        return () => {
+            window.removeEventListener('keydown', onKey);
+            opener.current?.focus();
+        };
+    }, [open, items.length]);
+
+    const current = open === null ? null : items[open];
+
+    return (
+        <>
+            <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {items.map((item, index) => (
+                    <li key={item.src}>
+                        <figure className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <button type="button" onClick={(event) => { opener.current = event.currentTarget; setOpen(index); }} className="block w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600" aria-label={`Ampliar: ${item.title}`}>
+                                <img src={item.src} alt={item.alt} width={1280} height={720} loading="lazy" decoding="async" className="aspect-video w-full object-cover" />
+                            </button>
+                            <figcaption className="p-4">
+                                <p className="font-bold text-gray-900">{item.title}</p>
+                                <p className="mt-1 text-sm text-gray-600">{item.text}</p>
+                            </figcaption>
+                        </figure>
+                    </li>
+                ))}
+            </ul>
+            {current && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4" role="dialog" aria-modal="true" aria-label={current.title} onClick={() => setOpen(null)}>
+                    <figure className="max-h-full w-full max-w-5xl" onClick={(event) => event.stopPropagation()}>
+                        <img src={current.src} alt={current.alt} className="max-h-[80vh] w-full rounded-lg object-contain" />
+                        <figcaption className="mt-3 text-center text-sm text-white/85">
+                            <strong>{current.title}</strong> · {current.text}
+                        </figcaption>
+                    </figure>
+                    <button ref={closeRef} type="button" onClick={() => setOpen(null)} className="absolute right-4 top-4 rounded-md bg-white/15 px-3 py-1.5 text-sm font-bold text-white hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                        Fechar ✕
+                    </button>
+                </div>
+            )}
+        </>
+    );
+}
+
 function Section({ id, title, subtitle, children, tone = 'light' }: { id?: string; title: string; subtitle?: string; children: ReactNode; tone?: 'light' | 'muted' }) {
     return (
         <section id={id} className={tone === 'muted' ? 'bg-gray-100 py-16' : 'py-16'}>
@@ -219,6 +286,7 @@ function ContactForm({ interests, privacy }: { interests: Content['interests']; 
 export default function Landing({ content, brand, links, seo }: Props) {
     const nav = [
         { href: '#recursos', label: 'Recursos' },
+        { href: '#galeria', label: 'Em ação' },
         { href: '#overlays', label: 'Overlays' },
         { href: '#pacotes', label: 'Pacotes' },
         { href: '#faq', label: 'Dúvidas' },
@@ -288,6 +356,10 @@ export default function Landing({ content, brand, links, seo }: Props) {
                             </article>
                         ))}
                     </div>
+                </Section>
+
+                <Section id="galeria" tone="muted" title="O produto em ação" subtitle="Telas reais da plataforma, com dados fictícios. Clique para ampliar.">
+                    <Gallery items={content.gallery} />
                 </Section>
 
                 <section id="overlays" className="bg-neutral-900 py-16 text-white">
