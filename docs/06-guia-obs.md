@@ -114,8 +114,9 @@ A apresentação **Completa** reúne tudo numa sequência de uma equipe: os **ca
 posições que o gestor salvou, ao lado da lista dos titulares) e, se quiser, **cada jogador** em seguida. Defina o tempo dos cartões
 (*Lista/cartões antes da transição*), o do esquema (3 a 30 s) e o de cada jogador. Se a equipe não tem esquema tático pronto, a etapa do
 esquema é pulada. A troca entre as etapas é animada (deslize, fusão, cortina, zoom ou virada de página, em *Visual da apresentação*): a
-etapa que sai e a que entra se sobrepõem, sem piscar. A **faixa de patrocinadores** fica fixa por baixo durante todas as etapas e
-continua a rotação sem reiniciar a cada troca; ela também acompanha a sequência *Lista → esquema* (as duas equipes). No modo manual,
+etapa que sai e a que entra se sobrepõem, sem piscar. A **barra de patrocinadores 1500 x 200** fica fixa por baixo durante todas as etapas: ela mostra **um banner por vez** e passa por todos os patrocinadores com banner em loop (tempo e transição em *Visual da rotação e da barra*, banners enviados em *Patrocinadores*); sem nenhum banner, usa os logotipos. A rotação não reinicia a cada troca de etapa e a barra também acompanha a sequência *Lista → esquema* (as duas equipes).
+
+**Animações do pacote inteiro:** em *Visual da apresentação* escolha um **pacote de animação** (Clássico de TV, Suave, Impacto, Estúdio, Dinâmico ou Cinema) ou ajuste item a item: a **entrada e saída do pacote** (ao mostrar/ocultar a escalação: fusão, deslize, subida, cortinas, abertura central, zoom, virada de página ou nenhuma), a **animação entre as etapas** (oito opções), a animação de entrada dos cartões e a **velocidade** (50 a 200 %). Com o movimento do canal em *sem movimento* tudo aparece e some na hora. No modo manual,
 **Anterior / Próximo** percorrem as etapas (ao fim, voltam aos cartões).
 
 Fotos são desligadas por padrão e habilitadas atleta por atleta. Apenas quem já possui foto cadastrada pode ser selecionado.

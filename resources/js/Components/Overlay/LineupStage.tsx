@@ -6,8 +6,8 @@ import { CSSProperties, ReactNode, useEffect, useRef, useState } from 'react';
  * entra, uma sobre a outra, sem piscar. `children` recebe `first` (verdadeiro enquanto ainda é a primeira etapa mostrada), para
  * a etapa usar a própria animação de entrada só na estreia e a troca animada nas demais.
  */
-export function LineupStage({ id, transition, motion, children }: { id: string; transition: LineupTransition; motion: 'dynamic' | 'subtle' | 'none'; children: (first: boolean) => ReactNode }) {
-    const timing = transitionTiming(transition, motion);
+export function LineupStage({ id, transition, motion, speed = 100, children }: { id: string; transition: LineupTransition; motion: 'dynamic' | 'subtle' | 'none'; speed?: number; children: (first: boolean) => ReactNode }) {
+    const timing = transitionTiming(transition, motion, speed);
     const [seen, setSeen] = useState(id);
     const [first, setFirst] = useState(true);
     const [leaving, setLeaving] = useState<{ id: string; node: ReactNode } | null>(null);

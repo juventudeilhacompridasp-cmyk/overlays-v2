@@ -1,14 +1,14 @@
 import { AthletePhoto, FormationPitch } from '@/Components/Overlay/Formation';
-import { CardsGrid, FormationCard, IndividualCard, lineupLook, SponsorBanner } from '@/Components/Overlay/LineupShow';
+import { CardsGrid, FormationCard, IndividualCard, lineupLook } from '@/Components/Overlay/LineupShow';
+import { SponsorBarCard } from '@/Components/Overlay/SponsorBarCard';
 import { LineupStage } from '@/Components/Overlay/LineupStage';
-import { lineupSkin } from '@/lib/lineupSkin';
-import { stageKey } from '@/lib/lineupStage';
+import { PackageAnimation, LineupTransition, packageTiming, stageEnterClass, stageExitClass, stageKey } from '@/lib/lineupStage';
 import { Realtime } from '@/lib/echo';
 import { LineupSide, OverlayState, useOverlay } from '@/lib/overlay';
 import { currentStep, individuals, nextChangeAt, stepContent } from '@/lib/overlayLineup';
-import { overlayMotion, overlayOrigin, overlayPosition, overlayStyle } from '@/lib/overlayVisual';
+import { overlayOrigin, overlayPosition, overlayStyle } from '@/lib/overlayVisual';
 import { Head } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { CSSProperties, useEffect, useRef, useState } from 'react';
 
 function TeamHeader({ side, accent }: { side: LineupSide; accent: string }) {
     return (
@@ -86,7 +86,6 @@ export function TeamShow({ state, skew }: { state: OverlayState; skew: number })
     const content = stepContent(settings, players.length, step, formationReady);
     const appearance = state.appearance;
     const look = lineupLook(settings);
-    const skin = lineupSkin(look, appearance.background_color, appearance.accent_color);
     const free = typeof settings.x === 'number' && typeof settings.y === 'number';
     const sport = state.game.sport;
     const transition = settings.transition ?? 'slide';
@@ -94,8 +93,8 @@ export function TeamShow({ state, skew }: { state: OverlayState; skew: number })
     return (
         <div className={`absolute inset-0 ${free ? '' : `flex p-12 ${overlayPosition(appearance.position)}`}`} data-step={step} data-kind={content.kind} data-presentation={settings.presentation}>
             <div style={{ ...(free ? { position: 'absolute', left: `${settings.x}%`, top: `${settings.y}%` } : {}), transform: `scale(${appearance.scale})`, transformOrigin: free ? 'top left' : overlayOrigin(appearance.position) }}>
-                <div className="flex flex-col gap-3">
-                    <LineupStage id={stageKey(content, settings.team)} transition={transition} motion={appearance.motion}>
+                <div className={`flex flex-col gap-3 ${free ? 'items-start' : 'items-center'}`}>
+                    <LineupStage id={stageKey(content, settings.team)} transition={transition} motion={appearance.motion} speed={settings.motion_speed ?? 100}>
                         {(first) => content.kind === 'formation' ? (
                             <FormationCard side={side} sport={sport} appearance={appearance} look={look} numberOnly={settings.formation_mark === 'number'} zoom={settings.formation_photo_size ?? 100} entrance={first} />
                         ) : content.kind === 'individual' && players[content.index] ? (
@@ -104,11 +103,7 @@ export function TeamShow({ state, skew }: { state: OverlayState; skew: number })
                             <CardsGrid side={side} players={players} appearance={appearance} sponsors={state.sponsors} showSponsor={false} look={look} entrance={first} />
                         )}
                     </LineupStage>
-                    {settings.sponsor_banner && state.sponsors.items.length > 0 && (
-                        <div className={`${skin.panel.className} ${overlayMotion(appearance.motion === 'dynamic' ? 'subtle' : appearance.motion)}`} style={{ ...skin.panel.style, background: 'transparent' }} data-testid="lineup-sponsor-bar">
-                            <SponsorBanner sponsors={state.sponsors} appearance={appearance} size={settings.sponsor_size} />
-                        </div>
-                    )}
+                    {settings.sponsor_banner && state.sponsors.items.length > 0 && <SponsorBarCard sponsors={state.sponsors} appearance={appearance} scale={settings.sponsor_size} testId="lineup-sponsor-bar" />}
                 </div>
             </div>
         </div>
@@ -132,37 +127,65 @@ export default function Lineup({ token, state: initial, realtime }: { token: str
         return () => window.clearTimeout(timer);
     }, [formationAvailable, requested, state.game?.id, state.lineup_settings.list_seconds, visible]);
 
+    // Pacote inteiro (cartões, esquema, jogadores e faixa de patrocinadores): entra e SAI com a animação escolhida. Ao ocultar a
+    // camada o estado perde a escalação, então o último quadro fica na tela até a saída terminar.
+    const settings = state.lineup_settings;
     const appearance = state.appearance;
-    const skin = lineupSkin(lineupLook(state.lineup_settings), appearance.background_color, appearance.accent_color);
-    const numberOnly = state.lineup_settings.formation_mark === 'number';
-    const zoom = state.lineup_settings.formation_photo_size ?? 100;
+    const pkg = (settings.package_animation ?? 'fade') as PackageAnimation;
+    const timing = packageTiming(pkg, appearance.motion, settings.motion_speed ?? 100);
+    const animated = pkg !== 'none' && appearance.motion !== 'none';
+    const [mounted, setMounted] = useState(visible);
+    const last = useRef(state);
+
+    useEffect(() => {
+        if (visible) last.current = state;
+    });
+
+    useEffect(() => {
+        if (visible) {
+            setMounted(true);
+
+            return;
+        }
+
+        const timer = window.setTimeout(() => setMounted(false), timing.exit + 40);
+
+        return () => window.clearTimeout(timer);
+    }, [visible, timing.exit]);
+
+    const showing = visible || mounted;
+    const shown = visible ? state : last.current;
+    const numberOnly = shown.lineup_settings.formation_mark === 'number';
+    const zoom = shown.lineup_settings.formation_photo_size ?? 100;
+    const packageStyle = { '--lineup-in': `${timing.enter}ms`, '--lineup-out': `${timing.exit}ms` } as CSSProperties;
 
     return (
-        <div className="fixed inset-0 overflow-hidden font-sans transition-opacity duration-500" style={{ ...overlayStyle(appearance), color: appearance.text_color, opacity: visible ? 1 : 0, textShadow: '0 1px 2px rgba(0,0,0,.55)' }} data-testid="overlay-lineup" data-visible={visible} data-phase={phase}>
+        <div className="fixed inset-0 overflow-hidden font-sans" style={{ ...overlayStyle(appearance), color: appearance.text_color, opacity: showing ? 1 : 0, textShadow: '0 1px 2px rgba(0,0,0,.55)' }} data-testid="overlay-lineup" data-visible={visible} data-phase={phase} data-package={pkg}>
             <Head title="Escalação" />
-            {state.lineup && state.game && TEAM_PRESENTATIONS.includes(requested) && <TeamShow state={state} skew={skew} />}
-            {state.lineup && state.game && !TEAM_PRESENTATIONS.includes(requested) && (
-                <div className="absolute inset-0 flex items-center justify-center" style={{ transform: `scale(${appearance.scale})` }}>
-                    <div className="flex flex-col gap-3">
-                        <LineupStage id={phase} transition={state.lineup_settings.transition ?? 'slide'} motion={appearance.motion}>
-                            {() => phase === 'list' ? (
-                                <div className="flex gap-8">
-                                    <ListColumn side={state.lineup!.home} background={appearance.background_color} accent={appearance.accent_color} />
-                                    <ListColumn side={state.lineup!.away} background={appearance.background_color} accent={appearance.accent_color} />
-                                </div>
-                            ) : (
-                                <div className="flex gap-8">
-                                    <TacticalSide side={state.lineup!.home} sport={state.game!.sport} background={appearance.background_color} accent={appearance.accent_color} numberOnly={numberOnly} zoom={zoom} />
-                                    <TacticalSide side={state.lineup!.away} sport={state.game!.sport} background={appearance.background_color} accent={appearance.accent_color} numberOnly={numberOnly} zoom={zoom} />
-                                </div>
-                            )}
-                        </LineupStage>
-                        {state.lineup_settings.sponsor_banner && state.sponsors.items.length > 0 && (
-                            <div className={skin.panel.className} style={{ ...skin.panel.style, background: 'transparent' }} data-testid="lineup-sponsor-bar">
-                                <SponsorBanner sponsors={state.sponsors} appearance={appearance} size={state.lineup_settings.sponsor_size} />
+            {showing && shown.lineup && shown.game && (
+                <div className={`absolute inset-0 ${animated ? (visible ? stageEnterClass(pkg as LineupTransition) : stageExitClass(pkg as LineupTransition)) : ''}`} style={packageStyle} data-testid="lineup-package" data-state={visible ? 'in' : 'out'}>
+                    {TEAM_PRESENTATIONS.includes(requested) ? (
+                        <TeamShow state={shown} skew={skew} />
+                    ) : (
+                        <div className="absolute inset-0 flex items-center justify-center" style={{ transform: `scale(${appearance.scale})` }}>
+                            <div className="flex flex-col items-center gap-3">
+                                <LineupStage id={phase} transition={settings.transition ?? 'slide'} motion={appearance.motion} speed={settings.motion_speed ?? 100}>
+                                    {() => phase === 'list' ? (
+                                        <div className="flex gap-8">
+                                            <ListColumn side={shown.lineup!.home} background={appearance.background_color} accent={appearance.accent_color} />
+                                            <ListColumn side={shown.lineup!.away} background={appearance.background_color} accent={appearance.accent_color} />
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-8">
+                                            <TacticalSide side={shown.lineup!.home} sport={shown.game!.sport} background={appearance.background_color} accent={appearance.accent_color} numberOnly={numberOnly} zoom={zoom} />
+                                            <TacticalSide side={shown.lineup!.away} sport={shown.game!.sport} background={appearance.background_color} accent={appearance.accent_color} numberOnly={numberOnly} zoom={zoom} />
+                                        </div>
+                                    )}
+                                </LineupStage>
+                                {settings.sponsor_banner && shown.sponsors.items.length > 0 && <SponsorBarCard sponsors={shown.sponsors} appearance={appearance} scale={settings.sponsor_size} testId="lineup-sponsor-bar" />}
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

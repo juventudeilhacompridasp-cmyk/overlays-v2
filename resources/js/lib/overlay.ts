@@ -93,7 +93,9 @@ export interface LineupPublicSettings {
     list_seconds: number;
     formation_seconds?: number;
     full_individuals?: boolean;
-    transition?: 'fade' | 'slide' | 'wipe' | 'zoom' | 'flip';
+    transition?: 'fade' | 'slide' | 'rise' | 'wipe' | 'curtain' | 'split' | 'zoom' | 'flip';
+    package_animation?: 'none' | 'fade' | 'slide' | 'rise' | 'wipe' | 'curtain' | 'split' | 'zoom' | 'flip';
+    motion_speed?: number;
     team: 'home' | 'away';
     individual_mode: 'auto' | 'manual';
     individual_seconds: number;
