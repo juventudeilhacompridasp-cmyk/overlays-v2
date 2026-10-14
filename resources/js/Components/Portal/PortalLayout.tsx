@@ -87,6 +87,12 @@ export default function PortalLayout({ theme, seo, children }: PropsWithChildren
                 <Link href={route('portal.privacy')} className="hover:underline">
                     Privacidade
                 </Link>
+                {/* Selo da plataforma: só quando o portal mostra a marca da plataforma (sem white-label). */}
+                {!theme.white_label && (
+                    <a href={route('status.index')} className="ml-2 inline-block align-middle" title="Status da plataforma">
+                        <img src={route('status.badge')} alt="Status da plataforma" height={20} className="inline h-5" />
+                    </a>
+                )}
             </footer>
         </div>
     );

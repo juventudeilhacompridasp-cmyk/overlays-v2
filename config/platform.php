@@ -58,6 +58,7 @@ return [
         'recover_threshold' => (int) env('STATUS_RECOVER_THRESHOLD', 2),
         'retention_days' => 90,
         'queue_max_age' => (int) env('STATUS_QUEUE_MAX_AGE', 180),
+        'notify' => (bool) env('STATUS_NOTIFY', true),
         'publish_disk' => env('STATUS_PUBLISH_DISK'),
         'storage_disk' => env('STATUS_STORAGE_DISK', 's3'),
     ],

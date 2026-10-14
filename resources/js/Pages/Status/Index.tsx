@@ -1,6 +1,6 @@
 import { dayColor, dayTitle, formatDuration, formatUptime, formatWhen, STATUS_TONE, ComponentStatus } from '@/lib/statusPage';
-import { Head } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { FormEvent, useEffect, useState } from 'react';
 
 interface DayPoint {
     date: string;
@@ -46,6 +46,45 @@ interface Status {
     components: StatusComponent[];
     incidents: Incident[];
     maintenance: Incident[];
+}
+
+/** Inscrição nos avisos por e-mail (dupla confirmação). A resposta é sempre a mesma, exista ou não o e-mail na lista. */
+function SubscribeForm() {
+    const { flash } = usePage().props;
+    const { data, setData, post, processing, errors, reset } = useForm({ email: '', website: '' });
+    const submit = (event: FormEvent) => {
+        event.preventDefault();
+        post(route('status.subscribe'), { preserveScroll: true, onSuccess: () => reset() });
+    };
+
+    return (
+        <section aria-label="Receber avisos" className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-200">
+            <h2 className="font-semibold">Receber avisos por e-mail</h2>
+            <p className="mt-1 text-sm text-gray-600">Avisamos quando houver incidente, atualização ou manutenção. Você confirma o e-mail e pode cancelar a qualquer momento.</p>
+            {flash?.success && (
+                <p role="status" className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800">
+                    {flash.success}
+                </p>
+            )}
+            <form onSubmit={submit} className="mt-3 flex flex-wrap gap-2" noValidate>
+                <label className="min-w-0 flex-1 text-sm">
+                    <span className="sr-only">Seu e-mail</span>
+                    <input type="email" value={data.email} onChange={(event) => setData('email', event.target.value)} placeholder="voce@exemplo.com.br" maxLength={160} autoComplete="email" required className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600" />
+                </label>
+                {/* Armadilha para robôs: escondido de pessoas e de leitores de tela. */}
+                <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
+                    <label>
+                        Não preencha
+                        <input tabIndex={-1} autoComplete="off" value={data.website} onChange={(event) => setData('website', event.target.value)} />
+                    </label>
+                </div>
+                <button type="submit" disabled={processing} className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-60">
+                    {processing ? 'Enviando…' : 'Inscrever'}
+                </button>
+            </form>
+            {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
+        </section>
+    );
 }
 
 /** Página pública de status da plataforma: situação geral, componentes com 90 dias, incidentes e manutenções. Atualiza sozinha a cada 30 s. */
@@ -173,6 +212,8 @@ export default function StatusPage({ status: initial, json_url }: { status: Stat
                         </article>
                     ))}
                 </section>
+
+                <SubscribeForm />
             </main>
         </div>
     );

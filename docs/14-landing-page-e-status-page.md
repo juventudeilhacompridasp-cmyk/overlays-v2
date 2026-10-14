@@ -34,7 +34,7 @@ Pedido de 14/10/2026: depois do Modo operador, **mapear** (não implementar aind
 
 ## 2. Status page
 
-> **Estado (14/10/2026): partes 1 e 2 entregues** — modelo, sondas, `status:probe`, incidentes automáticos e manuais, manutenções, painel do Super Admin, página pública, `status.json`, feed Atom e contingência estática opcional. **Falta a parte 3:** aviso por e-mail de incidentes, selo/widget para o portal e barra de manutenções no painel. Detalhes em `AGENTS.md`.
+> **Estado (14/10/2026): partes 1 e 2 entregues** — modelo, sondas, `status:probe`, incidentes automáticos e manuais, manutenções, painel do Super Admin, página pública, `status.json`, feed Atom e contingência estática opcional. **Parte 3 entregue:** inscrição por e-mail com dupla confirmação e aviso de incidentes/atualizações/manutenções, cancelamento em duas etapas, selo SVG (`/status/selo.svg`, no rodapé do portal sem white-label) e contagem de inscritos no painel da plataforma. Detalhes em `AGENTS.md`.
 
 **Objetivo:** transparência operacional para clientes (organizadores e operadores ao vivo): "o placar ao vivo e os overlays estão no ar?".
 

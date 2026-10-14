@@ -35,6 +35,7 @@ x-env: &env
   REVERB_SCALING_ENABLED: "true"
   # Status page (opcional): disco que recebe o retrato estático status/status.json (ex.: s3) e limites das sondagens.
   STATUS_PUBLISH_DISK: ${STATUS_PUBLISH_DISK:-}
+  STATUS_NOTIFY: ${STATUS_NOTIFY:-true}
   # Landing page do produto (opcional): e-mail que recebe os contatos e, se quiser a landing na raiz, os hosts dela.
   PLATFORM_CONTACT_EMAIL: ${PLATFORM_CONTACT_EMAIL:-}
   PLATFORM_LANDING_ROOT: ${PLATFORM_LANDING_ROOT:-false}

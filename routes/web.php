@@ -35,6 +35,11 @@ Route::middleware('throttle:60,1')->group(function () {
     Route::get('/status', [StatusPageController::class, 'index'])->name('status.index');
     Route::get('/status.json', [StatusPageController::class, 'json'])->name('status.json');
     Route::get('/status.atom', [StatusPageController::class, 'atom'])->name('status.atom');
+    Route::get('/status/selo.svg', [StatusPageController::class, 'badge'])->name('status.badge');
+    Route::post('/status/inscrever', [StatusPageController::class, 'subscribe'])->middleware('throttle:5,1')->name('status.subscribe');
+    Route::get('/status/confirmar/{token}', [StatusPageController::class, 'confirm'])->where('token', '[A-Za-z0-9]{40}')->name('status.confirm');
+    Route::get('/status/cancelar/{token}', [StatusPageController::class, 'unsubscribeShow'])->where('token', '[A-Za-z0-9]{40}')->name('status.unsubscribe.show');
+    Route::post('/status/cancelar/{token}', [StatusPageController::class, 'unsubscribe'])->where('token', '[A-Za-z0-9]{40}')->name('status.unsubscribe');
 });
 
 // Portal público (sem login): só edições publicadas.

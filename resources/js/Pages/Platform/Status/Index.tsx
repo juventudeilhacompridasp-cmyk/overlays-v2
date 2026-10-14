@@ -32,6 +32,8 @@ interface Props {
     impacts: Option[];
     states: { incident: Option[]; maintenance: Option[] };
     public_url: string;
+    badge_url: string;
+    subscribers: { confirmed: number; pending: number };
 }
 
 function UpdateForm({ incident, states }: { incident: IncidentRow; states: Option[] }) {
@@ -57,7 +59,7 @@ function UpdateForm({ incident, states }: { incident: IncidentRow; states: Optio
     );
 }
 
-export default function StatusAdmin({ summary, components, incidents, impacts, states, public_url }: Props) {
+export default function StatusAdmin({ summary, components, incidents, impacts, states, public_url, badge_url, subscribers }: Props) {
     const [maintenance, setMaintenance] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({ title: '', impact: 'minor', state: 'investigating', components: [] as string[], body: '', starts_at: '', ends_at: '' });
     const stateOptions = maintenance ? states.maintenance : states.incident;
@@ -85,6 +87,15 @@ export default function StatusAdmin({ summary, components, incidents, impacts, s
                         </li>
                     ))}
                 </ul>
+            </Card>
+
+            <Card title="Avisos por e-mail e selo" className="mb-6">
+                <p className="text-sm text-gray-700" data-testid="subscribers">
+                    <strong>{subscribers.confirmed}</strong> inscritos confirmados ({subscribers.pending} aguardando confirmação). Cada comunicado, atualização e incidente automático é enviado a eles; os e-mails são pedidos, confirmados e cancelados por eles mesmos na página pública.
+                </p>
+                <p className="mt-3 text-sm font-medium text-gray-700">Selo de status para outros sites (atualiza sozinho):</p>
+                <img src={badge_url} alt="Selo de status" className="mt-1 h-5" />
+                <pre className="mt-2 overflow-x-auto rounded-md bg-gray-100 p-3 text-xs text-gray-800">{`<a href="${public_url}"><img src="${badge_url}" alt="Status"></a>`}</pre>
             </Card>
 
             <Card title={maintenance ? 'Agendar manutenção' : 'Novo comunicado'} className="mb-6" actions={<Button variant="secondary" small onClick={() => switchKind(!maintenance)}>{maintenance ? 'Mudar para incidente' : 'Mudar para manutenção'}</Button>}>
