@@ -50,10 +50,18 @@ final class GameShareImage
             self::text($image, 26, 600, 590, $snapshot['venue'], $muted, 1100, true);
         }
 
-        ob_start();
-        imagepng($image);
-        $png = (string) ob_get_clean();
+        // Escreve antes de liberar a imagem para não manter o buffer PNG e o bitmap GD na memória ao mesmo tempo.
+        $temporary = tempnam(sys_get_temp_dir(), 'game-share-');
+        if ($temporary === false) {
+            imagedestroy($image);
+
+            return '';
+        }
+
+        imagepng($image, $temporary);
         imagedestroy($image);
+        $png = (string) file_get_contents($temporary);
+        unlink($temporary);
 
         return $png;
     }
