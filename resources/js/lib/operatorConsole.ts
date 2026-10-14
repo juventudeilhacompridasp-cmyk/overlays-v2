@@ -20,6 +20,7 @@ export const OPERATOR_SCREENS: { key: string; label: string; needsGame: boolean 
     { key: 'summary', label: 'Resumo', needsGame: true },
     { key: 'bracket', label: 'Chaveamento', needsGame: true },
     { key: 'stats', label: 'Estatísticas', needsGame: true },
+    { key: 'shootout', label: 'Pênaltis', needsGame: true },
     { key: 'cartela', label: 'Cartela', needsGame: false },
     { key: 'social', label: 'Redes sociais', needsGame: false },
     { key: 'sponsor_bar', label: 'Barra 1500x200', needsGame: false },

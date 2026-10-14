@@ -22,5 +22,6 @@ Use **Anular** no lançamento. Ele cria um evento compensatório: o histórico �
 - **Resultado rápido**: lança só o placar, sem súmula (não existe no vôlei nem no mata-mata).
 - **W.O.**: registre pelo jogo; o placar segue o regulamento do esporte.
 - **Mata-mata empatado**: o jogo decisivo não encerra empatado sem a disputa de pênaltis.
+- **Disputa de pênaltis cobrança a cobrança**: no cartão *Disputa de pênaltis* lance cada cobrança na ordem em que acontece (**converteu** ou **perdeu**). A primeira cobrança pode ser de qualquer equipe; depois as equipes se alternam e o botão da equipe que não cobra fica desativado. A disputa fecha sozinha quando há vencedor (nas cinco primeiras cobranças de cada lado, quando o outro lado não alcança mais; depois, na morte súbita, ao fim de cada rodada). **Desfazer a última cobrança** corrige um lançamento errado. O cobrador não é registrado. Se preferir, ainda dá para lançar só o total de convertidos; o total e a disputa cobrança a cobrança não se misturam (salve o total em branco para limpar). As bolinhas aparecem no placar do OBS e na tela *Disputa de pênaltis*.
 
 > Sem internet? Veja [a súmula offline](help:sumula-offline).

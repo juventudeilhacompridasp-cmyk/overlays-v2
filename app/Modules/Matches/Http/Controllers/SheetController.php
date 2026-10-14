@@ -11,9 +11,11 @@ use App\Modules\Matches\Actions\ChangeGamePeriod;
 use App\Modules\Matches\Actions\FinishGame;
 use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Actions\RecordShootout;
+use App\Modules\Matches\Actions\RecordShootoutKick;
 use App\Modules\Matches\Actions\ResetShotClock;
 use App\Modules\Matches\Actions\SaveGameLineup;
 use App\Modules\Matches\Actions\SyncSheetCommands;
+use App\Modules\Matches\Actions\UndoShootoutKick;
 use App\Modules\Matches\Actions\VoidGameEvent;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\LineupSlot;
@@ -23,6 +25,7 @@ use App\Modules\Matches\Http\Requests\GamePeriodRequest;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Support\PublicGameSnapshot;
+use App\Modules\Matches\Support\ShootoutView;
 use App\Modules\Matches\Support\TeamTimeouts;
 use App\Modules\Rules\Tactics\Formations;
 use App\Modules\Teams\Enums\RosterRole;
@@ -155,6 +158,7 @@ class SheetController extends Controller
                 'knockout' => $game->stage->type === StageType::Knockout,
                 'home_penalties' => $game->home_penalties,
                 'away_penalties' => $game->away_penalties,
+                'shootout' => ShootoutView::for($game),
                 'stage_id' => $game->stage_id,
                 'stage' => $game->stage->name,
                 'division' => $division->name,
@@ -336,6 +340,35 @@ class SheetController extends Controller
         }
 
         return back()->with('success', 'Pênaltis registrados.');
+    }
+
+    /** Uma cobrança da disputa de pênaltis (convertida ou perdida), na ordem em que acontece. */
+    public function shootoutKick(Request $request, Game $game, RecordShootoutKick $record): RedirectResponse
+    {
+        $validated = $request->validate([
+            'side' => ['required', 'string', 'in:home,away'],
+            'scored' => ['required', 'boolean'],
+        ]);
+
+        try {
+            $record->handle($game, $validated['side'], (bool) $validated['scored'], $request->user()?->getAuthIdentifier());
+        } catch (InvalidArgumentException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return back();
+    }
+
+    /** Desfaz a última cobrança da disputa. */
+    public function undoShootoutKick(Request $request, Game $game, UndoShootoutKick $undo): RedirectResponse
+    {
+        try {
+            $undo->handle($game, $request->user()?->getAuthIdentifier());
+        } catch (InvalidArgumentException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return back();
     }
 
     public function finish(Game $game, FinishGame $finish): RedirectResponse

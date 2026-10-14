@@ -4,6 +4,7 @@ import './artFonts';
 import { LowerThirdBannerData, LowerThirdSettings } from './lowerThird';
 import { useEffect, useRef, useState } from 'react';
 import type { BarLook, SponsorItem, SponsorLook } from './sponsorLook';
+import type { ShootoutData } from './shootout';
 import type { StatsState } from './statsLook';
 
 export interface OverlayTeam {
@@ -74,6 +75,7 @@ export interface OverlayGame {
     sets: { home: number; away: number; winner: 'home' | 'away' | null; finished: boolean }[] | null;
     fouls: { home: number; away: number; limit: number; period: number } | null;
     timeouts: { home: number; away: number; limit: number; period: number } | null;
+    shootout: ShootoutData | null;
     goals: { side: 'home' | 'away' | null; player: string | null; minute: number | null; own_goal: boolean }[];
 }
 
@@ -142,7 +144,7 @@ export interface OverlayState {
     stoppage: number;
     serve: 'home' | 'away' | null;
     social: { items: { label: string; value: string }[]; url: string | null };
-    screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean; social: boolean; sponsor_bar: boolean; stats: boolean };
+    screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean; social: boolean; sponsor_bar: boolean; stats: boolean; shootout: boolean };
     stats: StatsState | null;
     custom_live: Record<string, boolean>;
     custom_table: { position: number; team: string; points: number; played: number; won: number; drawn: number; lost: number; goal_difference: number }[] | null;
