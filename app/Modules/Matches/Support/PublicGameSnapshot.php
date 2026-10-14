@@ -179,7 +179,7 @@ final class PublicGameSnapshot
             ->map(fn (GameEvent $event): array => [
                 'type' => $event->type->value,
                 'period' => (int) $event->period,
-                'at_ms' => $event->created_at?->getTimestampMs() ?? 0,
+                'at_ms' => $event->created_at->getTimestampMs(),
                 'seconds' => isset($event->payload['seconds']) ? (int) $event->payload['seconds'] : null,
             ])->all();
 
