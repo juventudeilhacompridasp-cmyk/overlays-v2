@@ -224,11 +224,12 @@ return [
                     'person_id' => ['type' => 'string'],
                 ]],
                 'stoppage_minutes' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 15, 'description' => 'Acréscimos mostrados ao lado do relógio do placar (0 remove). Trocar o jogo no ar zera.'],
-                'screens_live' => ['type' => 'object', 'description' => 'Mostra (true) ou oculta (false) ao vivo as telas extras: `pregame` (cartela pré-jogo), `compare` (comparativo de equipes) e `cartela` (cartela de transmissão).', 'additionalProperties' => ['type' => 'boolean']],
+                'screens_live' => ['type' => 'object', 'description' => 'Mostra (true) ou oculta (false) ao vivo as telas extras: `pregame` (cartela pré-jogo), `compare` (comparativo de equipes), `cartela` (cartela de transmissão), `summary` (resumo do jogo) e `bracket` (chaveamento do mata-mata).', 'additionalProperties' => ['type' => 'boolean']],
                 'screen_settings' => ['type' => 'object', 'description' => 'Texto da cartela de transmissão. `minutes` (0 a 180) inicia uma contagem regressiva; 0 a remove.', 'properties' => [
                     'title' => ['type' => 'string', 'maxLength' => 60],
                     'subtitle' => ['type' => 'string', 'maxLength' => 80],
                     'minutes' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 180],
+                    'mvp_person_id' => ['type' => ['string', 'null'], 'description' => 'Craque do jogo (atleta da escalação) mostrado no resumo; vale só para o jogo no ar.'],
                 ]],
                 'championship_live' => ['type' => 'object', 'description' => 'Mostra (true) ou oculta (false) ao vivo as telas de campeonato abertas com `live=1` na URL. Chaves: standings, fixtures, results, scorers, discipline, matchcard, ticker, champion.', 'additionalProperties' => ['type' => 'boolean']],
                 'appearance' => ['type' => 'object', 'properties' => [

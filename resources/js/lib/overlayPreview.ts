@@ -14,7 +14,7 @@ export interface OverlayPreviewStatus {
     description: string;
 }
 
-const EXTRA_SCREENS: Record<string, string> = { prejogo: 'pregame', comparativo: 'compare', cartela: 'cartela' };
+const EXTRA_SCREENS: Record<string, string> = { prejogo: 'pregame', comparativo: 'compare', cartela: 'cartela', resumo: 'summary', chaveamento: 'bracket' };
 
 export function overlayPreviewStatus(slug: string, hasGame: boolean, layers: OverlayPreviewLayers): OverlayPreviewStatus {
     const extra = EXTRA_SCREENS[slug];

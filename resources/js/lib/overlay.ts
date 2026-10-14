@@ -79,6 +79,14 @@ export interface LineupPublicSettings {
     anchor_ms: number;
 }
 
+export interface BracketSide {
+    name: string;
+    short: string | null;
+    logo: string | null;
+    score: number | null;
+    winner: boolean;
+}
+
 export interface OverlayState {
     channel: string;
     appearance: OverlayAppearance;
@@ -89,8 +97,18 @@ export interface OverlayState {
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     championship: Record<string, boolean>;
     stoppage: number;
-    screens: { pregame: boolean; compare: boolean; cartela: boolean };
+    screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean };
     cartela: { title: string; subtitle: string; until_ms: number | null };
+    summary: {
+        headline: string;
+        cards: { side: 'home' | 'away'; kind: string; player: string | null; minute: number | null }[] | null;
+        mvp: { name: string; shirt: number | null; team: string | null; side: 'home' | 'away' | null } | null;
+    } | null;
+    bracket: {
+        title: string;
+        rounds: { label: string; ties: { a: BracketSide; b: BracketSide; decided: boolean; live: boolean; penalties: { a: number; b: number } | null }[] }[];
+        champion: string | null;
+    } | null;
     compare: {
         standings: { title: string; home: { position: number; points: number; played: number; of: number } | null; away: { position: number; points: number; played: number; of: number } | null } | null;
         form: { home: string[]; away: string[] } | null;

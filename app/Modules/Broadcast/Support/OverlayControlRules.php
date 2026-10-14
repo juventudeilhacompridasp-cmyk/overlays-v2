@@ -23,6 +23,7 @@ final class OverlayControlRules
             'screen_settings' => ['sometimes', 'array'],
             'screen_settings.title' => ['sometimes', 'nullable', 'string', 'max:60'],
             'screen_settings.subtitle' => ['sometimes', 'nullable', 'string', 'max:80'],
+            'screen_settings.mvp_person_id' => ['sometimes', 'nullable', 'string', 'max:40'],
             'screen_settings.minutes' => ['sometimes', 'nullable', 'integer', 'between:0,180'],
             'championship_live' => ['sometimes', 'array'],
             'championship_live.*' => ['boolean'],

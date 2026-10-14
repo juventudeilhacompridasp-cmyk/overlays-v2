@@ -34,6 +34,10 @@ local, horário e contagem regressiva para o início), **Comparativo de equipes*
 direto — os mesmos dados e interruptores do portal) e **Cartela de transmissão** (tela cheia: “Começamos em breve”, “Intervalo”, “Voltamos
 já”, “Fim da transmissão”, com contagem regressiva opcional e os patrocinadores). Todas começam ocultas e o clique em *Mostrar* vale na hora.
 
+Também em **Telas extras**: **Resumo do jogo** (título “Intervalo”/“Fim de jogo”, placar, autores dos gols, cartões — só se a organização liberar
+*Cartões* no portal — e o **craque do jogo**, escolhido por você entre os atletas da escalação) e **Chaveamento do mata-mata** (confrontos por rodada com
+placar agregado, vencedor em destaque, pênaltis e campeão; vale também a partir de um jogo da fase de pontos corridos, se a divisão tiver mata-mata).
+
 ### Gols sob o placar e acréscimos
 Em *Visual do overlay*, **Mostrar autores dos gols sob o placar** lista os goleadores de cada lado (“Rafa 12', 55'”), por nome público. Em
 *Acréscimos no relógio* (coluna Ao vivo) escolha de +1 a +8: o número aparece junto ao relógio enquanto o jogo corre e zera ao trocar o jogo.

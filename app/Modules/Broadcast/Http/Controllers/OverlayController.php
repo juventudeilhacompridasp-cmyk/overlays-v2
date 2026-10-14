@@ -24,6 +24,8 @@ class OverlayController extends Controller
         'prejogo' => 'Overlay/Pregame',
         'comparativo' => 'Overlay/Compare',
         'cartela' => 'Overlay/Cartela',
+        'resumo' => 'Overlay/Summary',
+        'chaveamento' => 'Overlay/Bracket',
     ];
 
     public function show(OverlayChannel $channel, string $overlay): Response

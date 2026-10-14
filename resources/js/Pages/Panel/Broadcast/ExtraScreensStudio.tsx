@@ -1,4 +1,4 @@
-import { Button, Field, Input } from '@/Components/Panel/ui';
+import { Button, Field, Input, Select } from '@/Components/Panel/ui';
 import { useEffect, useState } from 'react';
 
 interface CartelaSettings {
@@ -7,11 +7,20 @@ interface CartelaSettings {
     until_ms: number | null;
 }
 
-type Patch = (data: { screens_live?: Record<string, boolean>; screen_settings?: { title?: string; subtitle?: string; minutes?: number } }) => void;
+interface Person {
+    id: string;
+    name: string;
+    shirt: number | null;
+    team: string;
+}
+
+type Patch = (data: { screens_live?: Record<string, boolean>; screen_settings?: { title?: string; subtitle?: string; minutes?: number; mvp_person_id?: string | null } }) => void;
 
 const SCREENS: { key: string; label: string; hint: string; needsGame: boolean }[] = [
     { key: 'pregame', label: 'Cartela pré-jogo', hint: 'Escudos, competição, local, horário e contagem regressiva para o início.', needsGame: true },
     { key: 'compare', label: 'Comparativo de equipes', hint: 'Posição na tabela, forma recente e confronto direto.', needsGame: true },
+    { key: 'summary', label: 'Resumo do jogo', hint: 'Intervalo ou fim: placar, gols, cartões (se liberados) e craque do jogo.', needsGame: true },
+    { key: 'bracket', label: 'Chaveamento do mata-mata', hint: 'Confrontos por rodada, placares, vencedor e campeão.', needsGame: true },
     { key: 'cartela', label: 'Cartela de transmissão', hint: 'Tela cheia com título, contagem e patrocinadores.', needsGame: false },
 ];
 
@@ -22,10 +31,11 @@ const PRESETS: { label: string; title: string; subtitle: string; minutes: number
     { label: 'Fim da transmissão', title: 'Obrigado por assistir', subtitle: 'Até o próximo jogo', minutes: 0 },
 ];
 
-export default function ExtraScreensStudio({ channelId, screens, settings, hasGame, canOperate, patch }: { channelId: string; screens: Record<string, boolean>; settings: CartelaSettings; hasGame: boolean; canOperate: boolean; patch: Patch }) {
+export default function ExtraScreensStudio({ channelId, screens, settings, people, hasGame, canOperate, patch }: { channelId: string; screens: Record<string, boolean>; settings: CartelaSettings; people: Person[]; hasGame: boolean; canOperate: boolean; patch: Patch }) {
     const [title, setTitle] = useState(settings.title);
     const [subtitle, setSubtitle] = useState(settings.subtitle);
     const [minutes, setMinutes] = useState(0);
+    const [mvp, setMvp] = useState('');
 
     useEffect(() => {
         setTitle(settings.title);
@@ -54,6 +64,20 @@ export default function ExtraScreensStudio({ channelId, screens, settings, hasGa
                     })}
                 </div>
                 {!hasGame && <p className="mt-2 text-xs text-gray-500">Escolha um jogo no ar para liberar o pré-jogo e o comparativo.</p>}
+            </div>
+
+            <div className="rounded-lg border border-gray-200 p-4">
+                <div className="mb-1 font-medium text-gray-900">Craque do jogo</div>
+                <p className="mb-3 text-xs text-gray-500">Aparece no resumo do jogo. Vale só para o jogo no ar; trocar o jogo limpa a escolha.</p>
+                <div className="flex flex-wrap items-end gap-2">
+                    <Field label="Atleta" htmlFor={`mvp-${channelId}`}>
+                        <Select id={`mvp-${channelId}`} disabled={!canOperate || !hasGame} value={mvp} onChange={(event) => setMvp(event.target.value)}>
+                            <option value="">Nenhum</option>
+                            {people.map((item) => <option key={item.id} value={item.id}>{`${item.shirt ?? '–'} · ${item.name} (${item.team})`}</option>)}
+                        </Select>
+                    </Field>
+                    <Button small disabled={!canOperate || !hasGame} onClick={() => patch({ screen_settings: { mvp_person_id: mvp || null } })}>Definir</Button>
+                </div>
             </div>
 
             <div className="rounded-lg border border-gray-200 p-4">

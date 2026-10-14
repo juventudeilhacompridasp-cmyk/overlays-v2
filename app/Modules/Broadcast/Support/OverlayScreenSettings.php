@@ -8,15 +8,15 @@ namespace App\Modules\Broadcast\Support;
  */
 final class OverlayScreenSettings
 {
-    /** @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int} */
+    /** @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int, mvp: string|null} */
     public static function defaults(): array
     {
-        return ['title' => 'Começamos em breve', 'subtitle' => '', 'until_ms' => null, 'stoppage' => 0];
+        return ['title' => 'Começamos em breve', 'subtitle' => '', 'until_ms' => null, 'stoppage' => 0, 'mvp' => null];
     }
 
     /**
      * @param  array<string, mixed>|null  $settings
-     * @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int}
+     * @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int, mvp: string|null}
      */
     public static function normalize(?array $settings): array
     {
@@ -28,6 +28,7 @@ final class OverlayScreenSettings
             'subtitle' => mb_substr(trim((string) $values['subtitle']), 0, 80),
             'until_ms' => $until,
             'stoppage' => is_numeric($values['stoppage']) ? min(15, max(0, (int) $values['stoppage'])) : 0,
+            'mvp' => is_string($values['mvp']) && $values['mvp'] !== '' ? mb_substr($values['mvp'], 0, 40) : null,
         ];
     }
 
@@ -36,11 +37,15 @@ final class OverlayScreenSettings
      *
      * @param  array<string, mixed>|null  $current
      * @param  array<string, mixed>  $command
-     * @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int}
+     * @return array{title: string, subtitle: string, until_ms: int|null, stoppage: int, mvp: string|null}
      */
     public static function apply(?array $current, array $command, int $nowMs): array
     {
         $next = array_merge(self::normalize($current), array_intersect_key($command, ['title' => 1, 'subtitle' => 1]));
+
+        if (array_key_exists('mvp_person_id', $command)) {
+            $next['mvp'] = is_string($command['mvp_person_id']) && $command['mvp_person_id'] !== '' ? $command['mvp_person_id'] : null;
+        }
 
         if (array_key_exists('minutes', $command)) {
             $minutes = is_numeric($command['minutes']) ? (int) $command['minutes'] : 0;
