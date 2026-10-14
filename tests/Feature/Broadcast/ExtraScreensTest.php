@@ -49,7 +49,7 @@ it('lets the operator show and hide the screens, ignores unknown ones and tells 
     $this->patch("/painel/broadcast/{$channel->id}", ['screens_live' => ['cartela' => false]])->assertSessionHasNoErrors();
 
     $live = $channel->fresh()->screensLive();
-    expect($live)->toBe(['pregame' => true, 'compare' => false, 'cartela' => false, 'summary' => false, 'bracket' => false, 'social' => false, 'sponsor_bar' => false])
+    expect($live)->toBe(['pregame' => true, 'compare' => false, 'cartela' => false, 'summary' => false, 'bracket' => false, 'social' => false, 'sponsor_bar' => false, 'stats' => false])
         ->and($channel->fresh()->layerStates())->toBe(['lineup' => false, 'standings' => false, 'scoreboard' => true, 'lower_third' => true]);
     Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['screens']['pregame'] === true);
 
