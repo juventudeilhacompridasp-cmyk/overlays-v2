@@ -293,7 +293,7 @@ describe('result, table and sheet', function () {
             ->where('clock.max_period', 8)
             ->where('clock.pausable', true)
             ->where('home.player_fouls', [$hp[0] => 1])
-            ->where('event_types', fn ($types) => collect($types)->pluck('value')->all() === ['field_goal', 'three_pointer', 'free_throw', 'foul', 'substitution']));
+            ->where('event_types', fn ($types) => collect($types)->pluck('value')->all() === ['field_goal', 'three_pointer', 'free_throw', 'foul', 'technical_foul', 'unsportsmanlike_foul', 'substitution']));
     });
 
     it('records a basket from the sheet pad request', function () {
