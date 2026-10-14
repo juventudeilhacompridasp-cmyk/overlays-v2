@@ -32,7 +32,7 @@ final class SaveOverlaySponsor
         $path = $old;
 
         if ($logo !== null) {
-            $organizationId = $sponsor?->organization_id ?? CurrentOrganization::id();
+            $organizationId = $sponsor !== null ? $sponsor->organization_id : CurrentOrganization::id();
             $path = ImageStore::save(self::DISK, "organizations/{$organizationId}/sponsors", 'logo', $logo, [
                 'full' => ['size' => OverlaySponsor::SIZES['full'], 'fit' => 'contain'],
                 'thumb' => ['size' => OverlaySponsor::SIZES['thumb'], 'fit' => 'contain'],
