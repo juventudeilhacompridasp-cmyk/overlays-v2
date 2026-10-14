@@ -133,6 +133,8 @@ final class OverlayControlRules
             'lineup_settings.formation_seconds' => ['sometimes', 'integer', 'between:3,30'],
             'lineup_settings.full_individuals' => ['sometimes', 'boolean'],
             'lineup_settings.transition' => ['sometimes', 'string', Rule::in(OverlayLineupSettings::TRANSITIONS)],
+            'lineup_settings.package_animation' => ['sometimes', 'string', Rule::in(OverlayLineupSettings::PACKAGE_ANIMATIONS)],
+            'lineup_settings.motion_speed' => ['sometimes', 'integer', 'between:50,200'],
             'lineup_settings.team' => ['sometimes', 'string', Rule::in(OverlayLineupSettings::TEAMS)],
             'lineup_settings.individual_mode' => ['sometimes', 'string', Rule::in(OverlayLineupSettings::INDIVIDUAL_MODES)],
             'lineup_settings.individual_seconds' => ['sometimes', 'integer', 'between:3,30'],

@@ -3,7 +3,8 @@ import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
 import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent, useEffect, useState } from 'react';
-import { LINEUP_TRANSITIONS, LineupTransition } from '@/lib/lineupStage';
+import { activeMotionPreset, LINEUP_MOTION_PRESETS } from '@/lib/lineupMotion';
+import { LINEUP_TRANSITIONS, LineupTransition, PACKAGE_ANIMATIONS, PackageAnimation } from '@/lib/lineupStage';
 import { LINEUP_ANIMATIONS, LINEUP_LAYOUTS, LINEUP_STYLES, LineupAnimation, LineupLayout, LineupStyle } from '@/lib/lineupSkin';
 import { LowerThirdSettings } from '@/lib/lowerThird';
 import { BAR_TRANSITIONS, BarTransition, SPONSOR_ANIMATIONS, SPONSOR_FORMATS, SPONSOR_STYLES, SponsorAnimation, SponsorFormat, SponsorStyle } from '@/lib/sponsorLook';
@@ -76,6 +77,8 @@ interface LineupSettings {
     formation_seconds: number;
     full_individuals: boolean;
     transition: LineupTransition;
+    package_animation: PackageAnimation;
+    motion_speed: number;
     photo_person_ids: string[];
     team: 'home' | 'away';
     individual_mode: 'auto' | 'manual';
@@ -583,7 +586,7 @@ function ChannelCard({ channel, defaults, games, fonts, scenes, sceneLimit, seas
                     {!['cards', 'individual', 'show', 'full'].includes(lineupSettings.presentation) && (
                         <label className="mt-3 flex items-center gap-2 text-sm text-gray-700">
                             <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={lineupSettings.sponsor_banner} onChange={(event) => setLineupSettings({ ...lineupSettings, sponsor_banner: event.target.checked })} />
-                            Mostrar a faixa de patrocinador integrada (fixa por baixo da lista e do esquema)
+                            Mostrar a barra de patrocinadores 1500 x 200 por baixo (um banner por vez, em loop)
                         </label>
                     )}
 
@@ -632,7 +635,7 @@ function ChannelCard({ channel, defaults, games, fonts, scenes, sceneLimit, seas
                             )}
                             <label className="flex items-center gap-2 text-sm text-gray-700">
                                 <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={lineupSettings.sponsor_banner} onChange={(event) => setLineupSettings({ ...lineupSettings, sponsor_banner: event.target.checked })} />
-                                Mostrar a faixa de patrocinador no rodapé
+                                Mostrar a barra de patrocinadores 1500 x 200 por baixo (um banner por vez, em loop)
                             </label>
                             {lineupSettings.presentation !== 'cards' && canOperate && (
                                 <div className="rounded-md bg-gray-50 p-3">
@@ -694,6 +697,26 @@ function ChannelCard({ channel, defaults, games, fonts, scenes, sceneLimit, seas
                                     {LINEUP_STYLES.map((item) => <option key={item.key} value={item.key}>{item.label} — {item.hint}</option>)}
                                 </Select>
                             </Field>
+                            <div className="sm:col-span-2" role="group" aria-label="Pacotes de animação" data-testid="lineup-motion-presets">
+                                <div className="mb-1 text-sm font-medium text-gray-700">Pacote de animação (muda tudo de uma vez; depois ajuste cada item)</div>
+                                <div className="grid gap-2 sm:grid-cols-3">
+                                    {LINEUP_MOTION_PRESETS.map((item) => (
+                                        <button key={item.key} type="button" disabled={!canOperate} aria-pressed={activeMotionPreset(lineupSettings) === item.key} onClick={() => setLineupSettings({ ...lineupSettings, ...item.settings })}
+                                            className={`rounded-lg border p-2 text-left text-sm ${activeMotionPreset(lineupSettings) === item.key ? 'border-teal-600 bg-teal-50 text-teal-900' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                            <div className="font-semibold">{item.label}</div>
+                                            <div className="text-xs text-gray-500">{item.hint}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <Field label="Entrada e saída do pacote inteiro (ao mostrar/ocultar a escalação)" htmlFor={`lineup-package-${channel.id}`}>
+                                <Select id={`lineup-package-${channel.id}`} disabled={!canOperate} value={lineupSettings.package_animation} onChange={(event) => setLineupSettings({ ...lineupSettings, package_animation: event.target.value as PackageAnimation })}>
+                                    {PACKAGE_ANIMATIONS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+                                </Select>
+                            </Field>
+                            <Field label={`Velocidade das animações · ${lineupSettings.motion_speed}%`} htmlFor={`lineup-speed-${channel.id}`}>
+                                <Input id={`lineup-speed-${channel.id}`} type="range" min="50" max="200" step="10" disabled={!canOperate} value={lineupSettings.motion_speed} onChange={(event) => setLineupSettings({ ...lineupSettings, motion_speed: Number(event.target.value) })} />
+                            </Field>
                             <Field label="Animação entre as etapas (cartões → esquema → jogadores)" htmlFor={`lineup-transition-${channel.id}`}>
                                 <Select id={`lineup-transition-${channel.id}`} disabled={!canOperate} value={lineupSettings.transition} onChange={(event) => setLineupSettings({ ...lineupSettings, transition: event.target.value as LineupTransition })}>
                                     {LINEUP_TRANSITIONS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
@@ -714,7 +737,7 @@ function ChannelCard({ channel, defaults, games, fonts, scenes, sceneLimit, seas
                                 <Input id={`lineup-radius-${channel.id}`} type="range" min="0" max="40" disabled={!canOperate} value={lineupSettings.radius ?? 12} onChange={(event) => setLineupSettings({ ...lineupSettings, radius: Number(event.target.value) })} />
                                 {lineupSettings.radius !== null && canOperate && <button type="button" className="mt-1 text-xs text-teal-700 underline" onClick={() => setLineupSettings({ ...lineupSettings, radius: null })}>Voltar ao automático</button>}
                             </Field>
-                            <Field label={`Faixa de patrocinadores · ${lineupSettings.sponsor_size}%`} htmlFor={`lineup-sponsor-size-${channel.id}`}>
+                            <Field label={`Barra de patrocinadores (1500 x 200) · ${lineupSettings.sponsor_size}%`} htmlFor={`lineup-sponsor-size-${channel.id}`}>
                                 <Input id={`lineup-sponsor-size-${channel.id}`} type="range" min="60" max="180" step="5" disabled={!canOperate} value={lineupSettings.sponsor_size} onChange={(event) => setLineupSettings({ ...lineupSettings, sponsor_size: Number(event.target.value) })} />
                             </Field>
                             <label className="flex items-center gap-2 text-sm text-gray-700 sm:col-span-2">

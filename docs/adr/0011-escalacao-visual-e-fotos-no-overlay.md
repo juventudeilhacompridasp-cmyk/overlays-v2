@@ -38,6 +38,13 @@ depois o esquema tático, com escolha explícita de quais fotos podem aparecer, 
 - Mudanças de formação e posição feitas pelo gestor chegam ao overlay pelo estado já existente; notas privadas continuam fora.
 - Novos modos de apresentação devem ampliar `lineup_settings` de forma compatível e manter um fallback sem fotos.
 
+## Adendo — barra 1500 x 200 integrada e animações do pacote
+
+A faixa de patrocínio da escalação passou a ser a barra de 1500 x 200 (`SponsorBarCard`, a mesma da tela `barra-patrocinio`): um banner por vez,
+todos em loop, com a moldura e a transição de `sponsor_settings.bar_*`. `lineup_settings.package_animation` (`none` ou uma das oito animações) é a
+entrada e a saída do pacote inteiro, `motion_speed` (50–200 %) escala todas as animações e `transition` ganhou `rise`, `curtain` e `split`.
+`lib/lineupMotion.ts` guarda os pacotes de animação prontos; são só atalhos (gravam `animation`, `transition` e `package_animation`).
+
 ## Adendo — apresentação completa e palco com transições
 
 `lineup_settings.presentation = full` junta, para a equipe escolhida, a grade de cartões, o esquema tático (`FormationCard`: campo/quadra e

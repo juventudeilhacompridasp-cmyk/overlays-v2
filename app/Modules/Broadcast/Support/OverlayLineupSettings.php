@@ -12,7 +12,10 @@ final class OverlayLineupSettings
     public const PRESENTATIONS = ['sequence', 'list', 'formation', 'cards', 'individual', 'show', 'full'];
 
     /** Animação de troca entre as etapas da apresentação por equipe (a que sai e a que entra). */
-    public const TRANSITIONS = ['fade', 'slide', 'wipe', 'zoom', 'flip'];
+    public const TRANSITIONS = ['fade', 'slide', 'rise', 'wipe', 'curtain', 'split', 'zoom', 'flip'];
+
+    /** Entrada e saída do pacote inteiro (cartões, esquema, jogadores e faixa de patrocinadores) quando a camada liga e desliga. */
+    public const PACKAGE_ANIMATIONS = ['none', 'fade', 'slide', 'rise', 'wipe', 'curtain', 'split', 'zoom', 'flip'];
 
     public const TEAMS = ['home', 'away'];
 
@@ -42,6 +45,8 @@ final class OverlayLineupSettings
             'formation_seconds' => 8,
             'full_individuals' => true,
             'transition' => 'slide',
+            'package_animation' => 'fade',
+            'motion_speed' => 100,
             'photo_person_ids' => [],
             'team' => 'home',
             'individual_mode' => 'auto',
@@ -84,6 +89,8 @@ final class OverlayLineupSettings
             'formation_seconds' => min(30, max(3, $number($values['formation_seconds'], $defaults['formation_seconds']))),
             'full_individuals' => (bool) $values['full_individuals'],
             'transition' => $choice($values['transition'], self::TRANSITIONS, $defaults['transition']),
+            'package_animation' => $choice($values['package_animation'], self::PACKAGE_ANIMATIONS, $defaults['package_animation']),
+            'motion_speed' => min(200, max(50, $number($values['motion_speed'], 100))),
             'photo_person_ids' => array_values(array_unique(array_filter($ids, 'is_string'))),
             'team' => $choice($values['team'], self::TEAMS, $defaults['team']),
             'individual_mode' => $choice($values['individual_mode'], self::INDIVIDUAL_MODES, $defaults['individual_mode']),
