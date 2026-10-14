@@ -30,6 +30,7 @@ final class RecordGameEvent
         GameEventType::Goal, GameEventType::OwnGoal, GameEventType::YellowCard, GameEventType::RedCard,
         GameEventType::BlueCard, GameEventType::Substitution, GameEventType::Foul, GameEventType::Point,
         GameEventType::FreeThrow, GameEventType::FieldGoal, GameEventType::ThreePointer, GameEventType::Timeout,
+        GameEventType::TechnicalFoul, GameEventType::UnsportsmanlikeFoul,
     ];
 
     /** @param  Carbon|null  $at  quando o lance aconteceu (lançamento vindo da fila offline); padrão: agora */
@@ -39,7 +40,7 @@ final class RecordGameEvent
             throw new InvalidArgumentException('Este tipo de lançamento não é suportado na súmula.');
         }
 
-        if ($type === GameEventType::Foul && ! $game->sport()->profile()->tracksTeamFouls()) {
+        if ($type->isPersonalFoul() && ! $game->sport()->profile()->tracksTeamFouls()) {
             throw new InvalidArgumentException('Este esporte não registra faltas na súmula.');
         }
 
@@ -110,7 +111,7 @@ final class RecordGameEvent
         });
 
         // Falta não muda o placar: transmite o contador explicitamente.
-        if ($type === GameEventType::Foul) {
+        if ($type->isPersonalFoul()) {
             event(GameUpdated::for($game));
         }
 

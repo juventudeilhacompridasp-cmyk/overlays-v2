@@ -19,7 +19,7 @@ export interface Option {
 
 export type RulesData = {
     points: { win: number; draw: number; loss: number; walkover_loss: number | null };
-    fouls: { max_player: number | null };
+    fouls: { max_player: number | null; max_disqualifying: number };
     tiebreakers: string[];
     cards: {
         yellow_for_suspension: number;
