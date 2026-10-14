@@ -242,8 +242,9 @@ export function buildArt(style: ArtStyle, data: ArtData, W: number, H: number, a
     // ── rodapé e faixa de transmissão (desenhados antes: definem o limite de baixo) ──────
     const footerH = style.elements.footer && (style.text.footer !== '' || style.text.hashtag !== '') ? 5 * u * S : 0;
     const showBroadcast = style.elements.broadcast;
-    const hasBadge = showBroadcast && style.broadcast.platform !== 'none';
-    const broadcastH = showBroadcast ? ((hasBadge ? 5.5 : 0) + (style.broadcast.label !== '' ? 5.8 : 0) + (style.broadcast.channel !== '' ? 3.6 : 0)) * u * S : 0;
+    const badgeSrc = style.broadcast.badge ? (assets[style.broadcast.badge] ?? null) : null;
+    const hasBadge = showBroadcast && (badgeSrc !== null || style.broadcast.platform !== 'none');
+    const broadcastH = showBroadcast ? ((hasBadge ? (badgeSrc ? 6.5 : 5.5) : 0) + (style.broadcast.label !== '' ? 5.8 : 0) + (style.broadcast.channel !== '' ? 3.6 : 0)) * u * S : 0;
     const bottom = y0 + CH - footerH - broadcastH;
 
     if (footerH > 0) {
@@ -260,7 +261,13 @@ export function buildArt(style: ArtStyle, data: ArtData, W: number, H: number, a
 
     if (showBroadcast && broadcastH > 0) {
         let by = bottom + 0.6 * u;
-        if (hasBadge) {
+        if (hasBadge && badgeSrc) {
+            // Selo próprio (imagem da organização): cabe numa caixa larga, sem distorcer.
+            const bh = 5 * u * S;
+            const bw = 22 * u * S;
+            ops.push({ t: 'image', src: badgeSrc, x: left ? x0 : x0 + CW / 2 - bw / 2, y: by, w: bw, h: bh });
+            by += 6.5 * u * S;
+        } else if (hasBadge) {
             const badge = PLATFORM_BADGES[style.broadcast.platform];
             const bh = 4 * u * S;
             const bw = (style.broadcast.platform === 'youtube' ? 13 : 10.5) * u * S;
