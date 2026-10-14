@@ -7,7 +7,7 @@ Fonte: repositório `juventudeilhacompridasp-cmyk/overlays` (Overlay Studio: `pu
 | Overlay antigo (`layer=`) | Equivalente aqui | Estado |
 |---|---|---|
 | `scoreboard` (placar) | `/overlay/{token}/placar` | ✅ (2.1) |
-| `event` (gols, cartões, substituições, gol contra) | `/overlay/{token}/eventos` (lower thirds, ADR 0013) | 🟡 faltam modo de cartão e estilos do bloco (2.2) |
+| `event` (gols, cartões, substituições, gol contra) | `/overlay/{token}/eventos` (lower thirds, ADR 0013) | ✅ (2.2) |
 | `lineup` (lista de escalação) | `/overlay/{token}/escalacao` | ✅ |
 | `photo-lineup` (apresentação com fotos) | `/overlay/{token}/escalacao` (cartões, individual, show) | 🟡 faltam 5 conceitos de layout, 6 estilos e 6 animações (2.3) |
 | `sponsor` (patrocinador rotativo) | `/overlay/{token}/patrocinadores` | 🟡 faltam formatos, estilos e animações (2.4) |
@@ -27,7 +27,7 @@ Aqui já existe: preset (arena/classic/minimal), `layout` (bar/stacked/compact/w
 
 ### 2.2 Eventos
 Antigo: `eventScale/Font/Typeface/X/Y`, `eventPosition` (esquerda/centro/direita), `eventStyle` (faixa TV, linha limpa, bloco esportivo), `cardDisplayMode` (faixa ou tela cheia).
-Aqui: 6 estilos e 7 animações de lower third (ADR 0013), tempo, tipos de lance e placar. **Falta:** posição livre, tamanho do texto, tipografia por overlay, modo do cartão (faixa/tela cheia).
+Aqui: 6 estilos e 7 animações de lower third (ADR 0013), tempo, tipos de lance e placar. **Entregue:** posição (esquerda, centro, direita ou livre em X/Y), tamanho do texto e modo do cartão (faixa ou cartão grande no centro). A tipografia segue sendo a fonte do canal.
 
 ### 2.3 Escalação com fotos
 Antigo: `photoLineupLayout` (classic, tunnel, poster, sidebar, stadium, matchday), `photoLineupStyle` (editorial, cards, glass, premier, champions, diagonal), `photoLineupAnimation` (slide, wipe, rise, zoom, split, cascade), `photoLineupFormationMark` (número/foto) e `photoLineupFormationPhotoSize` (60–200%), `photoLineupIndividualDuration`, `photoLineupPanelDuration`, `photoLineupSponsorCount`, `photoLineupSponsorBarSize`, `photoLineupShowSponsors`, escala/fonte/tipografia/X/Y/opacidade/raio.
