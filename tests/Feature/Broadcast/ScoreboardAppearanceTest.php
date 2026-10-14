@@ -3,6 +3,7 @@
 use App\Modules\Broadcast\Events\OverlayUpdated;
 use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Support\OverlayAppearance;
+use App\Modules\Broadcast\Support\OverlayLineupSettings;
 use App\Modules\Broadcast\Support\OverlayState;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
@@ -86,4 +87,31 @@ it('works through the control api and keeps the scene intact', function () {
 
     $this->withToken($key)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", ['appearance' => ['preset' => 'ribbon', 'goal_celebration' => true, 'x' => 5, 'y' => 6]])
         ->assertOk()->assertJsonPath('data.appearance.preset', 'ribbon')->assertJsonPath('data.appearance.goal_celebration', true)->assertJsonPath('data.appearance.x', 5);
+});
+
+it('keeps the lineup visual parameters inside their limits and the free position pairwise', function () {
+    $normalized = OverlayLineupSettings::normalize([
+        'layout' => 'tunnel', 'style' => 'x', 'animation' => 'cascade', 'formation_mark' => 'number', 'formation_photo_size' => 999, 'sponsor_size' => 1,
+        'x' => 30, 'surface' => 1, 'radius' => 500, 'text_scale' => 5,
+    ]);
+
+    expect($normalized)->toMatchArray([
+        'layout' => 'tunnel', 'style' => 'editorial', 'animation' => 'cascade', 'formation_mark' => 'number', 'formation_photo_size' => 200, 'sponsor_size' => 60,
+        'x' => null, 'y' => null, 'surface' => 40, 'radius' => 40, 'text_scale' => 50,
+    ])->and(OverlayLineupSettings::normalize(['x' => 20, 'y' => 40]))->toMatchArray(['x' => 20, 'y' => 40]);
+});
+
+it('lets the operator set the lineup visual, without restarting the presentation, and refuses unknown values', function () {
+    $channel = appearanceChannel();
+    $channel->update(['lineup_settings' => ['presentation' => 'show', 'step' => 4, 'anchor_ms' => 123]]);
+    $this->actingAs(panelUser(Role::Operator));
+
+    $this->patch("/painel/broadcast/{$channel->id}", ['lineup_settings' => ['layout' => 'stadium', 'style' => 'champions', 'animation' => 'split', 'formation_mark' => 'number', 'formation_photo_size' => 140, 'sponsor_size' => 120, 'x' => 5, 'y' => 8, 'surface' => 80, 'radius' => 6, 'text_scale' => 110]])->assertSessionHasNoErrors();
+
+    $settings = OverlayState::for($channel->fresh())['lineup_settings'];
+    expect($settings)->toMatchArray(['layout' => 'stadium', 'style' => 'champions', 'animation' => 'split', 'formation_mark' => 'number', 'formation_photo_size' => 140, 'sponsor_size' => 120, 'x' => 5, 'y' => 8, 'surface' => 80, 'radius' => 6, 'text_scale' => 110, 'step' => 4, 'anchor_ms' => 123]);
+
+    foreach ([['layout' => 'x'], ['style' => 'x'], ['animation' => 'x'], ['formation_mark' => 'x'], ['formation_photo_size' => 20], ['sponsor_size' => 500], ['surface' => 10], ['text_scale' => 1], ['x' => 200]] as $invalid) {
+        $this->patch("/painel/broadcast/{$channel->id}", ['lineup_settings' => $invalid])->assertSessionHasErrors('lineup_settings.'.array_key_first($invalid));
+    }
 });

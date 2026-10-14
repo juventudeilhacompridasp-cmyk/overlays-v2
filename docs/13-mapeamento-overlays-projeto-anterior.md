@@ -9,7 +9,7 @@ Fonte: repositório `juventudeilhacompridasp-cmyk/overlays` (Overlay Studio: `pu
 | `scoreboard` (placar) | `/overlay/{token}/placar` | ✅ (2.1) |
 | `event` (gols, cartões, substituições, gol contra) | `/overlay/{token}/eventos` (lower thirds, ADR 0013) | ✅ (2.2) |
 | `lineup` (lista de escalação) | `/overlay/{token}/escalacao` | ✅ |
-| `photo-lineup` (apresentação com fotos) | `/overlay/{token}/escalacao` (cartões, individual, show) | 🟡 faltam 5 conceitos de layout, 6 estilos e 6 animações (2.3) |
+| `photo-lineup` (apresentação com fotos) | `/overlay/{token}/escalacao` (cartões, individual, show) | ✅ (2.3) |
 | `sponsor` (patrocinador rotativo) | `/overlay/{token}/patrocinadores` | 🟡 faltam formatos, estilos e animações (2.4) |
 | `sponsor-bar` (barra 1500 x 200) | — | ⬜ (2.5) |
 | `stats` (estatísticas: comparativo, gols/cartões, destaque do atleta) | `/comparativo` só com dados da súmula | ⬜ estatísticas manuais e 3 visões (2.6) |
@@ -31,7 +31,7 @@ Aqui: 6 estilos e 7 animações de lower third (ADR 0013), tempo, tipos de lance
 
 ### 2.3 Escalação com fotos
 Antigo: `photoLineupLayout` (classic, tunnel, poster, sidebar, stadium, matchday), `photoLineupStyle` (editorial, cards, glass, premier, champions, diagonal), `photoLineupAnimation` (slide, wipe, rise, zoom, split, cascade), `photoLineupFormationMark` (número/foto) e `photoLineupFormationPhotoSize` (60–200%), `photoLineupIndividualDuration`, `photoLineupPanelDuration`, `photoLineupSponsorCount`, `photoLineupSponsorBarSize`, `photoLineupShowSponsors`, escala/fonte/tipografia/X/Y/opacidade/raio.
-Aqui: cartões, individual (auto ou manual) e show, esquema tático por `Formations`, fotos só se habilitadas, tempos. **Falta:** os 5 conceitos de layout, os 6 estilos, as 6 animações, foto no lugar do número no esquema, tamanho da foto, patrocinadores no rodapé (quantidade e tamanho), posição/escala/opacidade/raio.
+Aqui: cartões, individual (auto ou manual) e show, esquema tático por `Formations`, fotos só se habilitadas, tempos. **Entregue:** os 5 conceitos novos (túnel, carta de coleção, coluna lateral, telão de estádio, programa do jogo) além do clássico, os 6 estilos, as 6 animações, foto/número no esquema com tamanho, tamanho da faixa de patrocinadores, posição livre, opacidade, cantos e texto. Diferença consciente: o rodapé mostra um patrocinador por vez, em rotação (não N logos lado a lado).
 
 ### 2.4 Patrocinador rotativo
 Antigo: `sponsorFormat` (texto, logo + nome, banner, banner + nome), `sponsorAnimation`, `sponsorAnimationSpeed`, `sponsorDuration`, `sponsorStyle` (box, limpo, faixa), escala/fonte/tipografia/X/Y.

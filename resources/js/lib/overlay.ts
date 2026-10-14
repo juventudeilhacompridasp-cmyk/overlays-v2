@@ -93,6 +93,17 @@ export interface LineupPublicSettings {
     individual_seconds: number;
     individual_scope: 'starters' | 'all';
     sponsor_banner: boolean;
+    layout?: 'classic' | 'tunnel' | 'poster' | 'sidebar' | 'stadium' | 'matchday';
+    style?: 'editorial' | 'cards' | 'glass' | 'premier' | 'champions' | 'diagonal';
+    animation?: 'slide' | 'wipe' | 'rise' | 'zoom' | 'split' | 'cascade';
+    formation_mark?: 'photo' | 'number';
+    formation_photo_size?: number;
+    sponsor_size?: number;
+    x?: number | null;
+    y?: number | null;
+    surface?: number;
+    radius?: number | null;
+    text_scale?: number;
     step: number;
     anchor_ms: number;
 }
