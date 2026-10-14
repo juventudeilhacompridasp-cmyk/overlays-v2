@@ -3,6 +3,7 @@
 ## Contexto
 **Status e pendências atuais: `docs/09-status-e-pendencias.md` (leia primeiro e atualize a cada PR).**
 SaaS de gestão de competições (futebol primeiro; depois futsal, vôlei, basquete) com overlays para OBS em tempo real.
+Mapa dos overlays do projeto anterior e o que ainda falta replicar (parâmetro a parâmetro): `docs/13-mapeamento-overlays-projeto-anterior.md`.
 Parametrização (o que é fixo e deveria ser configurável): `docs/10-parametrizacao.md`; roadmap de portal rico, ajuda, API interna e perfis: `docs/11-roadmap-portal-e-plataforma.md` (ADRs 0004–0007). Decisões em `docs/adr/`, arquitetura em `docs/02-arquitetura.md`, plano em `docs/04-plano-de-acao.md`, referência funcional em `docs/01-mapeamento-plataforma.md`.
 Idioma: código em inglês (nomes de classes, colunas, rotas internas); textos de interface, commits, PRs e docs em português do Brasil.
 
