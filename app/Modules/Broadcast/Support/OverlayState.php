@@ -33,6 +33,7 @@ final class OverlayState
             'channel' => $channel->name,
             'appearance' => OverlayAppearance::normalize($channel->appearance),
             'lineup_settings' => OverlayLineupSettings::public($channel->lineup_settings),
+            'sponsors' => OverlaySponsorSettings::public($channel->sponsor_settings),
             'layers' => array_merge(array_fill_keys(OverlayChannel::LAYERS, false), array_map('boolval', $channel->layers ?? [])),
             'game' => $game ? PublicGameSnapshot::for($game) : null,
             'lineup' => $game && $channel->layerOn('lineup') ? self::lineup($game, OverlayLineupSettings::normalize($channel->lineup_settings)['photo_person_ids']) : null,

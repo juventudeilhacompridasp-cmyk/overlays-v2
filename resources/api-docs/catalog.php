@@ -196,7 +196,7 @@ return [
     ],
     'api.v1.overlay-channels.state.update' => [
         'summary' => 'Atualiza o estado e o visual de um canal de overlay',
-        'description' => 'Controle privado para automações da transmissão. Aceita atualizações parciais do jogo no ar, camadas, aparência e apresentação da escalação. Use a chave de controle do canal como Bearer; ela é diferente do token público usado pelo OBS.',
+        'description' => 'Controle privado para automações da transmissão. Aceita atualizações parciais do jogo no ar, camadas, aparência, rotação de patrocinadores e apresentação da escalação. Use a chave de controle do canal como Bearer; ela é diferente do token público usado pelo OBS.',
         'parameters' => ['channel' => 'ID (ULID) do canal de overlay.'],
         'request' => [
             'schema' => ['type' => 'object', 'properties' => [
@@ -208,13 +208,17 @@ return [
                     'standings' => ['type' => 'boolean'],
                 ]],
                 'appearance' => ['type' => 'object', 'properties' => [
-                    'preset' => ['type' => 'string', 'enum' => ['arena']],
+                    'preset' => ['type' => 'string', 'enum' => ['arena', 'classic', 'minimal']],
                     'accent_color' => ['type' => 'string'],
                     'background_color' => ['type' => 'string'],
                     'text_color' => ['type' => 'string'],
-                    'position' => ['type' => 'string', 'enum' => ['top-left', 'top-center', 'top-right']],
+                    'position' => ['type' => 'string', 'enum' => ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right']],
                     'scale' => ['type' => 'number'],
                     'motion' => ['type' => 'string', 'enum' => ['dynamic', 'subtle', 'none']],
+                ]],
+                'sponsor_settings' => ['type' => 'object', 'properties' => [
+                    'enabled' => ['type' => 'boolean'],
+                    'seconds' => ['type' => 'integer', 'minimum' => 3, 'maximum' => 30],
                 ]],
                 'lineup_settings' => ['type' => 'object', 'properties' => [
                     'presentation' => ['type' => 'string', 'enum' => ['sequence', 'list', 'formation']],
@@ -226,6 +230,7 @@ return [
                 'game_id' => '01JABCDEF0123456789XYZ0001',
                 'layers' => ['scoreboard' => true, 'lower_third' => false, 'lineup' => true, 'standings' => false],
                 'appearance' => ['preset' => 'arena', 'accent_color' => '#22c55e', 'background_color' => '#07111f', 'text_color' => '#ffffff', 'position' => 'top-center', 'scale' => 1, 'motion' => 'dynamic'],
+                'sponsor_settings' => ['enabled' => true, 'seconds' => 8],
                 'lineup_settings' => ['presentation' => 'sequence', 'list_seconds' => 8, 'photo_person_ids' => []],
             ],
         ],

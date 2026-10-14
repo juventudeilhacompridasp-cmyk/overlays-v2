@@ -5,6 +5,7 @@ use App\Modules\Arts\Http\Controllers\ArtController;
 use App\Modules\Arts\Http\Controllers\AssetController as ArtAssetController;
 use App\Modules\Arts\Http\Controllers\TemplateController as ArtTemplateController;
 use App\Modules\Broadcast\Http\Controllers\ChannelController;
+use App\Modules\Broadcast\Http\Controllers\SponsorController;
 use App\Modules\Competitions\Http\Controllers\CompetitionController;
 use App\Modules\Competitions\Http\Controllers\DivisionController;
 use App\Modules\Competitions\Http\Controllers\EntryController;
@@ -157,6 +158,9 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::post('broadcast/{channel}/regenerate', [ChannelController::class, 'regenerate'])->name('broadcast.regenerate');
         Route::post('broadcast/{channel}/control-token', [ChannelController::class, 'regenerateControlToken'])->name('broadcast.control-token');
         Route::delete('broadcast/{channel}', [ChannelController::class, 'destroy'])->name('broadcast.destroy');
+        Route::post('broadcast/patrocinadores', [SponsorController::class, 'store'])->name('broadcast.sponsors.store');
+        Route::patch('broadcast/patrocinadores/{sponsor}', [SponsorController::class, 'update'])->name('broadcast.sponsors.update');
+        Route::delete('broadcast/patrocinadores/{sponsor}', [SponsorController::class, 'destroy'])->name('broadcast.sponsors.destroy');
     });
 
     // Artes das partidas (ADR 0009): qualquer membro gera e baixa; salvar modelos é de quem gerencia competições.

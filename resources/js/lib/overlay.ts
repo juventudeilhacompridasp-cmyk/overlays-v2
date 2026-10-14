@@ -54,6 +54,7 @@ export interface OverlayState {
     channel: string;
     appearance: OverlayAppearance;
     lineup_settings: { presentation: 'sequence' | 'list' | 'formation'; list_seconds: number };
+    sponsors: { enabled: boolean; seconds: number; items: { name: string; logo_url: string }[] };
     layers: { lineup: boolean; standings: boolean };
     game: OverlayGame | null;
     lineup: { home: LineupSide; away: LineupSide } | null;

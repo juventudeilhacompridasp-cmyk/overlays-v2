@@ -17,6 +17,7 @@ class OverlayController extends Controller
         'eventos' => 'Overlay/LowerThird',
         'escalacao' => 'Overlay/Lineup',
         'tabela' => 'Overlay/Standings',
+        'patrocinadores' => 'Overlay/Sponsors',
     ];
 
     public function show(OverlayChannel $channel, string $overlay): Response

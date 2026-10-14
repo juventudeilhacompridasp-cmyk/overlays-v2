@@ -7,7 +7,9 @@ use App\Modules\Broadcast\Actions\UpdateOverlayChannel;
 use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Support\OverlayAppearance;
 use App\Modules\Broadcast\Support\OverlayControlRules;
+use App\Modules\Broadcast\Models\OverlaySponsor;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
+use App\Modules\Broadcast\Support\OverlaySponsorSettings;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Models\Game;
@@ -69,6 +71,7 @@ class ChannelController extends Controller
                     'layers' => array_merge(array_fill_keys(OverlayChannel::LAYERS, false), array_map('boolval', $channel->layers ?? [])),
                     'appearance' => OverlayAppearance::normalize($channel->appearance),
                     'lineup_settings' => OverlayLineupSettings::normalize($channel->lineup_settings),
+                    'sponsor_settings' => OverlaySponsorSettings::normalize($channel->sponsor_settings),
                     'lineup_people' => $people,
                     'has_control_token' => $channel->control_token_hash !== null,
                     'control_url' => route('api.v1.overlay-channels.state.update', ['channel' => $channel]),
@@ -77,6 +80,10 @@ class ChannelController extends Controller
                     ])->values(),
                 ];
             })->values(),
+            'sponsors' => OverlaySponsor::query()->orderBy('sort')->orderBy('created_at')->get()->map(fn (OverlaySponsor $sponsor) => [
+                'id' => $sponsor->id, 'name' => $sponsor->name, 'active' => $sponsor->active, 'logo_url' => $sponsor->logoUrl(128),
+            ])->values(),
+            'sponsor_limit' => OverlaySponsor::LIMIT,
             'games' => $candidates->map(fn (Game $game) => ['id' => $game->id, 'label' => $label($game)])->values(),
             'issued_control' => session()->pull('overlay_issued_control'),
         ]);
@@ -96,6 +103,7 @@ class ChannelController extends Controller
             'layers' => [],
             'appearance' => OverlayAppearance::defaults(),
             'lineup_settings' => OverlayLineupSettings::defaults(),
+            'sponsor_settings' => OverlaySponsorSettings::defaults(),
         ]);
 
         return back()

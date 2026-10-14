@@ -21,6 +21,9 @@ Você pode trocar o fundo entre campo, quadra, escuro e a grade de transparênci
 
 > O endereço do canal é o segredo: quem tem a URL vê a tela. Se vazar, use **Renovar** para gerar outra (a antiga para de funcionar).
 
+## Patrocinadores
+Cadastre os logotipos em **Patrocinadores dos overlays** (quem gerencia competições) e, em cada canal, ligue a rotação e escolha o tempo de cada logotipo. Adicione no OBS a URL da tela **Patrocinadores**: ela mostra um logotipo por vez na posição do visual do canal. Pausar um patrocinador o tira da rotação.
+
 ## Dicas
 - Cartões, disciplina e documentos nunca aparecem nos overlays.
 - O **estilo do placar** pode ser Arena, Clássico ou Minimal, e o placar pode ficar no alto ou embaixo da tela; as cores valem para os três.

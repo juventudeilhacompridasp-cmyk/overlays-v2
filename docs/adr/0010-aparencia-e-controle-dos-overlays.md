@@ -40,4 +40,14 @@ integrações com controladores externos sem dar poder de escrita a quem apenas 
   relógio na cor de destaque); `arena` continua o padrão. Todos usam o mesmo estado e o mesmo contrato da API; a moldura de
   cada preset fica em `scoreboardFrame` (`resources/js/lib/overlayVisual.ts`), sem CSS novo e sem imagens.
 - `POSITIONS` ganha `bottom-left`, `bottom-center` e `bottom-right`; a escala cresce a partir do canto/borda de ancoragem.
+## Addendum — patrocinadores (14/10/2026)
+
+- `overlay_sponsors` guarda os logotipos da organização (até 12; nome, WebP 512/128 px no disco público, ordem e ativo),
+  reaproveitados por todos os canais. Cadastrar, pausar e excluir é `manage-competitions`.
+- `overlay_channels.sponsor_settings` (`OverlaySponsorSettings`) liga a rotação por canal (padrão desligada) e define de 3 a 30
+  segundos por logotipo; é operação ao vivo (`operate-games`) e também aceita pela API de controle.
+- Tela nova `patrocinadores` (`/overlay/{token}/patrocinadores`): um logotipo por vez, troca por opacidade, posição, escala e
+  preset do canal. O estado traz `sponsors {enabled, seconds, items[{name, logo_url}]}`; **com a rotação desligada `items` vai
+  vazio** e nunca vão caminhos nem IDs. Toda mudança nos patrocinadores dispara `OverlayUpdated` para os canais abertos.
+
 - Preset novo = entrada em `PRESETS` + moldura em `scoreboardFrame` + opção na tela de transmissão + teste.
