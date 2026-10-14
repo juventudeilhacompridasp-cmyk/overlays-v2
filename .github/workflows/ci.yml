@@ -30,7 +30,9 @@ jobs:
       - name: Larastan
         run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
       - name: Pest
-        run: php artisan test
+        # A geração da imagem Open Graph usa GD e pode ultrapassar o limite padrão de 128 MB
+        # quando a suíte completa roda no mesmo processo.
+        run: php -d memory_limit=256M artisan test
 
   frontend:
     name: Front (tipos e build)
