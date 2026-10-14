@@ -75,6 +75,7 @@ class ChannelController extends Controller
                     'game_id' => $channel->game_id,
                     'game_label' => $game ? $label($game) : null,
                     'layers' => $channel->layerStates(),
+                    'championship_live' => $channel->championshipLive(),
                     'appearance' => OverlayAppearance::normalize($channel->appearance),
                     'lineup_settings' => OverlayLineupSettings::normalize($channel->lineup_settings),
                     'sponsor_settings' => OverlaySponsorSettings::normalize($channel->sponsor_settings),

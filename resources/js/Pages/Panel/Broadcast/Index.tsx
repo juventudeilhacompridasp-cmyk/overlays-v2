@@ -3,6 +3,7 @@ import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
 import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent, useEffect, useState } from 'react';
+import { OBS_VIEWS } from '@/lib/obsChampionship';
 import ChampionshipStudio, { ChampionshipSeason, StyleModel } from './ChampionshipStudio';
 import OverlayPreviewStudio from './OverlayPreviewStudio';
 
@@ -83,6 +84,7 @@ interface Channel {
     game_id: string | null;
     game_label: string | null;
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
+    championship_live: Record<string, boolean>;
     appearance: Appearance;
     lineup_settings: LineupSettings;
     lineup_people: LineupPerson[];
@@ -181,7 +183,7 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
-    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings> }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
+    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; championship_live?: Record<string, boolean>; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings> }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { preserveScroll: true, ...options });
 
     // Comandos de exibir/ocultar: o botão muda no clique e a mudança segue direto para o OBS; se o servidor recusar, volta ao estado real.
     const [layers, setLayers] = useState(channel.layers);
@@ -272,6 +274,17 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                         ))}
                     </div>
                     <p className="mt-1 text-xs text-gray-500">Cada clique vale na hora no OBS, sem esperar. {!channel.game_id && 'Escolha um jogo no ar para liberar a escalação e a tabela.'}</p>
+                </div>
+                <div>
+                    <div className="mb-2 text-sm font-medium text-gray-700">Telas de campeonato no ar</div>
+                    <div className="flex flex-wrap gap-2">
+                        {OBS_VIEWS.map((view) => (
+                            <Button key={view.key} small variant={channel.championship_live[view.key] ? 'primary' : 'secondary'} disabled={!canOperate} aria-pressed={channel.championship_live[view.key]} onClick={() => patch({ championship_live: { [view.key]: !channel.championship_live[view.key] } })}>
+                                {channel.championship_live[view.key] ? 'Ocultar' : 'Mostrar'} {view.label.toLowerCase()}
+                            </Button>
+                        ))}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Vale para as URLs de campeonato criadas com “Controle ao vivo” ligado; as outras ficam sempre no ar.</p>
                 </div>
 
                 <ScenesBlock channel={channel} scenes={scenes} limit={sceneLimit} canManage={canManage} canOperate={canOperate} />

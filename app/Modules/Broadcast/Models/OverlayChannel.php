@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 /**
- * @property array<string, bool>|null $layers
+ * @property array<string, bool|array<string, bool>>|null $layers
  * @property array<string, mixed>|null $appearance
  * @property array<string, mixed>|null $lineup_settings
  * @property array<string, mixed>|null $sponsor_settings
@@ -30,6 +30,9 @@ class OverlayChannel extends Model
      * operador pode tirá-los da tela na hora). Telas sem camada (patrocinadores) têm a própria chave de ligar/desligar.
      */
     public const LAYERS = ['lineup', 'standings', 'scoreboard', 'lower_third'];
+
+    /** Telas de campeonato que o operador pode mostrar/ocultar ao vivo (URLs com `live=1`); começam ocultas. */
+    public const CHAMPIONSHIP_VIEWS = ['standings', 'fixtures', 'results', 'scorers', 'discipline', 'matchcard', 'ticker', 'champion'];
 
     /** Camadas que valem como ligadas quando o operador nunca mexeu nelas. */
     public const DEFAULT_ON = ['scoreboard', 'lower_third'];
@@ -89,6 +92,14 @@ class OverlayChannel extends Model
     public function layerStates(): array
     {
         return array_combine(self::LAYERS, array_map(fn (string $layer) => $this->layerOn($layer), self::LAYERS));
+    }
+
+    /** @return array<string, bool> cada tela de campeonato: no ar (true) ou oculta (padrão) */
+    public function championshipLive(): array
+    {
+        $saved = is_array($this->layers['championship'] ?? null) ? $this->layers['championship'] : [];
+
+        return array_combine(self::CHAMPIONSHIP_VIEWS, array_map(fn (string $view) => ($saved[$view] ?? false) === true, self::CHAMPIONSHIP_VIEWS));
     }
 
     public function overlayUrl(string $overlay): string

@@ -43,6 +43,15 @@ final class UpdateOverlayChannel
             );
         }
 
+        if (isset($data['championship_live']) && is_array($data['championship_live'])) {
+            $channel->layers = array_merge($channel->layers ?? [], [
+                'championship' => array_merge(
+                    $channel->championshipLive(),
+                    array_intersect_key(array_map('boolval', $data['championship_live']), array_flip(OverlayChannel::CHAMPIONSHIP_VIEWS)),
+                ),
+            ]);
+        }
+
         if (isset($data['appearance']) && is_array($data['appearance'])) {
             $channel->appearance = OverlayAppearance::normalize(array_merge($channel->appearance ?? [], $data['appearance']));
         }

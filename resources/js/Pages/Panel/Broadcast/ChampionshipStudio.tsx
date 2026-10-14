@@ -66,11 +66,13 @@ export default function ChampionshipStudio({ channelId, base, seasons, models, m
     }, [cfg, channelId]);
 
     // A prévia usa a URL real do OBS; só recarrega depois de uma pausa para não piscar enquanto o operador ajusta.
+    // A prévia ignora o controle ao vivo (senão ficaria vazia até alguém mostrar a tela).
+    const previewUrl = useMemo(() => obsUrl(base, { ...cfg, live: 0 }), [base, cfg]);
     useEffect(() => {
-        const timer = window.setTimeout(() => setPreview(url), 350);
+        const timer = window.setTimeout(() => setPreview(previewUrl), 350);
 
         return () => window.clearTimeout(timer);
-    }, [url]);
+    }, [previewUrl]);
 
     useEffect(() => {
         const element = frame.current;
@@ -131,7 +133,7 @@ export default function ChampionshipStudio({ channelId, base, seasons, models, m
             </div>
         </Field>
     );
-    const toggle = (key: 'logos' | 'head' | 'dots', label: string) => (
+    const toggle = (key: 'logos' | 'head' | 'dots' | 'live', label: string) => (
         <label className="flex items-center gap-2 text-sm text-gray-700">
             <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" checked={cfg[key] === 1} onChange={(event) => set(key, (event.target.checked ? 1 : 0) as never)} />
             {label}
@@ -250,7 +252,7 @@ export default function ChampionshipStudio({ channelId, base, seasons, models, m
                     {num('dx', 'Ajuste horizontal (px)', -1000, 1000, 10)}
                     {num('dy', 'Ajuste vertical (px)', -600, 600, 10)}
                 </div>
-                <div className="mt-3 flex flex-wrap gap-4">{toggle('logos', 'Escudos')}{toggle('head', 'Cabeçalho')}{toggle('dots', 'Indicador de páginas')}</div>
+                <div className="mt-3 flex flex-wrap gap-4">{toggle('live', 'Controle ao vivo (só aparece quando eu mostrar)')}{toggle('logos', 'Escudos')}{toggle('head', 'Cabeçalho')}{toggle('dots', 'Indicador de páginas')}</div>
             </div>
 
             <div className="rounded-lg border border-gray-200 p-4">

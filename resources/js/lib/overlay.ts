@@ -78,6 +78,7 @@ export interface OverlayState {
     lineup_settings: LineupPublicSettings;
     sponsors: { enabled: boolean; seconds: number; items: { name: string; logo_url: string }[] };
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
+    championship: Record<string, boolean>;
     game: OverlayGame | null;
     lineup: { home: LineupSide; away: LineupSide } | null;
     standings: {
