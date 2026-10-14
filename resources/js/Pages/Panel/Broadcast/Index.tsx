@@ -5,6 +5,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent, useEffect, useState } from 'react';
 import { LINEUP_ANIMATIONS, LINEUP_LAYOUTS, LINEUP_STYLES, LineupAnimation, LineupLayout, LineupStyle } from '@/lib/lineupSkin';
 import { LowerThirdSettings } from '@/lib/lowerThird';
+import { BAR_TRANSITIONS, BarTransition, SPONSOR_ANIMATIONS, SPONSOR_FORMATS, SPONSOR_STYLES, SponsorAnimation, SponsorFormat, SponsorStyle } from '@/lib/sponsorLook';
 import { OBS_VIEWS } from '@/lib/obsChampionship';
 import ChampionshipStudio, { ChampionshipSeason, StyleModel } from './ChampionshipStudio';
 import ExtraScreensStudio from './ExtraScreensStudio';
@@ -102,6 +103,25 @@ interface LineupPerson {
 interface SponsorSettings {
     enabled: boolean;
     seconds: number;
+    format: SponsorFormat;
+    style: SponsorStyle;
+    animation: SponsorAnimation;
+    animation_speed: number;
+    scale: number;
+    text_scale: number;
+    x: number | null;
+    y: number | null;
+    bar_seconds: number;
+    bar_transition: BarTransition;
+    bar_fit: 'cover' | 'contain';
+    bar_border: 'none' | 'thin' | 'accent';
+    bar_shadow: 'none' | 'soft' | 'strong';
+    bar_scale: number;
+    bar_x: number;
+    bar_y: number;
+    bar_opacity: number;
+    bar_radius: number;
+    bar_background: string;
 }
 
 interface Sponsor {
@@ -109,6 +129,7 @@ interface Sponsor {
     name: string;
     active: boolean;
     logo_url: string | null;
+    banner_url: string | null;
 }
 
 interface Channel {
@@ -701,6 +722,97 @@ function ChannelCard({ channel, games, fonts, scenes, sceneLimit, seasons, style
                             <Input id={`sponsor-seconds-${channel.id}`} type="range" min="3" max="30" step="1" disabled={!canOperate} value={sponsorSettings.seconds} onChange={(event) => setSponsorSettings({ ...sponsorSettings, seconds: Number(event.target.value) })} />
                         </Field>
                     </div>
+                    <details className="mt-4 rounded-lg border border-gray-200 p-3" data-testid="sponsor-visual">
+                        <summary className="cursor-pointer text-sm font-medium text-gray-800">Visual da rotação e da barra 1500 x 200</summary>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 sm:col-span-2">Tela Patrocinadores (rotação)</div>
+                            <Field label="Formato" htmlFor={`sponsor-format-${channel.id}`}>
+                                <Select id={`sponsor-format-${channel.id}`} disabled={!canOperate} value={sponsorSettings.format} onChange={(event) => setSponsorSettings({ ...sponsorSettings, format: event.target.value as SponsorFormat })}>
+                                    {SPONSOR_FORMATS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+                                </Select>
+                            </Field>
+                            <Field label="Estilo" htmlFor={`sponsor-style-${channel.id}`}>
+                                <Select id={`sponsor-style-${channel.id}`} disabled={!canOperate} value={sponsorSettings.style} onChange={(event) => setSponsorSettings({ ...sponsorSettings, style: event.target.value as SponsorStyle })}>
+                                    {SPONSOR_STYLES.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+                                </Select>
+                            </Field>
+                            <Field label="Animação" htmlFor={`sponsor-animation-${channel.id}`}>
+                                <Select id={`sponsor-animation-${channel.id}`} disabled={!canOperate} value={sponsorSettings.animation} onChange={(event) => setSponsorSettings({ ...sponsorSettings, animation: event.target.value as SponsorAnimation })}>
+                                    {SPONSOR_ANIMATIONS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+                                </Select>
+                            </Field>
+                            <Field label={`Velocidade · ${sponsorSettings.animation_speed}%`} htmlFor={`sponsor-speed-${channel.id}`}>
+                                <Input id={`sponsor-speed-${channel.id}`} type="range" min="50" max="200" step="10" disabled={!canOperate} value={sponsorSettings.animation_speed} onChange={(event) => setSponsorSettings({ ...sponsorSettings, animation_speed: Number(event.target.value) })} />
+                            </Field>
+                            <Field label={`Tamanho · ${sponsorSettings.scale}%`} htmlFor={`sponsor-scale-${channel.id}`}>
+                                <Input id={`sponsor-scale-${channel.id}`} type="range" min="50" max="200" step="5" disabled={!canOperate} value={sponsorSettings.scale} onChange={(event) => setSponsorSettings({ ...sponsorSettings, scale: Number(event.target.value) })} />
+                            </Field>
+                            <Field label={`Texto · ${sponsorSettings.text_scale}%`} htmlFor={`sponsor-text-${channel.id}`}>
+                                <Input id={`sponsor-text-${channel.id}`} type="range" min="50" max="200" step="5" disabled={!canOperate} value={sponsorSettings.text_scale} onChange={(event) => setSponsorSettings({ ...sponsorSettings, text_scale: Number(event.target.value) })} />
+                            </Field>
+                            <label className="flex items-center gap-2 text-sm text-gray-700 sm:col-span-2">
+                                <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" disabled={!canOperate} checked={sponsorSettings.x !== null && sponsorSettings.y !== null} onChange={(event) => setSponsorSettings({ ...sponsorSettings, x: event.target.checked ? 78 : null, y: event.target.checked ? 7 : null })} />
+                                Posição livre (X e Y em % da tela)
+                            </label>
+                            {sponsorSettings.x !== null && sponsorSettings.y !== null && (
+                                <>
+                                    <Field label={`Horizontal · ${sponsorSettings.x}%`} htmlFor={`sponsor-x-${channel.id}`}>
+                                        <Input id={`sponsor-x-${channel.id}`} type="range" min="0" max="100" disabled={!canOperate} value={sponsorSettings.x} onChange={(event) => setSponsorSettings({ ...sponsorSettings, x: Number(event.target.value) })} />
+                                    </Field>
+                                    <Field label={`Vertical · ${sponsorSettings.y}%`} htmlFor={`sponsor-y-${channel.id}`}>
+                                        <Input id={`sponsor-y-${channel.id}`} type="range" min="0" max="100" disabled={!canOperate} value={sponsorSettings.y} onChange={(event) => setSponsorSettings({ ...sponsorSettings, y: Number(event.target.value) })} />
+                                    </Field>
+                                </>
+                            )}
+                            <div className="mt-2 text-xs font-semibold uppercase tracking-wide text-gray-500 sm:col-span-2">Barra de patrocinadores 1500 x 200 (mostre em Telas extras)</div>
+                            <Field label={`Tempo de cada banner · ${sponsorSettings.bar_seconds}s`} htmlFor={`bar-seconds-${channel.id}`}>
+                                <Input id={`bar-seconds-${channel.id}`} type="range" min="3" max="60" disabled={!canOperate} value={sponsorSettings.bar_seconds} onChange={(event) => setSponsorSettings({ ...sponsorSettings, bar_seconds: Number(event.target.value) })} />
+                            </Field>
+                            <Field label="Transição" htmlFor={`bar-transition-${channel.id}`}>
+                                <Select id={`bar-transition-${channel.id}`} disabled={!canOperate} value={sponsorSettings.bar_transition} onChange={(event) => setSponsorSettings({ ...sponsorSettings, bar_transition: event.target.value as BarTransition })}>
+                                    {BAR_TRANSITIONS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+                                </Select>
+                            </Field>
+                            <Field label="Ajuste da arte" htmlFor={`bar-fit-${channel.id}`}>
+                                <Select id={`bar-fit-${channel.id}`} disabled={!canOperate} value={sponsorSettings.bar_fit} onChange={(event) => setSponsorSettings({ ...sponsorSettings, bar_fit: event.target.value as SponsorSettings['bar_fit'] })}>
+                                    <option value="cover">Preencher (corta o excesso)</option>
+                                    <option value="contain">Conter (mostra inteira)</option>
+                                </Select>
+                            </Field>
+                            <Field label="Moldura" htmlFor={`bar-border-${channel.id}`}>
+                                <Select id={`bar-border-${channel.id}`} disabled={!canOperate} value={sponsorSettings.bar_border} onChange={(event) => setSponsorSettings({ ...sponsorSettings, bar_border: event.target.value as SponsorSettings['bar_border'] })}>
+                                    <option value="none">Sem moldura</option>
+                                    <option value="thin">Fina</option>
+                                    <option value="accent">Destaque</option>
+                                </Select>
+                            </Field>
+                            <Field label="Sombra" htmlFor={`bar-shadow-${channel.id}`}>
+                                <Select id={`bar-shadow-${channel.id}`} disabled={!canOperate} value={sponsorSettings.bar_shadow} onChange={(event) => setSponsorSettings({ ...sponsorSettings, bar_shadow: event.target.value as SponsorSettings['bar_shadow'] })}>
+                                    <option value="none">Sem sombra</option>
+                                    <option value="soft">Suave</option>
+                                    <option value="strong">Forte</option>
+                                </Select>
+                            </Field>
+                            <Field label="Fundo" htmlFor={`bar-background-${channel.id}`}>
+                                <Input id={`bar-background-${channel.id}`} type="color" disabled={!canOperate} value={sponsorSettings.bar_background} onChange={(event) => setSponsorSettings({ ...sponsorSettings, bar_background: event.target.value })} className="h-10" />
+                            </Field>
+                            <Field label={`Tamanho · ${sponsorSettings.bar_scale}%`} htmlFor={`bar-scale-${channel.id}`}>
+                                <Input id={`bar-scale-${channel.id}`} type="range" min="50" max="150" step="5" disabled={!canOperate} value={sponsorSettings.bar_scale} onChange={(event) => setSponsorSettings({ ...sponsorSettings, bar_scale: Number(event.target.value) })} />
+                            </Field>
+                            <Field label={`Opacidade · ${sponsorSettings.bar_opacity}%`} htmlFor={`bar-opacity-${channel.id}`}>
+                                <Input id={`bar-opacity-${channel.id}`} type="range" min="30" max="100" step="5" disabled={!canOperate} value={sponsorSettings.bar_opacity} onChange={(event) => setSponsorSettings({ ...sponsorSettings, bar_opacity: Number(event.target.value) })} />
+                            </Field>
+                            <Field label={`Cantos · ${sponsorSettings.bar_radius}px`} htmlFor={`bar-radius-${channel.id}`}>
+                                <Input id={`bar-radius-${channel.id}`} type="range" min="0" max="40" disabled={!canOperate} value={sponsorSettings.bar_radius} onChange={(event) => setSponsorSettings({ ...sponsorSettings, bar_radius: Number(event.target.value) })} />
+                            </Field>
+                            <Field label={`Posição horizontal · ${sponsorSettings.bar_x}%`} htmlFor={`bar-x-${channel.id}`}>
+                                <Input id={`bar-x-${channel.id}`} type="range" min="0" max="100" disabled={!canOperate} value={sponsorSettings.bar_x} onChange={(event) => setSponsorSettings({ ...sponsorSettings, bar_x: Number(event.target.value) })} />
+                            </Field>
+                            <Field label={`Posição vertical · ${sponsorSettings.bar_y}%`} htmlFor={`bar-y-${channel.id}`}>
+                                <Input id={`bar-y-${channel.id}`} type="range" min="0" max="100" disabled={!canOperate} value={sponsorSettings.bar_y} onChange={(event) => setSponsorSettings({ ...sponsorSettings, bar_y: Number(event.target.value) })} />
+                            </Field>
+                        </div>
+                    </details>
                     {canOperate && <Button small className="mt-3" onClick={() => patch({ sponsor_settings: sponsorSettings })}>Aplicar patrocinadores</Button>}
                 </div>
                     </section>
@@ -764,16 +876,21 @@ function SponsorsCard({ sponsors, limit, canManage }: { sponsors: Sponsor[]; lim
 
     return (
         <Card title="Patrocinadores dos overlays">
-            <p className="mb-3 text-xs text-gray-500">Os logotipos valem para todos os canais da organização ({sponsors.length}/{limit}). Aparecem na tela Patrocinadores do OBS quando a rotação está ligada no canal e o patrocinador está ativo.</p>
+            <p className="mb-3 text-xs text-gray-500">Os logotipos valem para todos os canais da organização ({sponsors.length}/{limit}). Aparecem na tela Patrocinadores do OBS quando a rotação está ligada no canal e o patrocinador está ativo. O banner largo (ideal 1500 x 200) é opcional e vale para a barra de patrocinadores e para os formatos de banner.</p>
             {sponsors.length === 0 && <p className="text-sm text-gray-500">Nenhum patrocinador cadastrado.</p>}
             <ul className="divide-y divide-gray-100">
                 {sponsors.map((sponsor) => (
                     <li key={sponsor.id} className="flex items-center gap-3 py-2">
                         <span className="grid h-12 w-20 place-items-center rounded bg-[#ffffff] p-1 ring-1 ring-gray-200">{sponsor.logo_url && <img src={sponsor.logo_url} alt="" className="max-h-full max-w-full object-contain" />}</span>
-                        <span className="flex-1 text-sm font-medium text-gray-900">{sponsor.name}</span>
+                        <span className="flex-1 text-sm font-medium text-gray-900">{sponsor.name}{sponsor.banner_url && <span className="ml-2 text-xs text-gray-500">· com banner</span>}</span>
                         {sponsor.active ? <Badge>Ativo</Badge> : <Badge>Pausado</Badge>}
                         {canManage && (
                             <>
+                                <label className="cursor-pointer rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+                                    {sponsor.banner_url ? 'Trocar banner' : 'Enviar banner'}
+                                    <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label={`Banner de ${sponsor.name}`} onChange={(event) => { const file = event.target.files?.[0]; if (file) router.post(route('panel.broadcast.sponsors.update', sponsor.id), { _method: 'patch', banner: file }, { forceFormData: true, preserveScroll: true }); }} />
+                                </label>
+                                {sponsor.banner_url && <Button small variant="secondary" onClick={() => router.patch(route('panel.broadcast.sponsors.update', sponsor.id), { remove_banner: true }, { preserveScroll: true })}>Tirar banner</Button>}
                                 <Button small variant="secondary" onClick={() => router.patch(route('panel.broadcast.sponsors.update', sponsor.id), { active: !sponsor.active }, { preserveScroll: true })}>{sponsor.active ? 'Pausar' : 'Ativar'}</Button>
                                 <Button small variant="danger" onClick={() => window.confirm(`Excluir ${sponsor.name}?`) && router.delete(route('panel.broadcast.sponsors.destroy', sponsor.id), { preserveScroll: true })}>Excluir</Button>
                             </>

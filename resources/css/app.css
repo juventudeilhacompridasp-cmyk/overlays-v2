@@ -240,3 +240,17 @@
 .lineup-foil { background-size: 200% 200%; animation: lineup-foil-shine 4s linear infinite; }
 @keyframes lineup-foil-shine { 0% { background-position: 0% 0%; } 100% { background-position: 200% 200%; } }
 @media (prefers-reduced-motion: reduce) { .lineup-foil { animation: none; } }
+
+/* Patrocinadores: animações da rotação e transições da barra 1500 x 200 (transform/opacity). Duração: --sponsor-ms. */
+@keyframes sponsor-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sponsor-slide { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: none; } }
+@keyframes sponsor-zoom { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: none; } }
+@keyframes sponsor-rise { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+@keyframes sponsor-flip { from { opacity: 0; transform: perspective(900px) rotateX(-80deg); } to { opacity: 1; transform: none; } }
+@keyframes sponsor-elastic { 0% { opacity: 0; transform: scale(0.6); } 60% { opacity: 1; transform: scale(1.06); } 80% { transform: scale(0.98); } 100% { transform: none; } }
+.sponsor-in-fade { animation: sponsor-fade var(--sponsor-ms, 600ms) ease-out both; }
+.sponsor-in-slide { animation: sponsor-slide var(--sponsor-ms, 600ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.sponsor-in-zoom { animation: sponsor-zoom var(--sponsor-ms, 600ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.sponsor-in-rise { animation: sponsor-rise var(--sponsor-ms, 600ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.sponsor-in-flip { animation: sponsor-flip var(--sponsor-ms, 600ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.sponsor-in-elastic { animation: sponsor-elastic var(--sponsor-ms, 700ms) ease-out both; }

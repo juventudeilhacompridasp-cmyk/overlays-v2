@@ -10,8 +10,8 @@ Fonte: repositório `juventudeilhacompridasp-cmyk/overlays` (Overlay Studio: `pu
 | `event` (gols, cartões, substituições, gol contra) | `/overlay/{token}/eventos` (lower thirds, ADR 0013) | ✅ (2.2) |
 | `lineup` (lista de escalação) | `/overlay/{token}/escalacao` | ✅ |
 | `photo-lineup` (apresentação com fotos) | `/overlay/{token}/escalacao` (cartões, individual, show) | ✅ (2.3) |
-| `sponsor` (patrocinador rotativo) | `/overlay/{token}/patrocinadores` | 🟡 faltam formatos, estilos e animações (2.4) |
-| `sponsor-bar` (barra 1500 x 200) | — | ⬜ (2.5) |
+| `sponsor` (patrocinador rotativo) | `/overlay/{token}/patrocinadores` | ✅ (2.4) |
+| `sponsor-bar` (barra 1500 x 200) | `/overlay/{token}/barra-patrocinio` | ✅ (2.5) |
 | `stats` (estatísticas: comparativo, gols/cartões, destaque do atleta) | `/comparativo` só com dados da súmula | ⬜ estatísticas manuais e 3 visões (2.6) |
 | `custom` (Builder: overlays por elementos) | — | ⬜ (2.7) |
 | `all` (todas as camadas numa fonte) | — | ⬜ (2.8) |
@@ -35,11 +35,11 @@ Aqui: cartões, individual (auto ou manual) e show, esquema tático por `Formati
 
 ### 2.4 Patrocinador rotativo
 Antigo: `sponsorFormat` (texto, logo + nome, banner, banner + nome), `sponsorAnimation`, `sponsorAnimationSpeed`, `sponsorDuration`, `sponsorStyle` (box, limpo, faixa), escala/fonte/tipografia/X/Y.
-Aqui: biblioteca, rotação 3–30 s, logotipo WebP. **Falta:** formatos, estilos, animações/velocidade e posição livre.
+Aqui: biblioteca, rotação 3–30 s, logotipo WebP. **Entregue:** 5 formatos, 3 estilos, 5 animações com velocidade, tamanho do bloco e do texto e posição livre.
 
 ### 2.5 Barra de patrocinadores (1500 x 200)
 Antigo: saída própria; `sponsorBarDuration`, `sponsorBarTransition` (fade, slide, zoom, flip, elastic), `sponsorBarFit` (preencher/conter), `sponsorBarBorder`, `sponsorBarShadow`, `sponsorBarScale`, `sponsorBarX/Y`, `sponsorBarOpacity`, `sponsorBarRadius`, `sponsorBarBackground`, modo imagem/vídeo.
-Aqui: nada equivalente. **Falta tudo** (tela `barra-patrocinio`, banners largos na biblioteca, parâmetros acima).
+Aqui: nada equivalente. **Entregue:** tela `barra-patrocinio` (tela extra que liga e desliga ao vivo), banner largo por patrocinador na biblioteca e todos os parâmetros (tempo, 5 transições, ajuste, moldura, sombra, escala, X/Y, opacidade, cantos, fundo). Fora: vídeo no banner (só imagem).
 
 ### 2.6 Estatísticas
 Antigo: estatísticas lançadas à mão (finalizações, no gol, escanteios, faltas, impedimentos, defesas, posse de bola), três visões (comparativo com até 6 indicadores, gols e cartões por equipe, destaque do atleta com foto/camisa/gols/cartões/observação), `statsStyle` (painel TV, vidro, minimal), `statsAnimation`, `statsDuration` (0 = fica no ar), escala/fonte/tipografia/X/Y.

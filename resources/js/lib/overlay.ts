@@ -3,6 +3,7 @@ import { ConnectionState, Realtime, subscribeToChannel } from '@/lib/echo';
 import './artFonts';
 import { LowerThirdBannerData, LowerThirdSettings } from './lowerThird';
 import { useEffect, useRef, useState } from 'react';
+import type { BarLook, SponsorItem, SponsorLook } from './sponsorLook';
 
 export interface OverlayTeam {
     name: string;
@@ -109,6 +110,12 @@ export interface LineupPublicSettings {
     anchor_ms: number;
 }
 
+export interface SponsorsState extends Partial<SponsorLook>, Partial<BarLook> {
+    enabled: boolean;
+    seconds: number;
+    items: SponsorItem[];
+}
+
 export interface BracketSide {
     name: string;
     short: string | null;
@@ -122,13 +129,13 @@ export interface OverlayState {
     appearance: OverlayAppearance;
     font_face: OverlayFontFace | null;
     lineup_settings: LineupPublicSettings;
-    sponsors: { enabled: boolean; seconds: number; items: { name: string; logo_url: string }[] };
+    sponsors: SponsorsState;
     lower_third_settings: LowerThirdSettings;
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     championship: Record<string, boolean>;
     stoppage: number;
     social: { items: { label: string; value: string }[]; url: string | null };
-    screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean; social: boolean };
+    screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean; social: boolean; sponsor_bar: boolean };
     cartela: { title: string; subtitle: string; until_ms: number | null };
     summary: {
         headline: string;

@@ -14,12 +14,12 @@ export interface OverlayPreviewStatus {
     description: string;
 }
 
-const EXTRA_SCREENS: Record<string, string> = { prejogo: 'pregame', comparativo: 'compare', cartela: 'cartela', resumo: 'summary', chaveamento: 'bracket', social: 'social' };
+const EXTRA_SCREENS: Record<string, string> = { prejogo: 'pregame', comparativo: 'compare', cartela: 'cartela', resumo: 'summary', chaveamento: 'bracket', social: 'social', 'barra-patrocinio': 'sponsor_bar' };
 
 export function overlayPreviewStatus(slug: string, hasGame: boolean, layers: OverlayPreviewLayers): OverlayPreviewStatus {
     const extra = EXTRA_SCREENS[slug];
 
-    if (extra !== undefined && (slug === 'cartela' || slug === 'social' || hasGame)) {
+    if (extra !== undefined && (slug === 'cartela' || slug === 'social' || slug === 'barra-patrocinio' || hasGame)) {
         return layers.screens?.[extra] === true
             ? { label: 'No ar', tone: 'live', description: 'Esta tela está no ar no OBS até você ocultá-la.' }
             : { label: 'Oculta', tone: 'hidden', description: 'A prévia está disponível; mostre a tela (coluna Telas extras) para exibi-la no OBS.' };
