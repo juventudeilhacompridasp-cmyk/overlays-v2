@@ -77,7 +77,7 @@ it('builds the overlay state with the score, the clock and the logos', function 
             'goal_team_seconds' => 2,
             'goal_animation' => 'typewriter',
         ])
-        ->and($state['lineup_settings'])->toBe(['presentation' => 'sequence', 'list_seconds' => 6, 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'layout' => 'classic', 'style' => 'editorial', 'animation' => 'slide', 'formation_mark' => 'photo', 'formation_photo_size' => 100, 'sponsor_size' => 100, 'x' => null, 'y' => null, 'surface' => 96, 'radius' => null, 'text_scale' => 100, 'step' => 0, 'anchor_ms' => 0])
+        ->and($state['lineup_settings'])->toBe(['presentation' => 'sequence', 'list_seconds' => 6, 'formation_seconds' => 8, 'full_individuals' => true, 'transition' => 'slide', 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'layout' => 'classic', 'style' => 'editorial', 'animation' => 'slide', 'formation_mark' => 'photo', 'formation_photo_size' => 100, 'sponsor_size' => 100, 'x' => null, 'y' => null, 'surface' => 96, 'radius' => null, 'text_scale' => 100, 'step' => 0, 'anchor_ms' => 0])
         ->and($state['game']['id'])->toBe($game->id)
         ->and($state['game']['home']['color'])->toBe('#ff0000')
         ->and($state['game']['clock']['state'])->toBe('not_started')
@@ -125,7 +125,7 @@ it('only publishes a short signed photo url for athletes explicitly enabled on t
     $channel->update(['lineup_settings' => ['presentation' => 'formation', 'list_seconds' => 8, 'photo_person_ids' => [$hp[0]]]]);
     $state = OverlayState::for($channel->fresh());
 
-    expect($state['lineup_settings'])->toBe(['presentation' => 'formation', 'list_seconds' => 8, 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'layout' => 'classic', 'style' => 'editorial', 'animation' => 'slide', 'formation_mark' => 'photo', 'formation_photo_size' => 100, 'sponsor_size' => 100, 'x' => null, 'y' => null, 'surface' => 96, 'radius' => null, 'text_scale' => 100, 'step' => 0, 'anchor_ms' => 0])
+    expect($state['lineup_settings'])->toBe(['presentation' => 'formation', 'list_seconds' => 8, 'formation_seconds' => 8, 'full_individuals' => true, 'transition' => 'slide', 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'layout' => 'classic', 'style' => 'editorial', 'animation' => 'slide', 'formation_mark' => 'photo', 'formation_photo_size' => 100, 'sponsor_size' => 100, 'x' => null, 'y' => null, 'surface' => 96, 'radius' => null, 'text_scale' => 100, 'step' => 0, 'anchor_ms' => 0])
         ->and($state['lineup']['home']['starters'][0]['photo_url'])->toStartWith('https://private.test/')
         ->and($state['lineup']['home']['starters'][1]['photo_url'])->toBeNull()
         ->and(json_encode($state))->not->toContain($hp[0])->not->toContain('photo_person_ids');
@@ -767,7 +767,7 @@ describe('scenes', function () {
             ->and($scene->config['appearance']['font'])->toBe('bebas')
             ->and($scene->config['layers'])->toBe(['lineup' => true, 'standings' => false, 'scoreboard' => true, 'lower_third' => true])
             ->and($scene->config['sponsor_settings'])->toMatchArray(['enabled' => true, 'seconds' => 12])
-            ->and($scene->config['lineup_settings'])->toBe(['presentation' => 'formation', 'list_seconds' => 9, 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'layout' => 'classic', 'style' => 'editorial', 'animation' => 'slide', 'formation_mark' => 'photo', 'formation_photo_size' => 100, 'sponsor_size' => 100, 'x' => null, 'y' => null, 'surface' => 96, 'radius' => null, 'text_scale' => 100])
+            ->and($scene->config['lineup_settings'])->toBe(['presentation' => 'formation', 'list_seconds' => 9, 'formation_seconds' => 8, 'full_individuals' => true, 'transition' => 'slide', 'team' => 'home', 'individual_mode' => 'auto', 'individual_seconds' => 6, 'individual_scope' => 'starters', 'sponsor_banner' => false, 'layout' => 'classic', 'style' => 'editorial', 'animation' => 'slide', 'formation_mark' => 'photo', 'formation_photo_size' => 100, 'sponsor_size' => 100, 'x' => null, 'y' => null, 'surface' => 96, 'radius' => null, 'text_scale' => 100])
             ->and(array_keys($scene->config))->not->toContain('game_id')
             ->and(json_encode($scene->config))->not->toContain('01jabc');
     });
