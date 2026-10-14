@@ -17,6 +17,7 @@ use Illuminate\Support\Str;
  * @property array<string, mixed>|null $sponsor_settings
  * @property array<string, mixed>|null $lower_third_settings
  * @property array<string, mixed>|null $screen_settings
+ * @property array<string, mixed>|null $stats_settings
  * @property string|null $control_token_hash
  */
 #[Unguarded]
