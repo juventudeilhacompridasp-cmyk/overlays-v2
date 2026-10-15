@@ -232,6 +232,30 @@ describe('the internal routes (part 3)', function () {
     });
 });
 
+describe('the site routes (part 4)', function () {
+    it('describes every portal, status, landing, registration, signup and auth route (new route = new entry in site.php)', function () {
+        $operations = OpenApiBuilder::operations((new OpenApiBuilder)->build());
+        $pattern = '/^(portal|public|status|marketing|registration|market\.signup|password|verification|legal\.accept|profile)\.|^(login|logout|register|dashboard)$/';
+        $seen = 0;
+
+        foreach ($operations as $operation) {
+            $name = (string) ($operation['x-name'] ?? '');
+
+            if (preg_match($pattern, $name) === 1) {
+                $seen++;
+                expect($operation['x-documented'])->toBeTrue("{$operation['method']} {$operation['path']} ({$name}) sem descrição em resources/api-docs/site.php");
+                expect($operation['summary'])->not->toBe($name);
+
+                foreach ($operation['parameters'] as $parameter) {
+                    expect($parameter['description'])->not->toBeNull("{$operation['path']}: parâmetro {$parameter['name']} sem descrição");
+                }
+            }
+        }
+
+        expect($seen)->toBeGreaterThan(40);
+    });
+});
+
 describe('the change history', function () {
     it('is newest first, well formed, and gives the version of the specification', function () {
         $entries = ApiChangelog::entries();

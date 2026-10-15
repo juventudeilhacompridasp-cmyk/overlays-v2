@@ -55,6 +55,9 @@ final class OpenApiBuilder
         'block' => 'ID (ULID) do bloqueio de equipe.',
         'video' => 'ID (ULID) do vídeo do perfil.',
         'domain' => 'ID (ULID) do domínio da organização.',
+        'code' => 'Código de 10 caracteres da carteirinha do atleta.',
+        'id' => 'ID do usuário a verificar.',
+        'hash' => 'Hash do e-mail a verificar (link assinado).',
         'incident' => 'ID (ULID) do incidente da status page.',
         'lead' => 'ID (ULID) do contato recebido pela landing page.',
     ];
@@ -70,7 +73,11 @@ final class OpenApiBuilder
         /** @var array<string, array<string, mixed>> $internal */
         $internal = require resource_path('api-docs/internal.php');
 
-        return $catalog + $internal;
+        // Rotas de site (portal, status, landing, inscrição, cadastro do Mercado e autenticação).
+        /** @var array<string, array<string, mixed>> $site */
+        $site = require resource_path('api-docs/site.php');
+
+        return $catalog + $internal + $site;
     }
 
     /**
