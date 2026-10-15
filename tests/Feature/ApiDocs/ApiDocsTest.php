@@ -199,6 +199,39 @@ describe('the groups that were described in part 2', function () {
     });
 });
 
+describe('the internal routes (part 3)', function () {
+    it('describes every panel, manager and athlete route (new screen or action = new entry in internal.php)', function () {
+        $spec = (new OpenApiBuilder)->build();
+        $groups = ['Painel', 'Gestor de equipe', 'Atleta (Mercado)'];
+        $seen = [];
+
+        foreach ($spec['paths'] as $path => $methods) {
+            foreach ($methods as $method => $operation) {
+                // Só as rotas de sessão (panel./manager./athlete.); o cadastro público do Mercado (market.*) fica de fora.
+                if (in_array($operation['tags'][0], $groups, true) && preg_match('/^(panel|manager|athlete)\./', (string) $operation['x-name']) === 1) {
+                    $seen[$operation['tags'][0]] = true;
+                    expect($operation['x-documented'])->toBeTrue("{$method} {$path} sem descrição em resources/api-docs/internal.php");
+                    expect($operation['summary'])->not->toBe($operation['x-name']);
+                }
+            }
+        }
+
+        expect(array_keys($seen))->toEqualCanonicalizing($groups);
+    });
+
+    it('keeps the path parameters described', function () {
+        $operations = OpenApiBuilder::operations((new OpenApiBuilder)->build());
+
+        foreach ($operations as $operation) {
+            if (in_array($operation['tags'][0], ['Painel', 'Gestor de equipe', 'Atleta (Mercado)'], true) && preg_match('/^(panel|manager|athlete)\./', (string) ($operation['x-name'] ?? '')) === 1) {
+                foreach ($operation['parameters'] as $parameter) {
+                    expect($parameter['description'])->not->toBeNull("{$operation['path']}: parâmetro {$parameter['name']} sem descrição");
+                }
+            }
+        }
+    });
+});
+
 describe('the change history', function () {
     it('is newest first, well formed, and gives the version of the specification', function () {
         $entries = ApiChangelog::entries();

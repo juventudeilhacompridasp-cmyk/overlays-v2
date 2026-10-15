@@ -8,6 +8,14 @@
 
 return [
     [
+        'version' => '1.2.0',
+        'date' => '2026-10-15',
+        'changes' => [
+            'Rotas internas do painel, do gestor de equipe e do atleta passam a ter descrição (telas, ações e arquivos), em `resources/api-docs/internal.php`.',
+            'Descrição dos parâmetros de caminho dos recursos do painel (pessoa, elenco, pedido de inscrição, estádio, cena, patrocinador e outros).',
+        ],
+    ],
+    [
         'version' => '1.1.1',
         'date' => '2026-10-15',
         'changes' => [
