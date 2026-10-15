@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.2.3',
+        'date' => '2026-10-15',
+        'changes' => ['Rotas de site (portal público, status page, landing, inscrição online, cadastro do Mercado e autenticação/conta) agora têm descrição em `resources/api-docs/site.php`.'],
+    ],
+    [
         'version' => '1.2.2',
         'date' => '2026-10-15',
         'changes' => ['Rotas da área da plataforma (organizações, status page, contatos, medição e documentação) agora têm descrição.'],
