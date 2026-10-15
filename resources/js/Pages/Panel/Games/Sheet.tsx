@@ -88,6 +88,7 @@ interface Props {
     score_model: string;
     quarters: { period: number; home: number; away: number }[] | null;
     sets: SetScore[] | null;
+    volleyball_rotation: { set: number | null; configured: boolean; server: 'home' | 'away' | null; home_position: number; away_position: number; servers: Record<string, string> } | null;
     sets_to_win: number;
     fouls: { home: number; away: number; limit: number; period: number } | null;
     clock: GameClock & { server_time_ms: number; max_period: number };
@@ -365,6 +366,24 @@ function PointsCard({ game, sets, home, away, lastPoint, send }: { game: Props['
             <p className="mt-3 text-xs text-gray-500">Cada toque lança um ponto de rally; o set termina sozinho ao atingir a pontuação com a vantagem mínima. Só o último ponto pode ser desfeito.</p>
         </Card>
     );
+}
+
+function VolleyballRotationCard({ game, rotation, home, away }: { game: Props['game']; rotation: Props['volleyball_rotation']; home: Team; away: Team }) {
+    const [set, setSet] = useState(String(rotation?.set ?? 1));
+    const [server, setServer] = useState<'home' | 'away'>((rotation?.servers[set] as 'home' | 'away') ?? 'home');
+    if (!rotation) return null;
+    const save = (event: FormEvent) => {
+        event.preventDefault();
+        router.patch(route('panel.games.volleyball-rotation', game.id), { set: Number(set), server }, { preserveScroll: true });
+    };
+    return <Card title="Rodízio do vôlei">
+        <form className="flex flex-wrap items-end gap-3" onSubmit={save}>
+            <Field label="Set"><Select value={set} onChange={(event) => { setSet(event.target.value); setServer((rotation.servers[event.target.value] as 'home' | 'away') ?? 'home'); }}><option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option><option value="5">Set 5</option></Select></Field>
+            <Field label="Saque inicial"><Select value={server} onChange={(event) => setServer(event.target.value as 'home' | 'away')}><option value="home">{home.name}</option><option value="away">{away.name}</option></Select></Field>
+            <Button type="submit">Salvar</Button>
+        </form>
+        <p className="mt-3 text-xs text-gray-500">Set atual: {rotation.set ?? '—'} · Sacando: {rotation.server === 'home' ? home.name : rotation.server === 'away' ? away.name : 'não configurado'} · Posições {home.name}: {rotation.home_position} · {away.name}: {rotation.away_position}</p>
+    </Card>;
 }
 
 /** Bolinhas da disputa no painel (fundo claro): verde convertida, vermelha perdida, vazia por cobrar. */
@@ -690,7 +709,7 @@ const teamFields = (team: Team) => ({
     timeouts: team.timeouts,
 });
 
-export default function Sheet({ game: serverGame, home: serverHome, away: serverAway, events: serverEvents, limits, clock_offsets, event_types, sport, score_model, quarters, sets, fouls, clock: serverClock, public_url }: Props) {
+export default function Sheet({ game: serverGame, home: serverHome, away: serverAway, events: serverEvents, limits, clock_offsets, event_types, sport, score_model, quarters, sets, fouls, clock: serverClock, public_url, volleyball_rotation }: Props) {
     // Quem não opera jogos só consulta a súmula: o servidor também recusa as ações, aqui só se escondem os controles.
     const canOperate = useCan('operate-games');
     const canImport = useFeature('sheet_import');
@@ -789,7 +808,7 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
             ) : (
                 <div className="space-y-6">
                     {score_model === 'sets' ? (
-                        <PointsCard game={game} sets={sets ?? []} home={home} away={away} lastPoint={[...events].reverse().find((event) => event.type === 'point' && event.voidable)} send={send} />
+                        <><VolleyballRotationCard game={game} rotation={volleyball_rotation} home={home} away={away} /><PointsCard game={game} sets={sets ?? []} home={home} away={away} lastPoint={[...events].reverse().find((event) => event.type === 'point' && event.voidable)} send={send} /></>
                     ) : (
                         <ClockCard game={game} clock={clock} publicUrl={public_url} sport={sport} send={send} />
                     )}

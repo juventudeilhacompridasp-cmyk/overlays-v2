@@ -57,6 +57,7 @@ final class PublicGameSnapshot
             'sport' => $game->sport()->value,
             'score_model' => $game->sport()->profile()->scoreModel,
             'sets' => $game->sport()->profile()->scoreModel === 'sets' ? ($game->sets ?? []) : null,
+            'rotation' => VolleyballRotationView::for($game),
             'clock' => $game->clock()->snapshot($marks) + self::clockDisplay($game, $marks),
             'shot_clock' => self::shotClock($game),
             'quarters' => self::quarters($game),

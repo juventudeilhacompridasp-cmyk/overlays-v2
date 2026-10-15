@@ -27,6 +27,7 @@ use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Support\PublicGameSnapshot;
 use App\Modules\Matches\Support\ShootoutView;
 use App\Modules\Matches\Support\TeamTimeouts;
+use App\Modules\Matches\Support\VolleyballRotationView;
 use App\Modules\Rules\Tactics\Formations;
 use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Enums\RosterStatus;
@@ -189,6 +190,7 @@ class SheetController extends Controller
             'sport' => $game->sport()->value,
             'score_model' => $game->sport()->profile()->scoreModel,
             'sets' => $game->sport()->profile()->scoreModel === 'sets' ? ($game->sets ?? []) : null,
+            'volleyball_rotation' => VolleyballRotationView::for($game),
             'sets_to_win' => $rules->setsToWin,
             'fouls' => $snapshot['fouls'],
             'quarters' => $snapshot['quarters'],
@@ -276,6 +278,32 @@ class SheetController extends Controller
         }
 
         return back();
+    }
+
+    /** Define o saque inicial de um set, antes do primeiro rally daquele set. */
+    public function volleyballRotation(Request $request, Game $game): RedirectResponse
+    {
+        if ($game->sport()->profile()->scoreModel !== 'sets') {
+            return back()->with('error', 'O rodízio só existe para partidas de vôlei.');
+        }
+
+        $validated = $request->validate([
+            'set' => ['required', 'integer', 'between:1,5'],
+            'server' => ['required', 'in:home,away'],
+        ]);
+        $set = (int) $validated['set'];
+        $hasPoints = $game->events()->effective()->where('type', GameEventType::Point)->where('period', $set)->exists();
+
+        if ($hasPoints) {
+            return back()->with('error', 'O saque inicial só pode ser alterado antes do primeiro rally do set.');
+        }
+
+        $rotation = (array) $game->volleyball_rotation;
+        $servers = (array) ($rotation['servers'] ?? []);
+        $servers[(string) $set] = $validated['server'];
+        $game->forceFill(['volleyball_rotation' => ['servers' => $servers]])->save();
+
+        return back()->with('success', 'Saque inicial salvo.');
     }
 
     public function voidEvent(Game $game, GameEvent $event, VoidGameEvent $void): RedirectResponse
