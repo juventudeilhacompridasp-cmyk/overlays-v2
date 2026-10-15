@@ -720,6 +720,7 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
     // Quem não opera jogos só consulta a súmula: o servidor também recusa as ações, aqui só se escondem os controles.
     const canOperate = useCan('operate-games');
     const canImport = useFeature('sheet_import');
+    const canReports = useFeature('reports');
     const { auth } = usePage().props;
 
     // Fila offline: lançamentos guardados no aparelho. A tela mostra a projeção (placar, quem está em campo, relógio) como
@@ -765,6 +766,18 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
                 ]}
                 actions={
                     <div className="flex flex-wrap gap-2">
+                        {canReports && (
+                            <>
+                                <LinkButton href={route('panel.games.reports.lineup', game.id)} variant="secondary">
+                                    PDF da escalação
+                                </LinkButton>
+                                {!game.open && (
+                                    <LinkButton href={route('panel.games.reports.final', game.id)} variant="secondary">
+                                        PDF final
+                                    </LinkButton>
+                                )}
+                            </>
+                        )}
                         {canImport && (
                             <LinkButton href={route('panel.games.uploads', game.id)} variant="secondary">
                                 Súmulas enviadas

@@ -21,6 +21,7 @@ use App\Modules\Help\Http\Controllers\HelpNoteController;
 use App\Modules\Market\Http\Controllers\Panel\AdminController as MarketAdminController;
 use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
+use App\Modules\Matches\Http\Controllers\GameReportController;
 use App\Modules\Matches\Http\Controllers\MesarioController;
 use App\Modules\Matches\Http\Controllers\SheetController;
 use App\Modules\Matches\Http\Controllers\SheetReviewController;
@@ -126,6 +127,10 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
     Route::middleware('panel.can:operate-games')->group(function () {
         Route::get('mesario', [MesarioController::class, 'index'])->name('mesario');
         Route::get('games/{game}/sheet', [SheetController::class, 'show'])->name('games.sheet');
+        Route::middleware('feature:reports')->prefix('games/{game}/reports')->name('games.reports.')->group(function () {
+            Route::get('escalacao.pdf', [GameReportController::class, 'lineup'])->name('lineup');
+            Route::get('final.pdf', [GameReportController::class, 'finalReport'])->name('final');
+        });
         Route::put('games/{game}/lineups/{entry}', [SheetController::class, 'lineup'])->name('games.lineup');
         Route::post('games/{game}/sync', [SheetController::class, 'sync'])->name('games.sync');
         Route::post('games/{game}/events', [SheetController::class, 'storeEvent'])->name('games.events.store');
