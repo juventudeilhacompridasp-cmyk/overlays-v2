@@ -2,6 +2,7 @@
 
 namespace App\Support\Images;
 
+use App\Support\PlatformLimits;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -70,15 +71,15 @@ final class ImageStore
         return $contents !== null ? 'data:image/webp;base64,'.base64_encode($contents) : null;
     }
 
-    /** URL temporária assinada (disco privado: dados pessoais). */
-    public static function privateUrl(?string $base, int $size, int $minutes = 30): ?string
+    /** URL temporária assinada (disco privado: dados pessoais); sem `$minutes`, vale a validade da plataforma para fotos. */
+    public static function privateUrl(?string $base, int $size, ?int $minutes = null): ?string
     {
         if (! $base) {
             return null;
         }
 
         try {
-            return Storage::disk('s3-private')->temporaryUrl(self::path($base, $size), now()->addMinutes($minutes));
+            return Storage::disk('s3-private')->temporaryUrl(self::path($base, $size), now()->addMinutes($minutes ?? PlatformLimits::signedMinutes('photos')));
         } catch (Throwable) {
             return null;
         }

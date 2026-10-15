@@ -19,13 +19,14 @@ use App\Modules\Registration\Http\Controllers\ManageController;
 use App\Modules\Status\Http\Controllers\StatusPageController;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Http\Controllers\LegalAcceptController;
+use App\Support\PlatformLimits;
 use Illuminate\Support\Facades\Route;
 
 // Landing page do produto (docs/14): sempre em /produto; a raiz só nos hosts da landing quando `platform.landing.root` está ligado.
 foreach (LandingHosts::all() as $landingHost) {
     Route::domain($landingHost)->get('/', [LandingController::class, 'show']);
 }
-Route::get('/produto', [LandingController::class, 'show'])->middleware('throttle:60,1')->name('marketing.landing');
+Route::get('/produto', [LandingController::class, 'show'])->middleware(PlatformLimits::throttle('public'))->name('marketing.landing');
 Route::post('/produto/contato', [LandingController::class, 'contact'])->middleware('throttle:5,1')->name('marketing.contact');
 Route::post('/produto/medicao', [LandingMetricsController::class, 'store'])->middleware('throttle:30,1')->name('marketing.metrics');
 
@@ -33,7 +34,7 @@ Route::post('/produto/medicao', [LandingMetricsController::class, 'store'])->mid
 if (is_string($statusBase = config('platform.base_domain')) && $statusBase !== '') {
     Route::domain("status.{$statusBase}")->get('/', [StatusPageController::class, 'index']);
 }
-Route::middleware('throttle:60,1')->group(function () {
+Route::middleware(PlatformLimits::throttle('public'))->group(function () {
     Route::get('/status', [StatusPageController::class, 'index'])->name('status.index');
     Route::get('/status.json', [StatusPageController::class, 'json'])->name('status.json');
     Route::get('/status.atom', [StatusPageController::class, 'atom'])->name('status.atom');
@@ -52,34 +53,34 @@ Route::get('/competicoes/{competition:slug}', [PortalController::class, 'competi
 Route::get('/competicoes/{competition:slug}/edicoes/{season}', [PortalController::class, 'season'])->name('portal.season');
 Route::get('/competicoes/{competition:slug}/edicoes/{season}/estatisticas', [PortalController::class, 'stats'])->name('portal.stats');
 Route::get('/locais/{venue}', [PortalController::class, 'venue'])->name('portal.venue');
-Route::get('/feed.xml', [PortalController::class, 'feed'])->name('portal.feed')->middleware('throttle:60,1');
-Route::get('/busca', [PortalController::class, 'search'])->name('portal.search')->middleware('throttle:60,1');
+Route::get('/feed.xml', [PortalController::class, 'feed'])->name('portal.feed')->middleware(PlatformLimits::throttle('public'));
+Route::get('/busca', [PortalController::class, 'search'])->name('portal.search')->middleware(PlatformLimits::throttle('public'));
 Route::get('/equipes/{team}', [PortalController::class, 'team'])->name('portal.team');
 Route::get('/equipes/{team}/calendario.ics', [PortalController::class, 'teamCalendar'])->name('portal.team.calendar');
 // Avisos push do público (jogo ou equipe); exigem o recurso `push` e as chaves VAPID.
-Route::middleware(['throttle:30,1', 'feature:push'])->prefix('push')->name('push.')->group(function () {
+Route::middleware([PlatformLimits::throttle('push'), 'feature:push'])->prefix('push')->name('push.')->group(function () {
     Route::post('assinar', [PushController::class, 'subscribe'])->name('subscribe');
     Route::post('cancelar', [PushController::class, 'unsubscribe'])->name('unsubscribe');
 });
 
 // Widgets para outros sites (iframe): sem login, só edição publicada, liberados pelo recurso "embeds".
-Route::middleware(['throttle:120,1', 'feature:embeds'])->prefix('embed')->name('embed.')->group(function () {
+Route::middleware([PlatformLimits::throttle('embed'), 'feature:embeds'])->prefix('embed')->name('embed.')->group(function () {
     Route::get('jogo/{game}', [EmbedController::class, 'game'])->name('game');
     Route::get('classificacao/{division}', [EmbedController::class, 'standings'])->name('standings');
     Route::get('jogos/{season}', [EmbedController::class, 'games'])->name('games');
 });
 
 // Verificação da carteirinha (QR): sem cache e fora dos buscadores (cabeçalho e robots).
-Route::get('/carteirinha/{code}', CardVerifyController::class)->name('portal.card')->middleware(['throttle:30,1', 'feature:athlete_cards', PrivateNoIndex::class]);
+Route::get('/carteirinha/{code}', CardVerifyController::class)->name('portal.card')->middleware([PlatformLimits::throttle('card'), 'feature:athlete_cards', PrivateNoIndex::class]);
 Route::get('/termos', [LegalPageController::class, 'terms'])->name('portal.terms');
 Route::get('/privacidade', [LegalPageController::class, 'privacy'])->name('portal.privacy');
 Route::get('/sitemap.xml', [PortalController::class, 'sitemap'])->name('portal.sitemap');
 Route::get('/robots.txt', [PortalController::class, 'robots'])->name('portal.robots');
 
 // Inscrição online de equipes (sem login). O link pessoal da equipe (`/minha-inscricao/{token}`) é o acesso ao pedido.
-Route::middleware(['throttle:60,1', 'feature:online_registration'])->group(function () {
+Route::middleware([PlatformLimits::throttle('public'), 'feature:online_registration'])->group(function () {
     Route::get('/inscricoes/{competition:slug}/{season}', [ApplyController::class, 'show'])->name('registration.apply');
-    Route::post('/inscricoes/{competition:slug}/{season}', [ApplyController::class, 'store'])->middleware('throttle:10,1')->name('registration.store');
+    Route::post('/inscricoes/{competition:slug}/{season}', [ApplyController::class, 'store'])->middleware(PlatformLimits::throttle('registration'))->name('registration.store');
 
     Route::prefix('/minha-inscricao/{registration:token}')->name('registration.')->group(function () {
         Route::get('/', [ManageController::class, 'show'])->name('manage');
@@ -94,10 +95,10 @@ Route::middleware(['throttle:60,1', 'feature:online_registration'])->group(funct
 });
 
 // Overlays do OBS (sem login; o token da URL é o acesso). A tela "estado" é a contingência sem WebSocket.
-Route::get('/overlay/{channel:token}/estado', [OverlayController::class, 'state'])->name('overlay.state')->middleware(['throttle:120,1', 'feature:overlays']);
-Route::get('/overlay/{channel:token}/fonte/{font}', [OverlayController::class, 'font'])->name('overlay.font')->middleware(['throttle:120,1', 'feature:overlays']);
+Route::get('/overlay/{channel:token}/estado', [OverlayController::class, 'state'])->name('overlay.state')->middleware([PlatformLimits::throttle('overlay'), 'feature:overlays']);
+Route::get('/overlay/{channel:token}/fonte/{font}', [OverlayController::class, 'font'])->name('overlay.font')->middleware([PlatformLimits::throttle('overlay'), 'feature:overlays']);
 Route::get('/overlay/{channel:token}/personalizado/{item}', [OverlayController::class, 'custom'])->name('overlay.custom')->middleware('feature:overlays');
-Route::get('/overlay/{channel:token}/campeonato/dados', [ChampionshipOverlayController::class, 'data'])->name('overlay.championship.data')->middleware(['throttle:120,1', 'feature:overlays']);
+Route::get('/overlay/{channel:token}/campeonato/dados', [ChampionshipOverlayController::class, 'data'])->name('overlay.championship.data')->middleware([PlatformLimits::throttle('overlay'), 'feature:overlays']);
 Route::get('/overlay/{channel:token}/campeonato/{view}', [ChampionshipOverlayController::class, 'show'])->name('overlay.championship')->middleware('feature:overlays');
 Route::get('/overlay/{channel:token}/{overlay}', [OverlayController::class, 'show'])->name('overlay.show')->middleware('feature:overlays');
 

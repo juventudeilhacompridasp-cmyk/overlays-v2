@@ -63,6 +63,8 @@ Proposta: mover o que o regulamento real costuma variar (duração, pedidos de t
 `seasons.rules` com o perfil como padrão — usando o mecanismo que já existe (`RuleSet::fromArray($rules, $sportDefaults)`).
 
 ## 5. Ordem sugerida de entrega
+_Item 5 (limites de segurança) entregue: requisições por minuto por grupo e validade dos links assinados em `config/platform.php` (`App\Support\PlatformLimits`); fica a retenção do push e o tamanho de imagens._
+
 1. Tela única **Painel > Comunicações** (organização): interruptores dos e-mails da inscrição, avisos do gestor, convite
    e eventos de push + limiares do lembrete de escalação. É o que mais gera suporte e o menor risco.
 2. **Recursos ligáveis pela própria organização** (só reduzem o pacote) e seções do portal.

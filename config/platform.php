@@ -38,6 +38,24 @@ return [
     ],
 
     /*
+    | Limites de segurança da plataforma (docs/10, item 5): requisições por minuto (por IP) de cada grupo de rotas públicas e
+    | minutos de validade dos links assinados de arquivos privados. O padrão é o comportamento original; veja `App\Support\PlatformLimits`.
+    */
+    'limits' => [
+        'api' => (int) env('PLATFORM_LIMIT_API', 60),
+        'overlay' => (int) env('PLATFORM_LIMIT_OVERLAY', 120),
+        'embed' => (int) env('PLATFORM_LIMIT_EMBED', 120),
+        'push' => (int) env('PLATFORM_LIMIT_PUSH', 30),
+        'card' => (int) env('PLATFORM_LIMIT_CARD', 30),
+        'public' => (int) env('PLATFORM_LIMIT_PUBLIC', 60),
+        'registration' => (int) env('PLATFORM_LIMIT_REGISTRATION', 10),
+    ],
+    'signed_url_minutes' => [
+        'documents' => (int) env('SIGNED_URL_DOCUMENTS_MINUTES', 10),
+        'photos' => (int) env('SIGNED_URL_PHOTOS_MINUTES', 30),
+    ],
+
+    /*
     | Landing page do produto (docs/14). Ela sempre existe em `/produto`. Com `root` ligado, a RAIZ dos hosts da landing
     | (`hosts`, separados por vírgula; sem valor usa o domínio-base e o www dele) também mostra a landing em vez do portal da
     | organização padrão. `contact_email` recebe o aviso dos contatos enviados pelo formulário (vazio = só guarda).
