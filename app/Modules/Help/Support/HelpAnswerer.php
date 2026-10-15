@@ -34,7 +34,7 @@ PROMPT;
 
     /**
      * @param  list<HelpArticle>  $visible  artigos que a pessoa pode ver (as notas da organização ficam de fora)
-     * @return array{answer: ?string, sources: list<HelpArticle>, asked: bool}  `asked` = chegou ao provedor
+     * @return array{answer: ?string, sources: list<HelpArticle>, asked: bool} `asked` = chegou ao provedor
      */
     public function answer(string $question, array $visible): array
     {
