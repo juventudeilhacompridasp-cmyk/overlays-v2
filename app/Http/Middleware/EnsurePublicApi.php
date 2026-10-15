@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Modules\Tenancy\CurrentOrganization;
+use App\Modules\Tenancy\Models\Organization;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,7 +13,8 @@ class EnsurePublicApi
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $settings = CurrentOrganization::get()?->settings ?? [];
+        $organization = CurrentOrganization::get();
+        $settings = $organization instanceof Organization ? $organization->settings : [];
 
         abort_if(($settings['public_api'] ?? true) === false, 404);
 
