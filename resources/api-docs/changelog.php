@@ -8,6 +8,13 @@
 
 return [
     [
+        'version' => '1.2.1',
+        'date' => '2026-10-15',
+        'changes' => [
+            'Nova rota interna `help.ask` (painel e gestor): pergunta à central de ajuda com resposta de IA, sob o recurso `help_ai`.',
+        ],
+    ],
+    [
         'version' => '1.2.0',
         'date' => '2026-10-15',
         'changes' => [

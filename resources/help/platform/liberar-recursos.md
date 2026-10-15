@@ -11,7 +11,7 @@ Em [Plataforma](route:platform.organizations.index) o Super Admin gerencia cada 
 O **pacote** (Básico, Padrão ou Completo) define quais recursos começam ligados. A lista de recursos da organização, quando preenchida, **sobrescreve** o pacote (liberação manual). O núcleo (competições, súmula, portal) vale para todos.
 
 ## Recursos sob demanda
-Alguns recursos ficam **fora de todos os pacotes** e desligados para todo mundo até você liberar organização por organização, na seção "Recursos sob demanda". Hoje: **leitura de súmulas enviadas**, que envia imagens a um serviço de IA. Marcar na lista manual **não** liga esses recursos.
+Alguns recursos ficam **fora de todos os pacotes** e desligados para todo mundo até você liberar organização por organização, na seção "Recursos sob demanda". Hoje: **leitura de súmulas enviadas**, que envia imagens a um serviço de IA; o **Mercado de jogadores livres**; e as **respostas com IA na ajuda**, que enviam a pergunta (sem e-mails nem números longos) e trechos públicos dos artigos ao serviço de IA (precisa da chave `ANTHROPIC_API_KEY`; limites `HELP_AI_USER_DAILY` e `HELP_AI_MONTHLY`; depois a própria organização liga em Parâmetros). Marcar na lista manual **não** liga esses recursos.
 
 ## Limites
 Número máximo de usuários e de competições (vazio = sem limite). Gestores de equipe não contam como usuários.

@@ -1,6 +1,6 @@
 # ADR 0006 — Central de ajuda com busca e respostas (estilo RAG)
 
-Status: aceito (partes 1 e 2 entregues: artigos, ajuda contextual, "isso ajudou?" e notas da organização; falta a resposta com IA)
+Status: aceito (partes 1, 2 e 3 entregues: artigos, ajuda contextual, "isso ajudou?", notas da organização e resposta com IA)
 Data: 13/10/2026
 
 ## Contexto
@@ -41,4 +41,4 @@ conhecimento hoje está espalhado em `AGENTS.md`, `docs/*` e na cabeça de quem 
 ## Entrega em partes
 1. Estrutura de artigos + renderizador + busca textual + telas + conteúdo inicial (guias por módulo).
 2. Ajuda contextual por tela + "isso ajudou?" + notas da organização.
-3. Resposta com IA (RAG) opcional, com limites e registro de lacunas.
+3. Resposta com IA (RAG) opcional, com limites e registro de lacunas — **feita**, sem pgvector: a busca textual da própria ajuda escolhe até 4 artigos do ACERVO (nunca as notas da organização) e o provedor (Claude) responde só com eles, citando as fontes; resposta sem fonte conhecida vale como "não encontrei"; pergunta e e-mails/números longos são limpos antes de sair. Recurso sob demanda `help_ai` + interruptor da organização (padrão desligado) + chave do provedor; limites `HELP_AI_USER_DAILY` (10/dia por pessoa) e `HELP_AI_MONTHLY` (300/mês por organização); `help_questions` guarda a contagem e, só nas SEM resposta, o texto da pergunta (lacunas em Painel > Notas da ajuda).
