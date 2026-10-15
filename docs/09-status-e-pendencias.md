@@ -17,6 +17,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
   desenhados nas posições definidas pelo gestor; controle pelo painel e pela API, com URLs privadas curtas e sem IDs no estado público.
 - Painel de overlays com estúdio de pré-visualização: quatro telas organizadas em cards, URL real renderizada em 1920 x 1080,
   fundos de conferência, status operacional e ações para copiar/abrir; só uma prévia ao vivo por canal para preservar recursos.
+- Relatórios PDF de partidas: download privado da escalação pré-partida e do relatório final com placar, sets, escalações e linha do tempo de eventos efetivos.
 
 ## Em andamento
 - **Leitura de súmulas enviadas depois do jogo (ADR 0004)**: partes 1 (envio e guarda), 2 (leitura) e 3 (conferência) entregues — leitor estruturado CSV/XLSX sem IA, leitor por IA com visão (Claude, `ANTHROPIC_API_KEY`), `ExtractedSheet`, job em fila, interruptor e limite por jogo da organização, limite mensal da plataforma, aviso de privacidade e texto nos Termos; **recurso segue sob demanda (desligado para todos até o Super Admin liberar)**. Parte 3 entregue (revisão humana da leitura com registro das correções, relatório de conferência na tela e em CSV, sem alterar o jogo). **Parte 4 entregue** (aviso por e-mail a quem pediu a leitura quando ela termina ou falha, com interruptor em Comunicações, e leituras por IA do mês/total por organização em `/plataforma`). A leitura de súmulas está completa.

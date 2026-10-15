@@ -98,6 +98,13 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 
 - Indicadores e gráficos usam somente agregados da organização atual; não expor dados pessoais nem criar consultas por atleta sem necessidade.
 - Gráficos devem ser leves e progressivos (CSS/SVG, sem bibliotecas pesadas) para manter o painel responsivo.
+
+## Relatórios PDF de partidas
+
+- Os relatórios internos ficam nas rotas `panel.games.reports.*`, protegidas por `feature:reports` e `panel.can:operate-games`.
+- A escalação pré-partida e o relatório final são downloads privados em PDF; o relatório final inclui placar, sets, escalações registradas, eventos efetivos e situação da partida.
+- Eventos devem ser consultados com `GameEvent::effective()` e os PDFs nunca podem ser publicados em snapshots, overlays ou páginas públicas.
+- O gerador usa apenas recursos nativos para permanecer leve em instalações OBS e não introduzir dependências de renderização.
 - Filtros do painel (`DashboardController`): `?competition=`, `?season=` e `?months=` (3, 6 ou 12) valem para os jogos (gráfico, situação, próximos); chave inexistente vira "sem filtro", edição de outra competição corrige a competição, e os totais de competições/equipes/pessoas são sempre da organização. `panel.dashboard.export` (`/painel/resumo.csv`, qualquer membro) exporta os mesmos números em CSV (`;`, BOM, `SeasonReports::safeCell`). Número ou filtro novo = aggregate + teste em `DashboardTest`.
 
 ## Visualizador unificado dos overlays
