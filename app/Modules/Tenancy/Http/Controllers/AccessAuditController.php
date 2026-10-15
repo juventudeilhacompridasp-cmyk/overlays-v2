@@ -3,6 +3,7 @@
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Modules\Tenancy\Models\AccessAudit;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,8 +16,8 @@ class AccessAuditController extends Controller
         return Inertia::render('Panel/AccessAudit/Index', [
             'entries' => AccessAudit::query()->with('actor:id,name')->latest('created_at')->latest('id')->limit(200)->get()->map(fn (AccessAudit $entry) => [
                 'id' => $entry->getKey(),
-                'at' => $entry->created_at?->toIso8601String(),
-                'actor' => $entry->actor?->name ?? 'Sistema',
+                'at' => $entry->created_at->toIso8601String(),
+                'actor' => $entry->actor instanceof User ? $entry->actor->name : 'Sistema',
                 'action' => $entry->action,
                 'subject' => $entry->subject,
                 'summary' => $entry->summary,

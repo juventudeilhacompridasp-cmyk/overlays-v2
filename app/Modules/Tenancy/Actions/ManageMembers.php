@@ -32,7 +32,7 @@ final class ManageMembers
             $user->forceFill(['email_verified_at' => now()])->save();
 
             Membership::query()->create(['user_id' => $user->getKey(), 'role' => $profile !== null ? Role::Viewer : $role, 'access_profile_id' => $profile?->getKey()]);
-            AccessAuditLog::record('member.created', $name, 'Acesso criado: '.($profile?->name ?? $role->label()).'.');
+            AccessAuditLog::record('member.created', $name, 'Acesso criado: '.($profile instanceof AccessProfile ? $profile->name : $role->label()).'.');
 
             return $user;
         });
