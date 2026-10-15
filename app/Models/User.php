@@ -37,7 +37,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         if (! array_key_exists($organizationId, $this->memberships)) {
             $this->memberships[$organizationId] = Membership::query()
-                ->with('profile.grants')
+                ->with(['profile.grants', 'overrides'])
                 ->where('user_id', $this->getKey())
                 ->first();
         }

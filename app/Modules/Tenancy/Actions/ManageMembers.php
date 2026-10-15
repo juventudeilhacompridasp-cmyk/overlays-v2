@@ -8,6 +8,7 @@ use App\Modules\Tenancy\Enums\Permission;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\AccessProfile;
 use App\Modules\Tenancy\Models\Membership;
+use App\Modules\Tenancy\Support\AccessAuditLog;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -31,6 +32,7 @@ final class ManageMembers
             $user->forceFill(['email_verified_at' => now()])->save();
 
             Membership::query()->create(['user_id' => $user->getKey(), 'role' => $profile !== null ? Role::Viewer : $role, 'access_profile_id' => $profile?->getKey()]);
+            AccessAuditLog::record('member.created', $name, 'Acesso criado: '.($profile instanceof AccessProfile ? $profile->name : $role->label()).'.');
 
             return $user;
         });
@@ -58,7 +60,52 @@ final class ManageMembers
             $this->ensureAnotherManager($membership);
         }
 
+        $from = $membership->accessLabel();
         $membership->update(['role' => $profile !== null ? Role::Viewer : $role, 'access_profile_id' => $profile?->getKey()]);
+        $membership->unsetRelation('profile');
+        AccessAuditLog::record('member.access', $membership->user->name, "Acesso alterado de {$from} para {$membership->accessLabel()}.");
+
+        return $membership;
+    }
+
+    /**
+     * Exceções do usuário sobre o perfil/papel: `allow` soma e `deny` retira (negar vence). Substitui as anteriores; chaves
+     * iguais ao que o perfil já dá (allow) ou já não dá (deny) não têm efeito e são descartadas.
+     *
+     * @param  list<string>  $allow
+     * @param  list<string>  $deny
+     */
+    public function setOverrides(Membership $membership, array $allow, array $deny): Membership
+    {
+        if (! $membership->role->usesPanel()) {
+            throw new InvalidArgumentException('Gestor de equipe e atleta não são gerenciados aqui.');
+        }
+
+        $valid = fn (array $values): array => array_values(array_unique(array_filter($values, fn (string $value) => Permission::tryFrom($value) !== null)));
+        $deny = $valid($deny);
+        $allow = array_values(array_diff($valid($allow), $deny));
+        $base = array_map(fn (Permission $permission) => $permission->value, $membership->basePermissions());
+        $allow = array_values(array_diff($allow, $base));
+        $deny = array_values(array_intersect($deny, $base));
+
+        $effective = array_values(array_diff(array_merge($base, $allow), $deny));
+
+        if ($this->holdsUserManagement($membership) && ! in_array(Permission::UsersManage->value, $effective, true)) {
+            $this->ensureAnotherManager($membership);
+        }
+
+        $before = array_map(fn (Permission $permission) => $permission->value, $membership->permissions());
+
+        DB::transaction(function () use ($membership, $allow, $deny): void {
+            $membership->overrides()->delete();
+            $membership->overrides()->createMany([
+                ...array_map(fn (string $value) => ['permission' => $value, 'effect' => 'allow'], $allow),
+                ...array_map(fn (string $value) => ['permission' => $value, 'effect' => 'deny'], $deny),
+            ]);
+        });
+
+        $membership->unsetRelation('overrides');
+        AccessAuditLog::record('member.overrides', $membership->user->name, AccessAuditLog::diff($before, array_map(fn (Permission $permission) => $permission->value, $membership->permissions())));
 
         return $membership;
     }
@@ -69,6 +116,7 @@ final class ManageMembers
             $this->ensureAnotherManager($membership);
         }
 
+        AccessAuditLog::record('member.removed', $membership->user->name, 'Acesso removido ('.$membership->accessLabel().').');
         $membership->delete();
     }
 
@@ -96,7 +144,7 @@ final class ManageMembers
      */
     public function ensureAnotherManager(Membership $membership): void
     {
-        $others = Membership::query()->with('profile.grants')->whereKeyNot($membership->getKey())->get()
+        $others = Membership::query()->with(['profile.grants', 'overrides'])->whereKeyNot($membership->getKey())->get()
             ->contains(fn (Membership $other) => $this->holdsUserManagement($other));
 
         if (! $others) {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Tenancy\Actions\ManageMembers;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Ability;
+use App\Modules\Tenancy\Enums\Permission;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Http\Requests\MemberStoreRequest;
 use App\Modules\Tenancy\Models\AccessProfile;
@@ -21,7 +22,7 @@ class MemberController extends Controller
 {
     public function index(Request $request): Response
     {
-        $members = Membership::query()->whereNotIn('role', Role::outsiders())->with(['user:id,name,email', 'profile'])->get()
+        $members = Membership::query()->whereNotIn('role', Role::outsiders())->with(['user:id,name,email', 'profile.grants', 'overrides'])->get()
             ->sortBy(fn (Membership $membership) => mb_strtolower($membership->user->name))
             ->values()
             ->map(fn (Membership $membership) => [
@@ -32,12 +33,16 @@ class MemberController extends Controller
                 'profile_id' => $membership->access_profile_id,
                 'access' => $membership->access_profile_id !== null ? 'profile:'.$membership->access_profile_id : 'role:'.$membership->role->value,
                 'access_label' => $membership->accessLabel(),
+                'base' => array_map(fn (Permission $permission) => $permission->value, $membership->basePermissions()),
+                'allow' => $membership->overrides->where('effect', 'allow')->pluck('permission')->values(),
+                'deny' => $membership->overrides->where('effect', 'deny')->pluck('permission')->values(),
                 'is_me' => $membership->user_id === $request->user()?->getKey(),
             ]);
 
         return Inertia::render('Panel/Users/Index', [
             'members' => $members,
             'profiles' => AccessProfile::query()->where('is_system', false)->orderBy('name')->get(['id', 'name'])->map(fn (AccessProfile $profile) => ['id' => $profile->getKey(), 'name' => $profile->name])->values(),
+            'catalog' => collect(Permission::cases())->map(fn (Permission $permission) => ['value' => $permission->value, 'label' => $permission->label(), 'group' => $permission->groupLabel()])->values(),
             'roles' => collect(Role::cases())->filter(fn (Role $role) => $role->usesPanel())->map(fn (Role $role) => [
                 'value' => $role->value,
                 'label' => $role->label(),
@@ -85,6 +90,29 @@ class MemberController extends Controller
         $membership->user->forgetRole();
 
         return back()->with('success', $profile === null ? 'Papel atualizado.' : 'Perfil de acesso atualizado.');
+    }
+
+    public function overrides(Request $request, Membership $membership, ManageMembers $members): RedirectResponse
+    {
+        $keys = array_map(fn (Permission $permission) => $permission->value, Permission::cases());
+        $validated = $request->validate([
+            'allow' => ['array'],
+            'allow.*' => ['string', Rule::in($keys)],
+            'deny' => ['array'],
+            'deny.*' => ['string', Rule::in($keys)],
+        ]);
+
+        abort_if(! $membership->role->usesPanel(), 404);
+
+        try {
+            $members->setOverrides($membership, $validated['allow'] ?? [], $validated['deny'] ?? []);
+        } catch (InvalidArgumentException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        $membership->user->forgetRole();
+
+        return back()->with('success', 'Exceções atualizadas.');
     }
 
     public function destroy(Membership $membership, ManageMembers $members): RedirectResponse
