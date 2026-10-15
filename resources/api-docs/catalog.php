@@ -374,7 +374,7 @@ return [
     ],
     'overlay.state' => [
         'summary' => 'Estado completo de um canal de overlay (contingência do OBS)',
-        'description' => 'O token do canal na URL é o acesso. O estado inclui o jogo no ar e, só se o operador ligou a camada, a escalação e a tabela; cartões, disciplina e documentos nunca vêm. Exige o recurso `overlays`.',
+        'description' => 'O token do canal na URL é o acesso. O estado inclui o jogo no ar e, só se o operador ligou a camada, a escalação e a tabela; cartões, disciplina e documentos nunca vêm. Com `?pvw=chave` (lineup, standings, sponsors ou uma tela extra) devolve o estado com aquela camada ligada só em memória, para o PVW do Modo operador; isso exige sessão do painel (403 sem ela) e nada é gravado. Exige o recurso `overlays`.',
         'parameters' => ['channel' => 'Token secreto do canal de overlay.'],
         'responses' => [
             '200' => [
@@ -390,6 +390,97 @@ return [
                 'example' => ['channel' => 'Transmissão principal', 'layers' => ['lineup' => false, 'standings' => false], 'game' => null, 'lineup' => null, 'standings' => null, 'server_time_ms' => 1792000000000],
             ],
             '404' => ['description' => 'Token inexistente ou organização sem o recurso `overlays`.'],
+        ],
+    ],
+    'overlay.show' => [
+        'summary' => 'Tela de overlay para o OBS (placar, eventos, escalacao, tabela, telas extras, todos)',
+        'description' => 'Página HTML sem login: o token do canal na URL é o acesso. O nome da tela vai em `{overlay}` (a lista vem do painel de Transmissão). `pgm` é a visão do Modo operador (todas as telas empilhadas, uma só conexão) e não é fonte do OBS; com `?pvw=chave` vira o PVW (a camada ou tela escolhida ligada só em memória) e EXIGE sessão do painel, senão responde 403. Exige o recurso `overlays`.',
+        'parameters' => ['channel' => 'Token secreto do canal de overlay.', 'overlay' => 'Nome da tela (placar, eventos, escalacao, tabela, patrocinadores, prejogo, comparativo, cartela, resumo, chaveamento, social, barra-patrocinio, estatisticas, penaltis, todos ou pgm).'],
+        'responses' => [
+            '200' => ['description' => 'Página HTML (Inertia) que carrega o estado inicial e passa a receber atualizações pelo Reverb, com consulta periódica de contingência.'],
+            '403' => ['description' => '`?pvw` sem sessão do painel.'],
+            '404' => ['description' => 'Token inexistente, tela desconhecida ou organização sem o recurso `overlays`.'],
+        ],
+    ],
+    'overlay.font' => [
+        'summary' => 'Arquivo da fonte própria usada pelo canal',
+        'description' => 'Serve o arquivo (woff2, woff, ttf ou otf, `nosniff`, cache de 1 dia) pela mesma origem do overlay. Só existe para fontes cadastradas pela organização do canal.',
+        'parameters' => ['channel' => 'Token secreto do canal de overlay.', 'font' => 'ID (ULID) da fonte da organização.'],
+        'responses' => [
+            '200' => ['description' => 'Bytes da fonte, com o `Content-Type` do formato.'],
+            '404' => ['description' => 'Fonte inexistente ou de outra organização.'],
+        ],
+    ],
+    'overlay.custom' => [
+        'summary' => 'Overlay livre (Builder) de um canal',
+        'description' => 'Página HTML com o desenho já saneado (cores, números e listas validados; imagens só `https` ou tokens resolvidos). Só aparece no ar quando o operador liga o item no canal (`custom_live`).',
+        'parameters' => ['channel' => 'Token secreto do canal de overlay.', 'item' => 'ID (ULID) do overlay livre.'],
+        'responses' => [
+            '200' => ['description' => 'Página HTML (Inertia) do overlay livre.'],
+            '404' => ['description' => 'Token inexistente, item de outra organização ou organização sem o recurso `overlays`.'],
+        ],
+    ],
+    'overlay.championship.data' => [
+        'summary' => 'Dados das telas de campeonato do overlay',
+        'description' => 'JSON consumido pelas telas `/overlay/{token}/campeonato/{tela}`: a edição publicada (por `?edicao=`, `?c=`/`?div=` ou o jogo no ar), com classificação, jogos, artilharia e campeão. Cartões só com o interruptor `game_cards` do portal; nunca IDs de atletas.',
+        'parameters' => ['channel' => 'Token secreto do canal de overlay.'],
+        'responses' => [
+            '200' => ['description' => 'Pacote de dados da edição para a tela.'],
+            '404' => ['description' => 'Token inexistente, edição em rascunho ou organização sem o recurso `overlays`.'],
+        ],
+    ],
+    'overlay.championship' => [
+        'summary' => 'Tela de campeonato para o OBS (classificação, jogos, artilharia, cartões, destaque, faixa, campeão)',
+        'description' => 'Página HTML cuja aparência vem toda da URL. Com `live=1` só aparece quando o operador mostra a tela no painel.',
+        'parameters' => ['channel' => 'Token secreto do canal de overlay.', 'view' => 'standings, fixtures, results, scorers, discipline, matchcard, ticker ou champion.'],
+        'responses' => [
+            '200' => ['description' => 'Página HTML (Inertia).'],
+            '404' => ['description' => 'Token inexistente, tela desconhecida ou organização sem o recurso `overlays`.'],
+        ],
+    ],
+    'embed.game' => [
+        'summary' => 'Widget: placar ao vivo de um jogo (para iframe)',
+        'description' => 'Página sem login para incorporar em outros sites; só jogos de edição publicada. Aceita `?tema=escuro` e `?cor=%23rrggbb`. Envia a altura ao site pai por `postMessage`. Única família de rotas liberada para iframe de qualquer origem. Exige o recurso `embeds`.',
+        'parameters' => ['game' => 'ID (ULID) de um jogo de edição publicada.'],
+        'responses' => [
+            '200' => ['description' => 'Página HTML do widget (atualiza pelo Reverb, com consulta de contingência).'],
+            '404' => $notFound,
+        ],
+    ],
+    'embed.standings' => [
+        'summary' => 'Widget: classificação de uma divisão (para iframe)',
+        'description' => 'Aceita `?linhas=` (quantidade de linhas), `?tema=escuro` e `?cor=%23rrggbb`. Só edição publicada. Exige o recurso `embeds`.',
+        'parameters' => ['division' => 'ID (ULID) de uma divisão de edição publicada.'],
+        'responses' => [
+            '200' => ['description' => 'Página HTML do widget.'],
+            '404' => $notFound,
+        ],
+    ],
+    'embed.games' => [
+        'summary' => 'Widget: jogos de uma edição (para iframe)',
+        'description' => 'Próximos jogos e resultados recentes de uma edição publicada. Aceita `?tema=escuro` e `?cor=%23rrggbb`. Exige o recurso `embeds`.',
+        'parameters' => ['season' => 'ID (ULID) de uma edição publicada.'],
+        'responses' => [
+            '200' => ['description' => 'Página HTML do widget.'],
+            '404' => $notFound,
+        ],
+    ],
+    'public.games.show' => [
+        'summary' => 'Página pública do jogo (placar ao vivo)',
+        'description' => 'Página HTML renderizada no servidor (SEO, Open Graph e dados estruturados), com linha do tempo, tabela, forma e confronto direto conforme os interruptores do portal. Atualiza pelo Reverb.',
+        'parameters' => ['game' => 'ID (ULID) de um jogo de edição publicada.'],
+        'responses' => [
+            '200' => ['description' => 'Página HTML (Inertia, com SSR).'],
+            '404' => $notFound,
+        ],
+    ],
+    'public.games.image' => [
+        'summary' => 'Imagem de compartilhamento do jogo (PNG 1200x630)',
+        'description' => 'Gerada com GD a partir do retrato público (equipes, escudos, placar, competição, data e local); nunca traz atletas nem cartões. Cache de 60 s. Alimenta `og:image` e `twitter:card`.',
+        'parameters' => ['game' => 'ID (ULID) de um jogo de edição publicada.'],
+        'responses' => [
+            '200' => ['description' => 'Imagem `image/png`.'],
+            '404' => $notFound,
         ],
     ],
     'push.subscribe' => [

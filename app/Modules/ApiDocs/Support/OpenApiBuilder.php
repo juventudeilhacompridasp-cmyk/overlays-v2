@@ -77,7 +77,7 @@ final class OpenApiBuilder
             'openapi' => '3.1.0',
             'info' => [
                 'title' => 'Overlays v2 — referência interna das rotas',
-                'version' => '1',
+                'version' => ApiChangelog::current(),
                 'description' => 'Gerada das rotas registradas. Documento INTERNO (só Super Admin): revela a superfície da aplicação. A API pública estável é `/api/v1`.',
             ],
             'servers' => [['url' => (string) config('app.url')]],
