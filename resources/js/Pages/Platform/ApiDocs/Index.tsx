@@ -36,6 +36,8 @@ interface Props {
     tags: string[];
     operations: Operation[];
     documented: number;
+    version: string;
+    changelog: { version: string; date: string; changes: string[] }[];
 }
 
 const methodTone = (method: string): 'green' | 'blue' | 'amber' | 'red' | 'gray' =>
@@ -138,7 +140,7 @@ function Row({ operation }: { operation: Operation }) {
     );
 }
 
-export default function Index({ tags, operations, documented }: Props) {
+export default function Index({ tags, operations, documented, version, changelog }: Props) {
     const [query, setQuery] = useState('');
     const [onlyDocumented, setOnlyDocumented] = useState(false);
 
@@ -157,8 +159,13 @@ export default function Index({ tags, operations, documented }: Props) {
             <Head title="Documentação das APIs" />
             <PageHeader
                 title="Documentação das APIs"
-                subtitle={`Referência interna gerada das rotas registradas (${operations.length} operações; ${documented} descritas). Só o Super Admin vê esta página.`}
-                actions={<LinkButton href={route('platform.api-docs.openapi')}>Baixar OpenAPI (JSON)</LinkButton>}
+                subtitle={`Referência interna gerada das rotas registradas, versão ${version} (${operations.length} operações; ${documented} descritas). Só o Super Admin vê esta página.`}
+                actions={
+                    <>
+                        <LinkButton href={route('platform.api-docs.openapi')}>Baixar OpenAPI (JSON)</LinkButton>
+                        <LinkButton href={route('platform.api-docs.postman')}>Baixar coleção do Postman</LinkButton>
+                    </>
+                }
             />
 
             <div className="mb-4 flex max-w-3xl flex-wrap items-center gap-3">
@@ -191,6 +198,23 @@ export default function Index({ tags, operations, documented }: Props) {
                     );
                 })}
                 {filtered.length === 0 && <p className="text-sm text-gray-500">Nenhuma rota encontrada.</p>}
+
+                <Card title="Histórico de mudanças">
+                    <ol className="space-y-3">
+                        {changelog.map((entry) => (
+                            <li key={entry.version}>
+                                <p className="text-sm font-semibold text-gray-900">
+                                    {entry.version} <span className="font-normal text-gray-500">· {entry.date}</span>
+                                </p>
+                                <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm text-gray-700">
+                                    {entry.changes.map((change) => (
+                                        <li key={change}>{change}</li>
+                                    ))}
+                                </ul>
+                            </li>
+                        ))}
+                    </ol>
+                </Card>
             </div>
         </PanelLayout>
     );

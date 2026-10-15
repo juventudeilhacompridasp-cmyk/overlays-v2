@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\User;
+use App\Modules\ApiDocs\Support\ApiChangelog;
 use App\Modules\ApiDocs\Support\OpenApiBuilder;
+use App\Modules\ApiDocs\Support\PostmanExporter;
 use App\Modules\Help\Support\HelpLibrary;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
@@ -175,6 +177,88 @@ describe('the catalog', function () {
         expect($syncOperation['x-documented'])->toBeTrue()
             ->and($syncOperation['requestBody']['content']['application/json']['example']['items'])->not->toBeEmpty()
             ->and(array_map('strval', array_keys($syncOperation['responses'])))->toContain('200', '423');
+    });
+});
+
+describe('the groups that were described in part 2', function () {
+    it('describes every overlay, widget and real-time route (new route = new catalog entry)', function () {
+        $spec = (new OpenApiBuilder)->build();
+        $groups = ['Overlays (OBS)', 'Widgets', 'Tempo real e avisos'];
+        $seen = [];
+
+        foreach ($spec['paths'] as $path => $methods) {
+            foreach ($methods as $method => $operation) {
+                if (in_array($operation['tags'][0], $groups, true)) {
+                    $seen[$operation['tags'][0]] = true;
+                    expect($operation['x-documented'])->toBeTrue("{$method} {$path} sem descrição no catálogo");
+                }
+            }
+        }
+
+        expect(array_keys($seen))->toEqualCanonicalizing($groups);
+    });
+});
+
+describe('the change history', function () {
+    it('is newest first, well formed, and gives the version of the specification', function () {
+        $entries = ApiChangelog::entries();
+        $versions = array_column($entries, 'version');
+
+        expect($entries)->not->toBeEmpty()->and($versions)->toBe(array_values(array_unique($versions)))
+            ->and((new OpenApiBuilder)->build()['info']['version'])->toBe($versions[0]);
+
+        foreach ($entries as $entry) {
+            expect($entry['version'])->toMatch('/^\d+\.\d+\.\d+$/')
+                ->and($entry['date'])->toMatch('/^\d{4}-\d{2}-\d{2}$/')
+                ->and($entry['changes'])->not->toBeEmpty();
+        }
+
+        $sorted = $versions;
+        usort($sorted, fn (string $a, string $b) => version_compare($b, $a));
+        expect($versions)->toBe($sorted);
+
+        $dates = array_column($entries, 'date');
+        $descending = $dates;
+        rsort($descending);
+        expect($dates)->toBe($descending);
+    });
+});
+
+describe('the Postman collection', function () {
+    it('has one request per operation, grouped by tag, with the base url and path variables', function () {
+        $spec = (new OpenApiBuilder)->build();
+        $collection = PostmanExporter::fromSpec($spec);
+        $requests = collect($collection['item'])->flatMap(fn (array $folder) => $folder['item']);
+
+        expect($collection['info']['schema'])->toBe(PostmanExporter::SCHEMA)
+            ->and($collection['info']['version'])->toBe(ApiChangelog::current())
+            ->and(collect($collection['variable'])->pluck('key')->all())->toContain('baseUrl', 'controlKey')
+            ->and($requests->count())->toBe(count(OpenApiBuilder::operations($spec)));
+
+        $game = $requests->first(fn (array $item) => $item['request']['url']['raw'] === '{{baseUrl}}/api/v1/games/:game' && $item['request']['method'] === 'GET');
+
+        expect($game)->not->toBeNull()
+            ->and($game['request']['url']['path'])->toBe(['api', 'v1', 'games', ':game'])
+            ->and($game['request']['url']['variable'][0]['key'])->toBe('game');
+    });
+
+    it('sends the catalog example as the body and uses a Bearer variable (never the real key) for the channel control', function () {
+        $collection = PostmanExporter::fromSpec((new OpenApiBuilder)->build());
+        $requests = collect($collection['item'])->flatMap(fn (array $folder) => $folder['item']);
+        $control = $requests->first(fn (array $item) => str_contains($item['request']['url']['raw'], 'overlay-channels') && $item['request']['method'] === 'PATCH');
+
+        expect($control['request']['auth']['bearer'][0]['value'])->toBe('{{controlKey}}')
+            ->and($control['request']['body']['mode'])->toBe('raw')
+            ->and(json_decode($control['request']['body']['raw'], true))->toBeArray();
+    });
+
+    it('is downloadable only by the platform administrator', function () {
+        $this->actingAs(panelUser(Role::Admin))->get(route('platform.api-docs.postman'))->assertNotFound();
+
+        $response = $this->actingAs(docsPlatformAdmin())->get(route('platform.api-docs.postman'));
+
+        $response->assertOk()->assertHeader('Content-Disposition', 'attachment; filename="overlays-v2.postman_collection.json"');
+        expect(json_decode($response->getContent(), true)['info']['schema'])->toBe(PostmanExporter::SCHEMA);
     });
 });
 

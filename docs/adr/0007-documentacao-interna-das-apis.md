@@ -1,6 +1,6 @@
 # ADR 0007 — Documentação interna das APIs (somente Super Admin)
 
-Status: aceito (parte 1 entregue)
+Status: aceito (parte 1 entregue; partes 2 e 3 em andamento: overlays, widgets e tempo real descritos; exportação Postman e changelog entregues)
 Data: 13/10/2026
 
 ## Contexto
