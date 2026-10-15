@@ -17,6 +17,7 @@ use App\Modules\Competitions\Http\Controllers\ReportController;
 use App\Modules\Competitions\Http\Controllers\SeasonController;
 use App\Modules\Competitions\Http\Controllers\StageController;
 use App\Modules\Help\Http\Controllers\HelpController;
+use App\Modules\Help\Http\Controllers\HelpNoteController;
 use App\Modules\Market\Http\Controllers\Panel\AdminController as MarketAdminController;
 use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
@@ -225,6 +226,10 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::delete('profiles/{profile}', [AccessProfileController::class, 'destroy'])->name('profiles.destroy');
         Route::get('parameters', [ParametersController::class, 'edit'])->name('parameters.edit');
         Route::patch('parameters', [ParametersController::class, 'update'])->name('parameters.update');
+        Route::get('help-notes', [HelpNoteController::class, 'index'])->name('help-notes.index');
+        Route::post('help-notes', [HelpNoteController::class, 'store'])->name('help-notes.store');
+        Route::patch('help-notes/{note}', [HelpNoteController::class, 'update'])->name('help-notes.update');
+        Route::delete('help-notes/{note}', [HelpNoteController::class, 'destroy'])->name('help-notes.destroy');
         Route::get('communications', [CommunicationsController::class, 'edit'])->name('communications.edit');
         Route::patch('communications', [CommunicationsController::class, 'update'])->name('communications.update');
         Route::get('organization', [OrganizationController::class, 'edit'])->name('organization.edit');

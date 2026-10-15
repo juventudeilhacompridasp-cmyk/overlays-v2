@@ -87,6 +87,7 @@ export function buildNav(ctx: NavContext): NavMenu {
               item('Perfis de acesso', 'panel.profiles.index', 'panel.profiles.*', ICONS.shield),
               item('Portal público', 'panel.organization.edit', 'panel.organization.*', ICONS.globe),
               item('Comunicações', 'panel.communications.edit', 'panel.communications.*', ICONS.mail),
+              item('Notas da ajuda', 'panel.help-notes.index', 'panel.help-notes.*', ICONS.doc),
               item('Parâmetros', 'panel.parameters.edit', 'panel.parameters.*', ICONS.sliders),
               item('Termos e privacidade', 'panel.legal.edit', 'panel.legal.*', ICONS.doc),
           ]

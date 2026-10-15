@@ -8,6 +8,7 @@ use App\Modules\Help\Support\HelpAccess;
 use App\Modules\Help\Support\HelpArticle;
 use App\Modules\Help\Support\HelpLibrary;
 use App\Modules\Help\Support\HelpMarkdown;
+use App\Modules\Help\Support\HelpNotes;
 use App\Modules\Help\Support\HelpSearch;
 use App\Modules\Tenancy\CurrentOrganization;
 use Illuminate\Http\RedirectResponse;
@@ -28,7 +29,7 @@ class HelpController extends Controller
     public function index(Request $request): Response
     {
         $area = $this->area($request);
-        $visible = HelpAccess::visible(HelpLibrary::all(), $request->user(), $area);
+        $visible = HelpAccess::visible($this->articles($area), $request->user(), $area);
         $query = trim((string) $request->query('q', ''));
 
         $results = $query === '' ? [] : array_map(fn (array $hit) => [...$this->summary($hit['article']), 'snippet' => $hit['snippet']], HelpSearch::search($visible, $query));
@@ -52,7 +53,7 @@ class HelpController extends Controller
     public function show(Request $request, string $slug): Response
     {
         $area = $this->area($request);
-        $visible = HelpAccess::visible(HelpLibrary::all(), $request->user(), $area);
+        $visible = HelpAccess::visible($this->articles($area), $request->user(), $area);
         $article = collect($visible)->first(fn (HelpArticle $candidate) => $candidate->slug === $slug);
         abort_if($article === null, 404);
 
@@ -99,11 +100,21 @@ class HelpController extends Controller
             ->all();
     }
 
+    /**
+     * Os artigos do acervo mais as notas da organização atual para a área (as notas só existem no painel e no gestor).
+     *
+     * @return list<HelpArticle>
+     */
+    private function articles(string $area): array
+    {
+        return [...HelpLibrary::all(), ...HelpNotes::articles($area)];
+    }
+
     /** "Isso ajudou?": um voto por pessoa e artigo (o último vale), só para artigos que a pessoa pode ver. */
     public function feedback(Request $request, string $slug): RedirectResponse
     {
         $area = $this->area($request);
-        $visible = HelpAccess::visible(HelpLibrary::all(), $request->user(), $area);
+        $visible = HelpAccess::visible($this->articles($area), $request->user(), $area);
         abort_unless(collect($visible)->contains(fn (HelpArticle $candidate) => $candidate->slug === $slug), 404);
 
         $validated = $request->validate(['helpful' => ['required', 'boolean']]);
