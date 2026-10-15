@@ -40,6 +40,9 @@ class OverlayChannel extends Model
     /** Telas extras sob demanda (começam ocultas): cartela pré-jogo, comparativo, cartela de transmissão, resumo do jogo e chaveamento. */
     public const SCREENS = ['pregame', 'compare', 'cartela', 'summary', 'bracket', 'social', 'sponsor_bar', 'stats', 'shootout'];
 
+    /** Camadas e telas que o PVW do Modo operador pode mostrar antes de irem ao ar (`withPreview`). */
+    public const PREVIEWABLE = ['lineup', 'standings', 'sponsors', 'pregame', 'compare', 'cartela', 'summary', 'bracket', 'social', 'sponsor_bar', 'stats', 'shootout'];
+
     /** Camadas que valem como ligadas quando o operador nunca mexeu nelas. */
     public const DEFAULT_ON = ['scoreboard', 'lower_third'];
 
@@ -132,6 +135,32 @@ class OverlayChannel extends Model
         $saved = is_array($this->layers['custom'] ?? null) ? $this->layers['custom'] : [];
 
         return array_filter(array_map('boolval', $saved));
+    }
+
+    /**
+     * Cópia SÓ EM MEMÓRIA do canal com uma camada ou tela ligada, para o PVW montar o estado "como ficaria no ar".
+     * Nunca é salva; chave desconhecida devolve o canal como está.
+     */
+    public function withPreview(string $key): static
+    {
+        if (! in_array($key, self::PREVIEWABLE, true)) {
+            return $this;
+        }
+
+        $copy = clone $this;
+        $layers = is_array($copy->layers) ? $copy->layers : [];
+
+        if ($key === 'sponsors') {
+            $copy->sponsor_settings = [...(is_array($copy->sponsor_settings) ? $copy->sponsor_settings : []), 'enabled' => true];
+        } elseif (in_array($key, self::LAYERS, true)) {
+            $layers[$key] = true;
+        } else {
+            $layers['screens'] = [...(is_array($layers['screens'] ?? null) ? $layers['screens'] : []), $key => true];
+        }
+
+        $copy->layers = $layers;
+
+        return $copy;
     }
 
     public function customUrl(string $item): string

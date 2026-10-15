@@ -182,7 +182,7 @@ export interface OverlayRuntimeValue {
     skew: number;
 }
 
-const OverlayRuntimeContext = createContext<OverlayRuntimeValue | null>(null);
+export const OverlayRuntimeContext = createContext<OverlayRuntimeValue | null>(null);
 
 const POLL_MS = 3000;
 

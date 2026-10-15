@@ -8,7 +8,7 @@ import ts from 'typescript';
 const source = readFileSync(new URL('../../resources/js/lib/operatorConsole.ts', import.meta.url), 'utf8');
 const out = join(mkdtempSync(join(tmpdir(), 'operator-')), 'operatorConsole.mjs');
 writeFileSync(out, ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 } }).outputText);
-const { OPERATOR_CARTELAS, OPERATOR_CHAMPIONSHIP_LABELS, OPERATOR_LAYERS, OPERATOR_NOTICES, OPERATOR_SCREENS, bump, hotkeyAction, liveCount, stepLabel } = await import(out);
+const { OPERATOR_CARTELAS, OPERATOR_CHAMPIONSHIP_LABELS, OPERATOR_LAYERS, OPERATOR_NOTICES, OPERATOR_SCREENS, bump, hotkeyAction, liveCount, previewKey, previewLabel, stepLabel } = await import(out);
 
 test('the five live layers have unique hotkeys 1 to 5 and only lineup and table need a game', () => {
     assert.deepEqual(OPERATOR_LAYERS.map((layer) => layer.hotkey), ['1', '2', '3', '4', '5']);
@@ -59,4 +59,14 @@ test('step label and live count', () => {
 test('every championship screen has a short label that fits a compact button', () => {
     assert.deepEqual(Object.keys(OPERATOR_CHAMPIONSHIP_LABELS).sort(), ['champion', 'discipline', 'fixtures', 'matchcard', 'results', 'scorers', 'standings', 'ticker']);
     for (const label of Object.values(OPERATOR_CHAMPIONSHIP_LABELS)) assert.ok(label.length <= 12);
+});
+
+test('the PVW only accepts layers and screens the operator can take on air', () => {
+    for (const key of ['lineup', 'standings', 'sponsors', ...OPERATOR_SCREENS.map((screen) => screen.key)]) assert.equal(previewKey(key), key);
+
+    for (const bad of ['scoreboard', 'lower_third', '', 'x', null, undefined, 3]) assert.equal(previewKey(bad), null);
+
+    assert.equal(previewLabel('lineup'), 'Escalação');
+    assert.equal(previewLabel('pregame'), 'Pré-jogo');
+    assert.equal(previewLabel(null), 'Passe o mouse num botão');
 });

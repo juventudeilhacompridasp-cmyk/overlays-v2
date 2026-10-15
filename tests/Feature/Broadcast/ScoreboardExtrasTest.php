@@ -92,3 +92,26 @@ it('serves the PGM monitor page, outside the OBS screen list, with the url on th
 
     expect(OverlayChannel::OVERLAYS)->not->toHaveKey('pgm');
 });
+
+it('previews a layer or screen for the panel without touching the channel, and refuses outsiders', function () {
+    $channel = extrasChannel();
+
+    // Sem sessão do painel o token sozinho nunca mostra o que ainda não está no ar.
+    $this->getJson("/overlay/{$channel->token}/estado?pvw=lineup")->assertForbidden();
+    $this->get("/overlay/{$channel->token}/pgm?pvw=")->assertForbidden();
+    $this->getJson("/overlay/{$channel->token}/estado")->assertOk()->assertJsonPath('layers.lineup', false);
+
+    $this->actingAs(panelUser(Role::Viewer));
+
+    $this->getJson("/overlay/{$channel->token}/estado?pvw=lineup")->assertOk()->assertJsonPath('layers.lineup', true)->assertJsonPath('screens.pregame', false);
+    $this->getJson("/overlay/{$channel->token}/estado?pvw=pregame")->assertOk()->assertJsonPath('screens.pregame', true)->assertJsonPath('layers.lineup', false);
+    $this->getJson("/overlay/{$channel->token}/estado?pvw=sponsors")->assertOk()->assertJsonPath('sponsors.enabled', true);
+    $this->getJson("/overlay/{$channel->token}/estado?pvw=scoreboard")->assertOk()->assertJsonPath('layers.lineup', false);
+    $this->getJson("/overlay/{$channel->token}/estado?pvw=")->assertOk()->assertJsonPath('layers.lineup', false);
+
+    $this->get("/overlay/{$channel->token}/pgm?pvw=")->assertOk()->assertInertia(fn ($page) => $page->component('Overlay/Pgm')->where('preview', true));
+    $this->get("/overlay/{$channel->token}/pgm")->assertOk()->assertInertia(fn ($page) => $page->where('preview', false));
+
+    // Nada foi gravado: o ar continua como estava.
+    expect($channel->fresh()->layerOn('lineup'))->toBeFalse()->and($channel->fresh()->screensLive()['pregame'])->toBeFalse();
+});

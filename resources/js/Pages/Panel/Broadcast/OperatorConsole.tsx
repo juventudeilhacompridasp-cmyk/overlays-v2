@@ -1,4 +1,4 @@
-import { bump, hotkeyAction, liveCount, OPERATOR_CARTELAS, OPERATOR_CHAMPIONSHIP_LABELS, OPERATOR_LAYERS, OPERATOR_NOTICES, OPERATOR_SCREENS, OperatorLayerKey, stepLabel } from '@/lib/operatorConsole';
+import { bump, hotkeyAction, liveCount, OPERATOR_CARTELAS, OPERATOR_CHAMPIONSHIP_LABELS, OPERATOR_LAYERS, OPERATOR_NOTICES, OPERATOR_SCREENS, OperatorLayerKey, previewLabel, stepLabel } from '@/lib/operatorConsole';
 import { OBS_VIEWS } from '@/lib/obsChampionship';
 import { STATS_METRICS } from '@/lib/statsLook';
 import { useOnline } from '@/lib/pwa';
@@ -13,9 +13,9 @@ const LAYOUT_KEY = 'broadcast:operator-layout:v1';
 const NUMBERS = STATS_METRICS.filter((metric) => metric.key !== 'possession');
 
 /** Botão liga/desliga: verde = no ar. */
-function Tile({ on, label, hint, disabled, onClick, big = false }: { on: boolean; label: string; hint?: string; disabled?: boolean; onClick: () => void; big?: boolean }) {
+function Tile({ on, label, hint, disabled, onClick, big = false, preview }: { on: boolean; label: string; hint?: string; disabled?: boolean; onClick: () => void; big?: boolean; preview?: React.HTMLAttributes<HTMLButtonElement> }) {
     return (
-        <button type="button" disabled={disabled} aria-pressed={on} onClick={onClick}
+        <button type="button" disabled={disabled} aria-pressed={on} onClick={onClick} {...preview}
             className={`flex w-full items-center justify-between gap-1 rounded-md border px-2 text-left font-semibold leading-tight transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${big ? 'h-11 text-sm [@media(max-height:800px)]:h-9' : 'h-7 text-xs [@media(max-height:800px)]:h-6'} ${on ? 'border-emerald-700 bg-emerald-600 text-white shadow-inner' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'}`}>
             <span className="truncate">{label}</span>
             <span className={`shrink-0 text-[10px] font-bold uppercase ${on ? 'text-emerald-100' : 'text-gray-400'}`}>{hint ?? (on ? 'No ar' : 'Oculto')}</span>
@@ -50,6 +50,15 @@ function Controls({ channel, games, scenes, canOperate, onExit, layout, editing,
     const [sponsorsOn, setSponsorsOn] = useState(channel.sponsor_settings.enabled);
     const [stats, setStats] = useState({ home: channel.stats_settings.home, away: channel.stats_settings.away });
     const pgm = usePgmState();
+    // PVW: passar o mouse (ou focar) num botão de camada/tela mostra como ficaria no ar; o clique é o "ir ao ar".
+    const [pvwKey, setPvwKey] = useState<string | null>(null);
+    const pvwTimer = useRef<number>();
+    const previewOf = (key: string): React.HTMLAttributes<HTMLButtonElement> => ({
+        onMouseEnter: () => { window.clearTimeout(pvwTimer.current); pvwTimer.current = window.setTimeout(() => setPvwKey(key), 150); },
+        onMouseLeave: () => window.clearTimeout(pvwTimer.current),
+        onFocus: () => setPvwKey(key),
+    });
+    useEffect(() => () => window.clearTimeout(pvwTimer.current), []);
     const [title, setTitle] = useState('');
     const [person, setPerson] = useState('');
     useEffect(() => setLayers(channel.layers), [channel.layers]);
@@ -115,18 +124,19 @@ function Controls({ channel, games, scenes, canOperate, onExit, layout, editing,
     const noGameHint = hasGame ? undefined : 'Escolha o jogo no ar';
 
     const blocks: Partial<Record<PanelId, Block>> = {
+        pvw: { right: <span className="flex items-center gap-1"><span className="max-w-[9rem] truncate text-[10px] font-bold uppercase text-amber-700" data-testid="operator-pvw-label">{previewLabel(pvwKey)}</span>{pvwKey !== null && <button type="button" onClick={() => setPvwKey(null)} className="rounded border border-gray-300 px-1.5 text-[10px] font-bold uppercase text-gray-500 hover:bg-gray-50">Limpar</button>}</span>, body: <PgmMonitor url={`${channel.pgm_url}${channel.pgm_url.includes('?') ? '&' : '?'}pvw=`} hasGame={hasGame} backdrop={pgm.backdrop} frozen={pgm.frozen} preview={{ key: pvwKey }} /> },
         pgm: { right: <PgmControls backdrop={pgm.backdrop} onBackdrop={pgm.setBackdrop} frozen={pgm.frozen} onFrozen={pgm.setFrozen} />, body: <PgmMonitor url={channel.pgm_url} hasGame={hasGame} backdrop={pgm.backdrop} frozen={pgm.frozen} /> },
         live: { right: <span className="text-[10px] font-semibold text-gray-400">teclas 1–5</span>, body: (
                         <div className="grid grid-cols-2 gap-1.5">
                             {OPERATOR_LAYERS.map((layer, index) => (
-                                <div key={layer.key} className={index === OPERATOR_LAYERS.length - 1 ? 'col-span-2' : ''}><Tile big on={layerOn(layer.key)} label={`${layer.hotkey} · ${layer.label}`} hint={layer.needsGame && !hasGame ? 'sem jogo' : undefined} disabled={!canOperate || (layer.needsGame && !hasGame)} onClick={() => toggleLayer(layer.key)} /></div>
+                                <div key={layer.key} className={index === OPERATOR_LAYERS.length - 1 ? 'col-span-2' : ''}><Tile big preview={['lineup', 'standings', 'sponsors'].includes(layer.key) ? previewOf(layer.key) : undefined} on={layerOn(layer.key)} label={`${layer.hotkey} · ${layer.label}`} hint={layer.needsGame && !hasGame ? 'sem jogo' : undefined} disabled={!canOperate || (layer.needsGame && !hasGame)} onClick={() => toggleLayer(layer.key)} /></div>
                             ))}
                         </div>
         ) },
         screens: { body: (
                         <div className="grid grid-cols-2 gap-1">
                             {OPERATOR_SCREENS.map((screen) => (
-                                <Tile key={screen.key} on={screens[screen.key] === true} label={screen.label} hint={screens[screen.key] === true ? 'ON' : ''} disabled={!canOperate || (screen.needsGame && !hasGame)} onClick={() => toggleScreen(screen.key)} />
+                                <Tile key={screen.key} preview={previewOf(screen.key)} on={screens[screen.key] === true} label={screen.label} hint={screens[screen.key] === true ? 'ON' : ''} disabled={!canOperate || (screen.needsGame && !hasGame)} onClick={() => toggleScreen(screen.key)} />
                             ))}
                         </div>
         ) },

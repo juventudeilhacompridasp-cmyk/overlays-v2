@@ -100,6 +100,7 @@ tira da rotação sem perder o cadastro.
 ### Modo operador
 
 **Monitor PGM (bloco "PGM (no ar)"):** miniatura 16:9 de tudo o que o canal manda ao ar (`/overlay/{token}/pgm`, uma só conexão Reverb, fundo escuro/xadrez, congelar; pausa com a aba oculta). É o estado do canal, não o vídeo do OBS; campeonato e overlays livres ficam de fora.
+**PVW (bloco "PVW (prévia)"):** passar o mouse num botão de camada ou tela extra mostra como ficaria no ar antes do clique (`/overlay/{token}/pgm?pvw=`; o servidor monta o estado só em memória e exige sessão do painel).
 
 O botão **Modo operador** (no alto da página Transmissão) abre uma tela cheia para operar ao vivo, sem rolagem: jogo no ar e cenas, as cinco
 camadas (atalhos **1 a 5**), telas extras, campeonato, overlays livres, controle da escalação (**← →** e **R**), avisos de um clique, jogador em
