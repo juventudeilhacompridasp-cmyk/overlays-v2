@@ -26,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $started_at
  * @property Carbon|null $finished_at
  * @property list<array{home: int, away: int, winner: string|null, finished: bool}>|null $sets
+ * @property array{servers?: array<string, 'home'|'away'>}|null $volleyball_rotation
  */
 #[Unguarded]
 #[UseFactory(GameFactory::class)]
@@ -52,6 +53,7 @@ class Game extends Model
             'started_at' => 'datetime',
             'finished_at' => 'datetime',
             'sets' => 'array',
+            'volleyball_rotation' => 'array',
         ];
     }
 

@@ -17,6 +17,7 @@ use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Support\PublicGameSnapshot;
+use App\Modules\Rules\Scoring\VolleyballRotation;
 use App\Modules\Teams\Models\RosterEntry;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
@@ -51,6 +52,26 @@ function winThreeZero(Game $game): void
 {
     scorePoints($game, 'home', 75);
 }
+
+it('derives the volleyball rotation from the initial server and rallies', function () {
+    expect(VolleyballRotation::state(['home', 'away', 'away', 'home'], 'home'))->toMatchArray([
+        'configured' => true, 'server' => 'home', 'home_position' => 2, 'away_position' => 2,
+    ]);
+    expect(VolleyballRotation::state(['home'], null)['configured'])->toBeFalse();
+});
+
+it('stores the initial server only before the first rally and exposes aggregate rotation', function () {
+    $game = volleyballGame();
+    $this->actingAs(panelUser(Role::Operator));
+
+    $this->patch("/painel/games/{$game->id}/volleyball-rotation", ['set' => 1, 'server' => 'home'])->assertSessionHas('success');
+    $this->post("/painel/games/{$game->id}/points", ['side' => 'away']);
+    $this->patch("/painel/games/{$game->id}/volleyball-rotation", ['set' => 1, 'server' => 'away'])->assertSessionHas('error');
+
+    $snapshot = PublicGameSnapshot::for($game->fresh());
+    expect($snapshot['rotation'])->toMatchArray(['set' => 1, 'configured' => true, 'server' => 'away', 'home_position' => 1, 'away_position' => 2])
+        ->and(json_encode($snapshot['rotation']))->not->toContain($game->home_entry_id);
+});
 
 it('projects rally points into sets, set by set', function () {
     $game = volleyballGame();

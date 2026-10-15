@@ -82,6 +82,7 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 
 - O limite de substituições do vôlei é por set (`substitutions.max_per_period = 6`), reinicia no próximo set e deve ser aplicado pelo estado da súmula, nunca somente pelo front.
 - O líbero usa a vaga `lib` no banco: suas trocas de entrada e saída são reentradas especiais, não consomem o limite de substituições nem atos, e devem ser validadas pelo estado da súmula.
+- O rodízio é derivado dos rallies efetivos: o painel registra o saque inicial por set antes do primeiro ponto, a ordem dos seis titulares é a ordem de rotação e o snapshot público expõe somente lado sacador e posições numéricas (ADR 0014).
 
 ## Modo operador de transmissão
 

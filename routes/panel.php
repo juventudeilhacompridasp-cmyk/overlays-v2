@@ -126,6 +126,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::post('games/{game}/sync', [SheetController::class, 'sync'])->name('games.sync');
         Route::post('games/{game}/events', [SheetController::class, 'storeEvent'])->name('games.events.store');
         Route::post('games/{game}/points', [SheetController::class, 'point'])->name('games.points.store');
+        Route::patch('games/{game}/volleyball-rotation', [SheetController::class, 'volleyballRotation'])->name('games.volleyball-rotation');
         Route::post('games/{game}/events/{event}/void', [SheetController::class, 'voidEvent'])->name('games.events.void');
         Route::post('games/{game}/periods', [SheetController::class, 'period'])->name('games.periods.store');
         Route::post('games/{game}/clock', [SheetController::class, 'clockPause'])->name('games.clock.pause');
