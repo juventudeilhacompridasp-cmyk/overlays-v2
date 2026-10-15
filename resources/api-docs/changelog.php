@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.2.2',
+        'date' => '2026-10-15',
+        'changes' => ['Rotas da área da plataforma (organizações, status page, contatos, medição e documentação) agora têm descrição.'],
+    ],
+    [
         'version' => '1.2.1',
         'date' => '2026-10-15',
         'changes' => [
