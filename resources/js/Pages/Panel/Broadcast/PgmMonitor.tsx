@@ -52,8 +52,13 @@ export function usePgmState() {
  * Monitor PGM: a página `/overlay/{token}/pgm` (todas as telas ligadas do canal, uma só conexão) num canvas lógico de
  * 1920 x 1080 reduzido para caber no bloco. Só um iframe por canal; fica parado com a aba oculta ou congelado.
  */
-export default function PgmMonitor({ url, hasGame, backdrop, frozen }: { url: string; hasGame: boolean; backdrop: Backdrop; frozen: boolean }) {
+export default function PgmMonitor({ url, hasGame, backdrop, frozen, preview }: { url: string; hasGame: boolean; backdrop: Backdrop; frozen: boolean; preview?: { key: string | null } }) {
     const box = useRef<HTMLDivElement>(null);
+    const frame = useRef<HTMLIFrameElement>(null);
+    const isPreview = preview !== undefined;
+    const previewKey = preview?.key ?? '';
+    // PVW: a página fica carregada e recebe a chave nova por mensagem (mesma origem), sem recarregar.
+    const sendKey = () => frame.current?.contentWindow?.postMessage({ type: 'pvw', key: previewKey }, window.location.origin);
     const [size, setSize] = useState({ width: 0, height: 0 });
     const [visible, setVisible] = useState(() => typeof document === 'undefined' || !document.hidden);
 
@@ -76,19 +81,22 @@ export default function PgmMonitor({ url, hasGame, backdrop, frozen }: { url: st
         return () => document.removeEventListener('visibilitychange', update);
     }, []);
 
+    useEffect(sendKey, [previewKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const scale = Math.min(size.width / 1920, size.height / 1080);
     const width = 1920 * scale;
     const height = 1080 * scale;
     const running = visible && !frozen && scale > 0;
 
     return (
-        <div ref={box} className="relative flex h-full min-h-[3rem] items-center justify-center" data-testid="operator-pgm">
+        <div ref={box} className="relative flex h-full min-h-[3rem] items-center justify-center" data-testid={isPreview ? 'operator-pvw' : 'operator-pgm'}>
             {scale > 0 && (
-                <div className={`relative overflow-hidden rounded ${backdrop === 'checker' ? CHECKER : 'bg-slate-950'}`} style={{ width, height }} aria-label="Monitor PGM: o que está no ar">
-                    {running && <iframe key={url} src={url} title="PGM" tabIndex={-1} width={1920} height={1080} className="pointer-events-none absolute left-0 top-0 border-0" style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }} />}
+                <div className={`relative overflow-hidden rounded ${backdrop === 'checker' ? CHECKER : 'bg-slate-950'}`} style={{ width, height }} aria-label={isPreview ? 'Monitor PVW: prévia do que iria ao ar' : 'Monitor PGM: o que está no ar'}>
+                    {running && <iframe ref={frame} key={url} src={url} title={isPreview ? 'PVW' : 'PGM'} onLoad={sendKey} tabIndex={-1} width={1920} height={1080} className="pointer-events-none absolute left-0 top-0 border-0" style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }} />}
                     {!running && <div className="absolute inset-0 grid place-items-center px-2 text-center text-[11px] font-semibold text-white/70">{frozen ? 'Prévia congelada' : 'Prévia em pausa (aba oculta)'}</div>}
-                    {running && !hasGame && <div className="pointer-events-none absolute inset-x-0 bottom-1 text-center text-[10px] font-semibold text-white/50">Sem jogo no ar</div>}
-                    <span className="pointer-events-none absolute bottom-1.5 left-1.5 rounded bg-red-600 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">PGM</span>
+                    {running && !hasGame && !isPreview && <div className="pointer-events-none absolute inset-x-0 bottom-1 text-center text-[10px] font-semibold text-white/50">Sem jogo no ar</div>}
+                    {isPreview && running && preview.key === null && <div className="pointer-events-none absolute inset-x-0 top-1 text-center text-[10px] font-semibold text-white/60">Passe o mouse num botão de camada ou tela</div>}
+                    <span className={`pointer-events-none absolute bottom-1.5 left-1.5 rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white ${isPreview ? 'bg-amber-600' : 'bg-red-600'}`}>{isPreview ? 'PVW' : 'PGM'}</span>
                 </div>
             )}
         </div>

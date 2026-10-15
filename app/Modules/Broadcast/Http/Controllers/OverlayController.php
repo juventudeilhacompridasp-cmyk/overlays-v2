@@ -10,6 +10,7 @@ use App\Modules\Broadcast\Models\OverlayFont;
 use App\Modules\Broadcast\Support\OverlayCustomElements;
 use App\Modules\Broadcast\Support\OverlayState;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response as PlainResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,15 +38,17 @@ class OverlayController extends Controller
         'pgm' => 'Overlay/Pgm',
     ];
 
-    public function show(OverlayChannel $channel, string $overlay): Response
+    public function show(Request $request, OverlayChannel $channel, string $overlay): Response
     {
         abort_unless(isset(self::PAGES[$overlay]), 404);
 
         $realtime = config('platform.realtime');
+        $preview = $overlay === 'pgm' && $request->has('pvw');
 
         return Inertia::render(self::PAGES[$overlay], [
             'token' => $channel->token,
-            'state' => OverlayState::for($channel),
+            'state' => OverlayState::for($preview ? $this->previewed($request, $channel) : $channel),
+            'preview' => $preview,
             'realtime' => ['key' => $realtime['key'], 'host' => $realtime['host'], 'port' => $realtime['port'], 'scheme' => $realtime['scheme']],
         ]);
     }
@@ -74,8 +77,23 @@ class OverlayController extends Controller
     }
 
     /** Contingência quando o WebSocket não conecta (o OBS mantém a página aberta o dia todo). */
-    public function state(OverlayChannel $channel): JsonResponse
+    public function state(Request $request, OverlayChannel $channel): JsonResponse
     {
-        return response()->json(OverlayState::for($channel))->header('Cache-Control', 'no-store');
+        return response()->json(OverlayState::for($this->previewed($request, $channel)))->header('Cache-Control', 'no-store');
+    }
+
+    /**
+     * PVW do Modo operador: `?pvw=lineup` monta o estado com aquela camada/tela ligada SEM gravar nada. Só vale com sessão do
+     * painel (o token da URL sozinho nunca mostra o que ainda não está no ar); sem `pvw` o canal segue como está.
+     */
+    private function previewed(Request $request, OverlayChannel $channel): OverlayChannel
+    {
+        if (! $request->has('pvw')) {
+            return $channel;
+        }
+
+        abort_unless($request->user()?->role()?->usesPanel() === true, 403);
+
+        return $channel->withPreview((string) $request->query('pvw'));
     }
 }

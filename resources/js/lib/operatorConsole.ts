@@ -83,3 +83,16 @@ export function stepLabel(mode: 'auto' | 'manual', step: number, total: number):
 export function liveCount(...maps: Record<string, boolean>[]): number {
     return maps.reduce((sum, map) => sum + Object.values(map).filter(Boolean).length, 0);
 }
+
+/** Camadas e telas que o PVW pode mostrar antes de irem ao ar (as mesmas chaves de `OverlayChannel::PREVIEWABLE`). */
+export const PREVIEWABLE_KEYS: string[] = ['lineup', 'standings', 'sponsors', ...OPERATOR_SCREENS.map((screen) => screen.key)];
+
+/** Chave válida para o PVW; qualquer outra coisa vira "nada selecionado". */
+export const previewKey = (value: unknown): string | null => (typeof value === 'string' && PREVIEWABLE_KEYS.includes(value) ? value : null);
+
+/** Nome mostrado no cabeçalho do PVW. */
+export function previewLabel(key: string | null): string {
+    if (key === null) return 'Passe o mouse num botão';
+
+    return OPERATOR_LAYERS.find((layer) => layer.key === key)?.label ?? OPERATOR_SCREENS.find((screen) => screen.key === key)?.label ?? key;
+}
