@@ -13,6 +13,10 @@ final class PortalSettings
 {
     /** @var array<string, array{group: string, default: bool, label: string, hint: string}> */
     public const SWITCHES = [
+        'home_live' => ['group' => 'Página inicial', 'default' => true, 'label' => 'Bloco "Ao vivo agora"', 'hint' => 'Jogos em andamento (só aparece quando há algum).'],
+        'home_upcoming' => ['group' => 'Página inicial', 'default' => true, 'label' => 'Bloco "Próximos jogos"', 'hint' => 'Os próximos jogos agendados das edições publicadas.'],
+        'home_recent' => ['group' => 'Página inicial', 'default' => true, 'label' => 'Bloco "Resultados recentes"', 'hint' => 'Os últimos jogos encerrados das edições publicadas.'],
+        'home_competitions' => ['group' => 'Página inicial', 'default' => true, 'label' => 'Lista de competições', 'hint' => 'Competições e edições publicadas, com link para cada uma.'],
         'game_timeline' => ['group' => 'Página do jogo', 'default' => true, 'label' => 'Linha do tempo do jogo', 'hint' => 'Gols e substituições, com minuto (futebol e futsal).'],
         'game_cards' => ['group' => 'Página do jogo', 'default' => false, 'label' => 'Cartões na linha do tempo', 'hint' => 'Amarelos e vermelhos. Desligado por padrão: cartões são dado disciplinar.'],
         'game_standings' => ['group' => 'Página do jogo', 'default' => true, 'label' => 'Posição das equipes na tabela', 'hint' => 'Colocação e pontos das duas equipes, quando a fase tem tabela.'],
@@ -24,7 +28,9 @@ final class PortalSettings
         'team_calendar' => ['group' => 'Página da equipe', 'default' => true, 'label' => 'Calendário (.ics)', 'hint' => 'Link para a pessoa adicionar os jogos da equipe à agenda do celular.'],
         'team_roster' => ['group' => 'Página da equipe', 'default' => false, 'label' => 'Elenco público', 'hint' => 'Atletas (nome público e camisa) e técnico da edição mais recente. Desligado por padrão; sem foto, nascimento ou documento.'],
         'season_bracket' => ['group' => 'Página da edição', 'default' => true, 'label' => 'Chaveamento do mata-mata', 'hint' => 'Quadro visual das fases eliminatórias, com placares, pênaltis e o campeão.'],
+        'season_stats' => ['group' => 'Página da edição', 'default' => true, 'label' => 'Página de estatísticas', 'hint' => 'Ataque, defesa, forma e maiores resultados da edição (botão "Estatísticas"). Desligada, o endereço responde "não encontrado".'],
         'season_rules' => ['group' => 'Página da edição', 'default' => true, 'label' => 'Regras da tabela explicadas', 'hint' => 'Pontos por vitória/empate/derrota e a ordem dos critérios de desempate.'],
+        'share_buttons' => ['group' => 'Compartilhamento', 'default' => true, 'label' => 'Botões de compartilhar', 'hint' => 'WhatsApp e copiar link nas páginas do jogo, da equipe e da edição.'],
         'competition_page' => ['group' => 'Página da competição', 'default' => true, 'label' => 'Página própria da competição', 'hint' => 'Endereço /competicoes/{nome} com o histórico das edições. Desligada, o endereço leva direto à edição mais recente.'],
         'competition_champions' => ['group' => 'Página da competição', 'default' => true, 'label' => 'Campeão e vice de cada edição', 'hint' => 'No mata-mata, pela final decidida; em pontos corridos, pelo líder da tabela depois que a edição é encerrada.'],
         'competition_records' => ['group' => 'Página da competição', 'default' => true, 'label' => 'Recordes e títulos', 'hint' => 'Equipes com mais títulos, maiores vitórias e jogos com mais placar de todas as edições (só jogos encerrados em campo).'],

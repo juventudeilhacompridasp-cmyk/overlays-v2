@@ -202,6 +202,6 @@ describe('the organization settings', function () {
         $this->actingAs(panelUser(Role::Admin))->get(route('panel.organization.edit'))->assertInertia(fn ($page) => $page
             ->where('portal_settings.game_cards', true)
             ->where('portal_settings.game_standings', false)
-            ->has('portal_switches', 15));
+            ->has('portal_switches', 21));
     });
 });

@@ -9,6 +9,7 @@ interface Props {
     live: PortalGame[];
     upcoming: PortalGame[];
     recent: PortalGame[];
+    sections: { live: boolean; upcoming: boolean; recent: boolean; competitions: boolean };
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -20,26 +21,33 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     );
 }
 
-export default function Home({ theme, seo, competitions, live, upcoming, recent }: Props) {
+export default function Home({ theme, seo, competitions, live, upcoming, recent, sections }: Props) {
     return (
         <PortalLayout theme={theme} seo={seo}>
             <h1 className="sr-only">{theme.name}</h1>
             <div className="space-y-6">
-                {live.length > 0 && (
+                {sections.live && live.length > 0 && (
                     <Section title="Ao vivo agora">
                         <GameList games={live} />
                     </Section>
                 )}
 
-                <div className="grid gap-6 md:grid-cols-2">
-                    <Section title="Próximos jogos">
-                        <GameList games={upcoming} empty="Nenhum jogo agendado." />
-                    </Section>
-                    <Section title="Resultados recentes">
-                        <GameList games={recent} empty="Nenhum resultado ainda." />
-                    </Section>
-                </div>
+                {(sections.upcoming || sections.recent) && (
+                    <div className={`grid gap-6 ${sections.upcoming && sections.recent ? 'md:grid-cols-2' : ''}`}>
+                        {sections.upcoming && (
+                            <Section title="Próximos jogos">
+                                <GameList games={upcoming} empty="Nenhum jogo agendado." />
+                            </Section>
+                        )}
+                        {sections.recent && (
+                            <Section title="Resultados recentes">
+                                <GameList games={recent} empty="Nenhum resultado ainda." />
+                            </Section>
+                        )}
+                    </div>
+                )}
 
+                {sections.competitions && (
                 <Section title="Competições">
                     {competitions.length === 0 ? (
                         <p className="py-2 text-sm text-gray-500">Nenhuma competição publicada ainda.</p>
@@ -61,6 +69,7 @@ export default function Home({ theme, seo, competitions, live, upcoming, recent 
                         </ul>
                     )}
                 </Section>
+                )}
             </div>
         </PortalLayout>
     );

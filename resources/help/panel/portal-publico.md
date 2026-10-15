@@ -17,6 +17,9 @@ Em [Portal público](route:panel.organization.edit) o administrador ajusta a apa
 - Nomes de **menores** aparecem abreviados ("João S."); adultos, pelo apelido ou nome.
 - Nunca aparecem cartões, disciplina, escalações, elenco, fotos, CPF ou documentos.
 
+## Página inicial e compartilhamento
+No mesmo cartão, os grupos **Página inicial** e **Compartilhamento** escolhem o que a página inicial mostra (ao vivo, próximos jogos, resultados recentes, lista de competições), se existe a **página de estatísticas** da edição (desligada, o endereço responde "não encontrado" e o botão some) e os **botões de compartilhar** (WhatsApp e copiar link). Tudo ligado por padrão. Quantos itens aparecem em cada lista fica em [Parâmetros](route:panel.parameters.edit).
+
 ## Página pública do jogo
 Em Portal público, o cartão **O que as páginas públicas mostram** liga ou desliga o que aparece abaixo do placar:
 - **Linha do tempo**: gols e substituições com minuto (futebol e futsal; vôlei e basquete não têm).

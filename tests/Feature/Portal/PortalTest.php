@@ -378,3 +378,25 @@ it('limits the home lists to the quantity the organization chose', function () {
     CurrentOrganization::get()->update(['settings' => ['portal_quantities' => ['home' => 4]]]);
     $this->get('/')->assertInertia(fn ($page) => $page->has('recent', 4));
 });
+
+it('hides the home blocks the organization turned off', function () {
+    ['game' => $game] = publishedGame();
+    $game->forceFill(['status' => GameStatus::InProgress, 'started_at' => now()])->save();
+
+    $this->get('/')->assertInertia(fn ($page) => $page->where('sections.live', true)->where('sections.competitions', true)->has('live', 1)->has('competitions', 1));
+
+    CurrentOrganization::get()->update(['settings' => ['portal' => ['home_live' => false, 'home_competitions' => false]]]);
+
+    $this->get('/')->assertInertia(fn ($page) => $page
+        ->where('sections', ['live' => false, 'upcoming' => true, 'recent' => true, 'competitions' => false])
+        ->has('live', 0)
+        ->has('competitions', 0));
+});
+
+it('shares the share-buttons switch with the pages', function () {
+    $this->get('/')->assertInertia(fn ($page) => $page->where('portal_share', true));
+
+    CurrentOrganization::get()->update(['settings' => ['portal' => ['share_buttons' => false]]]);
+
+    $this->get('/')->assertInertia(fn ($page) => $page->where('portal_share', false));
+});

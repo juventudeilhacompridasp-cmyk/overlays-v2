@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Modules\Help\Support\ContextualHelp;
+use App\Modules\Portal\Support\PortalSettings;
 use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Ability;
@@ -53,6 +54,8 @@ class HandleInertiaRequests extends Middleware
 
                 return ['name' => $theme['white_label'] ? $theme['name'] : (string) config('app.name'), 'logo_url' => $theme['logo_url']];
             })(),
+            // Botões de compartilhar do portal (Painel > Portal público): só esconde; nada é enviado sem o clique.
+            'portal_share' => fn () => PortalSettings::enabled('share_buttons'),
             // Ajuda desta tela (artigos ligados à rota atual; ADR 0006): só calculada quando a página usa.
             'help' => fn () => ContextualHelp::for($request),
             'flash' => [
