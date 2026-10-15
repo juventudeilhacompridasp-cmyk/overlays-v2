@@ -2,7 +2,7 @@ import { GameClock, ShotClock } from '@/lib/clock';
 import { ConnectionState, Realtime, subscribeToChannel } from '@/lib/echo';
 import './artFonts';
 import { LowerThirdBannerData, LowerThirdSettings } from './lowerThird';
-import { useEffect, useRef, useState } from 'react';
+import { createContext, createElement, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { BarLook, SponsorItem, SponsorLook } from './sponsorLook';
 import type { ShootoutData } from './shootout';
 import type { StatsState } from './statsLook';
@@ -175,6 +175,15 @@ export interface OverlayState {
 
 export type Banner = LowerThirdBannerData;
 
+export interface OverlayRuntimeValue {
+    state: OverlayState;
+    banner: Banner | null;
+    connection: ConnectionState;
+    skew: number;
+}
+
+const OverlayRuntimeContext = createContext<OverlayRuntimeValue | null>(null);
+
 const POLL_MS = 3000;
 
 /**
@@ -182,7 +191,7 @@ const POLL_MS = 3000;
  * consulta `/overlay/{token}/estado` a cada poucos segundos. Também guarda a faixa de lance atual (some sozinha).
  * A tela do OBS fica aberta o dia todo, por isso a contingência não para.
  */
-export function useOverlay(token: string, initial: OverlayState, realtime: Realtime) {
+function useOverlayRuntime(token: string, initial: OverlayState, realtime: Realtime, active = true): OverlayRuntimeValue {
     const [state, setState] = useState(initial);
     const [banner, setBanner] = useState<Banner | null>(null);
     const [connection, setConnection] = useState<ConnectionState>('connecting');
@@ -190,13 +199,16 @@ export function useOverlay(token: string, initial: OverlayState, realtime: Realt
     const skew = useRef(Date.now() - initial.server_time_ms);
 
     useEffect(() => {
+        if (!active) return;
+
         document.documentElement.style.background = 'transparent';
         document.body.style.background = 'transparent';
-    }, []);
+    }, [active]);
 
     // Fonte própria: registra o arquivo (mesma origem do overlay) antes de usar a família; até carregar vale a fonte de reserva.
     const face = state.font_face;
     useEffect(() => {
+        if (!active) return;
         if (!face || typeof FontFace === 'undefined') return;
 
         let cancelled = false;
@@ -209,9 +221,11 @@ export function useOverlay(token: string, initial: OverlayState, realtime: Realt
         return () => {
             cancelled = true;
         };
-    }, [face?.family, face?.url, face?.format]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [active, face?.family, face?.url, face?.format]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
+        if (!active) return;
+
         let stop: (() => void) | undefined;
         let cancelled = false;
 
@@ -231,9 +245,10 @@ export function useOverlay(token: string, initial: OverlayState, realtime: Realt
             cancelled = true;
             stop?.();
         };
-    }, [token]);
+    }, [active, token]);
 
     useEffect(() => {
+        if (!active) return;
         if (connection === 'connected') {
             return;
         }
@@ -248,9 +263,10 @@ export function useOverlay(token: string, initial: OverlayState, realtime: Realt
         }, POLL_MS);
 
         return () => window.clearInterval(timer);
-    }, [connection, token]);
+    }, [active, connection, token]);
 
     useEffect(() => {
+        if (!active) return;
         if (!banner) {
             return;
         }
@@ -258,7 +274,21 @@ export function useOverlay(token: string, initial: OverlayState, realtime: Realt
         const timer = window.setTimeout(() => setBanner(null), (state.lower_third_settings?.seconds ?? 7) * 1000);
 
         return () => window.clearTimeout(timer);
-    }, [banner]);
+    }, [active, banner, state.lower_third_settings?.seconds]);
 
     return { state, banner, connection, skew: skew.current };
+}
+
+/** Compartilha a única assinatura Reverb e o único polling entre todas as camadas de /todos. */
+export function OverlayProvider({ children, token, initial, realtime }: { children: ReactNode; token: string; initial: OverlayState; realtime: Realtime }) {
+    const value = useOverlayRuntime(token, initial, realtime);
+
+    return createElement(OverlayRuntimeContext.Provider, { value }, children);
+}
+
+export function useOverlay(token: string, initial: OverlayState, realtime: Realtime): OverlayRuntimeValue {
+    const shared = useContext(OverlayRuntimeContext);
+    const local = useOverlayRuntime(token, initial, realtime, shared === null);
+
+    return shared ?? local;
 }
