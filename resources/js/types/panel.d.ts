@@ -30,6 +30,7 @@ export type RulesData = {
     points: { win: number; draw: number; loss: number; walkover_loss: number | null };
     fouls: { max_player: number | null; max_disqualifying: number; team_limit: number | null };
     periods: { minutes: number[] | null };
+    results: { quick_allowed: boolean };
     timeouts: { limits: Record<string, number> | null };
     tiebreakers: string[];
     cards: {

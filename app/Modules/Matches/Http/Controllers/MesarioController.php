@@ -49,7 +49,7 @@ class MesarioController extends Controller
                 'competition' => "{$game->division->season->competition->name} · {$game->division->name}",
                 'stage' => $game->stage->name,
                 // Placar final direto (sem súmula) só faz sentido onde o placar é gols/pontos, não sets.
-                'quick_result' => $quickResult && $game->sport()->profile()->scoreModel !== 'sets',
+                'quick_result' => $quickResult && $game->division->ruleSet()->allowQuickResult && $game->sport()->profile()->scoreModel !== 'sets',
                 'knockout' => $game->stage->type === StageType::Knockout,
             ])->values(),
         ]);

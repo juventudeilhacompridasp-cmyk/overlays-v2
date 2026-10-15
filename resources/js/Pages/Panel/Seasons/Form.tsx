@@ -262,6 +262,10 @@ export default function Form({ competition, season, rules, sport_rules, options,
                     </Card>
                 )}
 
+                <Card title="Regulamento: lançamento de resultados">
+                    {checkbox('Permitir o resultado rápido (placar final sem súmula detalhada). Desmarcado, o placar só entra pela súmula; W.O. continua disponível.', 'rules.results.quick_allowed', data.rules.results.quick_allowed, (d, v) => (d.results.quick_allowed = v))}
+                </Card>
+
                 <Card title="Regulamento: escalação pelo gestor da equipe">
                     <div className="grid gap-4 sm:grid-cols-2">
                         {numberField('Prazo da escalação (minutos antes do jogo)', 'rules.lineup.manager_deadline_minutes', data.rules.lineup.manager_deadline_minutes, (d, v) => (d.lineup.manager_deadline_minutes = v), '0 = até o horário do jogo')}

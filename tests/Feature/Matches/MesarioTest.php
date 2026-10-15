@@ -85,3 +85,13 @@ it('links the manifest only in panel pages', function () {
     $this->get('/painel/mesario')->assertSee('rel="manifest"', false);
     $this->get('/')->assertDontSee('rel="manifest"', false);
 });
+
+it('hides the quick result for games of an edition that does not allow it', function () {
+    $games = mesarioGames(2);
+    $games[0]->update(['scheduled_at' => now()->addHour()]);
+    $season = $games[0]->division->season;
+    $season->update(['rules' => [...$season->ruleSet()->toArray(), 'results' => ['quick_allowed' => false]]]);
+
+    $this->actingAs(panelUser(Role::Operator));
+    $this->get('/painel/mesario')->assertInertia(fn ($page) => $page->where('games.0.quick_result', false));
+});
