@@ -89,9 +89,10 @@ it('exports the same numbers as CSV, with the BOM, semicolons and formulas neutr
     $csv = $response->streamedContent();
 
     $response->assertOk()->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+    // O fputcsv põe entre aspas o campo com espaço ("Jogos encerrados").
     expect(str_starts_with($csv, "\xEF\xBB\xBF"))->toBeTrue()
         ->and($csv)->toContain('Indicador;Valor')
-        ->and($csv)->toContain('Mês;Jogos encerrados')
+        ->and($csv)->toContain('Mês;"Jogos encerrados"')
         ->and($csv)->toContain('Encerrados;1')
         ->and($csv)->toContain("'=SOMA(A1)")
         ->and($csv)->not->toContain(';=SOMA(A1)');
