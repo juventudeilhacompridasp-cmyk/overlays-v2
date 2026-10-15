@@ -58,6 +58,8 @@ final readonly class RuleSet
         public ?int $teamFoulLimit = null,
         /** @var array<int, int>|null pedidos de tempo por equipe em cada grupo de períodos; nulo = os do perfil do esporte. */
         public ?array $timeoutLimits = null,
+        /** O resultado rápido (placar final sem súmula detalhada) é permitido nesta edição? */
+        public bool $allowQuickResult = true,
     ) {
         foreach (['setsToWin' => $setsToWin, 'setPoints' => $setPoints, 'decidingSetPoints' => $decidingSetPoints, 'setMinLead' => $setMinLead] as $name => $value) {
             if ($value < 1) {
@@ -167,6 +169,7 @@ final readonly class RuleSet
             managerLineupDeadlineMinutes: (int) $merged['lineup']['manager_deadline_minutes'],
             periodMinutes: isset($merged['periods']['minutes']) && is_array($merged['periods']['minutes']) ? array_values(array_map('intval', $merged['periods']['minutes'])) : null,
             teamFoulLimit: isset($merged['fouls']['team_limit']) ? (int) $merged['fouls']['team_limit'] : null,
+            allowQuickResult: (bool) ($merged['results']['quick_allowed'] ?? true),
             timeoutLimits: isset($merged['timeouts']['limits']) && is_array($merged['timeouts']['limits']) ? array_map('intval', array_combine(array_map('intval', array_keys($merged['timeouts']['limits'])), $merged['timeouts']['limits'])) : null,
         );
     }
@@ -181,6 +184,7 @@ final readonly class RuleSet
             'fouls' => ['max_player' => $this->maxPlayerFouls, 'max_disqualifying' => $this->maxDisqualifyingFouls, 'team_limit' => $this->teamFoulLimit],
             'periods' => ['minutes' => $this->periodMinutes],
             'timeouts' => ['limits' => $this->timeoutLimits],
+            'results' => ['quick_allowed' => $this->allowQuickResult],
             'tiebreakers' => array_map(fn (Tiebreaker $t) => $t->value, $this->tiebreakers),
             'cards' => [
                 'yellow_for_suspension' => $this->yellowCardsForSuspension,

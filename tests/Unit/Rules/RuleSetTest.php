@@ -73,3 +73,11 @@ it('leaves period minutes, team foul limit and timeouts to the sport unless the 
         ->and($custom->timeoutLimits)->toBe([1 => 3, 2 => 4])
         ->and(RuleSet::fromArray($custom->toArray()))->toEqual($custom);
 });
+
+it('allows the quick result by default and keeps the edition choice', function () {
+    expect(RuleSet::defaults()->allowQuickResult)->toBeTrue();
+
+    $off = RuleSet::fromArray(['results' => ['quick_allowed' => false]]);
+
+    expect($off->allowQuickResult)->toBeFalse()->and(RuleSet::fromArray($off->toArray())->allowQuickResult)->toBeFalse();
+});

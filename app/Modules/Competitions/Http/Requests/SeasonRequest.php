@@ -65,6 +65,7 @@ class SeasonRequest extends FormRequest
             'rules.scoring.min_lead' => ['sometimes', 'integer', 'between:1,10'],
             'rules.scoring.points_narrow_win' => ['sometimes', 'nullable', 'integer', 'between:0,10'],
             'rules.scoring.points_narrow_loss' => ['sometimes', 'nullable', 'integer', 'between:0,10'],
+            'rules.results.quick_allowed' => ['sometimes', 'boolean'],
             'rules.periods.minutes' => ['sometimes', 'nullable', 'array'],
             'rules.periods.minutes.*' => ['integer', 'between:1,120'],
             'rules.fouls.team_limit' => ['sometimes', 'nullable', 'integer', 'between:1,20'],

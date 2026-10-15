@@ -28,6 +28,10 @@ final class RecordQuickResult
             throw new InvalidArgumentException('O resultado rápido está desligado nesta organização (Painel > Parâmetros). Lance os eventos pela súmula.');
         }
 
+        if (! $game->division->ruleSet()->allowQuickResult) {
+            throw new InvalidArgumentException('O regulamento desta edição não permite o resultado rápido. Lance os eventos pela súmula.');
+        }
+
         if ($game->home_entry_id === null || $game->away_entry_id === null) {
             throw new InvalidArgumentException('O jogo ainda não tem os dois confrontantes definidos.');
         }

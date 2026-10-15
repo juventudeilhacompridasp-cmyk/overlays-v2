@@ -131,3 +131,15 @@ it('feeds the standings from quick results, and a reopened game leaves the table
     expect($table[$e1->id]->row->points)->toBe(3)
         ->and($table[$e3->id]->row->played)->toBe(0);
 });
+
+it('refuses the quick result when the edition rules do not allow it, keeping the walkover available', function () {
+    ['game' => $game, 'home' => $home] = scheduledGame();
+    $season = $game->division->season;
+    $season->update(['rules' => [...$season->ruleSet()->toArray(), 'results' => ['quick_allowed' => false]]]);
+
+    expect(fn () => app(RecordQuickResult::class)->handle($game->fresh(), 2, 0))->toThrow(InvalidArgumentException::class, 'não permite o resultado rápido');
+    expect($game->fresh()->status)->toBe(GameStatus::Scheduled);
+
+    app(RegisterWalkover::class)->handle($game->fresh(), $home);
+    expect($game->fresh()->status)->toBe(GameStatus::Walkover);
+});
