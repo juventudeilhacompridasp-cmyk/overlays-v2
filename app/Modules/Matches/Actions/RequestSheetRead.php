@@ -15,7 +15,8 @@ use InvalidArgumentException;
  */
 final class RequestSheetRead
 {
-    public function handle(GameSheetUpload $upload): void
+    /** @param  int|null  $requestedBy  quem pediu a leitura (recebe o aviso quando termina; sem isso, quem enviou o arquivo) */
+    public function handle(GameSheetUpload $upload, ?int $requestedBy = null): void
     {
         if (! in_array($upload->status, [SheetUploadStatus::Uploaded, SheetUploadStatus::Failed, SheetUploadStatus::Read], true)) {
             throw new InvalidArgumentException($upload->status === SheetUploadStatus::Reading ? 'Esta súmula já está sendo lida.' : 'Esta súmula não pode mais ser lida de novo.');
@@ -31,7 +32,7 @@ final class RequestSheetRead
 
         GameSheetRead::query()->create(['game_id' => $upload->game_id, 'upload_id' => $upload->getKey(), 'reader' => $reader]);
 
-        ReadSheetUpload::dispatch($upload->getKey(), (string) $upload->organization_id);
+        ReadSheetUpload::dispatch($upload->getKey(), (string) $upload->organization_id, $requestedBy ?? ($upload->uploaded_by !== null ? (int) $upload->uploaded_by : null));
     }
 
     private function ensureAiAllowed(GameSheetUpload $upload): void

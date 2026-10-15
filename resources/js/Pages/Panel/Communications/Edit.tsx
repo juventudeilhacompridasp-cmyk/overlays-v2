@@ -19,13 +19,14 @@ type Settings = {
     market_contact_request: boolean;
     market_contact_answered: boolean;
     market_profile_expiring: boolean;
+    sheet_read_finished: boolean;
     reminder_first_minutes: number;
     reminder_second_minutes: number;
 };
 
 type SwitchKey = Exclude<keyof Settings, 'reminder_first_minutes' | 'reminder_second_minutes'>;
 
-const groups: { title: string; hint: string; feature: 'online_registration' | 'team_portal' | 'push' | 'market'; items: { key: SwitchKey; label: string }[] }[] = [
+const groups: { title: string; hint: string; feature: 'online_registration' | 'team_portal' | 'push' | 'market' | 'sheet_import'; items: { key: SwitchKey; label: string }[] }[] = [
     {
         title: 'Inscrição online (e-mails para a equipe que se inscreve)',
         hint: 'Desligado, o pedido segue normalmente, mas a equipe não recebe o e-mail (o link pessoal continua aparecendo na tela depois de criar o pedido).',
@@ -67,6 +68,12 @@ const groups: { title: string; hint: string; feature: 'online_registration' | 't
             { key: 'market_contact_answered', label: 'Gestor recebeu a resposta (aceito ou recusado)' },
             { key: 'market_profile_expiring', label: 'Perfil do atleta vai expirar em 7 dias' },
         ],
+    },
+    {
+        title: 'Súmulas enviadas depois do jogo',
+        hint: 'O e-mail só diz que a leitura terminou (ou falhou) e leva à revisão, que exige login; nunca traz o conteúdo lido.',
+        feature: 'sheet_import',
+        items: [{ key: 'sheet_read_finished', label: 'Leitura da súmula terminou (aviso a quem pediu)' }],
     },
 ];
 

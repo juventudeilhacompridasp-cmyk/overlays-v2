@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 final class OrganizationUsage
 {
     /**
-     * @return array{users: int, competitions: int, seasons: int, teams: int, people: int, games: int, finished_games: int, registrations: int, last_activity: ?string}
+     * @return array{users: int, competitions: int, seasons: int, teams: int, people: int, games: int, finished_games: int, registrations: int, sheet_reads_month: int, sheet_reads_total: int, last_activity: ?string}
      */
     public static function of(Organization $organization): array
     {
@@ -28,6 +28,9 @@ final class OrganizationUsage
             'games' => $count('games'),
             'finished_games' => $count('games', fn ($query) => $query->where('status', 'finished')),
             'registrations' => $count('registrations'),
+            // Leituras de súmula por IA (as que custam): no mês e desde sempre. Só contagens.
+            'sheet_reads_month' => $count('game_sheet_reads', fn ($query) => $query->where('reader', 'vision')->where('created_at', '>=', now()->startOfMonth())),
+            'sheet_reads_total' => $count('game_sheet_reads', fn ($query) => $query->where('reader', 'vision')),
             'last_activity' => $last !== '' ? $last : null,
         ];
     }
