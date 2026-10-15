@@ -15,4 +15,4 @@ Em [Notas da ajuda](route:panel.help-notes.index) o administrador escreve **proc
 Só a **sua organização** enxerga as notas; nenhuma outra, nem a plataforma, as mostra a quem não é da casa.
 
 ## Como escrever
-O texto é simples e seguro (nunca HTML): parágrafos separados por linha em branco, `## título`, listas com `-`, passos com `1.`, **negrito** com asteriscos duplos e links `[texto](help:artigo)` para outros artigos. Cada nota tem até 5.000 caracteres e a organização pode ter até 30 notas. As pessoas podem marcar se a nota ajudou.
+O texto é simples e seguro (nunca HTML): parágrafos separados por linha em branco, `## título`, listas com `-`, passos com `1.`, **negrito** com asteriscos duplos e links para outros artigos da ajuda, escritos como colchetes com o texto seguidos de parênteses com `help:` e o identificador do artigo. Cada nota tem até 5.000 caracteres e a organização pode ter até 30 notas. As pessoas podem marcar se a nota ajudou.
