@@ -7,6 +7,7 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import { defaultLayout, hidePanel, Layout, PANELS, PanelId, PRESETS, sanitizeLayout, showPanel } from '@/lib/operatorLayout';
 import type { Channel, GameOption, Scene } from './Index';
 import OperatorWorkspace, { Block } from './OperatorWorkspace';
+import ObsMonitor, { ObsControls, useObsMonitor } from './ObsMonitor';
 import PgmMonitor, { PgmControls, usePgmState } from './PgmMonitor';
 
 const LAYOUT_KEY = 'broadcast:operator-layout:v1';
@@ -50,6 +51,12 @@ function Controls({ channel, games, scenes, canOperate, onExit, layout, editing,
     const [sponsorsOn, setSponsorsOn] = useState(channel.sponsor_settings.enabled);
     const [stats, setStats] = useState({ home: channel.stats_settings.home, away: channel.stats_settings.away });
     const pgm = usePgmState();
+    const obs = useObsMonitor();
+    // Bloco fora do layout = sem conexão nem captura no fundo.
+    const obsShown = layout.some((item) => item.id === 'obs');
+    useEffect(() => {
+        if (!obsShown) obs.disconnect();
+    }, [obsShown]); // eslint-disable-line react-hooks/exhaustive-deps
     // PVW: passar o mouse (ou focar) num botão de camada/tela mostra como ficaria no ar; o clique é o "ir ao ar".
     const [pvwKey, setPvwKey] = useState<string | null>(null);
     const pvwTimer = useRef<number>();
@@ -125,6 +132,7 @@ function Controls({ channel, games, scenes, canOperate, onExit, layout, editing,
 
     const blocks: Partial<Record<PanelId, Block>> = {
         pvw: { right: <span className="flex items-center gap-1"><span className="max-w-[9rem] truncate text-[10px] font-bold uppercase text-amber-700" data-testid="operator-pvw-label">{previewLabel(pvwKey)}</span>{pvwKey !== null && <button type="button" onClick={() => setPvwKey(null)} className="rounded border border-gray-300 px-1.5 text-[10px] font-bold uppercase text-gray-500 hover:bg-gray-50">Limpar</button>}</span>, body: <PgmMonitor url={`${channel.pgm_url}${channel.pgm_url.includes('?') ? '&' : '?'}pvw=`} hasGame={hasGame} backdrop={pgm.backdrop} frozen={pgm.frozen} preview={{ key: pvwKey }} /> },
+        obs: { right: <ObsControls monitor={obs} />, body: <ObsMonitor monitor={obs} /> },
         pgm: { right: <PgmControls backdrop={pgm.backdrop} onBackdrop={pgm.setBackdrop} frozen={pgm.frozen} onFrozen={pgm.setFrozen} />, body: <PgmMonitor url={channel.pgm_url} hasGame={hasGame} backdrop={pgm.backdrop} frozen={pgm.frozen} /> },
         live: { right: <span className="text-[10px] font-semibold text-gray-400">teclas 1–5</span>, body: (
                         <div className="grid grid-cols-2 gap-1.5">

@@ -13,7 +13,7 @@ const { COLS, ROWS, PANELS, PRESETS, defaultLayout, firstFree, hidePanel, isVali
 
 test('todo modelo pronto é válido e cobre blocos conhecidos', () => {
     for (const preset of PRESETS) assert.equal(isValid(preset.layout), true, preset.key);
-    assert.equal(PANELS.length, 12);
+    assert.equal(PANELS.length, 13);
     for (const preset of PRESETS) for (const id of ['pgm', 'pvw']) assert.equal(preset.layout.some((item) => item.id === id), true, `${preset.key} sem ${id}`);
 });
 

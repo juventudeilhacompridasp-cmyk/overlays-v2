@@ -5,7 +5,7 @@
 export const COLS = 12;
 export const ROWS = 16;
 
-export type PanelId = 'pgm' | 'pvw' | 'live' | 'screens' | 'championship' | 'lineup' | 'notices' | 'cartelas' | 'clock' | 'stats' | 'summary' | 'custom';
+export type PanelId = 'pgm' | 'pvw' | 'live' | 'screens' | 'championship' | 'lineup' | 'notices' | 'cartelas' | 'clock' | 'stats' | 'summary' | 'custom' | 'obs';
 
 export type Item = { id: PanelId; x: number; y: number; w: number; h: number };
 export type Layout = Item[];
@@ -24,6 +24,7 @@ export const PANELS: { id: PanelId; title: string; minW: number; minH: number; w
     { id: 'stats', title: 'Estatísticas da partida', minW: 3, minH: 3, w: 4, h: 7 },
     { id: 'summary', title: 'Resumo', minW: 2, minH: 2, w: 4, h: 2 },
     { id: 'custom', title: 'Overlays livres', minW: 3, minH: 2, w: 5, h: 3 },
+    { id: 'obs', title: 'OBS (saída real)', minW: 3, minH: 4, w: 4, h: 6 },
 ];
 
 const META = new Map(PANELS.map((panel) => [panel.id, panel]));

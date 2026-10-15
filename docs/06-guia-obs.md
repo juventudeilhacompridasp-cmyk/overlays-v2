@@ -100,6 +100,7 @@ tira da rotação sem perder o cadastro.
 ### Modo operador
 
 **Monitor PGM (bloco "PGM (no ar)"):** miniatura 16:9 de tudo o que o canal manda ao ar (`/overlay/{token}/pgm`, uma só conexão Reverb, fundo escuro/xadrez, congelar; pausa com a aba oculta). É o estado do canal, não o vídeo do OBS; campeonato e overlays livres ficam de fora.
+**OBS (saída real, bloco "OBS (saída real)"):** mostra a foto da cena que está no ar NO OBS (não só o estado do canal), com transmissão, gravação e desempenho. Ligue o servidor em **Ferramentas > Configurações do servidor WebSocket** (porta 4455; defina uma senha), mostre o bloco em **Editar layout > Blocos**, informe o endereço (`ws://localhost:4455`, se o OBS está nesta máquina) e a senha. A conexão sai do navegador do operador direto para o OBS; o servidor da plataforma não participa e a senha não é guardada. Se o painel está em `https` use Chrome ou Edge (aceitam `ws://localhost`); para outra máquina da rede o OBS precisa de `wss://`. Atualiza a cada 0,5–5 s, para com a aba oculta e pode ser congelado.
 **PVW (bloco "PVW (prévia)"):** passar o mouse num botão de camada ou tela extra mostra como ficaria no ar antes do clique (`/overlay/{token}/pgm?pvw=`; o servidor monta o estado só em memória e exige sessão do painel).
 
 O botão **Modo operador** (no alto da página Transmissão) abre uma tela cheia para operar ao vivo, sem rolagem: jogo no ar e cenas, as cinco
