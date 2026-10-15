@@ -106,7 +106,7 @@ class SheetController extends Controller
                 'player_fouls' => (object) $state->foulsOf($entry->getKey()),
                 'yellows' => (object) $state->yellowsOf($entry->getKey()),
                 'timeouts' => $game->sport()->profile()->tracksTimeouts()
-                    ? ['used' => TeamTimeouts::used($game, $entry->getKey(), $currentPeriod), 'limit' => $game->sport()->profile()->timeoutLimit($currentPeriod)]
+                    ? ['used' => TeamTimeouts::used($game, $entry->getKey(), $currentPeriod), 'limit' => $game->timeoutLimit($currentPeriod)]
                     : null,
                 'substitutions_used' => $state->substitutionsUsed($entry->getKey()),
                 'substitutions_period_used' => $game->sport()->profile()->scoreModel === 'sets' ? $state->substitutionsUsedInPeriod($entry->getKey(), $currentPeriod) : null,

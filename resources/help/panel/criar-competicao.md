@@ -10,7 +10,7 @@ Uma competição (por exemplo, "Copa Ilha") tem **edições** (a temporada de ca
 
 ## Passo a passo
 1. Em [Competições](route:panel.competitions.index), crie a competição e escolha o esporte (futebol, futsal, vôlei ou basquete). O esporte só muda enquanto não existem edições.
-2. Crie a edição e preencha o regulamento: pontos, critérios de desempate e regras de cartões e suspensão. Tudo é parâmetro, nada é fixo.
+2. Crie a edição e preencha o regulamento: pontos, critérios de desempate e regras de cartões e suspensão. Tudo é parâmetro, nada é fixo. Para esportes com relógio, o bloco **tempo de jogo e limites do esporte** ajusta a duração de cada tempo ou quarto, as faltas de equipe que dão tiro livre e os pedidos de tempo (basquete e vôlei); já vêm com o padrão do esporte.
 3. Crie as divisões e inclua as equipes em cada uma (as equipes vêm de **Equipes**).
 4. Crie a fase e use **Gerar jogos**. Pontos corridos usa rodadas; mata-mata gera o chaveamento (1 jogo ou ida e volta).
 5. Ajuste datas e locais dos jogos.

@@ -17,9 +17,20 @@ export interface Option {
     label: string;
 }
 
+/** O que o perfil do esporte define e a edição pode ajustar (duração dos períodos, faltas de equipe, pedidos de tempo). */
+export type SportRules = {
+    period_minutes: number[];
+    period_labels: string[];
+    team_foul_limit: number | null;
+    timeout_limits: Record<string, number> | null;
+    timeout_labels: Record<string, string>;
+};
+
 export type RulesData = {
     points: { win: number; draw: number; loss: number; walkover_loss: number | null };
-    fouls: { max_player: number | null; max_disqualifying: number };
+    fouls: { max_player: number | null; max_disqualifying: number; team_limit: number | null };
+    periods: { minutes: number[] | null };
+    timeouts: { limits: Record<string, number> | null };
     tiebreakers: string[];
     cards: {
         yellow_for_suspension: number;

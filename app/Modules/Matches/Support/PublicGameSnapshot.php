@@ -91,7 +91,9 @@ final class PublicGameSnapshot
     {
         $profile = $game->sport()->profile();
 
-        if ($profile->teamFoulLimit === null) {
+        $teamLimit = $game->teamFoulLimit();
+
+        if ($teamLimit === null) {
             return null;
         }
 
@@ -107,7 +109,7 @@ final class PublicGameSnapshot
             }
         });
 
-        return ['home' => $counts['home'], 'away' => $counts['away'], 'limit' => $profile->teamFoulLimit, 'period' => $group];
+        return ['home' => $counts['home'], 'away' => $counts['away'], 'limit' => $teamLimit, 'period' => $group];
     }
 
     /**
@@ -139,7 +141,7 @@ final class PublicGameSnapshot
             }
         });
 
-        $limit = $profile->timeoutLimit($current);
+        $limit = $game->timeoutLimit($current);
 
         return ['home' => max(0, $limit - $used['home']), 'away' => max(0, $limit - $used['away']), 'limit' => $limit, 'period' => $group];
     }

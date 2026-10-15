@@ -143,9 +143,34 @@ class Game extends Model
         return $this->division->season->competition->sport;
     }
 
-    /** Cronômetro do jogo, com a duração dos períodos do esporte. */
+    /** Cronômetro do jogo: duração dos períodos do regulamento da divisão ou, sem ela, a do esporte. */
     public function clock(): GameClock
     {
-        return $this->sport()->profile()->clock();
+        $profile = $this->sport()->profile();
+        $minutes = $this->division->ruleSet()->periodMinutes;
+
+        // Só vale a lista do regulamento se tem um valor positivo para cada período do esporte (esportes sem relógio ignoram).
+        if ($profile->hasClock() && $minutes !== null && count($minutes) === count($profile->periodMinutes) && min($minutes) >= 1) {
+            return new GameClock($minutes);
+        }
+
+        return $profile->clock();
+    }
+
+    /** Faltas de equipe que dão tiro livre (regulamento da divisão ou perfil do esporte); nulo se o esporte não conta. */
+    public function teamFoulLimit(): ?int
+    {
+        $profile = $this->sport()->profile();
+
+        return $profile->teamFoulLimit === null ? null : ($this->division->ruleSet()->teamFoulLimit ?? $profile->teamFoulLimit);
+    }
+
+    /** Pedidos de tempo de cada equipe no grupo do período (regulamento da divisão ou perfil do esporte). */
+    public function timeoutLimit(int $period): int
+    {
+        $profile = $this->sport()->profile();
+        $group = $profile->timeoutGroup($period);
+
+        return $this->division->ruleSet()->timeoutLimits[$group] ?? $profile->timeoutLimit($period);
     }
 }

@@ -441,3 +441,64 @@ describe('timeouts in the public snapshot', function () {
         expect(PublicGameSnapshot::for($football)['timeouts'])->toBeNull();
     });
 });
+
+function basketballRules(Game $game, array $rules): void
+{
+    $season = $game->division->season;
+    $season->update(['rules' => [...$season->competition->sport->profile()->defaultRules()->toArray(), ...$rules]]);
+}
+
+describe('sport values the edition can adjust', function () {
+    it('uses the quarter length of the edition and falls back to the sport when the list does not fit', function () {
+        ['game' => $game] = basketballGame();
+
+        expect($game->fresh()->clock()->periodMinutes(1))->toBe(10);
+
+        basketballRules($game, ['periods' => ['minutes' => [12, 12, 12, 12, 5, 5, 5, 5]]]);
+        expect($game->fresh()->clock()->periodMinutes(1))->toBe(12)->and($game->fresh()->clock()->periodMinutes(5))->toBe(5);
+
+        basketballRules($game, ['periods' => ['minutes' => [12, 12]]]);
+        expect($game->fresh()->clock()->periodMinutes(1))->toBe(10);
+    });
+
+    it('uses the timeout limits and the team foul limit of the edition', function () {
+        ['game' => $game, 'hp' => $hp] = basketballGame();
+
+        basketballRules($game, ['timeouts' => ['limits' => [1 => 1]], 'fouls' => ['team_limit' => 3]]);
+
+        basketTimeout($game, 'home', 1);
+        expect(fn () => basketTimeout($game, 'home', 2))->toThrow(InvalidArgumentException::class, 'já usou os pedidos de tempo');
+
+        // O grupo 2 não foi sobrescrito: continua com os 3 do perfil.
+        basketTimeout($game, 'home', 3);
+        basketTimeout($game, 'home', 3);
+        basketTimeout($game, 'home', 4);
+
+        basket($game, GameEventType::Foul, 'home', $hp[0]);
+        $snapshot = PublicGameSnapshot::for($game->fresh());
+
+        // Sem marcos de relógio o período é o 1º: o grupo 1 tem o limite da edição (1 pedido).
+        expect($snapshot['fouls']['limit'])->toBe(3)->and($snapshot['timeouts']['limit'])->toBe(1);
+    });
+
+    it('saves the values from the season form and refuses a list with the wrong number of periods', function () {
+        $this->actingAs(panelUser(Role::Organizer));
+        $competition = Competition::factory()->create(['sport' => Sport::Basketball]);
+        $payload = fn (array $extra) => [
+            'name' => 'Basquete 2031', 'year' => 2031, 'status' => 'draft',
+            'rules' => [...$competition->sport->profile()->defaultRules()->toArray(), ...$extra],
+        ];
+
+        $this->get("/painel/competitions/{$competition->id}/seasons/create")->assertInertia(fn ($page) => $page
+            ->where('sport_rules.period_minutes', [10, 10, 10, 10, 5, 5, 5, 5])
+            ->where('sport_rules.team_foul_limit', 5)
+            ->where('sport_rules.timeout_limits.2', 3));
+
+        $this->post("/painel/competitions/{$competition->id}/seasons", $payload(['periods' => ['minutes' => [12, 12]]]))->assertSessionHasErrors('rules.periods.minutes');
+
+        $this->post("/painel/competitions/{$competition->id}/seasons", $payload(['periods' => ['minutes' => [12, 12, 12, 12, 5, 5, 5, 5]], 'fouls' => ['team_limit' => 4], 'timeouts' => ['limits' => ['1' => 3]]]))->assertSessionHasNoErrors();
+
+        $rules = Season::query()->where('name', 'Basquete 2031')->firstOrFail()->ruleSet();
+        expect($rules->periodMinutes[0])->toBe(12)->and($rules->teamFoulLimit)->toBe(4)->and($rules->timeoutLimits)->toBe([1 => 3]);
+    });
+});

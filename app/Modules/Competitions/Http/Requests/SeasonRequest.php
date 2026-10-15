@@ -7,8 +7,10 @@ use App\Modules\Competitions\Models\Competition;
 use App\Modules\Competitions\Models\Season;
 use App\Modules\Rules\RuleSet;
 use App\Modules\Rules\Tiebreaker;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class SeasonRequest extends FormRequest
 {
@@ -63,7 +65,29 @@ class SeasonRequest extends FormRequest
             'rules.scoring.min_lead' => ['sometimes', 'integer', 'between:1,10'],
             'rules.scoring.points_narrow_win' => ['sometimes', 'nullable', 'integer', 'between:0,10'],
             'rules.scoring.points_narrow_loss' => ['sometimes', 'nullable', 'integer', 'between:0,10'],
+            'rules.periods.minutes' => ['sometimes', 'nullable', 'array'],
+            'rules.periods.minutes.*' => ['integer', 'between:1,120'],
+            'rules.fouls.team_limit' => ['sometimes', 'nullable', 'integer', 'between:1,20'],
+            'rules.timeouts.limits' => ['sometimes', 'nullable', 'array'],
+            'rules.timeouts.limits.*' => ['integer', 'between:0,10'],
         ];
+    }
+
+    /**
+     * Lista de durações precisa ter um valor por período do esporte (a edição não troca o formato do jogo).
+     *
+     * @return array<int, Closure(Validator): void>
+     */
+    public function after(): array
+    {
+        return [function (Validator $validator): void {
+            $competition = $this->route('competition') ?? $this->route('season')?->competition;
+            $minutes = $this->input('rules.periods.minutes');
+
+            if ($competition instanceof Competition && is_array($minutes) && count($minutes) !== count($competition->sport->profile()->periodMinutes)) {
+                $validator->errors()->add('rules.periods.minutes', 'Informe a duração de cada período do esporte.');
+            }
+        }];
     }
 
     /**

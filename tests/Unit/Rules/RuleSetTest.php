@@ -60,3 +60,16 @@ it('rejects invalid tiebreakers and values', function () {
         ->and(fn () => RuleSet::fromArray(['points' => ['win' => -1]]))
         ->toThrow(InvalidArgumentException::class);
 });
+
+it('leaves period minutes, team foul limit and timeouts to the sport unless the rules set them', function () {
+    $rules = RuleSet::defaults();
+
+    expect($rules->periodMinutes)->toBeNull()->and($rules->teamFoulLimit)->toBeNull()->and($rules->timeoutLimits)->toBeNull();
+
+    $custom = RuleSet::fromArray(['periods' => ['minutes' => [12, 12, 12, 12, 5, 5, 5, 5]], 'fouls' => ['team_limit' => 4], 'timeouts' => ['limits' => ['1' => 3, '2' => 4]]]);
+
+    expect($custom->periodMinutes)->toBe([12, 12, 12, 12, 5, 5, 5, 5])
+        ->and($custom->teamFoulLimit)->toBe(4)
+        ->and($custom->timeoutLimits)->toBe([1 => 3, 2 => 4])
+        ->and(RuleSet::fromArray($custom->toArray()))->toEqual($custom);
+});

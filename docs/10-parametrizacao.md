@@ -59,7 +59,7 @@ Já são parâmetros: pontos, desempates, cartões/suspensão, limites de súmul
 - Basquete: pedidos de tempo (2/3/1 por grupo), grupos de faltas de equipe, W.O. de 20-0, duração dos quartos.
 - Futsal/futebol: duração dos tempos e da prorrogação, limite de faltas de equipe.
 - Vôlei: limite de substituições por set, quantidade de sets e pontos (parte já está em `scoring.*`).
-Proposta: mover o que o regulamento real costuma variar (duração, pedidos de tempo, faltas de equipe) para
+**Entregue:** duração dos períodos, faltas de equipe por tempo/quarto e pedidos de tempo por grupo de períodos agora são ajustáveis por edição (`periods.minutes`, `fouls.team_limit`, `timeouts.limits`; tela da edição). Seguem fixos: W.O. de 20-0 do basquete, grupos de faltas/pedidos de tempo e a quantidade de períodos. Proposta original: mover o que o regulamento real costuma variar (duração, pedidos de tempo, faltas de equipe) para
 `seasons.rules` com o perfil como padrão — usando o mecanismo que já existe (`RuleSet::fromArray($rules, $sportDefaults)`).
 
 ## 5. Ordem sugerida de entrega

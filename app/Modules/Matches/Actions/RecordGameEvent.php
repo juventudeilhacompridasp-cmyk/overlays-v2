@@ -76,9 +76,8 @@ final class RecordGameEvent
         $event = DB::transaction(function () use ($game, $type, $entryId, $personId, $secondaryPersonId, $period, $minute, $recordedBy, $at): GameEvent {
             if ($type === GameEventType::Timeout) {
                 $personId = null;
-                $profile = $game->sport()->profile();
 
-                if (TeamTimeouts::used($game, $entryId, $period) >= $profile->timeoutLimit($period)) {
+                if (TeamTimeouts::used($game, $entryId, $period) >= $game->timeoutLimit($period)) {
                     throw new InvalidArgumentException('A equipe já usou os pedidos de tempo deste período.');
                 }
             }

@@ -52,6 +52,12 @@ final readonly class RuleSet
         public int $maxDisqualifyingFouls = 2,
         /** Minutos antes do horário do jogo em que a escalação do gestor da equipe trava (0 = no horário do jogo). */
         public int $managerLineupDeadlineMinutes = 30,
+        /** @var list<int>|null duração de cada período em minutos (tempos + prorrogações); nulo = a do perfil do esporte. */
+        public ?array $periodMinutes = null,
+        /** Faltas de equipe por grupo de períodos que dão tiro livre; nulo = a do perfil do esporte. */
+        public ?int $teamFoulLimit = null,
+        /** @var array<int, int>|null pedidos de tempo por equipe em cada grupo de períodos; nulo = os do perfil do esporte. */
+        public ?array $timeoutLimits = null,
     ) {
         foreach (['setsToWin' => $setsToWin, 'setPoints' => $setPoints, 'decidingSetPoints' => $decidingSetPoints, 'setMinLead' => $setMinLead] as $name => $value) {
             if ($value < 1) {
@@ -159,6 +165,9 @@ final readonly class RuleSet
             maxPlayerFouls: isset($merged['fouls']['max_player']) ? (int) $merged['fouls']['max_player'] : null,
             maxDisqualifyingFouls: (int) ($merged['fouls']['max_disqualifying'] ?? 2),
             managerLineupDeadlineMinutes: (int) $merged['lineup']['manager_deadline_minutes'],
+            periodMinutes: isset($merged['periods']['minutes']) && is_array($merged['periods']['minutes']) ? array_values(array_map('intval', $merged['periods']['minutes'])) : null,
+            teamFoulLimit: isset($merged['fouls']['team_limit']) ? (int) $merged['fouls']['team_limit'] : null,
+            timeoutLimits: isset($merged['timeouts']['limits']) && is_array($merged['timeouts']['limits']) ? array_map('intval', array_combine(array_map('intval', array_keys($merged['timeouts']['limits'])), $merged['timeouts']['limits'])) : null,
         );
     }
 
@@ -169,7 +178,9 @@ final readonly class RuleSet
     {
         return [
             'points' => ['win' => $this->pointsWin, 'draw' => $this->pointsDraw, 'loss' => $this->pointsLoss, 'walkover_loss' => $this->pointsWalkoverLoss],
-            'fouls' => ['max_player' => $this->maxPlayerFouls, 'max_disqualifying' => $this->maxDisqualifyingFouls],
+            'fouls' => ['max_player' => $this->maxPlayerFouls, 'max_disqualifying' => $this->maxDisqualifyingFouls, 'team_limit' => $this->teamFoulLimit],
+            'periods' => ['minutes' => $this->periodMinutes],
+            'timeouts' => ['limits' => $this->timeoutLimits],
             'tiebreakers' => array_map(fn (Tiebreaker $t) => $t->value, $this->tiebreakers),
             'cards' => [
                 'yellow_for_suspension' => $this->yellowCardsForSuspension,
