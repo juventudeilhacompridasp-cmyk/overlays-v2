@@ -101,11 +101,16 @@ class DashboardController extends Controller
         $months = (int) $request->query('months', 6);
 
         $seasonModel = $season !== '' ? Season::query()->find($season) : null;
-        $competitionId = $seasonModel?->competition_id ?? ($competition !== '' && Competition::query()->whereKey($competition)->exists() ? $competition : null);
+        $competitionId = $competition !== '' && Competition::query()->whereKey($competition)->exists() ? $competition : null;
+
+        if ($seasonModel instanceof Season) {
+            // A edição escolhida prevalece: a competição passa a ser a dela.
+            $competitionId = (string) $seasonModel->competition_id;
+        }
 
         return [
-            'competition' => $competitionId !== null ? (string) $competitionId : null,
-            'season' => $seasonModel?->id,
+            'competition' => $competitionId,
+            'season' => $seasonModel instanceof Season ? (string) $seasonModel->getKey() : null,
             'months' => in_array($months, self::MONTH_OPTIONS, true) ? $months : 6,
         ];
     }
