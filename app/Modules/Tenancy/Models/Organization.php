@@ -49,7 +49,25 @@ class Organization extends Model
      */
     public function featureKeys(): array
     {
-        return array_values(array_unique([...$this->baseFeatureKeys(), ...$this->optInFeatureKeys()]));
+        return array_values(array_diff(array_unique([...$this->baseFeatureKeys(), ...$this->optInFeatureKeys()]), $this->disabledFeatureKeys()));
+    }
+
+    /**
+     * Recursos que o PRÓPRIO administrador pode desligar em Painel > Parâmetros (só reduz o que o pacote libera). Ficam de fora
+     * os de infraestrutura/marca (domínio próprio, white-label) e os overlays, para ninguém tirar a transmissão do ar sem querer.
+     */
+    public const SELF_DISABLEABLE = ['online_registration', 'athlete_cards', 'reports', 'embeds', 'push', 'team_portal', 'arts', 'sheet_import', 'market'];
+
+    /**
+     * Recursos desligados pela própria organização (`settings.features_disabled`), já limitados à lista permitida.
+     *
+     * @return list<string>
+     */
+    public function disabledFeatureKeys(): array
+    {
+        $saved = $this->settings['features_disabled'] ?? [];
+
+        return array_values(array_intersect(is_array($saved) ? $saved : [], self::SELF_DISABLEABLE));
     }
 
     /**

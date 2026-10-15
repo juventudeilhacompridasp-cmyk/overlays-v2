@@ -34,6 +34,7 @@ const ICONS = {
     phone: 'M12 18h.01M8 3h8a2 2 0 012 2v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2z',
     users: 'M16 11a3 3 0 100-6 3 3 0 000 6zM8 11a3 3 0 100-6 3 3 0 000 6zM2 20v-1a4 4 0 014-4h4a4 4 0 014 4v1M15 15h3a4 4 0 014 4v1',
     shield: 'M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3zM9 12l2 2 4-4',
+    sliders: 'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0M14 4v4M8 10v4M16 16v4',
     mail: 'M3 8l9 6 9-6M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z',
     doc: 'M9 12h6M9 16h6M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z',
     globe: 'M12 21a9 9 0 100-18 9 9 0 000 18zM3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 010 18M12 3a14 14 0 000 18',
@@ -86,6 +87,7 @@ export function buildNav(ctx: NavContext): NavMenu {
               item('Perfis de acesso', 'panel.profiles.index', 'panel.profiles.*', ICONS.shield),
               item('Portal público', 'panel.organization.edit', 'panel.organization.*', ICONS.globe),
               item('Comunicações', 'panel.communications.edit', 'panel.communications.*', ICONS.mail),
+              item('Parâmetros', 'panel.parameters.edit', 'panel.parameters.*', ICONS.sliders),
               item('Termos e privacidade', 'panel.legal.edit', 'panel.legal.*', ICONS.doc),
           ]
         : [];
