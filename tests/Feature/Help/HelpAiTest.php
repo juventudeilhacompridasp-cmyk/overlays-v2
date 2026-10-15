@@ -93,13 +93,13 @@ describe('answers', function () {
         Http::fake();
         $this->actingAs(panelUser(Role::Admin));
 
-        $response = $this->postJson(route('panel.help.ask'), ['question' => 'Quantos planetas orbitam Betelgeuse?'])->assertOk();
+        $response = $this->postJson(route('panel.help.ask'), ['question' => 'como para que'])->assertOk();
 
         expect($response->json('answer'))->toBeNull()->and($response->json('message'))->toContain('Não encontrei')->and($response->json('remaining'))->toBe(10);
         Http::assertNothingSent();
 
         $row = HelpQuestion::query()->firstOrFail();
-        expect($row->answered)->toBeFalse()->and($row->charged)->toBeFalse()->and($row->question)->toBe('Quantos planetas orbitam Betelgeuse?');
+        expect($row->answered)->toBeFalse()->and($row->charged)->toBeFalse()->and($row->question)->toBe('como para que');
     });
 
     it('treats an answer with no known source as no answer (possible invention) and charges the attempt', function () {
@@ -113,15 +113,20 @@ describe('answers', function () {
         expect($row->charged)->toBeTrue()->and($row->answered)->toBeFalse()->and($row->question)->not->toBeNull();
     });
 
-    it('strips markup from the answer and reports provider failures, still counting the attempt', function () {
+    it('strips markup from the answer', function () {
         fakeProvider('<b>Abra</b> a súmula.');
         $this->actingAs(panelUser(Role::Admin));
+
         expect($this->postJson(route('panel.help.ask'), ['question' => AI_QUESTION])->json('answer'))->toBe('Abra a súmula.');
+    });
 
+    it('reports a provider failure and still counts the attempt', function () {
         Http::fake(['api.anthropic.com/*' => Http::response('erro', 500)]);
-        $this->postJson(route('panel.help.ask'), ['question' => AI_QUESTION])->assertStatus(502);
+        $this->actingAs(panelUser(Role::Admin));
 
-        expect(HelpQuestion::query()->where('charged', true)->count())->toBe(2);
+        $this->postJson(route('panel.help.ask'), ['question' => AI_QUESTION])->assertStatus(502)->assertJsonPath('remaining', 9);
+
+        expect(HelpQuestion::query()->where('charged', true)->where('answered', false)->count())->toBe(1);
     });
 });
 
