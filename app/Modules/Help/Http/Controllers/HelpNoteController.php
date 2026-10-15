@@ -25,7 +25,7 @@ class HelpNoteController extends Controller
             'audiences' => collect(HelpNote::AUDIENCES)->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])->values(),
             'limit' => HelpNote::LIMIT,
             // Perguntas à ajuda com IA que ficaram sem resposta: o que falta na documentação (sem e-mails nem números longos).
-            'gaps' => HelpAiSettings::released() ? HelpQuestion::query()->where('answered', false)->whereNotNull('question')->latest('created_at')->limit(20)->get()->map(fn (HelpQuestion $item) => ['id' => $item->getKey(), 'question' => $item->question, 'at' => $item->created_at?->toIso8601String()])->values() : null,
+            'gaps' => HelpAiSettings::released() ? HelpQuestion::query()->where('answered', false)->whereNotNull('question')->latest('created_at')->limit(20)->get()->map(fn (HelpQuestion $item) => ['id' => $item->getKey(), 'question' => $item->question, 'at' => $item->created_at->toIso8601String()])->values() : null,
         ]);
     }
 
