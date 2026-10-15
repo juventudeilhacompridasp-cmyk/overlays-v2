@@ -49,6 +49,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefix('painel')->name('panel.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+    Route::get('resumo.csv', [DashboardController::class, 'export'])->name('dashboard.export');
 
     // Cadastros: equipes, estádios, atletas e comissão, elencos.
     Route::middleware('panel.can:manage-registry')->group(function () {
