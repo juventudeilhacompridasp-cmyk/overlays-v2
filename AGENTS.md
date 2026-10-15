@@ -92,5 +92,9 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 - Indicadores e gráficos usam somente agregados da organização atual; não expor dados pessoais nem criar consultas por atleta sem necessidade.
 - Gráficos devem ser leves e progressivos (CSS/SVG, sem bibliotecas pesadas) para manter o painel responsivo.
 
+## Visualizador unificado dos overlays
+
+- A rota `/overlay/{token}/todos` deve manter uma única assinatura Reverb e um único polling de contingência; as telas filhas consomem o estado compartilhado pelo `OverlayProvider`.
+
 ## Qualidade
 Testes Pest para toda regra de negócio (as regras de campeonato têm testes baseados em exemplos reais). PHPStan/Larastan (nível sobe gradualmente até 8). PRs pequenos, descrição em português, sem segredos no repositório.
