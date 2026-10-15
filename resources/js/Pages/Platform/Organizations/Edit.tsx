@@ -179,6 +179,8 @@ export default function Edit({ organization, usage, plans, all_features, opt_in_
                             ['Jogos', usage.games],
                             ['Jogos encerrados', usage.finished_games],
                             ['Inscrições', usage.registrations],
+                            ['Leituras de súmula por IA (mês)', usage.sheet_reads_month],
+                            ['Leituras de súmula por IA (total)', usage.sheet_reads_total],
                         ].map(([label, value]) => (
                             <div key={label as string}>
                                 <dt className="text-gray-500">{label}</dt>

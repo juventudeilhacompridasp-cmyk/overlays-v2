@@ -98,10 +98,10 @@ class SheetUploadController extends Controller
     }
 
     /** Pede a leitura (estruturada na hora; por IA em fila, sujeita ao interruptor e aos limites). */
-    public function read(GameSheetUpload $upload, RequestSheetRead $request): RedirectResponse
+    public function read(Request $http, GameSheetUpload $upload, RequestSheetRead $request): RedirectResponse
     {
         try {
-            $request->handle($upload);
+            $request->handle($upload, $http->user() !== null ? (int) $http->user()->getAuthIdentifier() : null);
         } catch (InvalidArgumentException $exception) {
             return back()->with('error', $exception->getMessage());
         }

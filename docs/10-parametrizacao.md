@@ -17,7 +17,7 @@ padrões no código, valor salvo sobrescrevendo, validação em `FormRequest` e 
 configuração = teste do padrão + teste do valor salvo.
 
 ## 1. Comunicações (prioridade alta) — **entregue em parte: Painel > Comunicações**
-Entregue: interruptores dos e-mails da inscrição (4), convite/lembrete/mudança de jogo/suspensões do gestor, momentos do push e os dois limiares do lembrete de escalação (`CommunicationSettings`). Falta: remetente/`reply-to` por organização, textos editáveis e interruptor por tipo para o próprio gestor (hoje só liga/desliga geral).
+Entregue: interruptores dos e-mails da inscrição (4), convite/lembrete/mudança de jogo/suspensões do gestor, momentos do push e os dois limiares do lembrete de escalação (`CommunicationSettings`). Entregue também: aviso "leitura de súmula terminou" (`sheet_read_finished`). Falta: remetente/`reply-to` por organização, textos editáveis e interruptor por tipo para o próprio gestor (hoje só liga/desliga geral).
 | Hoje | Onde | Proposta |
 |---|---|---|
 | Lembrete de escalação ao gestor: limiares 24 h e 2 h fixos; janela de busca de 4 dias fixa; roda a cada 10 min fixo | `Teams/Support/LineupReminders` (`DAY`, `SOON`, `addDays(4)`), `routes/console.php` | Organização: ligar/desligar o lembrete e escolher os limiares (lista de minutos antes do prazo). |

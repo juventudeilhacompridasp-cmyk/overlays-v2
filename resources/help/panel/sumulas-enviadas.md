@@ -16,6 +16,8 @@ Quando a mesa preenche a súmula em papel, envie-a depois do jogo para o sistema
 2. **Revisar**: corrija nomes, números e lances lidos errado. Linhas de baixa confiança vêm destacadas. As correções ficam registradas.
 3. **Confirmar**: o sistema mostra a **conferência**, comparando placar, escalação, gols, cartões e substituições com o jogo, e aponta o que confere, diverge ou só existe de um lado. Dá para baixar em CSV.
 
+Quando a leitura termina (ou falha), **quem a pediu recebe um e-mail** com o link para revisar; o e-mail nunca traz o que foi lido. O administrador pode desligar esse aviso em [Comunicações](help:comunicacoes).
+
 > A conferência **não altera o jogo**. Para corrigir, reabra o jogo e ajuste a súmula normalmente.
 
 Os arquivos ficam em área privada e abrem por link temporário.

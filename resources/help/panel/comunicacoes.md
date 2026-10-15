@@ -12,6 +12,7 @@ Em [Comunicações](route:panel.communications.edit) o administrador escolhe **o
 - **Inscrição online**: pedido criado (link pessoal), aprovado, devolvido para ajustes e recusado.
 - **Gestores de equipe**: convite por e-mail, lembrete de escalação pendente, mudança de data ou local do jogo e suspensões depois do jogo.
 - **Avisos push** (torcedores que seguem jogos e equipes): jogo começou, placar mudou e jogo terminou.
+- **Súmulas enviadas** (recurso sob demanda): aviso a quem pediu a leitura quando ela termina ou falha, com link para a revisão e sem o conteúdo lido.
 - **Horários dos lembretes** de escalação: o primeiro (padrão 24 horas antes do prazo) e o segundo (padrão 2 horas).
 
 ## Detalhes úteis

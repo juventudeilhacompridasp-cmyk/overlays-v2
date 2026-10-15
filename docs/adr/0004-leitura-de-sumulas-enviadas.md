@@ -57,7 +57,7 @@ lançado e aponta diferenças), **sem alterar o jogo**.
 1. **Envio e guarda** (esta): ADR, recurso `sheet_import`, `game_sheet_uploads`, tela Painel > Jogo > Súmulas enviadas (enviar, listar, abrir por URL assinada, excluir).
 2. **Leitura**: `SheetReader`, leitor estruturado (CSV/XLSX), cliente Claude com visão, `ExtractedSheet`, job em fila, interruptor/limites, parágrafo nos Termos.
 3. **Conferência e revisão**: `SheetComparison`, tela de revisão da leitura e relatório de conferência (tela + CSV).
-4. **Acabamentos**: notificação ao organizador quando a leitura termina, métricas de uso por organização na área da plataforma.
+4. **Acabamentos (entregue)**: notificação ao organizador quando a leitura termina, métricas de uso por organização na área da plataforma.
 
 ## Consequências
 - Mais um dado pessoal em `s3-private`: precisa constar na política de retenção (excluir o jogo ou o upload apaga o arquivo).

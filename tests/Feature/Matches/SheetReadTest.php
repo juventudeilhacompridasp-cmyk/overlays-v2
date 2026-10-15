@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Matches\Enums\SheetUploadStatus;
+use App\Modules\Matches\Mail\SheetReadNotice;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameSheetRead;
 use App\Modules\Matches\Models\GameSheetUpload;
@@ -11,9 +12,11 @@ use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Plan;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
+use App\Modules\Tenancy\Support\OrganizationUsage;
 use Illuminate\Http\Client\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -371,5 +374,60 @@ describe('access', function () {
             ->where('ai.can_configure', true));
 
         $this->actingAs(panelUser(Role::Viewer))->get(route('panel.games.uploads', $game))->assertInertia(fn ($page) => $page->where('ai.can_configure', false));
+    });
+});
+
+describe('finish notice and usage metrics', function () {
+    it('tells whoever asked for the reading that it finished, with a link to the review and no content read', function () {
+        Mail::fake();
+        $upload = sheetFor(Game::factory()->create(), UploadedFile::fake()->createWithContent('sumula.csv', READ_CSV));
+        $asker = panelUser(Role::Operator);
+
+        test()->actingAs($asker)->post(route('panel.games.uploads.read', $upload))->assertSessionHas('success');
+
+        Mail::assertQueued(SheetReadNotice::class, fn (SheetReadNotice $mail) => $mail->hasTo($asker->email)
+            && str_contains($mail->subjectLine, 'terminou')
+            && str_contains($mail->link, "/game-sheet-uploads/{$upload->getKey()}/review")
+            && ! str_contains($mail->detail.$mail->headline, 'Fulano'));
+        Mail::assertQueuedCount(1);
+    });
+
+    it('tells the asker when the reading failed and points to the sheet', function () {
+        Mail::fake();
+        Http::fake(['api.anthropic.test/*' => Http::response(['error' => 'x'], 529)]);
+        $upload = sheetFor(Game::factory()->create(), UploadedFile::fake()->create('sumula.pdf', 100, 'application/pdf'));
+        $asker = panelUser(Role::Operator);
+
+        test()->actingAs($asker)->post(route('panel.games.uploads.read', $upload));
+
+        Mail::assertQueued(SheetReadNotice::class, fn (SheetReadNotice $mail) => $mail->hasTo($asker->email)
+            && str_contains($mail->subjectLine, 'não funcionou')
+            && str_ends_with($mail->link, "/game-sheet-uploads/{$upload->getKey()}"));
+    });
+
+    it('stays quiet when the organization switched the notice off', function () {
+        Mail::fake();
+        CurrentOrganization::get()->update(['settings' => ['communications' => ['sheet_read_finished' => false]]]);
+        $upload = sheetFor(Game::factory()->create(), UploadedFile::fake()->createWithContent('sumula.csv', READ_CSV));
+
+        requestRead($upload)->assertSessionHas('success');
+
+        expect($upload->refresh()->status)->toBe(SheetUploadStatus::Read);
+        Mail::assertNothingQueued();
+    });
+
+    it('counts only the AI readings, this month and in total, for the platform', function () {
+        Http::fake(['api.anthropic.test/*' => Http::response(visionAnswer(['home_team' => 'Leões', 'away_team' => 'Águias']))]);
+        $game = Game::factory()->create();
+        $pdf = sheetFor($game, UploadedFile::fake()->create('sumula.pdf', 100, 'application/pdf'));
+        requestRead($pdf);
+        requestRead(sheetFor($game, UploadedFile::fake()->createWithContent('sumula.csv', READ_CSV)));
+
+        $old = GameSheetRead::query()->create(['game_id' => $game->id, 'upload_id' => $pdf->getKey(), 'reader' => 'vision']);
+        $old->forceFill(['created_at' => now()->subMonths(2)])->save();
+
+        $usage = OrganizationUsage::of(CurrentOrganization::get());
+
+        expect($usage['sheet_reads_month'])->toBe(1)->and($usage['sheet_reads_total'])->toBe(2);
     });
 });
