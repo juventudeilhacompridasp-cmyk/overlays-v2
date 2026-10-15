@@ -772,9 +772,14 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
                                     PDF da escalação
                                 </LinkButton>
                                 {!game.open && (
-                                    <LinkButton href={route('panel.games.reports.final', game.id)} variant="secondary">
-                                        PDF final
-                                    </LinkButton>
+                                    <>
+                                        <LinkButton href={`${route('panel.games.reports.final', game.id)}?tipo=activities`} variant="secondary">
+                                            PDF de atividades
+                                        </LinkButton>
+                                        <LinkButton href={route('panel.games.reports.final', game.id)} variant="secondary">
+                                            PDF completo
+                                        </LinkButton>
+                                    </>
                                 )}
                             </>
                         )}
