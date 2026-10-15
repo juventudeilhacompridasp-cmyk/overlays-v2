@@ -24,6 +24,7 @@ final class RecordGameEvent
     public function __construct(
         private readonly BuildGameSheet $sheet = new BuildGameSheet,
         private readonly ProjectGameScore $projectScore = new ProjectGameScore,
+        private readonly ChangeGamePeriod $periods = new ChangeGamePeriod,
     ) {}
 
     private const SHEET_TYPES = [
@@ -113,6 +114,15 @@ final class RecordGameEvent
         // Falta não muda o placar: transmite o contador explicitamente.
         if ($type->isPersonalFoul()) {
             event(GameUpdated::for($game));
+        }
+
+        // No basquete, o pedido de tempo interrompe automaticamente o relógio quando ele está correndo.
+        if ($type === GameEventType::Timeout && $game->sport()->profile()->pausableClock) {
+            $clock = $game->clock()->snapshot(ChangeGamePeriod::marks($game));
+
+            if ($clock['state'] === 'running') {
+                $this->periods->pause($game, true, $recordedBy, $at);
+            }
         }
 
         GameEventRecorded::dispatch((string) $game->getKey(), (string) $event->getKey());
