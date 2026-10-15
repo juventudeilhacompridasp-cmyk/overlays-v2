@@ -5,6 +5,8 @@ namespace App\Modules\Help\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Help\Models\HelpFeedback;
 use App\Modules\Help\Support\HelpAccess;
+use App\Modules\Help\Support\HelpAiSettings;
+use App\Modules\Help\Support\HelpAnswerer;
 use App\Modules\Help\Support\HelpArticle;
 use App\Modules\Help\Support\HelpLibrary;
 use App\Modules\Help\Support\HelpMarkdown;
@@ -46,6 +48,7 @@ class HelpController extends Controller
             'q' => $query,
             'results' => $results,
             'categories' => collect($categories)->map(fn (array $articles, string $name) => ['name' => $name, 'articles' => $articles])->values(),
+            'ai' => in_array($area, ['panel', 'manager'], true) && HelpAiSettings::available() ? ['ask' => "{$area}.help.ask", 'remaining' => HelpAiSettings::remaining($request->user()), 'max_length' => HelpAnswerer::MAX_QUESTION] : null,
             ...($area === 'platform' ? ['feedback_summary' => $this->feedbackSummary()] : []),
         ]);
     }

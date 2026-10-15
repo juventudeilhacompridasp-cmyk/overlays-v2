@@ -58,6 +58,12 @@ return [
         'max_pixels' => max(1_000_000, (int) env('IMAGE_MAX_PIXELS', 40_000_000)),
     ],
 
+    // Respostas com IA na central de ajuda (ADR 0006): perguntas por pessoa por dia e por organização por mês.
+    'help_ai' => [
+        'user_daily' => (int) env('HELP_AI_USER_DAILY', 10),
+        'monthly' => (int) env('HELP_AI_MONTHLY', 300),
+    ],
+
     // Dias que o pedido de aviso (push) de um jogo encerrado é guardado antes de `push:prune` apagá-lo (mínimo 1).
     'push_retention_days' => max(1, (int) env('PUSH_RETENTION_DAYS', 1)),
     'signed_url_minutes' => [

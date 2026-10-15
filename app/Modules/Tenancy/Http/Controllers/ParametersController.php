@@ -3,6 +3,7 @@
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Help\Support\HelpAiSettings;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
 use App\Modules\Tenancy\Models\Organization;
@@ -36,6 +37,7 @@ class ParametersController extends Controller
             'mesario' => MesarioSettings::all(),
             'portal' => PortalQuantities::all($organization),
             'quick_result' => OperationSettings::quickResultAllowed($organization),
+            'help_ai' => ['released' => HelpAiSettings::released(), 'enabled' => HelpAiSettings::enabled(), 'configured' => HelpAiSettings::configured()],
             'public_api' => ($organization->settings['public_api'] ?? true) !== false,
         ]);
     }
@@ -55,6 +57,7 @@ class ParametersController extends Controller
             'portal.stats_form' => ['required', 'integer', 'between:3,10'],
             'public_api' => ['required', 'boolean'],
             'quick_result' => ['required', 'boolean'],
+            'help_ai' => ['sometimes', 'boolean'],
         ], [], [
             'mesario.days_ahead' => 'dias à frente',
             'mesario.finished_hours' => 'horas de encerrados',
@@ -76,6 +79,12 @@ class ParametersController extends Controller
         $settings['portal_quantities'] = array_map('intval', $validated['portal']);
         $settings['public_api'] = (bool) $validated['public_api'];
         $settings['operation'] = ['quick_result' => (bool) $validated['quick_result']];
+
+        // O interruptor das respostas com IA só muda se o recurso foi liberado pela plataforma.
+        if (array_key_exists('help_ai', $validated) && HelpAiSettings::released()) {
+            $settings['help_ai'] = ['enabled' => (bool) $validated['help_ai']];
+        }
+
         $organization->update(['settings' => $settings]);
 
         return back()->with('success', 'Parâmetros atualizados.');

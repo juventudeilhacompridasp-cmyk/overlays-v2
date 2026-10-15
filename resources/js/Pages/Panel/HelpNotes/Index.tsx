@@ -14,10 +14,11 @@ interface Props {
     notes: Note[];
     audiences: { value: string; label: string }[];
     limit: number;
+    gaps: { id: string; question: string; at: string | null }[] | null;
 }
 
 /** Notas próprias da organização na central de ajuda: criar, editar e excluir (só administrador). */
-export default function Index({ notes, audiences, limit }: Props) {
+export default function Index({ notes, audiences, limit, gaps }: Props) {
     const [editing, setEditing] = useState<Note | null>(null);
     const { data, setData, post, patch, processing, errors, reset, clearErrors } = useForm({ audience: audiences[0]?.value ?? 'panel', title: '', body: '' });
 
@@ -105,6 +106,24 @@ export default function Index({ notes, audiences, limit }: Props) {
                         </ul>
                     )}
                 </Card>
+
+                {gaps !== null && (
+                    <Card title="Perguntas à ajuda sem resposta">
+                        <p className="mb-2 text-sm text-gray-600">O que as pessoas perguntaram e a documentação não cobriu (sem e-mails nem números longos). Use para criar notas ou pedir novos artigos.</p>
+                        {gaps.length === 0 ? (
+                            <p className="text-sm text-gray-500">Nenhuma pergunta sem resposta ainda.</p>
+                        ) : (
+                            <ul className="divide-y divide-gray-100 text-sm" data-testid="gaps">
+                                {gaps.map((gap) => (
+                                    <li key={gap.id} className="py-2">
+                                        {gap.question}
+                                        {gap.at && <span className="ml-2 text-xs text-gray-400">{new Date(gap.at).toLocaleDateString('pt-BR')}</span>}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </Card>
+                )}
             </div>
         </PanelLayout>
     );

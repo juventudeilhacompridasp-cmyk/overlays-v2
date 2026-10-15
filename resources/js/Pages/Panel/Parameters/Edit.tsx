@@ -9,10 +9,11 @@ type Props = {
     portal: { home: number; widgets: number; scorers: number; stats_top: number; stats_form: number };
     public_api: boolean;
     quick_result: boolean;
+    help_ai: { released: boolean; enabled: boolean; configured: boolean };
 };
 
-export default function Edit({ features, mesario, portal, public_api, quick_result }: Props) {
-    const { data, setData, patch, processing, errors } = useForm({ disabled: features.filter((feature) => feature.off).map((feature) => feature.key), mesario, portal, public_api, quick_result });
+export default function Edit({ features, mesario, portal, public_api, quick_result, help_ai }: Props) {
+    const { data, setData, patch, processing, errors } = useForm({ disabled: features.filter((feature) => feature.off).map((feature) => feature.key), mesario, portal, public_api, quick_result, help_ai: help_ai.enabled });
 
     const toggle = (key: string, on: boolean) => setData('disabled', on ? data.disabled.filter((item) => item !== key) : [...data.disabled, key]);
     const submit = (event: FormEvent) => {
@@ -67,6 +68,18 @@ export default function Edit({ features, mesario, portal, public_api, quick_resu
                         <span>Permitir o <strong>resultado rápido</strong> (placar final sem súmula detalhada) na tela da fase e no app do mesário. Desligado, só a súmula (eventos) lança o placar; W.O. continua disponível.</span>
                     </label>
                 </Card>
+
+                {help_ai.released && (
+                    <Card title="Respostas com IA na ajuda" className="max-w-3xl">
+                        <label className="flex items-start gap-2 text-sm text-gray-700">
+                            <input type="checkbox" className="mt-0.5 rounded border-gray-300 text-emerald-600" checked={data.help_ai} onChange={(event) => setData('help_ai', event.target.checked)} />
+                            <span>
+                                Ativar <strong>"Perguntar à ajuda"</strong>. A pergunta (sem e-mails nem números longos) e até 4 trechos <em>públicos</em> dos artigos de ajuda são enviados ao serviço de IA; nunca notas, nomes ou dados da organização. Não escreva dados pessoais na pergunta.
+                            </span>
+                        </label>
+                        {!help_ai.configured && <p className="mt-2 text-xs text-amber-700">A plataforma ainda não configurou a chave do serviço de IA: a pergunta não funciona até lá.</p>}
+                    </Card>
+                )}
 
                 <Card title="Portal público e widgets" className="max-w-3xl">
                     <p className="mb-3 text-sm text-gray-600">Quantos itens aparecem nas listas públicas.</p>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Help\Http\Controllers\HelpAskController;
 use App\Modules\Help\Http\Controllers\HelpController;
 use App\Modules\Market\Http\Controllers\Manager\ContactController;
 use App\Modules\Market\Http\Controllers\Manager\HiringController;
@@ -11,6 +12,7 @@ use App\Modules\Teams\Http\Controllers\Manager\GameController;
 use App\Modules\Teams\Http\Controllers\Manager\NoticeController;
 use App\Modules\Teams\Http\Controllers\Manager\RosterController;
 use App\Modules\Teams\Http\Controllers\Manager\SupplementController;
+use App\Support\PlatformLimits;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,6 +29,7 @@ Route::middleware(['auth', 'verified', 'manager.member', 'legal.accepted', 'feat
     Route::get('inscricoes/{entry}/carteirinhas', [CardsController::class, 'entry'])->middleware('feature:athlete_cards')->name('entries.cards');
     Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'manager')->name('help.index');
     Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'manager')->name('help.show');
+    Route::post('ajuda/perguntar', HelpAskController::class)->middleware(['feature:help_ai', PlatformLimits::throttle('public')])->defaults('area', 'manager')->name('help.ask');
     Route::post('ajuda/{slug}/avaliar', [HelpController::class, 'feedback'])->defaults('area', 'manager')->name('help.feedback');
     Route::get('mercado', [MarketController::class, 'index'])->middleware('feature:market')->name('market.index');
     Route::post('mercado/{profile}/pedidos', [ContactController::class, 'store'])->middleware('feature:market')->name('market.requests.store');

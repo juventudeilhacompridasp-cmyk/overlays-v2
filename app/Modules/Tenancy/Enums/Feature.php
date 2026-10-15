@@ -17,6 +17,7 @@ enum Feature: string
     case SheetImport = 'sheet_import';
     case Market = 'market';
     case Arts = 'arts';
+    case HelpAi = 'help_ai';
 
     /**
      * Recurso sob demanda: fica DESLIGADO para todas as organizações, em qualquer pacote, até a plataforma liberá-lo
@@ -25,7 +26,7 @@ enum Feature: string
      */
     public function isOptIn(): bool
     {
-        return $this === self::SheetImport || $this === self::Market;
+        return $this === self::SheetImport || $this === self::Market || $this === self::HelpAi;
     }
 
     /**
@@ -61,6 +62,7 @@ enum Feature: string
             self::SheetImport => 'Súmulas enviadas depois do jogo (leitura e conferência)',
             self::Market => 'Mercado de jogadores livres',
             self::Arts => 'Artes das partidas (jogo do dia, resultado, escalação)',
+            self::HelpAi => 'Respostas com IA na central de ajuda',
         };
     }
 }

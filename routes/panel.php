@@ -16,6 +16,7 @@ use App\Modules\Competitions\Http\Controllers\EntryController;
 use App\Modules\Competitions\Http\Controllers\ReportController;
 use App\Modules\Competitions\Http\Controllers\SeasonController;
 use App\Modules\Competitions\Http\Controllers\StageController;
+use App\Modules\Help\Http\Controllers\HelpAskController;
 use App\Modules\Help\Http\Controllers\HelpController;
 use App\Modules\Help\Http\Controllers\HelpNoteController;
 use App\Modules\Market\Http\Controllers\Panel\AdminController as MarketAdminController;
@@ -44,6 +45,7 @@ use App\Modules\Tenancy\Http\Controllers\LegalController;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Http\Controllers\OrganizationController;
 use App\Modules\Tenancy\Http\Controllers\ParametersController;
+use App\Support\PlatformLimits;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -102,6 +104,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
     // Central de ajuda (ADR 0006): qualquer membro; o que aparece depende do perfil e do pacote.
     Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'panel')->name('help.index');
     Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'panel')->name('help.show');
+    Route::post('ajuda/perguntar', HelpAskController::class)->middleware(['feature:help_ai', PlatformLimits::throttle('public')])->defaults('area', 'panel')->name('help.ask');
     Route::post('ajuda/{slug}/avaliar', [HelpController::class, 'feedback'])->defaults('area', 'panel')->name('help.feedback');
 
     Route::get('widgets', [EmbedPanelController::class, 'index'])->middleware('feature:embeds')->name('widgets.index');

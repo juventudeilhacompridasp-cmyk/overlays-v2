@@ -4,6 +4,8 @@ namespace App\Modules\Help\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Help\Models\HelpNote;
+use App\Modules\Help\Models\HelpQuestion;
+use App\Modules\Help\Support\HelpAiSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -22,6 +24,8 @@ class HelpNoteController extends Controller
             'notes' => HelpNote::query()->orderBy('created_at')->get()->map(fn (HelpNote $note) => ['id' => $note->id, 'audience' => $note->audience, 'title' => $note->title, 'body' => $note->body])->values(),
             'audiences' => collect(HelpNote::AUDIENCES)->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])->values(),
             'limit' => HelpNote::LIMIT,
+            // Perguntas à ajuda com IA que ficaram sem resposta: o que falta na documentação (sem e-mails nem números longos).
+            'gaps' => HelpAiSettings::released() ? HelpQuestion::query()->where('answered', false)->whereNotNull('question')->latest('created_at')->limit(20)->get()->map(fn (HelpQuestion $item) => ['id' => $item->getKey(), 'question' => $item->question, 'at' => $item->created_at->toIso8601String()])->values() : null,
         ]);
     }
 

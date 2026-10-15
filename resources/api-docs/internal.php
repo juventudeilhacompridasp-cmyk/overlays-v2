@@ -19,6 +19,31 @@ $action = fn (string $summary, ?string $description = null) => array_filter([
     'responses' => ['302' => ['description' => 'Volta para a tela com o aviso `success` ou `error` na sessão.'], '403' => ['description' => 'Sem a permissão ou o recurso do pacote.'], '404' => ['description' => 'Registro fora da organização atual.'], '422' => ['description' => 'Dados inválidos (erros por campo).']],
 ]);
 
+$json = fn (string $summary, string $description) => [
+    'summary' => $summary,
+    'description' => $description,
+    'request' => [
+        'schema' => ['type' => 'object', 'required' => ['question'], 'properties' => ['question' => ['type' => 'string', 'description' => 'A pergunta (5 a 300 caracteres).']]],
+        'example' => ['question' => 'Como lançar um gol na súmula?'],
+    ],
+    'responses' => [
+        '200' => [
+            'description' => 'A resposta (nula quando a documentação não cobre) com as fontes, as perguntas que restam e, sem resposta, uma mensagem.',
+            'schema' => ['type' => 'object', 'required' => ['answer', 'sources', 'remaining'], 'properties' => [
+                'answer' => ['type' => ['string', 'null']],
+                'sources' => ['type' => 'array', 'items' => ['type' => 'object', 'properties' => ['slug' => ['type' => 'string'], 'title' => ['type' => 'string'], 'url' => ['type' => 'string']]]],
+                'remaining' => ['type' => 'integer'],
+                'message' => ['type' => ['string', 'null']],
+            ]],
+            'example' => ['answer' => 'Abra o Mesário, escolha o jogo e lance o gol na súmula.', 'sources' => [['slug' => 'lancar-sumula', 'title' => 'Lançar a súmula de um jogo', 'url' => 'https://exemplo.test/painel/ajuda/lancar-sumula']], 'remaining' => 9, 'message' => null],
+        ],
+        '403' => ['description' => 'Respostas com IA não estão ativas nesta organização.'],
+        '422' => ['description' => 'Pergunta fora do tamanho permitido.'],
+        '429' => ['description' => 'Limite de perguntas atingido.'],
+        '502' => ['description' => 'O serviço de respostas não respondeu.'],
+    ],
+];
+
 $download = fn (string $summary, string $file, ?string $description = null) => array_filter([
     'summary' => $summary,
     'description' => $description,
@@ -31,6 +56,7 @@ return [
     'panel.dashboard.export' => $download('Exporta os números do início em CSV', 'CSV (`;`, UTF-8 com BOM) com os mesmos números e filtros da tela.'),
     'panel.help.index' => $page('Central de ajuda do painel: busca e categorias'),
     'panel.help.show' => $page('Artigo da central de ajuda'),
+    'panel.help.ask' => $json('Pergunta à ajuda com IA (resposta só a partir dos artigos)', 'Exige o recurso `help_ai` (sob demanda), o interruptor da organização e a chave do serviço de IA. Ao provedor vão só a pergunta (sem e-mails nem números longos) e até 4 trechos públicos do acervo; nunca notas ou dados da organização. Sem artigo relacionado não chama o provedor. Limites por pessoa/dia e por organização/mês (429).'),
     'panel.help.feedback' => $action('Registra o voto "isso ajudou?" de um artigo', 'Um voto por usuário e artigo; o último vale.'),
     'panel.help-notes.index' => $page('Notas da organização na central de ajuda'),
     'panel.help-notes.store' => $action('Cria uma nota da organização (até 30)'),
@@ -224,6 +250,7 @@ return [
     'manager.entries.cards' => $page('Carteirinhas do próprio elenco'),
     'manager.help.index' => $page('Central de ajuda do gestor'),
     'manager.help.show' => $page('Artigo da central de ajuda do gestor'),
+    'manager.help.ask' => $json('Pergunta à ajuda do gestor com IA (resposta só a partir dos artigos)', 'Mesmas regras de `panel.help.ask`, com os artigos do gestor.'),
     'manager.help.feedback' => $action('Registra o voto "isso ajudou?" de um artigo'),
     'manager.market.index' => $page('Busca de jogadores livres do Mercado', 'Exige o recurso `market`. Mostra faixa de idade, nunca contato ou nascimento.'),
     'manager.market.requests.store' => $action('Pede o contato de um jogador, em nome de uma equipe do gestor', 'Um pedido pendente por perfil e equipe, com cota diária.'),
