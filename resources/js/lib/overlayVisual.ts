@@ -69,6 +69,11 @@ export function scoreboardFrame(appearance: OverlayAppearance): { className: str
                 className: `${base} ${round('rounded-2xl')} border border-white/15 ${shadow}`,
                 style: { background: `radial-gradient(circle at 12% 0%, ${withAlpha(accent, 0.72, surface)}, transparent 48%), radial-gradient(circle at 92% 100%, ${withAlpha(accent, 0.3, surface)}, transparent 45%), ${withAlpha(bg, 0.96, surface)}`, ...custom },
             };
+        case 'studio':
+            return {
+                className: `${base} ${round('rounded-lg')} border-l-4 ${shadow}`,
+                style: { background: `linear-gradient(135deg, ${withAlpha(bg, 1, surface)} 0%, ${withAlpha(bg, 0.9, surface)} 72%, ${withAlpha(accent, 0.65, surface)} 180%)`, borderLeftColor: accent, ...custom },
+            };
         default:
             return {
                 className: `${base} ${round('rounded-2xl')} border border-white/15 ${lift('shadow-2xl')}`,

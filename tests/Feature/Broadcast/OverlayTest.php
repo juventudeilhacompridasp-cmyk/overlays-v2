@@ -340,11 +340,11 @@ describe('panel', function () {
             ->and($channel->fresh()->lineup_settings['photo_person_ids'])->toBe([]);
     });
 
-    it('accepts the classic and minimal presets and the bottom positions, and refuses unknown ones', function () {
+    it('accepts the scoreboard presets and the bottom positions, and refuses unknown ones', function () {
         $channel = channelFor();
         $this->actingAs(panelUser(Role::Operator));
 
-        foreach (['classic', 'minimal', 'arena', 'glass', 'contrast', 'neon', 'ribbon', 'gradient', 'aurora'] as $preset) {
+        foreach (['classic', 'minimal', 'arena', 'glass', 'contrast', 'neon', 'ribbon', 'gradient', 'aurora', 'studio'] as $preset) {
             foreach (['bottom-left', 'bottom-center', 'bottom-right'] as $position) {
                 $this->patch("/painel/broadcast/{$channel->id}", ['appearance' => ['preset' => $preset, 'position' => $position]])->assertSessionHasNoErrors();
                 expect($channel->fresh()->appearance['preset'])->toBe($preset)->and($channel->fresh()->appearance['position'])->toBe($position);
