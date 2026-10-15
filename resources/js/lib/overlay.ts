@@ -73,6 +73,7 @@ export interface OverlayGame {
     score_model: string;
     quarters: { period: number; home: number; away: number }[] | null;
     sets: { home: number; away: number; winner: 'home' | 'away' | null; finished: boolean }[] | null;
+    rotation: { set: number | null; configured: boolean; server: 'home' | 'away' | null; home_position: number; away_position: number } | null;
     fouls: { home: number; away: number; limit: number; period: number } | null;
     timeouts: { home: number; away: number; limit: number; period: number } | null;
     shootout: ShootoutData | null;
