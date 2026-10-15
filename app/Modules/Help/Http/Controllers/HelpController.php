@@ -13,6 +13,7 @@ use App\Modules\Tenancy\CurrentOrganization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Exceptions\UrlGenerationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -83,7 +84,7 @@ class HelpController extends Controller
      */
     private function feedbackSummary(): array
     {
-        $rows = HelpFeedback::query()
+        $rows = DB::table('help_feedback')
             ->selectRaw('slug, sum(case when helpful then 1 else 0 end) as yes_total, sum(case when helpful then 0 else 1 end) as no_total')
             ->groupBy('slug')
             ->get();
