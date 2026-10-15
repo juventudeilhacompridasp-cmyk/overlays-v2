@@ -21,4 +21,7 @@ Se um botão não aparece, é porque o seu acesso não cobre aquela ação. Peç
 2. Crie a competição e a edição e gere os jogos ([passo a passo](help:criar-competicao)).
 3. No dia do jogo, abra o [Mesário](help:lancar-sumula) e lance a súmula.
 
+## Filtros e exportação do painel
+Na tela inicial, escolha a **competição**, a **edição** e o **período do gráfico** (3, 6 ou 12 meses) para ver só aqueles jogos; os totais do topo são sempre da organização inteira. **Exportar CSV** baixa os mesmos números (com os mesmos filtros) para planilha. Só entram contagens e o calendário de jogos, nunca dados pessoais.
+
 > Recursos como transmissão, inscrição online e carteirinhas dependem do pacote da organização. Os que não estão no seu pacote não aparecem no menu nem nesta ajuda.
