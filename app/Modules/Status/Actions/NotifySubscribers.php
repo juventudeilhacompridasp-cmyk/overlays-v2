@@ -13,6 +13,7 @@ use Throwable;
 
 /**
  * Avisa por e-mail quem confirmou a inscrição: quando um incidente/manutenção é aberto, recebe atualização ou é encerrado.
+ * Quem escolheu componentes só recebe o que afeta algum deles (incidente sem componente avisa todos).
  * Vai para a fila (não atrasa a sondagem) e uma falha de envio nunca derruba a ação que a disparou.
  */
 class NotifySubscribers
@@ -26,8 +27,15 @@ class NotifySubscribers
         $sent = 0;
 
         try {
-            Subscriber::query()->whereNotNull('confirmed_at')->orderBy('id')->each(function (Subscriber $subscriber) use ($incident, $update, &$sent) {
-                Mail::to($subscriber->email)->queue(new IncidentNotice($incident->title, $update->state->label(), $update->body, StatusLinks::page(), StatusLinks::unsubscribe($subscriber->token)));
+            /** @var list<string> $componentKeys */
+            $componentKeys = $incident->components()->pluck('key')->all();
+
+            Subscriber::query()->whereNotNull('confirmed_at')->orderBy('id')->each(function (Subscriber $subscriber) use ($incident, $update, $componentKeys, &$sent) {
+                if (! $subscriber->wantsAny($componentKeys)) {
+                    return;
+                }
+
+                Mail::to($subscriber->email)->queue(new IncidentNotice($incident->title, $update->state->label(), $update->body, StatusLinks::page(), StatusLinks::unsubscribe($subscriber->token), StatusLinks::preferences($subscriber->token)));
                 $sent++;
             });
         } catch (Throwable $e) {

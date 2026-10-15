@@ -42,6 +42,8 @@ Route::middleware('throttle:60,1')->group(function () {
     Route::get('/status/confirmar/{token}', [StatusPageController::class, 'confirm'])->where('token', '[A-Za-z0-9]{40}')->name('status.confirm');
     Route::get('/status/cancelar/{token}', [StatusPageController::class, 'unsubscribeShow'])->where('token', '[A-Za-z0-9]{40}')->name('status.unsubscribe.show');
     Route::post('/status/cancelar/{token}', [StatusPageController::class, 'unsubscribe'])->where('token', '[A-Za-z0-9]{40}')->name('status.unsubscribe');
+    Route::get('/status/preferencias/{token}', [StatusPageController::class, 'preferencesShow'])->where('token', '[A-Za-z0-9]{40}')->name('status.preferences.show');
+    Route::post('/status/preferencias/{token}', [StatusPageController::class, 'preferencesUpdate'])->where('token', '[A-Za-z0-9]{40}')->middleware('throttle:20,1')->name('status.preferences');
 });
 
 // Portal público (sem login): só edições publicadas.

@@ -31,6 +31,11 @@ class StatusLinks
         return self::root()."/status/cancelar/{$token}";
     }
 
+    public static function preferences(string $token): string
+    {
+        return self::root()."/status/preferencias/{$token}";
+    }
+
     private static function root(): string
     {
         return rtrim((string) config('app.url'), '/');

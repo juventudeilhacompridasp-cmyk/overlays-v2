@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
  *
  * @property string $email
  * @property string $token
+ * @property list<string>|null $components chaves dos componentes acompanhados (nulo = todos)
  * @property Carbon|null $confirmed_at
  */
 #[Unguarded]
@@ -27,7 +28,24 @@ class Subscriber extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['confirmed_at' => 'datetime'];
+        return ['confirmed_at' => 'datetime', 'components' => 'array'];
+    }
+
+    /**
+     * Quer o aviso de um incidente que afeta estes componentes? Sem escolha (nulo/vazio) quer tudo; incidente sem componente
+     * (geral) avisa todo mundo; senão basta um componente em comum.
+     *
+     * @param  list<string>  $componentKeys
+     */
+    public function wantsAny(array $componentKeys): bool
+    {
+        $chosen = $this->components;
+
+        if ($chosen === null || $chosen === [] || $componentKeys === []) {
+            return true;
+        }
+
+        return array_intersect($chosen, $componentKeys) !== [];
     }
 
     public function isConfirmed(): bool

@@ -59,6 +59,7 @@ Pedido de 14/10/2026: depois do Modo operador, **mapear** (não implementar aind
 
 ### Comportamento
 - Comando agendado `status:probe` (a cada minuto) grava as medições e abre/resolve incidente automático após N falhas seguidas (limiar configurável); incidentes manuais e **manutenções programadas** no painel da plataforma (`/plataforma/status`, só Super Admin).
+- **Aviso por componente (entregue):** o inscrito escolhe os componentes em `/status/preferencias/{token}` (link em todo aviso); sem escolha recebe tudo.
 - Página pública: situação geral (verde/amarelo/vermelho), componentes com barra de uptime de 90 dias, incidentes recentes com linha do tempo, próxima manutenção; `GET /status.json` e `/status.rss` (feed Atom como o do portal) para integrações; atualização automática sem recarregar.
 - Opcional (fase 2): inscrição por e-mail para avisos de incidente (dupla confirmação, link de cancelamento, sem dado pessoal além do e-mail) e selo/widget "status" para o rodapé do portal.
 - **Regras:** textos em português; horários no fuso de São Paulo com UTC no `title`; nenhum dado de tenant; a página não pode exigir login nem cookie.

@@ -7,6 +7,7 @@ use App\Modules\Status\Enums\Impact;
 use App\Modules\Status\Enums\IncidentState;
 use App\Modules\Status\Mail\IncidentNotice;
 use App\Modules\Status\Mail\SubscriptionConfirm;
+use App\Modules\Status\Models\Component;
 use App\Modules\Status\Models\Subscriber;
 use App\Modules\Status\Probes\Probe;
 use App\Modules\Status\Probes\ProbeResult;
@@ -211,6 +212,69 @@ describe('incident notices', function () {
 
         expect($incident->exists)->toBeTrue();
         Mail::assertNothingQueued();
+    });
+});
+
+describe('per-component notices', function () {
+    it('warns only who follows a component the incident touches, and everyone when nothing was chosen', function () {
+        confirmedSubscriber('todos@exemplo.test');
+        $web = confirmedSubscriber('web@exemplo.test');
+        $web->update(['components' => ['web']]);
+        $database = confirmedSubscriber('dados@exemplo.test');
+        $database->update(['components' => ['database']]);
+
+        app(ManageIncidents::class)->open('Lentidão no painel', Impact::Minor, IncidentState::Investigating, [webId()], 'Estamos investigando.');
+
+        Mail::assertQueued(IncidentNotice::class, 2);
+        Mail::assertQueued(IncidentNotice::class, fn (IncidentNotice $mail) => $mail->hasTo('todos@exemplo.test'));
+        Mail::assertQueued(IncidentNotice::class, fn (IncidentNotice $mail) => $mail->hasTo('web@exemplo.test'));
+        Mail::assertNotQueued(IncidentNotice::class, fn (IncidentNotice $mail) => $mail->hasTo('dados@exemplo.test'));
+    });
+
+    it('still warns everyone about an incident with no component, and carries the preferences link in every notice', function () {
+        $database = confirmedSubscriber('dados@exemplo.test');
+        $database->update(['components' => ['database']]);
+
+        app(ManageIncidents::class)->open('Manutenção geral', Impact::Maintenance, IncidentState::Scheduled, [], 'Janela de manutenção.', now()->addDay(), now()->addDay()->addHour());
+
+        Mail::assertQueued(IncidentNotice::class, fn (IncidentNotice $mail) => $mail->hasTo('dados@exemplo.test') && str_contains((string) $mail->preferencesLink, "/status/preferencias/{$database->token}"));
+    });
+
+    it('lets a confirmed subscriber pick components with the token, and choosing all goes back to the default', function () {
+        $subscriber = confirmedSubscriber();
+        StatusComponents::ensure();
+
+        $this->get("/status/preferencias/{$subscriber->token}")->assertOk()->assertInertia(fn ($page) => $page
+            ->component('Status/Preferences')
+            ->where('components', fn ($list) => count($list) >= 2 && collect($list)->every(fn ($item) => $item['selected'] === true)));
+
+        $this->post("/status/preferencias/{$subscriber->token}", ['components' => ['web']])->assertRedirect(route('status.preferences.show', $subscriber->token))->assertSessionHas('success');
+        expect($subscriber->fresh()->components)->toBe(['web']);
+
+        $this->get("/status/preferencias/{$subscriber->token}")->assertInertia(fn ($page) => $page->where('components', fn ($list) => collect($list)->firstWhere('key', 'web')['selected'] === true && collect($list)->firstWhere('key', 'database')['selected'] === false));
+
+        $all = Component::query()->where('visible', true)->pluck('key')->all();
+        $this->post("/status/preferencias/{$subscriber->token}", ['components' => $all])->assertSessionHas('success');
+        expect($subscriber->fresh()->components)->toBeNull();
+    });
+
+    it('refuses an empty choice, unknown keys, pending subscribers and unknown tokens', function () {
+        $subscriber = confirmedSubscriber();
+        StatusComponents::ensure();
+
+        $this->post("/status/preferencias/{$subscriber->token}", ['components' => []])->assertSessionHasErrors('components');
+        $this->post("/status/preferencias/{$subscriber->token}", ['components' => ['nao-existe']])->assertNotFound();
+        expect($subscriber->fresh()->components)->toBeNull();
+
+        $pending = pendingSubscriber();
+        $this->get("/status/preferencias/{$pending->token}")->assertOk()->assertInertia(fn ($page) => $page->component('Status/Notice')->where('title', 'Inscrição não encontrada'));
+        $this->post("/status/preferencias/{$pending->token}", ['components' => ['web']])->assertNotFound();
+
+        $this->get('/status/preferencias/'.str_repeat('a', 40))->assertInertia(fn ($page) => $page->component('Status/Notice'));
+    });
+
+    it('keeps the preferences page out of the search engines', function () {
+        expect($this->get('/robots.txt')->getContent())->toContain('Disallow: /status/preferencias');
     });
 });
 
