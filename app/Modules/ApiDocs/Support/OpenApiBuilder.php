@@ -54,6 +54,9 @@ final class OpenApiBuilder
         'contactRequest' => 'ID (ULID) do pedido de contato do Mercado.',
         'block' => 'ID (ULID) do bloqueio de equipe.',
         'video' => 'ID (ULID) do vídeo do perfil.',
+        'domain' => 'ID (ULID) do domínio da organização.',
+        'incident' => 'ID (ULID) do incidente da status page.',
+        'lead' => 'ID (ULID) do contato recebido pela landing page.',
     ];
 
     /**
