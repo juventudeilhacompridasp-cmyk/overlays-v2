@@ -5,6 +5,7 @@ namespace App\Modules\Matches\Actions;
 use App\Modules\Matches\Enums\SheetUploadStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameSheetUpload;
+use App\Support\PlatformLimits;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -80,11 +81,11 @@ final class StoreGameSheetUpload
         $upload->delete();
     }
 
-    /** URL temporária assinada (10 min) para abrir o arquivo. */
+    /** URL temporária assinada (validade dos documentos da plataforma, 10 min por padrão) para abrir o arquivo. */
     public function signedUrl(GameSheetUpload $upload): ?string
     {
         try {
-            return Storage::disk(self::DISK)->temporaryUrl($upload->path, now()->addMinutes(10), [
+            return Storage::disk(self::DISK)->temporaryUrl($upload->path, now()->addMinutes(PlatformLimits::signedMinutes('documents')), [
                 'ResponseContentDisposition' => 'attachment; filename="'.str_replace('"', '', $upload->original_name).'"',
             ]);
         } catch (\Throwable) {

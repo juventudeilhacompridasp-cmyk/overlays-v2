@@ -36,6 +36,16 @@ x-env: &env
   # Status page (opcional): disco que recebe o retrato estático status/status.json (ex.: s3) e limites das sondagens.
   STATUS_PUBLISH_DISK: ${STATUS_PUBLISH_DISK:-}
   STATUS_NOTIFY: ${STATUS_NOTIFY:-true}
+  # Limites de segurança da plataforma (requisições por minuto por IP e validade de links assinados; docs/10).
+  PLATFORM_LIMIT_API: ${PLATFORM_LIMIT_API:-60}
+  PLATFORM_LIMIT_OVERLAY: ${PLATFORM_LIMIT_OVERLAY:-120}
+  PLATFORM_LIMIT_EMBED: ${PLATFORM_LIMIT_EMBED:-120}
+  PLATFORM_LIMIT_PUSH: ${PLATFORM_LIMIT_PUSH:-30}
+  PLATFORM_LIMIT_CARD: ${PLATFORM_LIMIT_CARD:-30}
+  PLATFORM_LIMIT_PUBLIC: ${PLATFORM_LIMIT_PUBLIC:-60}
+  PLATFORM_LIMIT_REGISTRATION: ${PLATFORM_LIMIT_REGISTRATION:-10}
+  SIGNED_URL_DOCUMENTS_MINUTES: ${SIGNED_URL_DOCUMENTS_MINUTES:-10}
+  SIGNED_URL_PHOTOS_MINUTES: ${SIGNED_URL_PHOTOS_MINUTES:-30}
   # Landing page do produto (opcional): e-mail que recebe os contatos e, se quiser a landing na raiz, os hosts dela.
   PLATFORM_CONTACT_EMAIL: ${PLATFORM_CONTACT_EMAIL:-}
   PLATFORM_LANDING_ROOT: ${PLATFORM_LANDING_ROOT:-false}

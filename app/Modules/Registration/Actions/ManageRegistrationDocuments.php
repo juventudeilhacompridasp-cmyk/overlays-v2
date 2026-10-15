@@ -7,6 +7,7 @@ use App\Modules\Registration\Models\Registration;
 use App\Modules\Registration\Models\RegistrationDocument;
 use App\Modules\Registration\Models\RegistrationPerson;
 use App\Modules\Registration\Support\EnsureEditable;
+use App\Support\PlatformLimits;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -71,11 +72,11 @@ final class ManageRegistrationDocuments
         Storage::disk(self::DISK)->delete($documents->pluck('path')->all());
     }
 
-    /** URL temporária assinada (10 min) para o organizador abrir o documento. */
+    /** URL temporária assinada (validade dos documentos da plataforma, 10 min por padrão) para o organizador abrir o documento. */
     public function signedUrl(RegistrationDocument $document): ?string
     {
         try {
-            return Storage::disk(self::DISK)->temporaryUrl($document->path, now()->addMinutes(10), [
+            return Storage::disk(self::DISK)->temporaryUrl($document->path, now()->addMinutes(PlatformLimits::signedMinutes('documents')), [
                 'ResponseContentDisposition' => 'attachment; filename="'.str_replace('"', '', $document->original_name).'"',
             ]);
         } catch (\Throwable) {
