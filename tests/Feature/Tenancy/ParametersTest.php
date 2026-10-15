@@ -8,6 +8,7 @@ use App\Modules\Tenancy\Enums\Feature;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
 use App\Modules\Tenancy\Support\MesarioSettings;
+use App\Modules\Tenancy\Support\PortalQuantities;
 
 beforeEach(function () {
     CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug')]));
@@ -15,7 +16,7 @@ beforeEach(function () {
 
 function parametersPayload(array $override = []): array
 {
-    return $override + ['disabled' => [], 'mesario' => ['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40]];
+    return $override + ['disabled' => [], 'mesario' => ['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40], 'portal' => ['home' => 8, 'widgets' => 6, 'scorers' => 10], 'public_api' => true];
 }
 
 describe('features the organization turns off by itself', function () {
@@ -106,4 +107,35 @@ it('is for administrators only', function () {
     $this->actingAs(panelUser(Role::Organizer))->patch(route('panel.parameters.update'), parametersPayload(['disabled' => ['arts']]))->assertRedirect();
 
     expect(CurrentOrganization::get()->fresh()->hasFeature(Feature::Arts))->toBeTrue();
+});
+
+describe('portal quantities and public API', function () {
+    it('keeps the original numbers by default and clamps saved ones', function () {
+        expect(PortalQuantities::all())->toBe(['home' => 8, 'widgets' => 6, 'scorers' => 10]);
+
+        $organization = CurrentOrganization::get();
+        $organization->update(['settings' => ['portal_quantities' => ['home' => 100, 'widgets' => 1, 'scorers' => 12]]]);
+
+        expect(PortalQuantities::all($organization->fresh()))->toBe(['home' => 24, 'widgets' => 3, 'scorers' => 12]);
+    });
+
+    it('saves them with validation', function () {
+        $this->actingAs(panelUser(Role::Admin))->patch(route('panel.parameters.update'), parametersPayload(['portal' => ['home' => 12, 'widgets' => 10, 'scorers' => 20]]))->assertSessionHas('success');
+
+        expect(PortalQuantities::all(CurrentOrganization::get()->fresh()))->toBe(['home' => 12, 'widgets' => 10, 'scorers' => 20]);
+
+        $this->patch(route('panel.parameters.update'), parametersPayload(['portal' => ['home' => 2, 'widgets' => 10, 'scorers' => 20]]))->assertSessionHasErrors('portal.home');
+        $this->patch(route('panel.parameters.update'), parametersPayload(['portal' => ['home' => 8, 'widgets' => 10, 'scorers' => 99]]))->assertSessionHasErrors('portal.scorers');
+    });
+
+    it('turns the public API off for the organization only', function () {
+        $this->getJson('/api/v1/competitions')->assertOk();
+
+        $this->actingAs(panelUser(Role::Admin))->patch(route('panel.parameters.update'), parametersPayload(['public_api' => false]))->assertSessionHas('success');
+
+        $this->getJson('/api/v1/competitions')->assertNotFound();
+
+        $this->patch(route('panel.parameters.update'), parametersPayload(['public_api' => true]));
+        $this->getJson('/api/v1/competitions')->assertOk();
+    });
 });

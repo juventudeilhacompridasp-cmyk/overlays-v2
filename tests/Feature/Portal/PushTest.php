@@ -198,6 +198,20 @@ describe('notifications', function () {
         expect($sender->sent)->toBe([]);
     });
 
+    it('keeps the game requests for the retention days set by the platform', function () {
+        $game = pushGame();
+        PushSubscription::query()->create(['target_type' => 'game', 'target_id' => $game->id, 'endpoint' => 'https://p.example.com/a', 'endpoint_hash' => PushSubscription::hash('https://p.example.com/a'), 'p256dh' => 'x', 'auth' => 'y']);
+        $game->forceFill(['status' => GameStatus::Finished, 'finished_at' => now()->subDays(2)])->saveQuietly();
+
+        config(['platform.push_retention_days' => 5]);
+        Artisan::call('push:prune');
+        expect(PushSubscription::query()->count())->toBe(1);
+
+        config(['platform.push_retention_days' => 1]);
+        Artisan::call('push:prune');
+        expect(PushSubscription::query()->count())->toBe(0);
+    });
+
     it('prunes game subscriptions of games finished more than a day ago, keeping team ones', function () {
         $game = pushGame();
         $other = $game->homeEntry->team_id;

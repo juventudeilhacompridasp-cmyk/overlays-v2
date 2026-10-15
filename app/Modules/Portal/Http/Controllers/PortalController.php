@@ -24,6 +24,7 @@ use App\Modules\Portal\Support\TeamPage;
 use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
+use App\Modules\Tenancy\Support\PortalQuantities;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,8 +36,6 @@ use Inertia\Response;
 /** Portal público: tudo aqui é leitura, sem login, e só mostra edições publicadas (rascunho nunca aparece). */
 class PortalController extends Controller
 {
-    private const SHOWN = 8;
-
     private const SEARCH_LIMIT = 15;
 
     public function home(): Response
@@ -49,10 +48,11 @@ class PortalController extends Controller
         $withTeams = ['homeEntry.team', 'awayEntry.team', 'venue', 'group'];
         $published = fn ($query) => $query->whereHas('division.season', fn ($season) => $season->published());
 
-        $live = Game::query()->where('status', GameStatus::InProgress)->tap($published)->with($withTeams)->orderBy('started_at')->limit(self::SHOWN)->get();
+        $shown = PortalQuantities::all()['home'];
+        $live = Game::query()->where('status', GameStatus::InProgress)->tap($published)->with($withTeams)->orderBy('started_at')->limit($shown)->get();
         $upcoming = Game::query()->where('status', GameStatus::Scheduled)->whereNotNull('scheduled_at')->where('scheduled_at', '>=', now()->startOfDay())
-            ->whereNotNull('home_entry_id')->whereNotNull('away_entry_id')->tap($published)->with($withTeams)->orderBy('scheduled_at')->limit(self::SHOWN)->get();
-        $recent = Game::query()->whereIn('status', [GameStatus::Finished, GameStatus::Walkover])->tap($published)->with($withTeams)->orderByDesc('finished_at')->limit(self::SHOWN)->get();
+            ->whereNotNull('home_entry_id')->whereNotNull('away_entry_id')->tap($published)->with($withTeams)->orderBy('scheduled_at')->limit($shown)->get();
+        $recent = Game::query()->whereIn('status', [GameStatus::Finished, GameStatus::Walkover])->tap($published)->with($withTeams)->orderByDesc('finished_at')->limit($shown)->get();
 
         $theme = PublicTheme::current();
 

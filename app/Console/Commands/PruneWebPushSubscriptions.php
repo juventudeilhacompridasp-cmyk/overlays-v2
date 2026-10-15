@@ -10,14 +10,14 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 #[Signature('push:prune')]
-#[Description('Apaga os pedidos de aviso de jogos que já terminaram há mais de um dia (as inscrições de equipes ficam)')]
+#[Description('Apaga os pedidos de aviso de jogos que já terminaram há mais de PUSH_RETENTION_DAYS dias, 1 por padrão (as inscrições de equipes ficam)')]
 class PruneWebPushSubscriptions extends Command
 {
     public function handle(): int
     {
         $finished = DB::table('games')
             ->whereIn('status', [GameStatus::Finished->value, GameStatus::Walkover->value])
-            ->where('finished_at', '<', now()->subDay())
+            ->where('finished_at', '<', now()->subDays((int) config('platform.push_retention_days', 1)))
             ->pluck('id');
 
         $deleted = PushSubscription::query()->withoutGlobalScopes()->where('target_type', PushSubscription::GAME)->whereIn('target_id', $finished)->delete();

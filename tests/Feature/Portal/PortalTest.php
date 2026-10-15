@@ -364,3 +364,17 @@ describe('venue page', function () {
         $this->get('/busca?q='.urlencode($venue->name))->assertInertia(fn ($page) => $page->has('venues', 0));
     });
 });
+
+it('limits the home lists to the quantity the organization chose', function () {
+    ['stage' => $stage] = fixtureDivision(4);
+    app(GenerateStageFixtures::class)->handle($stage);
+    $games = Game::query()->where('stage_id', $stage->id)->get();
+    publishSeason($games->first());
+    $games->each(fn (Game $game) => $game->forceFill(['status' => GameStatus::Finished, 'finished_at' => now()])->saveQuietly());
+    expect($games)->toHaveCount(6);
+
+    $this->get('/')->assertInertia(fn ($page) => $page->has('recent', 6));
+
+    CurrentOrganization::get()->update(['settings' => ['portal_quantities' => ['home' => 4]]]);
+    $this->get('/')->assertInertia(fn ($page) => $page->has('recent', 4));
+});

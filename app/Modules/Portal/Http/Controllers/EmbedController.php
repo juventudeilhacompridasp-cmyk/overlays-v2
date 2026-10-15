@@ -11,6 +11,7 @@ use App\Modules\Matches\Support\PublicGameSnapshot;
 use App\Modules\Portal\Support\GamePresenter;
 use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Portal\Support\SeasonPresenter;
+use App\Modules\Tenancy\Support\PortalQuantities;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,8 +23,6 @@ use Inertia\Response;
  */
 class EmbedController extends Controller
 {
-    private const LIST = 6;
-
     public function game(Request $request, Game $game): Response
     {
         abort_unless($game->division->season->isPublished(), 404);
@@ -64,13 +63,14 @@ class EmbedController extends Controller
         $divisions = $season->divisions()->pluck('id');
         $query = fn () => Game::query()->whereIn('division_id', $divisions)->whereNotNull('home_entry_id')->whereNotNull('away_entry_id')->with(['homeEntry.team', 'awayEntry.team', 'venue', 'group']);
         $present = fn ($games) => $games->map(fn (Game $game) => GamePresenter::game($game))->values()->all();
+        $shown = PortalQuantities::all()['widgets'];
 
         return Inertia::render('Embed/Games', [
             'options' => $this->options($request),
             'title' => "{$season->competition->name} {$season->name}",
             'live' => $present($query()->where('status', GameStatus::InProgress)->orderBy('started_at')->get()),
-            'upcoming' => $present($query()->where('status', GameStatus::Scheduled)->whereNotNull('scheduled_at')->where('scheduled_at', '>=', now()->subHours(3))->orderBy('scheduled_at')->limit(self::LIST)->get()),
-            'recent' => $present($query()->whereIn('status', [GameStatus::Finished, GameStatus::Walkover])->orderByDesc('finished_at')->orderByDesc('id')->limit(self::LIST)->get()),
+            'upcoming' => $present($query()->where('status', GameStatus::Scheduled)->whereNotNull('scheduled_at')->where('scheduled_at', '>=', now()->subHours(3))->orderBy('scheduled_at')->limit($shown)->get()),
+            'recent' => $present($query()->whereIn('status', [GameStatus::Finished, GameStatus::Walkover])->orderByDesc('finished_at')->orderByDesc('id')->limit($shown)->get()),
             'portal_url' => route('portal.season', [$season->competition->slug, $season->getKey()]),
         ]);
     }

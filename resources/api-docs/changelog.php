@@ -8,6 +8,13 @@
 
 return [
     [
+        'version' => '1.1.1',
+        'date' => '2026-10-15',
+        'changes' => [
+            'A organização pode desligar a API pública em Painel > Parâmetros: com ela desligada, as rotas `/api/v1` de consulta respondem 404 naquele endereço.',
+        ],
+    ],
+    [
         'version' => '1.1.0',
         'date' => '2026-10-15',
         'changes' => [
