@@ -34,6 +34,26 @@ final class OpenApiBuilder
         'membership' => 'ID (ULID) da participação do usuário na organização.',
         'profile' => 'ID (ULID) do perfil de acesso.',
         'slug' => 'Identificador (slug) do artigo de ajuda.',
+        'teamManager' => 'ID (ULID) do vínculo gestor × equipe.',
+        'person' => 'ID (ULID) da pessoa (atleta ou comissão).',
+        'rosterEntry' => 'ID (ULID) do integrante do elenco.',
+        'registration' => 'ID (ULID) do pedido de inscrição online.',
+        'document' => 'ID (ULID) do documento enviado.',
+        'venue' => 'ID (ULID) do estádio.',
+        'type' => 'Tipo do relatório (ex.: pendências ou elencos).',
+        'event' => 'ID (ULID) do evento de jogo.',
+        'scene' => 'ID (ULID) da cena do canal.',
+        'sponsor' => 'ID (ULID) do patrocinador.',
+        'model' => 'ID (ULID) do modelo de estilo.',
+        'item' => 'ID (ULID) do overlay livre.',
+        'font' => 'ID (ULID) da fonte própria.',
+        'asset' => 'ID (ULID) da imagem da organização.',
+        'template' => 'ID (ULID) do modelo de arte.',
+        'report' => 'ID (ULID) da denúncia.',
+        'note' => 'ID (ULID) da nota da organização.',
+        'contactRequest' => 'ID (ULID) do pedido de contato do Mercado.',
+        'block' => 'ID (ULID) do bloqueio de equipe.',
+        'video' => 'ID (ULID) do vídeo do perfil.',
     ];
 
     /**
@@ -43,8 +63,11 @@ final class OpenApiBuilder
     {
         /** @var array<string, array<string, mixed>> $catalog */
         $catalog = require resource_path('api-docs/catalog.php');
+        // Rotas internas (painel, gestor e atleta): telas e ações de sessão, descritas à parte.
+        /** @var array<string, array<string, mixed>> $internal */
+        $internal = require resource_path('api-docs/internal.php');
 
-        return $catalog;
+        return $catalog + $internal;
     }
 
     /**
