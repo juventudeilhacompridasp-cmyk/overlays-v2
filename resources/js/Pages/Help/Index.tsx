@@ -16,9 +16,10 @@ interface Props {
     q: string;
     results: Summary[];
     categories: { name: string; articles: Summary[] }[];
+    feedback_summary?: { slug: string; title: string; yes: number; no: number }[];
 }
 
-export default function Index({ routes, q, results, categories }: Props) {
+export default function Index({ routes, q, results, categories, feedback_summary }: Props) {
     const [term, setTerm] = useState(q);
 
     const search = (event: FormEvent) => {
@@ -84,6 +85,22 @@ export default function Index({ routes, q, results, categories }: Props) {
                         </Card>
                     ))}
                 </div>
+            )}
+            {feedback_summary && feedback_summary.length > 0 && (
+                <Card title="Artigos que mais precisam de ajuste (votos “não ajudou”)" className="mt-6 max-w-3xl">
+                    <ul className="divide-y divide-gray-100 text-sm" data-testid="feedback-summary">
+                        {feedback_summary.map((item) => (
+                            <li key={item.slug} className="flex items-center justify-between gap-3 py-2">
+                                <Link href={route(routes.show, item.slug)} className="text-emerald-700 hover:underline">
+                                    {item.title}
+                                </Link>
+                                <span className="shrink-0 text-gray-500">
+                                    {item.no} não · {item.yes} sim
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                </Card>
             )}
         </PanelLayout>
     );

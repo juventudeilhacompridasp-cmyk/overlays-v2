@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Modules\Help\Support\ContextualHelp;
 use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Ability;
@@ -52,6 +53,8 @@ class HandleInertiaRequests extends Middleware
 
                 return ['name' => $theme['white_label'] ? $theme['name'] : (string) config('app.name'), 'logo_url' => $theme['logo_url']];
             })(),
+            // Ajuda desta tela (artigos ligados à rota atual; ADR 0006): só calculada quando a página usa.
+            'help' => fn () => ContextualHelp::for($request),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

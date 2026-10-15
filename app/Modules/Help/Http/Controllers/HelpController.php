@@ -3,11 +3,14 @@
 namespace App\Modules\Help\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Help\Models\HelpFeedback;
 use App\Modules\Help\Support\HelpAccess;
 use App\Modules\Help\Support\HelpArticle;
 use App\Modules\Help\Support\HelpLibrary;
 use App\Modules\Help\Support\HelpMarkdown;
 use App\Modules\Help\Support\HelpSearch;
+use App\Modules\Tenancy\CurrentOrganization;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Exceptions\UrlGenerationException;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +44,7 @@ class HelpController extends Controller
             'q' => $query,
             'results' => $results,
             'categories' => collect($categories)->map(fn (array $articles, string $name) => ['name' => $name, 'articles' => $articles])->values(),
+            ...($area === 'platform' ? ['feedback_summary' => $this->feedbackSummary()] : []),
         ]);
     }
 
@@ -68,7 +72,47 @@ class HelpController extends Controller
                 'screen_url' => $article->route !== null ? $this->routeUrl($article->route) : null,
             ],
             'related' => $related,
+            'feedback' => HelpFeedback::query()->where('user_id', $request->user()->getAuthIdentifier())->where('slug', $article->slug)->value('helpful'),
         ]);
+    }
+
+    /**
+     * Para a plataforma melhorar a documentação: os artigos com mais votos "não ajudou" (só quem ainda existe no acervo).
+     *
+     * @return list<array{slug: string, title: string, yes: int, no: int}>
+     */
+    private function feedbackSummary(): array
+    {
+        $rows = HelpFeedback::query()
+            ->selectRaw('slug, sum(case when helpful then 1 else 0 end) as yes_total, sum(case when helpful then 0 else 1 end) as no_total')
+            ->groupBy('slug')
+            ->get();
+
+        return $rows
+            ->map(fn ($row) => ['article' => HelpLibrary::find((string) $row->slug), 'yes' => (int) $row->yes_total, 'no' => (int) $row->no_total])
+            ->filter(fn (array $item) => $item['article'] !== null && $item['no'] > 0)
+            ->sortByDesc('no')
+            ->take(10)
+            ->map(fn (array $item) => ['slug' => $item['article']->slug, 'title' => $item['article']->title, 'yes' => $item['yes'], 'no' => $item['no']])
+            ->values()
+            ->all();
+    }
+
+    /** "Isso ajudou?": um voto por pessoa e artigo (o último vale), só para artigos que a pessoa pode ver. */
+    public function feedback(Request $request, string $slug): RedirectResponse
+    {
+        $area = $this->area($request);
+        $visible = HelpAccess::visible(HelpLibrary::all(), $request->user(), $area);
+        abort_unless(collect($visible)->contains(fn (HelpArticle $candidate) => $candidate->slug === $slug), 404);
+
+        $validated = $request->validate(['helpful' => ['required', 'boolean']]);
+
+        HelpFeedback::query()->updateOrCreate(
+            ['user_id' => $request->user()->getAuthIdentifier(), 'slug' => $slug],
+            ['helpful' => (bool) $validated['helpful'], 'organization_id' => CurrentOrganization::id()],
+        );
+
+        return back()->with('success', 'Obrigado pelo retorno.');
     }
 
     /** A área (panel, manager ou platform) vem do padrão da rota; o Laravel passa os padrões depois dos parâmetros da URL. */
@@ -102,11 +146,11 @@ class HelpController extends Controller
     }
 
     /**
-     * @return array{index: string, show: string}
+     * @return array{index: string, show: string, feedback: string}
      */
     private function routes(string $area): array
     {
-        return ['index' => "{$area}.help.index", 'show' => "{$area}.help.show"];
+        return ['index' => "{$area}.help.index", 'show' => "{$area}.help.show", 'feedback' => "{$area}.help.feedback"];
     }
 
     /**

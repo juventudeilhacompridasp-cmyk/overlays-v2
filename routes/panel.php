@@ -98,6 +98,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
     // Central de ajuda (ADR 0006): qualquer membro; o que aparece depende do perfil e do pacote.
     Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'panel')->name('help.index');
     Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'panel')->name('help.show');
+    Route::post('ajuda/{slug}/avaliar', [HelpController::class, 'feedback'])->defaults('area', 'panel')->name('help.feedback');
 
     Route::get('widgets', [EmbedPanelController::class, 'index'])->middleware('feature:embeds')->name('widgets.index');
 

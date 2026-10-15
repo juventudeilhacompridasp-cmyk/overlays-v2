@@ -19,6 +19,7 @@ export type PageProps<
     };
     features: string[];
     brand: { name: string; logo_url: string | null };
+    help: { area: string; articles: { slug: string; title: string; url: string }[] } | null;
     flash: {
         success?: string | null;
         error?: string | null;

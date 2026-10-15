@@ -1,4 +1,5 @@
 import FlashToasts from '@/Components/FlashToasts';
+import HelpButton from '@/Components/HelpButton';
 import ThemeToggle from '@/Components/ThemeToggle';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren } from 'react';
@@ -30,6 +31,7 @@ export default function PlatformLayout({ children }: PropsWithChildren) {
                 <FlashToasts />
                 {children}
             </main>
+            <HelpButton />
         </div>
     );
 }

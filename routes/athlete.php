@@ -27,4 +27,5 @@ Route::middleware(['auth', 'athlete.member', 'legal.accepted', 'feature:market']
     Route::delete('conta', [AthleteController::class, 'destroy'])->name('destroy');
     Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'athlete')->name('help.index');
     Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'athlete')->name('help.show');
+    Route::post('ajuda/{slug}/avaliar', [HelpController::class, 'feedback'])->defaults('area', 'athlete')->name('help.feedback');
 });
