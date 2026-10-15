@@ -28,7 +28,8 @@ Entregue: interruptores dos e-mails da inscrição (4), convite/lembrete/mudanç
 | Remetente e nome nos e-mails: apenas `MAIL_FROM_*` global | `config/mail.php` | Organização: nome de exibição (e `reply-to`) por organização, mantendo o remetente técnico da plataforma. |
 | Textos dos e-mails fixos em português | `RegistrationMail`, `ManagerNotice`, `TeamManagerInvitation` | Organização: trechos editáveis (assunto/introdução/rodapé) com variáveis simples; nunca HTML livre. |
 
-## 2. Ativar/desativar funcionalidades (prioridade alta)
+## 2. Ativar/desativar funcionalidades (prioridade alta) — **entregue em parte: Painel > Parâmetros**
+Entregue: a organização desliga recursos do próprio pacote (`settings.features_disabled`, só reduz; fora overlays/domínio/white-label) e as janelas do mesário (dias à frente, horas de encerrados, limite). Falta: seções do portal, interruptor da API pública, resultado rápido por edição, fila offline.
 - Recursos por pacote já existem (`Feature`), mas **só a plataforma liga/desliga**. Falta, dentro de um recurso liberado,
   a organização escolher usar ou não: ex.: carteirinha, push, widgets, portal do gestor. Proposta: `settings.features_enabled`
   (lista) que só pode **reduzir** o que o pacote permite; `CurrentOrganization::has()` considera os dois.
@@ -41,6 +42,7 @@ Entregue: interruptores dos e-mails da inscrição (4), convite/lembrete/mudanç
 - Fila offline da súmula: sempre ligada. Proposta: interruptor por organização (para suporte).
 
 ## 3. Janelas, limites e números fixos (prioridade média)
+Entregue: janelas do mesário (Painel > Parâmetros). Falta o restante da tabela.
 | Hoje | Onde | Proposta |
 |---|---|---|
 | Mesário: jogos de hoje + próximos 2 dias + encerrados nas últimas 6 h; limite de 40 cartões | `MesarioController` (`addDays(2)`, `subHours(6)`, `subHours(3)`, `LIMIT`) | Organização: dias à frente, horas de encerrados e limite. |

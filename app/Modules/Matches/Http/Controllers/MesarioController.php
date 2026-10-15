@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Tenancy\Support\MesarioSettings;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,20 +16,19 @@ use Inertia\Response;
  */
 class MesarioController extends Controller
 {
-    private const LIMIT = 40;
-
     public function index(): Response
     {
+        $window = MesarioSettings::all();
         $games = Game::query()
             ->with(['homeEntry.team', 'awayEntry.team', 'venue', 'division.season.competition', 'stage'])
             ->whereNotNull('home_entry_id')->whereNotNull('away_entry_id')
             ->where(fn ($query) => $query
                 ->where('status', GameStatus::InProgress)
-                ->orWhere(fn ($open) => $open->where('status', GameStatus::Scheduled)->whereBetween('scheduled_at', [now()->startOfDay()->subHours(3), now()->addDays(2)->endOfDay()]))
-                ->orWhere(fn ($done) => $done->whereIn('status', [GameStatus::Finished, GameStatus::Walkover])->where('finished_at', '>=', now()->subHours(6))))
+                ->orWhere(fn ($open) => $open->where('status', GameStatus::Scheduled)->whereBetween('scheduled_at', [now()->startOfDay()->subHours(3), now()->addDays($window['days_ahead'])->endOfDay()]))
+                ->orWhere(fn ($done) => $done->whereIn('status', [GameStatus::Finished, GameStatus::Walkover])->where('finished_at', '>=', now()->subHours($window['finished_hours']))))
             ->orderByRaw("case status when 'in_progress' then 0 when 'scheduled' then 1 else 2 end")
             ->orderBy('scheduled_at')->orderBy('id')
-            ->limit(self::LIMIT)->get();
+            ->limit($window['limit'])->get();
 
         return Inertia::render('Panel/Mesario/Index', [
             'games' => $games->map(fn (Game $game) => [

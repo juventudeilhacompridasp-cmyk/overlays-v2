@@ -40,6 +40,7 @@ use App\Modules\Tenancy\Http\Controllers\CommunicationsController;
 use App\Modules\Tenancy\Http\Controllers\LegalController;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Http\Controllers\OrganizationController;
+use App\Modules\Tenancy\Http\Controllers\ParametersController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -220,6 +221,8 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::patch('profiles/{profile}', [AccessProfileController::class, 'update'])->name('profiles.update');
         Route::post('profiles/{profile}/duplicate', [AccessProfileController::class, 'duplicate'])->name('profiles.duplicate');
         Route::delete('profiles/{profile}', [AccessProfileController::class, 'destroy'])->name('profiles.destroy');
+        Route::get('parameters', [ParametersController::class, 'edit'])->name('parameters.edit');
+        Route::patch('parameters', [ParametersController::class, 'update'])->name('parameters.update');
         Route::get('communications', [CommunicationsController::class, 'edit'])->name('communications.edit');
         Route::patch('communications', [CommunicationsController::class, 'update'])->name('communications.update');
         Route::get('organization', [OrganizationController::class, 'edit'])->name('organization.edit');
