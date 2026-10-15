@@ -153,6 +153,12 @@ test('finishing, voiding and rally points are flagged instead of guessed', () =>
     assert.equal(view.home_score, 0);
 });
 
+test('quick results update both scores and finish the projected game', () => {
+    const view = project(base(), [item('quick_result', { home_score: 3, away_score: 2 })], rules);
+
+    assert.deepEqual([view.home_score, view.away_score, view.finishing], [3, 2, true]);
+});
+
 test('the projection never changes the data it received', () => {
     const original = base();
     const snapshot = JSON.stringify(original);

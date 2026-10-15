@@ -26,6 +26,21 @@ function queueItem(string $kind, array $payload, Carbon $at, ?string $key = null
 }
 
 describe('applying the queue', function () {
+    it('applies an offline quick result with the device timestamp', function () {
+        ['game' => $game] = sheetGame();
+        $at = now()->subMinutes(2)->startOfSecond();
+
+        $response = $this->actingAs(panelUser(Role::Operator))->postJson(route('panel.games.sync', $game), ['items' => [
+            queueItem('quick_result', ['home_score' => 3, 'away_score' => 1], $at),
+        ]])->assertOk();
+
+        expect($response->json('results.0.status'))->toBe('applied')
+            ->and($game->fresh()->home_score)->toBe(3)
+            ->and($game->fresh()->away_score)->toBe(1)
+            ->and($game->fresh()->status)->toBe(GameStatus::Finished)
+            ->and($game->events()->first()->created_at->getTimestamp())->toBe($at->getTimestamp());
+    });
+
     it('applies the batch in order with the time each play really happened', function () {
         ['game' => $game, 'home' => $home, 'hp' => $hp] = sheetGame();
         $start = now()->subMinutes(50)->startOfSecond();

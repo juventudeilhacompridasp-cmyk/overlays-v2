@@ -5,7 +5,7 @@
  * cada item com a validação do regulamento quando a conexão volta. Código puro (sem React) para poder ser testado em Node.
  */
 
-export type QueueKind = 'event' | 'point' | 'period' | 'clock' | 'shot_clock' | 'void' | 'finish';
+export type QueueKind = 'event' | 'point' | 'quick_result' | 'period' | 'clock' | 'shot_clock' | 'void' | 'finish';
 
 export interface QueueItem {
     /** Chave gerada no aparelho: o servidor a usa para não aplicar o mesmo item duas vezes. */
@@ -212,6 +212,11 @@ export function project<C extends ClockView>(base: SheetView<C>, items: QueueIte
             case 'point':
                 // Pontos de rally viram sets: o fim de cada set só o servidor sabe calcular.
                 view.partial = true;
+                break;
+            case 'quick_result':
+                view.home_score = Number(item.payload.home_score ?? view.home_score);
+                view.away_score = Number(item.payload.away_score ?? view.away_score);
+                view.finishing = true;
                 break;
         }
     }
