@@ -1,6 +1,6 @@
 # ADR 0006 — Central de ajuda com busca e respostas (estilo RAG)
 
-Status: aceito (parte 1 entregue)
+Status: aceito (parte 1 entregue; parte 2: ajuda contextual e "isso ajudou?" entregues, faltam as notas da organização)
 Data: 13/10/2026
 
 ## Contexto

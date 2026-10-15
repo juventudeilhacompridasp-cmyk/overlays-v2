@@ -16,6 +16,7 @@ Route::middleware(['auth', 'verified', 'platform.admin'])->prefix('plataforma')-
     Route::get('/', [PlatformOrganizationController::class, 'index'])->name('organizations.index');
     Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'platform')->name('help.index');
     Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'platform')->name('help.show');
+    Route::post('ajuda/{slug}/avaliar', [HelpController::class, 'feedback'])->defaults('area', 'platform')->name('help.feedback');
     Route::get('api-docs', [ApiDocsController::class, 'index'])->name('api-docs.index');
     Route::get('api-docs/openapi.json', [ApiDocsController::class, 'openapi'])->name('api-docs.openapi');
     Route::get('api-docs/postman.json', [ApiDocsController::class, 'postman'])->name('api-docs.postman');

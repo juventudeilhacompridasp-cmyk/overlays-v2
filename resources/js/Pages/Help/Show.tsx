@@ -1,6 +1,6 @@
 import { Badge, Card, LinkButton, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { ReactNode } from 'react';
 
 type Inline = { t: 'text' | 'b' | 'code' | 'link'; v: string; href?: string };
@@ -12,9 +12,10 @@ type Block =
 
 interface Props {
     area: string;
-    routes: { index: string; show: string };
+    routes: { index: string; show: string; feedback: string };
     article: { slug: string; title: string; category: string; tags: string[]; blocks: Block[]; screen_url: string | null };
     related: { slug: string; title: string; category: string }[];
+    feedback: boolean | null;
 }
 
 function Text({ parts }: { parts: Inline[] }): ReactNode {
@@ -36,7 +37,9 @@ function Text({ parts }: { parts: Inline[] }): ReactNode {
     );
 }
 
-export default function Show({ routes, article, related }: Props) {
+export default function Show({ routes, article, related, feedback }: Props) {
+    const vote = (helpful: boolean) => router.post(route(routes.feedback, article.slug), { helpful }, { preserveScroll: true });
+
     return (
         <PanelLayout>
             <Head title={`${article.title} · Ajuda`} />
@@ -97,6 +100,16 @@ export default function Show({ routes, article, related }: Props) {
                     }
                 })}
             </article>
+
+            <section className="mt-6 flex max-w-3xl flex-wrap items-center gap-3 border-t border-gray-200 pt-4 text-sm text-gray-700" aria-label="Avaliação do artigo" data-testid="feedback">
+                <span>Isso ajudou?</span>
+                {[{ label: 'Sim', value: true }, { label: 'Não', value: false }].map((option) => (
+                    <button key={option.label} type="button" aria-pressed={feedback === option.value} onClick={() => vote(option.value)} className={`rounded-md border px-3 py-1 font-medium ${feedback === option.value ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'}`}>
+                        {option.label}
+                    </button>
+                ))}
+                {feedback !== null && <span className="text-gray-500">Obrigado pelo retorno.</span>}
+            </section>
 
             {article.tags.length > 0 && (
                 <div className="mt-6 flex flex-wrap gap-2">

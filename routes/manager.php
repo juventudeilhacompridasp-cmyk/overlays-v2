@@ -27,6 +27,7 @@ Route::middleware(['auth', 'verified', 'manager.member', 'legal.accepted', 'feat
     Route::get('inscricoes/{entry}/carteirinhas', [CardsController::class, 'entry'])->middleware('feature:athlete_cards')->name('entries.cards');
     Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'manager')->name('help.index');
     Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'manager')->name('help.show');
+    Route::post('ajuda/{slug}/avaliar', [HelpController::class, 'feedback'])->defaults('area', 'manager')->name('help.feedback');
     Route::get('mercado', [MarketController::class, 'index'])->middleware('feature:market')->name('market.index');
     Route::post('mercado/{profile}/pedidos', [ContactController::class, 'store'])->middleware('feature:market')->name('market.requests.store');
     Route::post('mercado/{profile}/denunciar', [HiringController::class, 'report'])->middleware('feature:market')->name('market.report');

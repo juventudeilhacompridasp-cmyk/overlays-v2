@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import FlashToasts from '@/Components/FlashToasts';
+import HelpButton from '@/Components/HelpButton';
 import ThemeToggle from '@/Components/ThemeToggle';
 import { useCan } from '@/lib/can';
 import { activeGroupOf, buildNav, groupOpen, NavGroup, NavGroupId, NavItem } from '@/lib/panelNav';
@@ -137,6 +138,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
                     <FlashToasts />
                     {children}
                 </main>
+                <HelpButton />
             </div>
         </div>
     );
