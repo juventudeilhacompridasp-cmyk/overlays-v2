@@ -87,6 +87,10 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 
 - O layout da grade é salvo por usuário e canal em `users.operator_layouts`; o navegador continua como cache local, mas o servidor é a fonte para restaurar a configuração em outro dispositivo.
 
+## Tempo do basquete
+
+- Ao registrar um pedido de tempo com o relógio regressivo em andamento, `RecordGameEvent` cria automaticamente o marco `clock_pause`; se o relógio já estiver parado, não cria um marco duplicado.
+
 ## Dashboard do painel
 
 - Indicadores e gráficos usam somente agregados da organização atual; não expor dados pessoais nem criar consultas por atleta sem necessidade.

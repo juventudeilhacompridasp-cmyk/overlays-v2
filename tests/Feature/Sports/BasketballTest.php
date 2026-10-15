@@ -368,6 +368,16 @@ describe('team timeouts', function () {
             ->and($game->status)->toBe(GameStatus::InProgress);
     });
 
+    it('pauses the running clock automatically when a timeout is recorded', function () {
+        ['game' => $game] = basketballGame();
+        app(ChangeGamePeriod::class)->handle($game->fresh(), true, 1);
+
+        basketTimeout($game, 'home', 1);
+
+        expect($game->fresh()->events()->effective()->where('type', GameEventType::ClockPause)->count())->toBe(1)
+            ->and(PublicGameSnapshot::for($game->fresh())['clock']['state'])->toBe('paused');
+    });
+
     it('gives the timeout back when it is voided', function () {
         ['game' => $game] = basketballGame();
 
