@@ -33,6 +33,8 @@ class OverlayController extends Controller
         'estatisticas' => 'Overlay/Stats',
         'penaltis' => 'Overlay/Shootout',
         'todos' => 'Overlay/All',
+        // Monitor do Modo operador (não é fonte do OBS; fora de `OverlayChannel::OVERLAYS`).
+        'pgm' => 'Overlay/Pgm',
     ];
 
     public function show(OverlayChannel $channel, string $overlay): Response

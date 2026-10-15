@@ -296,6 +296,7 @@ describe('panel', function () {
             ->where('channels.0.lineup_settings.presentation', 'sequence')
             ->where('channels.0.lineup_settings.photo_person_ids', [])
             ->where('channels.0.has_control_token', true)
+            ->where('channels.0.pgm_url', fn ($url) => str_ends_with($url, '/pgm'))
             ->where('issued_control.channel_id', $channel->id)
             ->has('issued_control.token')
             ->where('channels.0.layers', ['lineup' => false, 'standings' => false, 'scoreboard' => true, 'lower_third' => true]));

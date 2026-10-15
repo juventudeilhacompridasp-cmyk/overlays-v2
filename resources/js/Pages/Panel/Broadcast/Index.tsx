@@ -164,6 +164,7 @@ export interface Channel {
     lower_third_settings: LowerThirdSettings;
     has_control_token: boolean;
     control_url: string;
+    pgm_url: string;
     championship_base: string;
     overlays: { slug: string; title: string; url: string }[];
 }
