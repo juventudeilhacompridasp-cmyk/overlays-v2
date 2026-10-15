@@ -1,6 +1,8 @@
 <?php
 
+use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Enums\GameStatus;
+use App\Modules\Matches\Models\Game;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
 use App\Modules\Tenancy\Enums\Role;
@@ -73,8 +75,8 @@ describe('mesário windows', function () {
 
     it('changes which games the mesário sees', function () {
         ['stage' => $stage] = fixtureDivision(4);
-        app(App\Modules\Matches\Actions\GenerateStageFixtures::class)->handle($stage);
-        $games = App\Modules\Matches\Models\Game::query()->where('stage_id', $stage->id)->orderBy('id')->get();
+        app(GenerateStageFixtures::class)->handle($stage);
+        $games = Game::query()->where('stage_id', $stage->id)->orderBy('id')->get();
         $games[0]->update(['scheduled_at' => now()->addDays(5)]);
         $games[1]->update(['scheduled_at' => now()->addHours(2), 'status' => GameStatus::Scheduled]);
 

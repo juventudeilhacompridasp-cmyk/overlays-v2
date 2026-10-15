@@ -37,10 +37,10 @@ use App\Modules\Teams\Http\Controllers\TeamLogoController;
 use App\Modules\Teams\Http\Controllers\TeamManagerController;
 use App\Modules\Tenancy\Http\Controllers\AccessProfileController;
 use App\Modules\Tenancy\Http\Controllers\CommunicationsController;
-use App\Modules\Tenancy\Http\Controllers\ParametersController;
 use App\Modules\Tenancy\Http\Controllers\LegalController;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Http\Controllers\OrganizationController;
+use App\Modules\Tenancy\Http\Controllers\ParametersController;
 use Illuminate\Support\Facades\Route;
 
 /*
