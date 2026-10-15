@@ -5,6 +5,7 @@ namespace App\Modules\Tenancy\Actions;
 use App\Modules\Tenancy\Enums\Permission;
 use App\Modules\Tenancy\Models\AccessProfile;
 use App\Modules\Tenancy\Models\Membership;
+use App\Modules\Tenancy\Support\AccessAuditLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -33,6 +34,7 @@ final class ManageAccessProfiles
             ]);
 
             $this->sync($profile, $permissions);
+            AccessAuditLog::record('profile.created', $name, 'Perfil criado com '.count($profile->permissions()).' permissão(ões).');
 
             return $profile;
         });
@@ -53,8 +55,10 @@ final class ManageAccessProfiles
         }
 
         return DB::transaction(function () use ($profile, $name, $description, $permissions): AccessProfile {
+            $before = array_map(fn (Permission $permission) => $permission->value, $profile->permissions());
             $profile->update(['name' => $name, 'description' => $description]);
             $this->sync($profile, $permissions);
+            AccessAuditLog::record('profile.updated', $name, AccessAuditLog::diff($before, array_map(fn (Permission $permission) => $permission->value, $profile->permissions())));
 
             return $profile;
         });
@@ -83,6 +87,7 @@ final class ManageAccessProfiles
         }
 
         $profile->delete();
+        AccessAuditLog::record('profile.deleted', $profile->name, 'Perfil excluído.');
     }
 
     private function ensureEditable(AccessProfile $profile): void
@@ -108,14 +113,14 @@ final class ManageAccessProfiles
     /** Se os usuários deste perfil perdessem a gestão de usuários, alguém de fora dele precisa continuar com ela. */
     private function ensureManagersRemain(AccessProfile $profile): void
     {
-        $holdsNow = Membership::query()->where('access_profile_id', $profile->getKey())->with('profile.grants')->get()
+        $holdsNow = Membership::query()->where('access_profile_id', $profile->getKey())->with(['profile.grants', 'overrides'])->get()
             ->contains(fn (Membership $membership) => $this->members->holdsUserManagement($membership));
 
         if (! $holdsNow) {
             return;
         }
 
-        $others = Membership::query()->with('profile.grants')
+        $others = Membership::query()->with(['profile.grants', 'overrides'])
             ->where(fn ($query) => $query->whereNull('access_profile_id')->orWhere('access_profile_id', '!=', $profile->getKey()))
             ->get()
             ->contains(fn (Membership $membership) => $this->members->holdsUserManagement($membership));

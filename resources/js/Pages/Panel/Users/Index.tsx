@@ -1,7 +1,7 @@
 import { Badge, Button, Card, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { FormEvent, useState } from 'react';
 
 interface Member {
     id: string;
@@ -10,7 +10,72 @@ interface Member {
     role: string;
     access: string;
     access_label: string;
+    base: string[];
+    allow: string[];
+    deny: string[];
     is_me: boolean;
+}
+
+interface CatalogItem {
+    value: string;
+    label: string;
+    group: string;
+}
+
+/** Permissões efetivas e de onde vêm (perfil/papel, exceção que soma, exceção que retira). */
+function Exceptions({ member, catalog }: { member: Member; catalog: CatalogItem[] }) {
+    const [open, setOpen] = useState(false);
+    const [allow, setAllow] = useState<string[]>(member.allow);
+    const [deny, setDeny] = useState<string[]>(member.deny);
+
+    const toggle = (list: string[], set: (value: string[]) => void, key: string) => set(list.includes(key) ? list.filter((item) => item !== key) : [...list, key]);
+    const source = (key: string) => (deny.includes(key) ? 'negada' : allow.includes(key) ? 'exceção' : member.base.includes(key) ? member.access_label : '');
+    const count = member.allow.length + member.deny.length;
+
+    return (
+        <div className="w-full">
+            <Button small variant="secondary" aria-expanded={open} onClick={() => setOpen(!open)}>
+                Exceções{count > 0 ? ` (${count})` : ''}
+            </Button>
+            {open && (
+                <div className="mt-3 rounded-md border border-gray-200 p-3">
+                    <p className="mb-2 text-sm text-gray-600">Ajuste só para {member.name}: <b>soma</b> uma permissão que o acesso não dá ou <b>retira</b> uma que dá. Negar vence.</p>
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="text-left text-gray-500">
+                                <th className="py-1">Permissão</th>
+                                <th className="py-1">Origem</th>
+                                <th className="py-1">Somar</th>
+                                <th className="py-1">Retirar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {catalog.map((item) => {
+                                const inBase = member.base.includes(item.value);
+                                return (
+                                    <tr key={item.value} className="border-t border-gray-100">
+                                        <td className="py-1">{item.label}</td>
+                                        <td className="py-1 text-gray-500">{source(item.value) || '—'}</td>
+                                        <td className="py-1">
+                                            <input type="checkbox" aria-label={`Somar ${item.label} para ${member.name}`} disabled={inBase} checked={allow.includes(item.value)} onChange={() => toggle(allow, setAllow, item.value)} />
+                                        </td>
+                                        <td className="py-1">
+                                            <input type="checkbox" aria-label={`Retirar ${item.label} de ${member.name}`} disabled={!inBase} checked={deny.includes(item.value)} onChange={() => toggle(deny, setDeny, item.value)} />
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                    <div className="mt-3">
+                        <Button small onClick={() => router.put(route('panel.users.overrides', member.id), { allow, deny }, { preserveScroll: true })}>
+                            Salvar exceções
+                        </Button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 }
 
 interface ProfileInfo {
@@ -50,7 +115,7 @@ function AccessOptions({ roles, profiles }: { roles: RoleInfo[]; profiles: Profi
     );
 }
 
-export default function Index({ members, roles, profiles }: { members: Member[]; roles: RoleInfo[]; profiles: ProfileInfo[] }) {
+export default function Index({ members, roles, profiles, catalog }: { members: Member[]; roles: RoleInfo[]; profiles: ProfileInfo[]; catalog: CatalogItem[] }) {
     const { data, setData, transform, post, processing, errors, reset } = useForm({ name: '', email: '', password: '', access: 'role:operator' });
     transform((form) => ({ name: form.name, email: form.email, password: form.password, ...payload(form.access) }));
 
@@ -96,6 +161,7 @@ export default function Index({ members, roles, profiles }: { members: Member[];
                                         Remover acesso
                                     </Button>
                                 </div>
+                                <Exceptions key={`${member.id}:${member.access}:${member.allow.join()}:${member.deny.join()}`} member={member} catalog={catalog} />
                             </li>
                         ))}
                     </ul>

@@ -36,6 +36,7 @@ use App\Modules\Teams\Http\Controllers\RosterController;
 use App\Modules\Teams\Http\Controllers\TeamController;
 use App\Modules\Teams\Http\Controllers\TeamLogoController;
 use App\Modules\Teams\Http\Controllers\TeamManagerController;
+use App\Modules\Tenancy\Http\Controllers\AccessAuditController;
 use App\Modules\Tenancy\Http\Controllers\AccessProfileController;
 use App\Modules\Tenancy\Http\Controllers\CommunicationsController;
 use App\Modules\Tenancy\Http\Controllers\LegalController;
@@ -242,6 +243,8 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::get('users', [MemberController::class, 'index'])->name('users.index');
         Route::post('users', [MemberController::class, 'store'])->name('users.store');
         Route::patch('users/{membership}', [MemberController::class, 'update'])->name('users.update');
+        Route::put('users/{membership}/overrides', [MemberController::class, 'overrides'])->name('users.overrides');
         Route::delete('users/{membership}', [MemberController::class, 'destroy'])->name('users.destroy');
+        Route::get('access-audit', [AccessAuditController::class, 'index'])->name('access-audit.index');
     });
 });

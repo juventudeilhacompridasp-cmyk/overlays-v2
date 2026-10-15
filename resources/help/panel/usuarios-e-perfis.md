@@ -21,7 +21,17 @@ Se os papéis não bastam, crie um perfil em [Perfis de acesso](route:panel.prof
 - Um perfil em uso não pode ser excluído.
 - Permissão não libera recurso fora do pacote da organização.
 
+## Exceções por usuário
+Em [Usuários](route:panel.users.index), o botão **Exceções** de cada pessoa ajusta o acesso só para ela, sem criar um perfil novo:
+- **Somar** dá uma permissão que o papel ou o perfil não dá.
+- **Retirar** tira uma que ele dá.
+- **Negar vence**: se a mesma permissão estiver nas duas listas, ela é retirada.
+A tabela mostra a **origem** de cada permissão (o papel/perfil ou uma exceção). As exceções ficam com a pessoa mesmo se você trocar o papel ou o perfil dela; para voltar ao padrão, desmarque tudo e salve.
+
+## Auditoria de acesso
+[Auditoria de acesso](route:panel.access-audit.index) lista as 200 últimas mudanças: quem criou, trocou ou removeu um acesso, mudou exceções ou mexeu num perfil, e o que passou a valer. O registro não guarda endereço IP e não pode ser editado.
+
 ## Proteção
-A organização **nunca fica sem alguém que gerencie usuários**. Trocar o acesso, remover o usuário ou tirar a permissão do perfil é recusado se for o último.
+A organização **nunca fica sem alguém que gerencie usuários**. Trocar o acesso, remover o usuário, tirar a permissão do perfil ou retirá-la por exceção é recusado se for o último.
 
 > Remover o acesso não apaga a conta: ela só deixa de entrar no painel.

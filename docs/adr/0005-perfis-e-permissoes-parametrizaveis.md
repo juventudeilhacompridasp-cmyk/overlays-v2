@@ -46,7 +46,7 @@ cada organização monte seus próprios perfis. O pedido é: **usuário × perfi
 ## Entrega em partes
 1. Catálogo `Permission`, perfis de sistema migrados, `memberships.access_profile_id`, Gate compatível — **sem UI nova**, zero mudança de comportamento.
 2. Tela de perfis (CRUD + matriz) e escolha do perfil em Usuários.
-3. Exceções por usuário + auditoria + "permissões efetivas".
+3. Exceções por usuário + auditoria + "permissões efetivas" — **feita** (`membership_permissions` e `access_audit`; a auditoria guarda o nome e um resumo em texto, sem IP; as exceções permanecem ao trocar o papel/perfil).
 4. (Opcional) escopo por competição/edição.
 
 ## Consequências
