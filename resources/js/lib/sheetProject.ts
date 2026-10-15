@@ -5,7 +5,7 @@
  * cada item com a validação do regulamento quando a conexão volta. Código puro (sem React) para poder ser testado em Node.
  */
 
-export type QueueKind = 'event' | 'point' | 'quick_result' | 'period' | 'clock' | 'shot_clock' | 'void' | 'finish';
+export type QueueKind = 'event' | 'point' | 'quick_result' | 'shootout_kick' | 'shootout_undo' | 'period' | 'clock' | 'shot_clock' | 'void' | 'finish';
 
 export interface QueueItem {
     /** Chave gerada no aparelho: o servidor a usa para não aplicar o mesmo item duas vezes. */

@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Competitions\Enums\Sport;
+use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Enums\GameEventType;
@@ -39,6 +40,21 @@ describe('applying the queue', function () {
             ->and($game->fresh()->away_score)->toBe(1)
             ->and($game->fresh()->status)->toBe(GameStatus::Finished)
             ->and($game->events()->first()->created_at->getTimestamp())->toBe($at->getTimestamp());
+    });
+
+    it('applies and undoes offline shootout kicks in order', function () {
+        ['stage' => $stage] = fixtureDivision(2, StageType::Knockout);
+        app(GenerateStageFixtures::class)->handle($stage);
+        $game = Game::query()->where('stage_id', $stage->id)->firstOrFail();
+        $at = now()->subMinutes(2)->startOfSecond();
+
+        $response = $this->actingAs(panelUser(Role::Operator))->postJson(route('panel.games.sync', $game), ['items' => [
+            queueItem('shootout_kick', ['side' => 'home', 'scored' => true], $at),
+            queueItem('shootout_kick', ['side' => 'away', 'scored' => false], $at->copy()->addSecond()),
+        ]])->assertOk();
+
+        expect(collect($response->json('results'))->pluck('status')->all())->toBe(['applied', 'applied'])
+            ->and($game->events()->effective()->where('type', GameEventType::PenaltyKick)->count())->toBe(2);
     });
 
     it('applies the batch in order with the time each play really happened', function () {

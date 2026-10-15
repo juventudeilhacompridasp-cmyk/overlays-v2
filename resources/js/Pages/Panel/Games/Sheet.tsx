@@ -401,17 +401,24 @@ function ShootoutRow({ name, kicks, opponent, rounds, turn }: { name: string; ki
 }
 
 /** Disputa de pênaltis cobrança a cobrança (os times se alternam; a disputa fecha sozinha ao ter vencedor) ou só o total, à mão. */
-function ShootoutCard({ game, home, away }: { game: Props['game']; home: Team; away: Team }) {
+function ShootoutCard({ game, home, away, send }: { game: Props['game']; home: Team; away: Team; send: Send }) {
     const [homePens, setHomePens] = useState(game.home_penalties?.toString() ?? '');
     const [awayPens, setAwayPens] = useState(game.away_penalties?.toString() ?? '');
     const shootout = game.shootout;
     const manual = shootout !== null && !shootout.by_kick;
     const empty = shootout === null;
     const state = shootout ?? { home: [], away: [], goals: { home: 0, away: 0 }, first: null, next: null, decided: false, winner: null, rounds: 5, by_kick: true };
-    const locked = state.decided || manual;
+    const [queued, setQueued] = useState<{ side: 'home' | 'away'; scored: boolean }[]>([]);
+    const display = queued.reduce<ShootoutData>((current, kick) => ({
+        ...current,
+        [kick.side]: [...current[kick.side], kick.scored],
+        goals: { ...current.goals, [kick.side]: current.goals[kick.side] + (kick.scored ? 1 : 0) },
+        next: kick.side === 'home' ? 'away' : 'home',
+    }), state);
+    const locked = display.decided || manual;
     const post = (name: string, data: Record<string, unknown> = {}) => router.post(route(name, game.id), data as never, { preserveScroll: true });
-    const kick = (side: 'home' | 'away', scored: boolean) => post('panel.games.shootout.kick', { side, scored });
-    const canKick = (side: 'home' | 'away') => !locked && (state.next === null || state.next === side);
+    const kick = (side: 'home' | 'away', scored: boolean) => { send('shootout_kick', { side, scored }, `Pênalti — ${side === 'home' ? home.name : away.name}`); setQueued((items) => [...items, { side, scored }]); };
+    const canKick = (side: 'home' | 'away') => !locked && (display.next === null || display.next === side);
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -421,11 +428,11 @@ function ShootoutCard({ game, home, away }: { game: Props['game']; home: Team; a
     return (
         <Card title="Disputa de pênaltis">
             <div className="space-y-2" data-testid="shootout-card">
-                <ShootoutRow name={home.name} kicks={state.home} opponent={state.away.length} rounds={state.rounds} turn={!locked && state.next === 'home'} />
-                <ShootoutRow name={away.name} kicks={state.away} opponent={state.home.length} rounds={state.rounds} turn={!locked && state.next === 'away'} />
+                <ShootoutRow name={home.name} kicks={display.home} opponent={display.away.length} rounds={display.rounds} turn={!locked && display.next === 'home'} />
+                <ShootoutRow name={away.name} kicks={display.away} opponent={display.home.length} rounds={display.rounds} turn={!locked && display.next === 'away'} />
                 <p className="text-sm font-medium text-gray-700" data-testid="shootout-status">
-                    {empty ? 'Lance cada cobrança na ordem em que acontece; qualquer equipe pode abrir a disputa.' : manual ? `Total lançado à mão: ${state.goals.home} x ${state.goals.away}.` : shootoutCaption(state, { home: home.name, away: away.name })}
-                    {!empty && !manual && ` (${state.goals.home} x ${state.goals.away})`}
+                    {empty ? 'Lance cada cobrança na ordem em que acontece; qualquer equipe pode abrir a disputa.' : manual ? `Total lançado à mão: ${display.goals.home} x ${display.goals.away}.` : shootoutCaption(display, { home: home.name, away: away.name })}
+                    {!empty && !manual && ` (${display.goals.home} x ${display.goals.away})`}
                 </p>
                 <div className="grid gap-2 sm:grid-cols-2">
                     {([['home', home], ['away', away]] as const).map(([side, team]) => (
@@ -436,8 +443,8 @@ function ShootoutCard({ game, home, away }: { game: Props['game']; home: Team; a
                     ))}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button small variant="secondary" disabled={empty || manual} onClick={() => post('panel.games.shootout.undo')}>↶ Desfazer a última cobrança</Button>
-                    {state.decided && !manual && <span className="text-xs text-gray-500">Decidida: já dá para encerrar o jogo.</span>}
+                    <Button small variant="secondary" disabled={empty || manual || queued.length > 0} onClick={() => send('shootout_undo', {}, 'Desfazer a última cobrança')}>↶ Desfazer a última cobrança</Button>
+                    {display.decided && !manual && <span className="text-xs text-gray-500">Decidida: já dá para encerrar o jogo.</span>}
                 </div>
             </div>
             <details className="mt-4 border-t border-gray-100 pt-3">
@@ -845,7 +852,7 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
                         <TeamCard game={game} team={away} limits={limits} period={clock.period ?? 1} send={send} />
                     </div>
 
-                    {game.open && game.knockout && score_model !== 'sets' && <ShootoutCard game={game} home={home} away={away} />}
+                    {game.open && game.knockout && score_model !== 'sets' && <ShootoutCard game={game} home={home} away={away} send={send} />}
 
                     {game.open && home.has_lineup && away.has_lineup && (
                         <Card title="Novo lançamento">
