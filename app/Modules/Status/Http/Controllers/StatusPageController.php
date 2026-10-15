@@ -9,6 +9,7 @@ use App\Modules\Status\Support\StatusBadge;
 use App\Modules\Status\Support\StatusSummary;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -32,7 +33,7 @@ class StatusPageController extends Controller
     public function confirm(string $token, SubscriberActions $subscribers): InertiaResponse
     {
         return $subscribers->confirm($token)
-            ? $this->notice('Inscrição confirmada', 'Pronto! Você vai receber um e-mail quando houver incidente ou manutenção. Dá para cancelar a qualquer momento pelo link no final de cada aviso.')
+            ? $this->notice('Inscrição confirmada', 'Pronto! Você vai receber um e-mail quando houver incidente ou manutenção. Pelos links no final de cada aviso dá para escolher quais componentes acompanhar ou cancelar.')
             : $this->notice('Link inválido ou expirado', 'Não encontramos esta inscrição. Faça o pedido de novo na status page.');
     }
 
@@ -49,6 +50,27 @@ class StatusPageController extends Controller
         $subscribers->cancel($token);
 
         return $this->notice('Avisos cancelados', 'Seu e-mail foi removido da lista. Você pode voltar a se inscrever quando quiser na status page.');
+    }
+
+    /** Escolha dos componentes que a pessoa acompanha (link no final de cada aviso; o token é o acesso). */
+    public function preferencesShow(string $token, SubscriberActions $subscribers): InertiaResponse
+    {
+        $components = $subscribers->preferences($token);
+
+        if ($components === null) {
+            return $this->notice('Inscrição não encontrada', 'Este link não vale mais ou a inscrição ainda não foi confirmada.');
+        }
+
+        return Inertia::render('Status/Preferences', ['components' => $components, 'save_url' => route('status.preferences', $token), 'status_url' => route('status.index')]);
+    }
+
+    public function preferencesUpdate(string $token, Request $request, SubscriberActions $subscribers): RedirectResponse
+    {
+        $validated = $request->validate(['components' => ['required', 'array', 'min:1'], 'components.*' => ['string', 'max:40']], ['components.required' => 'Escolha pelo menos um componente.', 'components.min' => 'Escolha pelo menos um componente.']);
+
+        abort_unless($subscribers->savePreferences($token, array_values($validated['components'])), 404);
+
+        return redirect()->route('status.preferences.show', $token)->with('success', 'Preferências salvas.');
     }
 
     /** Selo "status | operacional" em SVG, para <img> em qualquer site (cache curto, aberto a qualquer origem). */

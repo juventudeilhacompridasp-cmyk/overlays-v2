@@ -3,6 +3,7 @@
 namespace App\Modules\Status\Actions;
 
 use App\Modules\Status\Mail\SubscriptionConfirm;
+use App\Modules\Status\Models\Component;
 use App\Modules\Status\Models\Subscriber;
 use App\Modules\Status\Support\StatusLinks;
 use Illuminate\Support\Facades\Log;
@@ -67,6 +68,50 @@ class SubscriberActions
     public function cancel(string $token): bool
     {
         return Subscriber::query()->where('token', $token)->delete() > 0;
+    }
+
+    /**
+     * Componentes e a escolha atual de quem já confirmou (null se o token não vale ou ainda não foi confirmado).
+     *
+     * @return list<array{key: string, name: string, selected: bool}>|null
+     */
+    public function preferences(string $token): ?array
+    {
+        $subscriber = Subscriber::query()->where('token', $token)->first();
+
+        if ($subscriber === null || ! $subscriber->isConfirmed()) {
+            return null;
+        }
+
+        return Component::query()->where('visible', true)->orderBy('sort')->get()
+            ->map(fn (Component $component) => ['key' => $component->key, 'name' => $component->name, 'selected' => $subscriber->wantsAny([$component->key])])
+            ->values()->all();
+    }
+
+    /**
+     * Guarda os componentes escolhidos (só chaves de componentes visíveis; escolher todos volta ao padrão "todos").
+     * Devolve false se o token não vale ou não há nenhuma escolha válida.
+     *
+     * @param  list<string>  $keys
+     */
+    public function savePreferences(string $token, array $keys): bool
+    {
+        $subscriber = Subscriber::query()->where('token', $token)->first();
+
+        if ($subscriber === null || ! $subscriber->isConfirmed()) {
+            return false;
+        }
+
+        $all = Component::query()->where('visible', true)->pluck('key')->all();
+        $valid = array_values(array_intersect($all, $keys));
+
+        if ($valid === []) {
+            return false;
+        }
+
+        $subscriber->update(['components' => count($valid) === count($all) ? null : $valid]);
+
+        return true;
     }
 
     public function exists(string $token): bool
