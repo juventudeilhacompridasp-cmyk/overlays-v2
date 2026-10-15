@@ -5,13 +5,14 @@
 export const COLS = 12;
 export const ROWS = 16;
 
-export type PanelId = 'live' | 'screens' | 'championship' | 'lineup' | 'notices' | 'cartelas' | 'clock' | 'stats' | 'summary' | 'custom';
+export type PanelId = 'pgm' | 'live' | 'screens' | 'championship' | 'lineup' | 'notices' | 'cartelas' | 'clock' | 'stats' | 'summary' | 'custom';
 
 export type Item = { id: PanelId; x: number; y: number; w: number; h: number };
 export type Layout = Item[];
 
 /** Metadados dos blocos: título, tamanho mínimo e tamanho ao reaparecer. */
 export const PANELS: { id: PanelId; title: string; minW: number; minH: number; w: number; h: number }[] = [
+    { id: 'pgm', title: 'PGM (no ar)', minW: 3, minH: 3, w: 4, h: 5 },
     { id: 'live', title: 'No ar agora', minW: 2, minH: 3, w: 3, h: 5 },
     { id: 'screens', title: 'Telas extras', minW: 2, minH: 3, w: 3, h: 5 },
     { id: 'championship', title: 'Campeonato', minW: 2, minH: 2, w: 3, h: 4 },
@@ -112,7 +113,8 @@ export function resizeTo(layout: Layout, id: PanelId, w: number, h: number): Lay
 export function firstFree(layout: Layout, w: number, h: number): { x: number; y: number } | null {
     for (let y = 0; y + h <= ROWS; y++) {
         for (let x = 0; x + w <= COLS; x++) {
-            const probe = { id: 'summary' as PanelId, x, y, w, h };
+            // Id que não é de nenhum bloco: `overlaps` ignora quem tem o mesmo id.
+            const probe = { id: '' as PanelId, x, y, w, h };
 
             if (layout.every((item) => !overlaps(probe, item))) return { x, y };
         }
@@ -145,15 +147,16 @@ export const PRESETS: { key: string; label: string; layout: Layout }[] = [
         layout: [
             { id: 'live', x: 0, y: 0, w: 3, h: 5 }, { id: 'screens', x: 0, y: 5, w: 3, h: 5 }, { id: 'championship', x: 0, y: 10, w: 3, h: 6 },
             { id: 'lineup', x: 3, y: 0, w: 5, h: 5 }, { id: 'notices', x: 3, y: 5, w: 5, h: 5 }, { id: 'cartelas', x: 3, y: 10, w: 5, h: 3 }, { id: 'custom', x: 3, y: 13, w: 5, h: 3 },
-            { id: 'clock', x: 8, y: 0, w: 4, h: 4 }, { id: 'stats', x: 8, y: 4, w: 4, h: 10 }, { id: 'summary', x: 8, y: 14, w: 4, h: 2 },
+            { id: 'pgm', x: 8, y: 0, w: 4, h: 5 }, { id: 'clock', x: 8, y: 5, w: 4, h: 3 }, { id: 'stats', x: 8, y: 8, w: 4, h: 6 }, { id: 'summary', x: 8, y: 14, w: 4, h: 2 },
         ],
     },
     {
         key: 'lineup', label: 'Escalação em foco',
         layout: [
-            { id: 'lineup', x: 0, y: 0, w: 7, h: 6 }, { id: 'live', x: 7, y: 0, w: 5, h: 6 },
-            { id: 'notices', x: 0, y: 6, w: 7, h: 5 }, { id: 'screens', x: 7, y: 6, w: 5, h: 5 },
-            { id: 'cartelas', x: 0, y: 11, w: 7, h: 2 }, { id: 'summary', x: 7, y: 11, w: 5, h: 2 }, { id: 'custom', x: 0, y: 13, w: 12, h: 3 },
+            { id: 'lineup', x: 0, y: 0, w: 7, h: 6 }, { id: 'notices', x: 0, y: 6, w: 7, h: 4 },
+            { id: 'cartelas', x: 0, y: 10, w: 7, h: 2 }, { id: 'custom', x: 0, y: 12, w: 7, h: 4 },
+            { id: 'pgm', x: 7, y: 0, w: 5, h: 6 }, { id: 'live', x: 7, y: 6, w: 5, h: 4 },
+            { id: 'screens', x: 7, y: 10, w: 5, h: 4 }, { id: 'summary', x: 7, y: 14, w: 5, h: 2 },
         ],
     },
     {
@@ -161,7 +164,7 @@ export const PRESETS: { key: string; label: string; layout: Layout }[] = [
         layout: [
             { id: 'live', x: 0, y: 0, w: 4, h: 6 }, { id: 'stats', x: 4, y: 0, w: 5, h: 9 }, { id: 'clock', x: 9, y: 0, w: 3, h: 3 },
             { id: 'notices', x: 9, y: 3, w: 3, h: 6 }, { id: 'screens', x: 0, y: 6, w: 4, h: 5 }, { id: 'summary', x: 4, y: 9, w: 5, h: 2 },
-            { id: 'lineup', x: 4, y: 11, w: 5, h: 5 }, { id: 'cartelas', x: 9, y: 9, w: 3, h: 2 },
+            { id: 'lineup', x: 4, y: 11, w: 5, h: 5 }, { id: 'cartelas', x: 9, y: 9, w: 3, h: 2 }, { id: 'pgm', x: 0, y: 11, w: 4, h: 5 },
         ],
     },
 ];

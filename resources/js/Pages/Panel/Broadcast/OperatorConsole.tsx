@@ -7,6 +7,7 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import { defaultLayout, hidePanel, Layout, PANELS, PanelId, PRESETS, sanitizeLayout, showPanel } from '@/lib/operatorLayout';
 import type { Channel, GameOption, Scene } from './Index';
 import OperatorWorkspace, { Block } from './OperatorWorkspace';
+import PgmMonitor, { PgmControls, usePgmState } from './PgmMonitor';
 
 const LAYOUT_KEY = 'broadcast:operator-layout:v1';
 const NUMBERS = STATS_METRICS.filter((metric) => metric.key !== 'possession');
@@ -48,6 +49,7 @@ function Controls({ channel, games, scenes, canOperate, onExit, layout, editing,
     const [custom, setCustom] = useState(Object.fromEntries(channel.custom_overlays.map((item) => [item.id, item.live])));
     const [sponsorsOn, setSponsorsOn] = useState(channel.sponsor_settings.enabled);
     const [stats, setStats] = useState({ home: channel.stats_settings.home, away: channel.stats_settings.away });
+    const pgm = usePgmState();
     const [title, setTitle] = useState('');
     const [person, setPerson] = useState('');
     useEffect(() => setLayers(channel.layers), [channel.layers]);
@@ -113,6 +115,7 @@ function Controls({ channel, games, scenes, canOperate, onExit, layout, editing,
     const noGameHint = hasGame ? undefined : 'Escolha o jogo no ar';
 
     const blocks: Partial<Record<PanelId, Block>> = {
+        pgm: { right: <PgmControls backdrop={pgm.backdrop} onBackdrop={pgm.setBackdrop} frozen={pgm.frozen} onFrozen={pgm.setFrozen} />, body: <PgmMonitor url={channel.pgm_url} hasGame={hasGame} backdrop={pgm.backdrop} frozen={pgm.frozen} /> },
         live: { right: <span className="text-[10px] font-semibold text-gray-400">teclas 1–5</span>, body: (
                         <div className="grid grid-cols-2 gap-1.5">
                             {OPERATOR_LAYERS.map((layer, index) => (

@@ -109,6 +109,7 @@ function App() {
                 screens_live: { stats: true, sponsor_bar: true }, screen_settings: { title: 'Intervalo', subtitle: '', until_ms: null, serve: null, social: { items: [], url: null } },
                 lineup_settings: { presentation: 'full', team: 'home', individual_mode: 'manual', step: 2, anchor_ms: 0 }, lineup_people: people, lineup_steps: 14,
                 sponsor_settings: { enabled: true }, stats_settings: { home: { shots: 7, shots_on_target: 3, corners: 4, fouls: 9, offsides: 1, saves: 2 }, away: { shots: 5, shots_on_target: 2, corners: 2, fouls: 11, offsides: 3, saves: 4 } },
+                pgm_url: '/?shot=placar',
                 custom_overlays: Array.from({ length: 4 }, (_, index) => ({ id: `o${index}`, name: ['Chamada do jogo', 'Aviso de rodada', 'Redes sociais', 'Parceiros'][index], url: '', live: index === 0 })),
             };
             return (

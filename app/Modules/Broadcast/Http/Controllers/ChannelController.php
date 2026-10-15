@@ -95,6 +95,7 @@ class ChannelController extends Controller
                     'lineup_people' => $people,
                     'lineup_steps' => OverlayLineupTimeline::steps(OverlayLineupSettings::normalize($channel->lineup_settings), $plan['individuals'], $plan['formation']),
                     'championship_base' => substr(route('overlay.championship', ['channel' => $channel->token, 'view' => 'standings']), 0, -strlen('/standings')),
+                    'pgm_url' => $channel->overlayUrl('pgm'),
                     'has_control_token' => $channel->control_token_hash !== null,
                     'control_url' => route('api.v1.overlay-channels.state.update', ['channel' => $channel]),
                     'overlays' => collect(OverlayChannel::OVERLAYS)->map(fn (string $title, string $slug) => [

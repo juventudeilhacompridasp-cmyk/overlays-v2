@@ -84,3 +84,11 @@ it('keeps the stoppage out of the cartela, away from other settings, and works t
     $this->withToken($key)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", ['screen_settings' => ['title' => 'Voltamos já']])->assertOk()->assertJsonPath('data.stoppage', 3);
     $this->withToken($key)->patchJson("/api/v1/overlay-channels/{$channel->id}/state", ['stoppage_minutes' => 0])->assertOk()->assertJsonPath('data.stoppage', 0)->assertJsonPath('data.cartela.title', 'Voltamos já');
 });
+
+it('serves the PGM monitor page, outside the OBS screen list, with the url on the channel', function () {
+    $channel = extrasChannel();
+
+    $this->get("/overlay/{$channel->token}/pgm")->assertOk()->assertInertia(fn ($page) => $page->component('Overlay/Pgm')->where('token', $channel->token)->has('state.screens'));
+
+    expect(OverlayChannel::OVERLAYS)->not->toHaveKey('pgm');
+});
