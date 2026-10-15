@@ -1,6 +1,6 @@
 import { Button, Card, Field, Input, LinkButton, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
-import { Option, RulesData } from '@/types/panel';
+import { Option, RulesData, SportRules } from '@/types/panel';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
@@ -8,13 +8,14 @@ interface Props {
     competition: { id: string; name: string };
     season: { id: string; name: string; year: number; starts_on: string | null; ends_on: string | null; status: string } | null;
     rules: RulesData;
+    sport_rules: SportRules;
     options: { statuses: Option[]; tiebreakers: Option[] };
     defaults: { year: number };
 }
 
 const toNumber = (value: string) => (value === '' ? 0 : Number(value));
 
-export default function Form({ competition, season, rules, options, defaults }: Props) {
+export default function Form({ competition, season, rules, sport_rules, options, defaults }: Props) {
     const { data, setData, post, put, processing, errors } = useForm({
         name: season?.name ?? String(defaults.year),
         year: season?.year ?? defaults.year,
@@ -200,6 +201,66 @@ export default function Form({ competition, season, rules, options, defaults }: 
                         {checkbox('Quem sai pode voltar ao jogo (substituição volante, como no futsal)', 'rules.substitutions.allow_reentry', data.rules.substitutions.allow_reentry, (d, v) => (d.substitutions.allow_reentry = v))}
                     </div>
                 </Card>
+
+                {(sport_rules.period_minutes.length > 0 || sport_rules.team_foul_limit !== null || sport_rules.timeout_limits !== null) && (
+                    <Card title="Regulamento: tempo de jogo e limites do esporte">
+                        <p className="mb-3 text-xs text-gray-500">Já vêm com o padrão do esporte; ajuste só se o regulamento desta edição for diferente.</p>
+                        {sport_rules.period_minutes.length > 0 && (
+                            <div className="mb-4">
+                                <div className="mb-1 text-sm font-medium text-gray-700">Duração dos períodos (minutos)</div>
+                                {err('rules.periods.minutes') && <p className="mb-1 text-sm text-red-600">{err('rules.periods.minutes')}</p>}
+                                <div className="grid gap-3 sm:grid-cols-4">
+                                    {sport_rules.period_minutes.map((standard, index) => (
+                                        <Field key={index} label={sport_rules.period_labels[index] ?? `Período ${index + 1}`} htmlFor={`period-${index}`}>
+                                            <Input
+                                                id={`period-${index}`}
+                                                type="number"
+                                                min={1}
+                                                max={120}
+                                                value={(data.rules.periods.minutes ?? sport_rules.period_minutes)[index] ?? standard}
+                                                onChange={(event) =>
+                                                    updateRules((d) => {
+                                                        const minutes = [...(d.periods.minutes ?? sport_rules.period_minutes)];
+                                                        minutes[index] = toNumber(event.target.value);
+                                                        d.periods.minutes = minutes;
+                                                    })
+                                                }
+                                            />
+                                        </Field>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {sport_rules.team_foul_limit !== null && (
+                            <div className="mb-4 grid gap-4 sm:grid-cols-2">
+                                {numberField('Faltas de equipe que dão tiro livre (por tempo/quarto)', 'rules.fouls.team_limit', data.rules.fouls.team_limit ?? sport_rules.team_foul_limit, (d, v) => (d.fouls.team_limit = v))}
+                            </div>
+                        )}
+                        {sport_rules.timeout_limits !== null && (
+                            <div>
+                                <div className="mb-1 text-sm font-medium text-gray-700">Pedidos de tempo por equipe</div>
+                                <div className="grid gap-3 sm:grid-cols-4">
+                                    {Object.entries(sport_rules.timeout_limits).map(([group, standard]) => (
+                                        <Field key={group} label={sport_rules.timeout_labels[group] ?? `Grupo ${group}`} htmlFor={`timeout-${group}`}>
+                                            <Input
+                                                id={`timeout-${group}`}
+                                                type="number"
+                                                min={0}
+                                                max={10}
+                                                value={(data.rules.timeouts.limits ?? sport_rules.timeout_limits ?? {})[group] ?? standard}
+                                                onChange={(event) =>
+                                                    updateRules((d) => {
+                                                        d.timeouts.limits = { ...(d.timeouts.limits ?? sport_rules.timeout_limits ?? {}), [group]: toNumber(event.target.value) };
+                                                    })
+                                                }
+                                            />
+                                        </Field>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </Card>
+                )}
 
                 <Card title="Regulamento: escalação pelo gestor da equipe">
                     <div className="grid gap-4 sm:grid-cols-2">
