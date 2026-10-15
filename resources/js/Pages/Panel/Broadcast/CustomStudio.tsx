@@ -190,6 +190,7 @@ export function CustomEditorCard({ items, limit, sponsors, canManage }: { items:
                         <div className="flex flex-wrap gap-1">
                             <Button small variant="secondary" onClick={() => add('text')}>+ Texto</Button>
                             <Button small variant="secondary" onClick={() => add('image')}>+ Imagem</Button>
+                            <Button small variant="secondary" onClick={() => add('video')}>+ Vídeo</Button>
                             <Button small variant="secondary" onClick={() => add('shape')}>+ Forma</Button>
                         </div>
                     )}
@@ -315,6 +316,18 @@ function Properties({ element, sponsors, canManage, update, onDuplicate, onRemov
                     {element.src !== '' && !IMAGE_TOKENS.some((item) => item.token === element.src) && !element.src.startsWith('sponsor:') && (
                         <Input aria-label="Endereço da imagem" maxLength={500} disabled={off} value={element.src} onChange={(event) => update({ src: event.target.value })} placeholder="https://…" />
                     )}
+                    <label className="block text-xs text-gray-600">Ajuste
+                        <select disabled={off} value={element.fit} onChange={(event) => update({ fit: event.target.value as BuilderElement['fit'] })} className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1 text-sm"><option value="cover">Preencher</option><option value="contain">Conter</option></select>
+                    </label>
+                </div>
+            )}
+
+            {element.type === 'video' && (
+                <div className="space-y-2 rounded border border-gray-200 p-2">
+                    <label className="block text-xs text-gray-600">Endereço do vídeo (HTTPS)
+                        <Input aria-label="Endereço do vídeo" maxLength={500} disabled={off} value={element.src} onChange={(event) => update({ src: event.target.value })} placeholder="https://…/video.mp4" />
+                    </label>
+                    <p className="text-[11px] text-gray-500">O navegador do OBS reproduz o vídeo em loop, sem áudio. Use um endereço HTTPS direto para MP4 ou WebM.</p>
                     <label className="block text-xs text-gray-600">Ajuste
                         <select disabled={off} value={element.fit} onChange={(event) => update({ fit: event.target.value as BuilderElement['fit'] })} className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1 text-sm"><option value="cover">Preencher</option><option value="contain">Conter</option></select>
                     </label>

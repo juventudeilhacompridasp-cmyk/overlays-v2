@@ -73,6 +73,12 @@ function ElementBody({ element, ctx, fontFamily }: { element: BuilderElement; ct
         return src ? <img src={src} alt="" draggable={false} style={{ width: '100%', height: '100%', objectFit: element.fit, borderRadius: element.shape === 'circle' ? '50%' : undefined }} /> : null;
     }
 
+    if (element.type === 'video') {
+        const src = resolveImage(element.src, ctx);
+
+        return src ? <video src={src} autoPlay loop muted playsInline aria-hidden="true" style={{ width: '100%', height: '100%', objectFit: element.fit, borderRadius: element.shape === 'circle' ? '50%' : undefined }} /> : null;
+    }
+
     return null;
 }
 

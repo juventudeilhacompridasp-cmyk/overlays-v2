@@ -31,7 +31,7 @@ function customBody(string $name = 'Lower third', array $elements = [['type' => 
 describe('sanitizing', function () {
     it('keeps every value inside its limits and falls back to the defaults', function () {
         $e = OverlayCustomElements::sanitize([[
-            'id' => 'A b!c', 'type' => 'video', 'x' => 9999, 'y' => -9999, 'w' => 0, 'h' => 'x', 'rotation' => 900, 'opacity' => -5, 'size' => 1, 'weight' => 123,
+            'id' => 'A b!c', 'type' => 'unknown', 'x' => 9999, 'y' => -9999, 'w' => 0, 'h' => 'x', 'rotation' => 900, 'opacity' => -5, 'size' => 1, 'weight' => 123,
             'color' => 'vermelho', 'fill' => 'red', 'fill2' => '#ABCDEF', 'align' => 'justify', 'shadow' => 'gigante', 'animIn' => 'explodir', 'animOut' => 'voar',
             'duration' => 99999, 'delay' => -1, 'name' => "linha\ndois", 'text' => "oi\nmundo\x07",
         ]])[0];
@@ -42,6 +42,12 @@ describe('sanitizing', function () {
                 'align' => 'left', 'shadow' => 'none', 'animIn' => 'fade', 'animOut' => 'same', 'duration' => 5000, 'delay' => 0,
             ])
             ->and($e['name'])->not->toContain("\n")->and($e['text'])->toBe("oi\nmundo");
+    });
+
+    it('keeps a secure HTTPS video element for the OBS browser source', function () {
+        $element = OverlayCustomElements::sanitize([['type' => 'video', 'src' => 'https://cdn.example.com/opening.mp4']])[0];
+
+        expect($element['type'])->toBe('video')->and($element['src'])->toBe('https://cdn.example.com/opening.mp4');
     });
 
     it('caps the list at 60 elements, keeps ids unique and ignores junk entries', function () {

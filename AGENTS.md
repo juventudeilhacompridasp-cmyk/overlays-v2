@@ -105,6 +105,11 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 - A escalação pré-partida e os relatórios da partida são downloads privados em PDF; o organizador pode escolher escalação, atividades (resumo, períodos e linha do tempo) ou completo (inclui escalações, placar, sets e situação).
 - Eventos devem ser consultados com `GameEvent::effective()` e os PDFs nunca podem ser publicados em snapshots, overlays ou páginas públicas.
 - O gerador usa apenas recursos nativos para permanecer leve em instalações OBS e não introduzir dependências de renderização.
+
+## Builder de overlays livres
+
+- O Builder aceita vídeo somente por URL HTTPS direta, reproduzido em loop, sem áudio e sem autoplay dependente de interação; a origem passa pelo mesmo saneamento das imagens.
+- Elementos de vídeo não devem carregar dados pessoais nem URLs HTTP, `data:` ou `javascript:`; upload de imagens próprias exige armazenamento público versionado e validação antes de ser implementado.
 - Filtros do painel (`DashboardController`): `?competition=`, `?season=` e `?months=` (3, 6 ou 12) valem para os jogos (gráfico, situação, próximos); chave inexistente vira "sem filtro", edição de outra competição corrige a competição, e os totais de competições/equipes/pessoas são sempre da organização. `panel.dashboard.export` (`/painel/resumo.csv`, qualquer membro) exporta os mesmos números em CSV (`;`, BOM, `SeasonReports::safeCell`). Número ou filtro novo = aggregate + teste em `DashboardTest`.
 
 ## Visualizador unificado dos overlays
