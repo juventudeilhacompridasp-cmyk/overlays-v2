@@ -6,6 +6,7 @@ use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -14,11 +15,11 @@ final class UndoShootoutKick
 {
     public function __construct(private readonly ProjectGameScore $projectScore = new ProjectGameScore) {}
 
-    public function handle(Game $game, ?int $recordedBy = null): Game
+    public function handle(Game $game, ?int $recordedBy = null, ?Carbon $at = null): Game
     {
         RecordShootoutKick::ensureOpen($game);
 
-        $game = DB::transaction(function () use ($game, $recordedBy): Game {
+        $game = DB::transaction(function () use ($game, $recordedBy, $at): Game {
             $last = $game->events()->effective()->where('type', GameEventType::PenaltyKick)->orderByDesc('id')->first();
 
             if ($last === null) {
@@ -38,6 +39,7 @@ final class UndoShootoutKick
                 'payload' => $last->payload,
                 'compensates_event_id' => $last->getKey(),
                 'recorded_by' => $recordedBy,
+                'created_at' => $at ?? now(),
             ]);
 
             return $this->projectScore->handle($game);

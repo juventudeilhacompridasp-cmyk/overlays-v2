@@ -21,11 +21,13 @@ use InvalidArgumentException;
  */
 final class SyncSheetCommands
 {
-    public const KINDS = ['event', 'point', 'quick_result', 'period', 'clock', 'shot_clock', 'void', 'finish'];
+    public const KINDS = ['event', 'point', 'quick_result', 'shootout_kick', 'shootout_undo', 'period', 'clock', 'shot_clock', 'void', 'finish'];
 
     public function __construct(
         private readonly RecordGameEvent $record = new RecordGameEvent,
         private readonly RecordQuickResult $quickResult = new RecordQuickResult,
+        private readonly RecordShootoutKick $shootoutKick = new RecordShootoutKick,
+        private readonly UndoShootoutKick $undoShootoutKick = new UndoShootoutKick,
         private readonly ChangeGamePeriod $period = new ChangeGamePeriod,
         private readonly ResetShotClock $shotClock = new ResetShotClock,
         private readonly VoidGameEvent $void = new VoidGameEvent,
@@ -102,6 +104,8 @@ final class SyncSheetCommands
             'event' => $this->event($game, $payload, $userId, $at),
             'point' => $this->point($game, $payload, $userId, $at),
             'quick_result' => $this->quickResult->handle($game, (int) ($payload['home_score'] ?? -1), (int) ($payload['away_score'] ?? -1), $userId, null, null, $at),
+            'shootout_kick' => $this->shootoutKick->handle($game, (string) ($payload['side'] ?? ''), (bool) ($payload['scored'] ?? false), $userId, $at),
+            'shootout_undo' => $this->undoShootoutKick->handle($game, $userId, $at),
             'period' => $this->period->handle($game, (bool) ($payload['start'] ?? false), (int) ($payload['period'] ?? 0), $userId, $at),
             'clock' => $this->period->pause($game, (bool) ($payload['pause'] ?? false), $userId, $at),
             'shot_clock' => $this->shotClock->handle($game, (int) ($payload['seconds'] ?? 0), $userId, $at),

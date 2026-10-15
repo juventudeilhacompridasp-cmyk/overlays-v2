@@ -8,6 +8,7 @@ use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Rules\Shootout\ShootoutState;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -20,7 +21,7 @@ final class RecordShootoutKick
 {
     public function __construct(private readonly ProjectGameScore $projectScore = new ProjectGameScore) {}
 
-    public function handle(Game $game, string $side, bool $scored, ?int $recordedBy = null): Game
+    public function handle(Game $game, string $side, bool $scored, ?int $recordedBy = null, ?Carbon $at = null): Game
     {
         if (! in_array($side, ['home', 'away'], true)) {
             throw new InvalidArgumentException('Escolha a equipe que cobrou.');
@@ -30,7 +31,7 @@ final class RecordShootoutKick
 
         $entryId = $side === 'home' ? $game->home_entry_id : $game->away_entry_id;
 
-        $game = DB::transaction(function () use ($game, $side, $scored, $entryId, $recordedBy): Game {
+        $game = DB::transaction(function () use ($game, $side, $scored, $entryId, $recordedBy, $at): Game {
             $events = $game->events()->effective()->where('type', GameEventType::PenaltyKick)->orderBy('id')->get();
 
             if ($events->contains(fn (GameEvent $event) => ! isset($event->payload['kick']))) {
@@ -60,6 +61,7 @@ final class RecordShootoutKick
                 'entry_id' => $entryId,
                 'payload' => ['shootout' => true, 'scored' => $scored, 'kick' => count($kicks) + 1],
                 'recorded_by' => $recordedBy,
+                'created_at' => $at ?? now(),
             ]);
 
             return $this->projectScore->handle($game);

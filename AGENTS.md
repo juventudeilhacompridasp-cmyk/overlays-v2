@@ -107,4 +107,4 @@ Testes Pest para toda regra de negócio (as regras de campeonato têm testes bas
 
 ## Fila offline da súmula
 
-- Resultado rápido pode ser enfileirado pelo app do mesário como `quick_result`; o servidor reaplica `RecordQuickResult` com a validação normal e preserva o horário do aparelho. A projeção do navegador só mostra placar e encerramento até a confirmação do servidor.
+- Resultado rápido e cobranças individuais de pênaltis podem ser enfileirados pelo app do mesário como `quick_result`, `shootout_kick` e `shootout_undo`; o servidor reaplica as ações normais e preserva o horário do aparelho. A projeção do navegador só mostra o placar/estado otimista até a confirmação do servidor.
