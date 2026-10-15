@@ -3,6 +3,7 @@
 use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Portal\Support\PublicTheme;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
 use App\Modules\Tenancy\Enums\Role;
@@ -10,6 +11,7 @@ use App\Modules\Tenancy\Models\Organization;
 use App\Modules\Tenancy\Support\MesarioSettings;
 use App\Modules\Tenancy\Support\OperationSettings;
 use App\Modules\Tenancy\Support\PortalQuantities;
+use App\Support\Images\ImageVariants;
 
 beforeEach(function () {
     CurrentOrganization::set(Organization::factory()->create(['slug' => config('platform.default_organization_slug')]));
@@ -17,7 +19,7 @@ beforeEach(function () {
 
 function parametersPayload(array $override = []): array
 {
-    return $override + ['disabled' => [], 'mesario' => ['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40], 'portal' => ['home' => 8, 'widgets' => 6, 'scorers' => 10], 'public_api' => true, 'quick_result' => true];
+    return $override + ['disabled' => [], 'mesario' => ['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40], 'portal' => ['home' => 8, 'widgets' => 6, 'scorers' => 10, 'stats_top' => 5, 'stats_form' => 5], 'public_api' => true, 'quick_result' => true];
 }
 
 describe('features the organization turns off by itself', function () {
@@ -112,21 +114,21 @@ it('is for administrators only', function () {
 
 describe('portal quantities and public API', function () {
     it('keeps the original numbers by default and clamps saved ones', function () {
-        expect(PortalQuantities::all())->toBe(['home' => 8, 'widgets' => 6, 'scorers' => 10]);
+        expect(PortalQuantities::all())->toBe(['home' => 8, 'widgets' => 6, 'scorers' => 10, 'stats_top' => 5, 'stats_form' => 5]);
 
         $organization = CurrentOrganization::get();
-        $organization->update(['settings' => ['portal_quantities' => ['home' => 100, 'widgets' => 1, 'scorers' => 12]]]);
+        $organization->update(['settings' => ['portal_quantities' => ['home' => 100, 'widgets' => 1, 'scorers' => 12, 'stats_top' => 50, 'stats_form' => 1]]]);
 
-        expect(PortalQuantities::all($organization->fresh()))->toBe(['home' => 24, 'widgets' => 3, 'scorers' => 12]);
+        expect(PortalQuantities::all($organization->fresh()))->toBe(['home' => 24, 'widgets' => 3, 'scorers' => 12, 'stats_top' => 10, 'stats_form' => 3]);
     });
 
     it('saves them with validation', function () {
-        $this->actingAs(panelUser(Role::Admin))->patch(route('panel.parameters.update'), parametersPayload(['portal' => ['home' => 12, 'widgets' => 10, 'scorers' => 20]]))->assertSessionHas('success');
+        $this->actingAs(panelUser(Role::Admin))->patch(route('panel.parameters.update'), parametersPayload(['portal' => ['home' => 12, 'widgets' => 10, 'scorers' => 20, 'stats_top' => 7, 'stats_form' => 4]]))->assertSessionHas('success');
 
-        expect(PortalQuantities::all(CurrentOrganization::get()->fresh()))->toBe(['home' => 12, 'widgets' => 10, 'scorers' => 20]);
+        expect(PortalQuantities::all(CurrentOrganization::get()->fresh()))->toBe(['home' => 12, 'widgets' => 10, 'scorers' => 20, 'stats_top' => 7, 'stats_form' => 4]);
 
-        $this->patch(route('panel.parameters.update'), parametersPayload(['portal' => ['home' => 2, 'widgets' => 10, 'scorers' => 20]]))->assertSessionHasErrors('portal.home');
-        $this->patch(route('panel.parameters.update'), parametersPayload(['portal' => ['home' => 8, 'widgets' => 10, 'scorers' => 99]]))->assertSessionHasErrors('portal.scorers');
+        $this->patch(route('panel.parameters.update'), parametersPayload(['portal' => ['home' => 2, 'widgets' => 10, 'scorers' => 20, 'stats_top' => 5, 'stats_form' => 5]]))->assertSessionHasErrors('portal.home');
+        $this->patch(route('panel.parameters.update'), parametersPayload(['portal' => ['home' => 8, 'widgets' => 10, 'scorers' => 99, 'stats_top' => 5, 'stats_form' => 5]]))->assertSessionHasErrors('portal.scorers');
     });
 
     it('turns the public API off for the organization only', function () {
@@ -160,5 +162,33 @@ describe('quick result', function () {
         $this->patch(route('panel.parameters.update'), parametersPayload(['quick_result' => true]));
         $this->get('/painel/mesario')->assertInertia(fn ($page) => $page->where('games.0.quick_result', true));
         $this->post(route('panel.games.result', $games->first()), ['home_score' => 1, 'away_score' => 0])->assertSessionHas('success');
+    });
+});
+
+describe('platform defaults', function () {
+    it('uses the original portal color unless the installation sets a valid one', function () {
+        expect(PublicTheme::current()['primary'])->toBe('#059669');
+
+        config(['platform.default_color' => '#112233']);
+        expect(PublicTheme::current()['primary'])->toBe('#112233');
+
+        config(['platform.default_color' => 'azul']);
+        expect(PublicTheme::current()['primary'])->toBe('#059669');
+
+        CurrentOrganization::get()->update(['settings' => ['theme' => ['primary' => '#abcdef']]]);
+        config(['platform.default_color' => '#112233']);
+        expect(PublicTheme::current()['primary'])->toBe('#abcdef');
+    });
+
+    it('lets the installation lower the image pixel limit', function () {
+        $image = imagecreatetruecolor(100, 100);
+        ob_start();
+        imagepng($image);
+        $png = (string) ob_get_clean();
+
+        expect(ImageVariants::make($png, ['full' => ['size' => 50, 'fit' => 'contain']]))->toHaveKey('full');
+
+        config(['platform.images.max_pixels' => 5000]);
+        expect(fn () => ImageVariants::make($png, ['full' => ['size' => 50, 'fit' => 'contain']]))->toThrow(InvalidArgumentException::class);
     });
 });

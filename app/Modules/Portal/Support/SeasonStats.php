@@ -6,6 +6,7 @@ use App\Modules\Competitions\Models\Division;
 use App\Modules\Competitions\Models\Season;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Tenancy\Support\PortalQuantities;
 use Illuminate\Support\Collection;
 
 /**
@@ -15,10 +16,6 @@ use Illuminate\Support\Collection;
  */
 final class SeasonStats
 {
-    private const TOP = 5;
-
-    private const FORM = 5;
-
     /** @return array{unit: string, unit_singular: string, divisions: list<array<string, mixed>>} */
     public function handle(Season $season): array
     {
@@ -69,7 +66,7 @@ final class SeasonStats
             'avg_for' => round($row['for'] / $row['played'], 2),
             'avg_against' => round($row['against'] / $row['played'], 2),
             'win_rate' => round($row['wins'] / $row['played'] * 100, 1),
-            'form' => array_slice($row['form'], -self::FORM),
+            'form' => array_slice($row['form'], -PortalQuantities::all()['stats_form']),
         ])->values();
 
         $total = $games->sum(fn (Game $game) => $game->home_score + $game->away_score);
@@ -91,9 +88,9 @@ final class SeasonStats
             'teams' => $rows->sortByDesc(fn (array $row) => [$row['wins'], $row['for'] - $row['against']])->values()->all(),
             'biggest_wins' => $games->filter(fn (Game $game) => $game->home_score !== $game->away_score)
                 ->sortByDesc(fn (Game $game) => [abs($game->home_score - $game->away_score), $game->home_score + $game->away_score])
-                ->take(self::TOP)->map(fn (Game $game) => GamePresenter::game($game))->values()->all(),
+                ->take(PortalQuantities::all()['stats_top'])->map(fn (Game $game) => GamePresenter::game($game))->values()->all(),
             'highest_scoring' => $games->sortByDesc(fn (Game $game) => $game->home_score + $game->away_score)
-                ->take(self::TOP)->map(fn (Game $game) => GamePresenter::game($game))->values()->all(),
+                ->take(PortalQuantities::all()['stats_top'])->map(fn (Game $game) => GamePresenter::game($game))->values()->all(),
         ];
     }
 }

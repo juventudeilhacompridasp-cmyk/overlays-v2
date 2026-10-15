@@ -24,6 +24,8 @@ Define quantos itens aparecem nas listas públicas:
 - **Itens por bloco da página inicial** (4 a 24): jogos ao vivo, próximos e recentes. Padrão 8.
 - **Jogos por lista dos widgets** (3 a 20): próximos e recentes do widget de jogos. Padrão 6.
 - **Artilheiros por divisão** (3 a 30): tabela de artilharia da edição. Padrão 10.
+- **Maiores resultados** (3 a 10): maiores vitórias e jogos com mais placar nas estatísticas. Padrão 5.
+- **Jogos da forma recente** (3 a 10): últimos resultados de cada equipe nas estatísticas. Padrão 5.
 
 ## API pública
 Por padrão a API de consulta (`/api/v1`: competições, edições, estatísticas e jogos publicados) está ligada. Desmarque para que ela responda "não encontrado" neste endereço. O portal, os widgets e o controle privado dos overlays (chave própria do canal) continuam funcionando.
