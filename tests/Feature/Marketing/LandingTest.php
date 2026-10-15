@@ -117,6 +117,20 @@ describe('gallery', function () {
     });
 });
 
+describe('demo video', function () {
+    it('points to an existing light WebM with a poster from the gallery', function () {
+        $video = LandingContent::video();
+        $bytes = (string) file_get_contents(public_path(ltrim($video['src'], '/')));
+
+        expect(substr($bytes, 0, 4))->toBe("\x1A\x45\xDF\xA3")
+            ->and(strlen($bytes))->toBeLessThan(2 * 1024 * 1024)
+            ->and(array_column(LandingContent::gallery(), 'src'))->toContain($video['poster'])
+            ->and($video['text'])->toContain('fictícios');
+
+        $this->get('/produto')->assertOk()->assertInertia(fn ($page) => $page->where('content.video.src', $video['src']));
+    });
+});
+
 describe('contact form', function () {
     it('stores the lead with consent, normalizes the e-mail and warns the team', function () {
         Mail::fake();

@@ -7,6 +7,7 @@ import Scoreboard from '@/Pages/Overlay/Scoreboard';
 import Shootout from '@/Pages/Overlay/Shootout';
 import Standings from '@/Pages/Overlay/Standings';
 import { createRoot } from 'react-dom/client';
+import { useEffect, useState } from 'react';
 import { AWAY, appearance, avatar, banner, crest, game, HOME, lineupSide, standings, state } from './fixtures';
 
 (window as unknown as { route: (name: string) => string }).route = (name: string) => `/${name}`;
@@ -23,6 +24,31 @@ function Pitch({ children }: { children: React.ReactNode }) {
             <div style={{ position: 'absolute', left: '50%', top: '38%', width: 360, height: 360, marginLeft: -180, marginTop: -180, borderRadius: '50%', border: '3px solid rgba(255,255,255,.18)' }} />
             {children}
         </div>
+    );
+}
+
+/** Cursor fictício para o vídeo (a gravação do navegador não captura o ponteiro): um ponto que segue o mouse e pulsa no clique. */
+function FakeCursor() {
+    const [position, setPosition] = useState({ x: -50, y: -50 });
+    const [down, setDown] = useState(false);
+
+    useEffect(() => {
+        const move = (event: MouseEvent) => setPosition({ x: event.clientX, y: event.clientY });
+        const press = () => {
+            setDown(true);
+            window.setTimeout(() => setDown(false), 260);
+        };
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mousedown', press);
+
+        return () => {
+            window.removeEventListener('mousemove', move);
+            window.removeEventListener('mousedown', press);
+        };
+    }, []);
+
+    return (
+        <div aria-hidden="true" style={{ position: 'fixed', left: position.x, top: position.y, zIndex: 99999, pointerEvents: 'none', width: 22, height: 22, marginLeft: -11, marginTop: -11, borderRadius: '50%', background: down ? 'rgba(13,148,136,.55)' : 'rgba(15,23,42,.35)', border: '2px solid #0f172a', boxShadow: '0 0 0 2px rgba(255,255,255,.9)', transform: down ? 'scale(1.6)' : 'scale(1)', transition: 'transform .18s ease, background .18s ease' }} />
     );
 }
 
@@ -87,6 +113,7 @@ function App() {
             };
             return (
                 <div data-shot-ready="true">
+                    {new URLSearchParams(location.search).get('cursor') === '1' && <FakeCursor />}
                     <OperatorConsole channels={[channel as never]} games={[{ id: 'g1', label: 'Leões da Ilha x Tigres FC · Copa Ilha' }] as never} scenes={[{ id: 's1', name: 'Pré-jogo' }, { id: 's2', name: 'Jogo' }, { id: 's3', name: 'Intervalo' }, { id: 's4', name: 'Pós-jogo' }] as never} canOperate operatorLayouts={{}} onExit={() => undefined} />
                 </div>
             );
