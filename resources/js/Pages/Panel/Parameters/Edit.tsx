@@ -6,10 +6,12 @@ import { FormEvent } from 'react';
 type Props = {
     features: { key: string; label: string; off: boolean }[];
     mesario: { days_ahead: number; finished_hours: number; limit: number };
+    portal: { home: number; widgets: number; scorers: number };
+    public_api: boolean;
 };
 
-export default function Edit({ features, mesario }: Props) {
-    const { data, setData, patch, processing, errors } = useForm({ disabled: features.filter((feature) => feature.off).map((feature) => feature.key), mesario });
+export default function Edit({ features, mesario, portal, public_api }: Props) {
+    const { data, setData, patch, processing, errors } = useForm({ disabled: features.filter((feature) => feature.off).map((feature) => feature.key), mesario, portal, public_api });
 
     const toggle = (key: string, on: boolean) => setData('disabled', on ? data.disabled.filter((item) => item !== key) : [...data.disabled, key]);
     const submit = (event: FormEvent) => {
@@ -19,6 +21,12 @@ export default function Edit({ features, mesario }: Props) {
     const number = (key: keyof Props['mesario'], label: string, min: number, max: number, hint: string) => (
         <Field label={label} htmlFor={`mesario-${key}`} hint={hint} error={errors[`mesario.${key}` as keyof typeof errors]}>
             <Input id={`mesario-${key}`} type="number" min={min} max={max} value={data.mesario[key]} onChange={(event) => setData('mesario', { ...data.mesario, [key]: Number(event.target.value) })} />
+        </Field>
+    );
+
+    const quantity = (key: keyof Props['portal'], label: string, min: number, max: number, hint: string) => (
+        <Field label={label} htmlFor={`portal-${key}`} hint={hint} error={errors[`portal.${key}` as keyof typeof errors]}>
+            <Input id={`portal-${key}`} type="number" min={min} max={max} value={data.portal[key]} onChange={(event) => setData('portal', { ...data.portal, [key]: Number(event.target.value) })} />
         </Field>
     );
 
@@ -50,6 +58,24 @@ export default function Edit({ features, mesario }: Props) {
                         {number('finished_hours', 'Horas de encerrados', 1, 48, 'Quanto tempo um jogo encerrado continua na tela.')}
                         {number('limit', 'Limite de jogos', 10, 100, 'Máximo de cartões na tela.')}
                     </div>
+                </Card>
+
+                <Card title="Portal público e widgets" className="max-w-3xl">
+                    <p className="mb-3 text-sm text-gray-600">Quantos itens aparecem nas listas públicas.</p>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                        {quantity('home', 'Itens por bloco da página inicial', 4, 24, 'Ao vivo, próximos e recentes.')}
+                        {quantity('widgets', 'Jogos por lista dos widgets', 3, 20, 'Próximos e recentes do widget de jogos.')}
+                        {quantity('scorers', 'Artilheiros por divisão', 3, 30, 'Tabela de artilharia da edição.')}
+                    </div>
+                </Card>
+
+                <Card title="API pública" className="max-w-3xl">
+                    <label className="flex items-start gap-2 text-sm text-gray-700">
+                        <input type="checkbox" className="mt-0.5 rounded border-gray-300 text-emerald-600" checked={data.public_api} onChange={(event) => setData('public_api', event.target.checked)} />
+                        <span>
+                            Manter a API pública de consulta (<code>/api/v1</code>) ligada. Desligada, ela responde 404 neste endereço; o controle privado dos overlays (chave própria) não é afetado.
+                        </span>
+                    </label>
                 </Card>
 
                 <Button type="submit" disabled={processing}>

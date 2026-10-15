@@ -29,7 +29,7 @@ Entregue: interruptores dos e-mails da inscrição (4), convite/lembrete/mudanç
 | Textos dos e-mails fixos em português | `RegistrationMail`, `ManagerNotice`, `TeamManagerInvitation` | Organização: trechos editáveis (assunto/introdução/rodapé) com variáveis simples; nunca HTML livre. |
 
 ## 2. Ativar/desativar funcionalidades (prioridade alta) — **entregue em parte: Painel > Parâmetros**
-Entregue: a organização desliga recursos do próprio pacote (`settings.features_disabled`, só reduz; fora overlays/domínio/white-label) e as janelas do mesário (dias à frente, horas de encerrados, limite). Falta: seções do portal, interruptor da API pública, resultado rápido por edição, fila offline.
+Entregue: a organização desliga recursos do próprio pacote (`settings.features_disabled`, só reduz; fora overlays/domínio/white-label) e as janelas do mesário (dias à frente, horas de encerrados, limite). Entregue também: interruptor da API pública (`settings.public_api`). Falta: seções do portal, resultado rápido por edição, fila offline.
 - Recursos por pacote já existem (`Feature`), mas **só a plataforma liga/desliga**. Falta, dentro de um recurso liberado,
   a organização escolher usar ou não: ex.: carteirinha, push, widgets, portal do gestor. Proposta: `settings.features_enabled`
   (lista) que só pode **reduzir** o que o pacote permite; `CurrentOrganization::has()` considera os dois.
@@ -42,7 +42,7 @@ Entregue: a organização desliga recursos do próprio pacote (`settings.feature
 - Fila offline da súmula: sempre ligada. Proposta: interruptor por organização (para suporte).
 
 ## 3. Janelas, limites e números fixos (prioridade média)
-Entregue: janelas do mesário (Painel > Parâmetros). Falta o restante da tabela.
+Entregue: janelas do mesário e quantidades do portal/widgets/artilharia (Painel > Parâmetros, `PortalQuantities`) e retenção do push (`PUSH_RETENTION_DAYS`). Falta: top 5 das estatísticas, tamanho de imagens e cor padrão do portal.
 | Hoje | Onde | Proposta |
 |---|---|---|
 | Mesário: jogos de hoje + próximos 2 dias + encerrados nas últimas 6 h; limite de 40 cartões | `MesarioController` (`addDays(2)`, `subHours(6)`, `subHours(3)`, `LIMIT`) | Organização: dias à frente, horas de encerrados e limite. |
@@ -63,7 +63,7 @@ Proposta: mover o que o regulamento real costuma variar (duração, pedidos de t
 `seasons.rules` com o perfil como padrão — usando o mecanismo que já existe (`RuleSet::fromArray($rules, $sportDefaults)`).
 
 ## 5. Ordem sugerida de entrega
-_Item 5 (limites de segurança) entregue: requisições por minuto por grupo e validade dos links assinados em `config/platform.php` (`App\Support\PlatformLimits`); fica a retenção do push e o tamanho de imagens._
+_Item 5 (limites de segurança) entregue: requisições por minuto por grupo e validade dos links assinados em `config/platform.php` (`App\Support\PlatformLimits`); retenção do push entregue (`PUSH_RETENTION_DAYS`); fica o tamanho de imagens._
 
 1. Tela única **Painel > Comunicações** (organização): interruptores dos e-mails da inscrição, avisos do gestor, convite
    e eventos de push + limiares do lembrete de escalação. É o que mais gera suporte e o menor risco.

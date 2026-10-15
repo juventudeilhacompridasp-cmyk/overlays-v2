@@ -13,6 +13,7 @@ use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Scheduling\KnockoutBracket;
 use App\Modules\Teams\Models\Person;
+use App\Modules\Tenancy\Support\PortalQuantities;
 
 /**
  * Edição inteira no formato público: divisões, fases (classificação, rodadas, mata-mata) e artilharia.
@@ -20,8 +21,6 @@ use App\Modules\Teams\Models\Person;
  */
 final class SeasonPresenter
 {
-    private const SCORERS = 10;
-
     public function __construct(private readonly CalculateStandings $standings = new CalculateStandings) {}
 
     /** @return array<string, mixed> */
@@ -133,7 +132,7 @@ final class SeasonPresenter
 
         $top = $events->groupBy(fn (GameEvent $event) => $event->person_id.'|'.$event->entry_id)
             ->map(fn ($group) => ['person_id' => $group->first()->person_id, 'entry_id' => $group->first()->entry_id, 'goals' => $group->count()])
-            ->sortByDesc('goals')->take(self::SCORERS)->values();
+            ->sortByDesc('goals')->take(PortalQuantities::all()['scorers'])->values();
 
         $people = Person::query()->whereIn('id', $top->pluck('person_id'))->get()->keyBy('id');
         $teams = $games->flatMap(fn (Game $game) => [$game->homeEntry, $game->awayEntry])->filter()->unique('id')->mapWithKeys(fn ($entry) => [$entry->getKey() => $entry->team->name]);

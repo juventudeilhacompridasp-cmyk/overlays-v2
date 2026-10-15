@@ -50,6 +50,8 @@ return [
         'public' => (int) env('PLATFORM_LIMIT_PUBLIC', 60),
         'registration' => (int) env('PLATFORM_LIMIT_REGISTRATION', 10),
     ],
+    // Dias que o pedido de aviso (push) de um jogo encerrado é guardado antes de `push:prune` apagá-lo (mínimo 1).
+    'push_retention_days' => max(1, (int) env('PUSH_RETENTION_DAYS', 1)),
     'signed_url_minutes' => [
         'documents' => (int) env('SIGNED_URL_DOCUMENTS_MINUTES', 10),
         'photos' => (int) env('SIGNED_URL_PHOTOS_MINUTES', 30),
