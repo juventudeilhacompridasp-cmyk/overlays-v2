@@ -21,10 +21,11 @@ use InvalidArgumentException;
  */
 final class SyncSheetCommands
 {
-    public const KINDS = ['event', 'point', 'period', 'clock', 'shot_clock', 'void', 'finish'];
+    public const KINDS = ['event', 'point', 'quick_result', 'period', 'clock', 'shot_clock', 'void', 'finish'];
 
     public function __construct(
         private readonly RecordGameEvent $record = new RecordGameEvent,
+        private readonly RecordQuickResult $quickResult = new RecordQuickResult,
         private readonly ChangeGamePeriod $period = new ChangeGamePeriod,
         private readonly ResetShotClock $shotClock = new ResetShotClock,
         private readonly VoidGameEvent $void = new VoidGameEvent,
@@ -100,6 +101,7 @@ final class SyncSheetCommands
         match ($kind) {
             'event' => $this->event($game, $payload, $userId, $at),
             'point' => $this->point($game, $payload, $userId, $at),
+            'quick_result' => $this->quickResult->handle($game, (int) ($payload['home_score'] ?? -1), (int) ($payload['away_score'] ?? -1), $userId, null, null, $at),
             'period' => $this->period->handle($game, (bool) ($payload['start'] ?? false), (int) ($payload['period'] ?? 0), $userId, $at),
             'clock' => $this->period->pause($game, (bool) ($payload['pause'] ?? false), $userId, $at),
             'shot_clock' => $this->shotClock->handle($game, (int) ($payload['seconds'] ?? 0), $userId, $at),

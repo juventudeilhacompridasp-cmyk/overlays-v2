@@ -5,6 +5,7 @@ namespace App\Modules\Matches\Actions;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -20,7 +21,7 @@ final class RecordQuickResult
         private readonly RecordShootout $shootout = new RecordShootout,
     ) {}
 
-    public function handle(Game $game, int $homeGoals, int $awayGoals, ?int $recordedBy = null, ?int $homePenalties = null, ?int $awayPenalties = null): Game
+    public function handle(Game $game, int $homeGoals, int $awayGoals, ?int $recordedBy = null, ?int $homePenalties = null, ?int $awayPenalties = null, ?Carbon $at = null): Game
     {
         if ($game->home_entry_id === null || $game->away_entry_id === null) {
             throw new InvalidArgumentException('O jogo ainda não tem os dois confrontantes definidos.');
@@ -44,7 +45,7 @@ final class RecordQuickResult
             throw new InvalidArgumentException('O basquete não termina empatado: lance o placar depois da prorrogação.');
         }
 
-        return DB::transaction(function () use ($game, $homeGoals, $awayGoals, $recordedBy, $homePenalties, $awayPenalties, $points): Game {
+        return DB::transaction(function () use ($game, $homeGoals, $awayGoals, $recordedBy, $homePenalties, $awayPenalties, $points, $at): Game {
             $goalTypes = $points ? GameEventType::scoring() : [GameEventType::Goal, GameEventType::OwnGoal];
 
             $effective = $game->events()->effective()->whereIn('type', $goalTypes)->get();
@@ -54,21 +55,21 @@ final class RecordQuickResult
             }
 
             foreach ($effective as $previous) {
-                $this->event($game, $previous->type, $previous->entry_id, $recordedBy, ['quick' => true], $previous->getKey());
+                $this->event($game, $previous->type, $previous->entry_id, $recordedBy, ['quick' => true], $previous->getKey(), $at);
             }
 
             foreach ([[$game->home_entry_id, $homeGoals], [$game->away_entry_id, $awayGoals]] as [$entryId, $goals]) {
                 if ($points) {
                     // Um único lançamento anônimo carrega o total da equipe.
                     if ($goals > 0) {
-                        $this->event($game, GameEventType::FieldGoal, $entryId, $recordedBy, ['quick' => true, 'points' => $goals]);
+                        $this->event($game, GameEventType::FieldGoal, $entryId, $recordedBy, ['quick' => true, 'points' => $goals], null, $at);
                     }
 
                     continue;
                 }
 
                 for ($i = 0; $i < $goals; $i++) {
-                    $this->event($game, GameEventType::Goal, $entryId, $recordedBy, ['quick' => true]);
+                    $this->event($game, GameEventType::Goal, $entryId, $recordedBy, ['quick' => true], null, $at);
                 }
             }
 
@@ -77,14 +78,14 @@ final class RecordQuickResult
                 $this->shootout->handle($game, $homePenalties, $awayPenalties, $recordedBy);
             }
 
-            return $this->finish->handle($game);
+            return $this->finish->handle($game, $at);
         });
     }
 
     /**
      * @param  array<string, mixed>  $payload
      */
-    private function event(Game $game, GameEventType $type, ?string $entryId, ?int $recordedBy, array $payload, ?string $compensates = null): void
+    private function event(Game $game, GameEventType $type, ?string $entryId, ?int $recordedBy, array $payload, ?string $compensates = null, ?Carbon $at = null): void
     {
         GameEvent::query()->create([
             'organization_id' => $game->organization_id,
@@ -95,6 +96,7 @@ final class RecordQuickResult
             'payload' => $payload,
             'compensates_event_id' => $compensates,
             'recorded_by' => $recordedBy,
+            'created_at' => $at ?? now(),
         ]);
     }
 }

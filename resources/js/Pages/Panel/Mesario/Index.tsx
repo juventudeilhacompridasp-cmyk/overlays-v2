@@ -2,7 +2,8 @@ import { Badge, Button, Empty, Input, LinkButton, PageHeader } from '@/Component
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
 import { useInstallPrompt } from '@/lib/pwa';
-import { Head, router } from '@inertiajs/react';
+import { useSheetQueue } from '@/lib/sheetQueue';
+import { Head } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 
 interface MesarioGame {
@@ -23,14 +24,17 @@ interface MesarioGame {
     knockout: boolean;
 }
 
-function QuickResult({ game }: { game: MesarioGame }) {
+function QuickResult({ game, userId }: { game: MesarioGame; userId: number | string }) {
     const [home, setHome] = useState(game.home_score.toString());
     const [away, setAway] = useState(game.away_score.toString());
+    const [queued, setQueued] = useState(false);
+    const { enqueue } = useSheetQueue({ gameId: game.id, userId, skewMs: 0, enabled: true });
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
         if (window.confirm(`Encerrar ${game.home} ${home} x ${away} ${game.away}?`)) {
-            router.post(route('panel.games.result', game.id), { home_score: home, away_score: away }, { preserveScroll: true });
+            enqueue('quick_result', { home_score: Number(home), away_score: Number(away) }, `Resultado rápido — ${game.home} x ${game.away}`);
+            setQueued(true);
         }
     };
 
@@ -40,13 +44,13 @@ function QuickResult({ game }: { game: MesarioGame }) {
             <span className="text-gray-400">x</span>
             <Input type="number" inputMode="numeric" min={0} max={999} value={away} onChange={(e) => setAway(e.target.value)} className="w-20 text-center text-lg" aria-label={`Placar de ${game.away}`} />
             <Button type="submit" variant="secondary">
-                Encerrar
+                {queued ? 'Resultado salvo na fila' : 'Encerrar'}
             </Button>
         </form>
     );
 }
 
-export default function Index({ games }: { games: MesarioGame[] }) {
+export default function Index({ games, user_id }: { games: MesarioGame[]; user_id: number | string }) {
     const canOperate = useCan('operate-games');
     const { available, install } = useInstallPrompt();
 
@@ -90,7 +94,7 @@ export default function Index({ games }: { games: MesarioGame[] }) {
                             <div className="mt-3 flex justify-center">
                                 <LinkButton href={route('panel.games.sheet', game.id)}>{canOperate && game.open ? 'Abrir súmula' : 'Ver súmula'}</LinkButton>
                             </div>
-                            {canOperate && game.open && game.quick_result && !game.knockout && <QuickResult game={game} />}
+                            {canOperate && game.open && game.quick_result && !game.knockout && <QuickResult game={game} userId={user_id} />}
                         </li>
                     ))}
                 </ul>

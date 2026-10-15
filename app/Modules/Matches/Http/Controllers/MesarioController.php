@@ -31,6 +31,7 @@ class MesarioController extends Controller
             ->limit($window['limit'])->get();
 
         return Inertia::render('Panel/Mesario/Index', [
+            'user_id' => auth()->id(),
             'games' => $games->map(fn (Game $game) => [
                 'id' => $game->getKey(),
                 'home' => $game->homeEntry->team->name,

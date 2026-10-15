@@ -104,3 +104,7 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 
 ## Qualidade
 Testes Pest para toda regra de negócio (as regras de campeonato têm testes baseados em exemplos reais). PHPStan/Larastan (nível sobe gradualmente até 8). PRs pequenos, descrição em português, sem segredos no repositório.
+
+## Fila offline da súmula
+
+- Resultado rápido pode ser enfileirado pelo app do mesário como `quick_result`; o servidor reaplica `RecordQuickResult` com a validação normal e preserva o horário do aparelho. A projeção do navegador só mostra placar e encerramento até a confirmação do servidor.
