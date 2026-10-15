@@ -2,10 +2,13 @@
 
 namespace App\Modules\Matches\Support;
 
+use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Models\GameTactic;
 use App\Modules\Teams\Models\Person;
+use Illuminate\Support\Collection;
 
 /** Monta relatórios PDF de escalação e encerramento para uso interno do organizador. */
 final class GameReportPdf
@@ -25,21 +28,35 @@ final class GameReportPdf
     }
 
     /** @return list<string> */
-    public static function finalReport(Game $game): array
+    public static function finalReport(Game $game, string $type = 'full'): array
     {
         self::load($game);
-        $lines = self::header($game, 'RELATÓRIO FINAL DA PARTIDA');
+        $type = in_array($type, ['lineup', 'activities', 'full'], true) ? $type : 'full';
+        $title = match ($type) {
+            'lineup' => 'RELATÓRIO DE ESCALAÇÃO',
+            'activities' => 'RELATÓRIO DE ATIVIDADES DA PARTIDA',
+            default => 'RELATÓRIO FINAL DA PARTIDA',
+        };
+        $lines = self::header($game, $title);
+        if ($type === 'lineup') {
+            return [...$lines, ...self::lineupLines($game), '', 'Assinatura do responsável: ______________________________________________'];
+        }
+
         $lines[] = 'Placar final: '.$game->homeEntry->team->name.' '.$game->home_score.' x '.$game->away_score.' '.$game->awayEntry->team->name;
         if ($game->sets !== null) {
             $lines[] = 'Sets: '.implode(' | ', array_map(fn (array $set): string => $set['home'].'-'.$set['away'], $game->sets));
         }
         $lines[] = 'Situação: '.$game->status->label();
-        $lines[] = '';
-        $lines[] = 'ESCALAÇÕES REGISTRADAS';
-        $lines = [...$lines, ...self::lineupLines($game, false)];
+        $events = $game->events()->effective()->with(['entry.team', 'person', 'secondaryPerson'])->orderBy('id')->get();
+        $lines = [...$lines, ...self::summaryLines($game, $events)];
+        if ($type === 'full') {
+            $lines[] = '';
+            $lines[] = 'ESCALAÇÕES REGISTRADAS';
+            $lines = [...$lines, ...self::lineupLines($game, false)];
+        }
         $lines[] = '';
         $lines[] = 'LINHA DO TEMPO';
-        foreach ($game->events()->effective()->with(['entry.team', 'person'])->orderBy('id')->get() as $event) {
+        foreach ($events as $event) {
             $team = $event->entry === null ? 'Partida' : $event->entry->team->name;
             $person = $event->person ? ' — '.self::person($event->person) : '';
             $detail = '';
@@ -48,12 +65,41 @@ final class GameReportPdf
             }
             $lines[] = 'Set/período '.$event->period.' · '.$event->type->label().' · '.$team.$person.$detail;
         }
-        if ($game->events()->effective()->count() === 0) {
+        if ($events->isEmpty()) {
             $lines[] = 'Nenhum evento registrado.';
         }
         $lines[] = '';
         $lines[] = 'Observações: ___________________________________________________________';
         $lines[] = '________________________________________________________________________';
+
+        return $lines;
+    }
+
+    /** @param Collection<int, GameEvent> $events */
+    private static function summaryLines(Game $game, $events): array
+    {
+        $counts = [
+            'Gols' => $events->whereIn('type', [GameEventType::Goal, GameEventType::OwnGoal])->count(),
+            'Cartões' => $events->whereIn('type', [GameEventType::YellowCard, GameEventType::RedCard, GameEventType::BlueCard])->count(),
+            'Substituições' => $events->where('type', GameEventType::Substitution)->count(),
+            'Faltas' => $events->whereIn('type', [GameEventType::Foul, GameEventType::TechnicalFoul, GameEventType::UnsportsmanlikeFoul])->count(),
+            'Pontos' => $events->whereIn('type', GameEventType::scoring())->sum(fn (GameEvent $event): int => (int) (($event->payload ?? [])['points'] ?? $event->type->pointValue() ?? 0)),
+        ];
+        $lines = ['', 'RESUMO DA PARTIDA'];
+        $lines[] = implode(' · ', array_map(static fn (string $label, int $value): string => $label.': '.$value, array_keys($counts), $counts));
+        $byPeriod = [];
+        foreach ($events->whereIn('type', GameEventType::scoring()) as $event) {
+            $side = $event->entry_id === $game->home_entry_id ? 'home' : ($event->entry_id === $game->away_entry_id ? 'away' : null);
+            if ($side === null) {
+                continue;
+            }
+            $period = (int) $event->period;
+            $byPeriod[$period] ??= ['home' => 0, 'away' => 0];
+            $byPeriod[$period][$side] += (int) (($event->payload ?? [])['points'] ?? $event->type->pointValue() ?? 0);
+        }
+        if ($byPeriod !== []) {
+            $lines[] = 'Placar por período: '.implode(' | ', array_map(static fn (int $period, array $score): string => $period.': '.$score['home'].'-'.$score['away'], array_keys($byPeriod), $byPeriod));
+        }
 
         return $lines;
     }

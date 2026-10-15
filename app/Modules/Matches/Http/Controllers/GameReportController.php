@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Support\GameReportPdf;
 use App\Modules\Matches\Support\PdfReport;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /** PDFs internos da partida: escalação antes do jogo e relatório final. */
@@ -16,9 +17,16 @@ final class GameReportController extends Controller
         return $this->download($game, 'escalacao', GameReportPdf::lineup($game));
     }
 
-    public function finalReport(Game $game): Response
+    public function finalReport(Request $request, Game $game): Response
     {
-        return $this->download($game, 'relatorio-final', GameReportPdf::finalReport($game));
+        $type = (string) $request->query('tipo', 'full');
+        $label = match ($type) {
+            'lineup' => 'escalacao',
+            'activities' => 'atividades',
+            default => 'relatorio-final',
+        };
+
+        return $this->download($game, $label, GameReportPdf::finalReport($game, $type));
     }
 
     /** @param list<string> $lines */
