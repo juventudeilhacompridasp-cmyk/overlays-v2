@@ -50,6 +50,14 @@ return [
         'public' => (int) env('PLATFORM_LIMIT_PUBLIC', 60),
         'registration' => (int) env('PLATFORM_LIMIT_REGISTRATION', 10),
     ],
+    // Cor de destaque padrão do portal público quando a organização não escolheu uma (#rrggbb).
+    'default_color' => env('PORTAL_DEFAULT_COLOR', '#059669'),
+
+    // Limite de pixels de uma imagem enviada (largura x altura); acima disso o envio é recusado.
+    'images' => [
+        'max_pixels' => max(1_000_000, (int) env('IMAGE_MAX_PIXELS', 40_000_000)),
+    ],
+
     // Dias que o pedido de aviso (push) de um jogo encerrado é guardado antes de `push:prune` apagá-lo (mínimo 1).
     'push_retention_days' => max(1, (int) env('PUSH_RETENTION_DAYS', 1)),
     'signed_url_minutes' => [

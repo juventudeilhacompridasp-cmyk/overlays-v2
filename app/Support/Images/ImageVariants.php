@@ -19,8 +19,10 @@ final class ImageVariants
      * @param  array<string, array{size: int, fit: 'contain'|'cover'}>  $specs  nome => tamanho máximo e modo
      * @return array<string, string> nome => conteúdo WebP
      */
-    public static function make(string $binary, array $specs, int $maxPixels = self::MAX_PIXELS): array
+    public static function make(string $binary, array $specs, ?int $maxPixels = null): array
     {
+        $maxPixels ??= (int) config('platform.images.max_pixels', self::MAX_PIXELS);
+
         $info = @getimagesizefromstring($binary);
 
         if ($info === false || ! in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP], true)) {

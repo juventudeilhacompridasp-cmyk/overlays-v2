@@ -51,6 +51,8 @@ class ParametersController extends Controller
             'portal.home' => ['required', 'integer', 'between:4,24'],
             'portal.widgets' => ['required', 'integer', 'between:3,20'],
             'portal.scorers' => ['required', 'integer', 'between:3,30'],
+            'portal.stats_top' => ['required', 'integer', 'between:3,10'],
+            'portal.stats_form' => ['required', 'integer', 'between:3,10'],
             'public_api' => ['required', 'boolean'],
             'quick_result' => ['required', 'boolean'],
         ], [], [
@@ -60,6 +62,8 @@ class ParametersController extends Controller
             'portal.home' => 'itens por bloco da página inicial',
             'portal.widgets' => 'jogos por lista dos widgets',
             'portal.scorers' => 'artilheiros por divisão',
+            'portal.stats_top' => 'maiores resultados nas estatísticas',
+            'portal.stats_form' => 'jogos da forma recente',
         ]);
 
         $organization = CurrentOrganization::get();

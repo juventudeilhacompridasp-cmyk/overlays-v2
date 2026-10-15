@@ -42,7 +42,7 @@ Entregue: a organização desliga recursos do próprio pacote (`settings.feature
 - Fila offline da súmula: sempre ligada. Proposta: interruptor por organização (para suporte).
 
 ## 3. Janelas, limites e números fixos (prioridade média)
-Entregue: janelas do mesário e quantidades do portal/widgets/artilharia (Painel > Parâmetros, `PortalQuantities`) e retenção do push (`PUSH_RETENTION_DAYS`). Falta: top 5 das estatísticas, tamanho de imagens e cor padrão do portal.
+Entregue: janelas do mesário e quantidades do portal/widgets/artilharia (Painel > Parâmetros, `PortalQuantities`) e retenção do push (`PUSH_RETENTION_DAYS`). Entregue também: listas das estatísticas (`stats_top`/`stats_form`), cor padrão do portal (`PORTAL_DEFAULT_COLOR`) e limite de pixels da imagem (`IMAGE_MAX_PIXELS`); os tamanhos das variantes seguem fixos (os caminhos salvos dependem deles).
 | Hoje | Onde | Proposta |
 |---|---|---|
 | Mesário: jogos de hoje + próximos 2 dias + encerrados nas últimas 6 h; limite de 40 cartões | `MesarioController` (`addDays(2)`, `subHours(6)`, `subHours(3)`, `LIMIT`) | Organização: dias à frente, horas de encerrados e limite. |

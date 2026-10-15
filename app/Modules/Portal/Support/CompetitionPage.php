@@ -10,6 +10,7 @@ use App\Modules\Competitions\Models\Division;
 use App\Modules\Competitions\Models\Season;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Tenancy\Support\PortalQuantities;
 
 /**
  * Página pública da competição (todas as edições publicadas): histórico com campeão e vice, quadro de títulos e
@@ -18,8 +19,6 @@ use App\Modules\Matches\Models\Game;
  */
 final class CompetitionPage
 {
-    private const TOP = 5;
-
     public function __construct(private readonly CalculateStandings $standings = new CalculateStandings) {}
 
     /**
@@ -129,9 +128,9 @@ final class CompetitionPage
             'average' => $games->isEmpty() ? 0.0 : round($total / $games->count(), 2),
             'biggest_wins' => $games->filter(fn (Game $game) => $game->home_score !== $game->away_score)
                 ->sortByDesc(fn (Game $game) => [abs($game->home_score - $game->away_score), $game->home_score + $game->away_score])
-                ->take(self::TOP)->map($present)->values()->all(),
+                ->take(PortalQuantities::all()['stats_top'])->map($present)->values()->all(),
             'highest_scoring' => $games->sortByDesc(fn (Game $game) => $game->home_score + $game->away_score)
-                ->take(self::TOP)->map($present)->values()->all(),
+                ->take(PortalQuantities::all()['stats_top'])->map($present)->values()->all(),
         ];
     }
 }

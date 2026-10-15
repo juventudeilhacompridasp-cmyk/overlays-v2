@@ -6,7 +6,7 @@ import { FormEvent } from 'react';
 type Props = {
     features: { key: string; label: string; off: boolean }[];
     mesario: { days_ahead: number; finished_hours: number; limit: number };
-    portal: { home: number; widgets: number; scorers: number };
+    portal: { home: number; widgets: number; scorers: number; stats_top: number; stats_form: number };
     public_api: boolean;
     quick_result: boolean;
 };
@@ -74,6 +74,8 @@ export default function Edit({ features, mesario, portal, public_api, quick_resu
                         {quantity('home', 'Itens por bloco da página inicial', 4, 24, 'Ao vivo, próximos e recentes.')}
                         {quantity('widgets', 'Jogos por lista dos widgets', 3, 20, 'Próximos e recentes do widget de jogos.')}
                         {quantity('scorers', 'Artilheiros por divisão', 3, 30, 'Tabela de artilharia da edição.')}
+                        {quantity('stats_top', 'Maiores resultados (estatísticas)', 3, 10, 'Maiores vitórias e jogos com mais placar.')}
+                        {quantity('stats_form', 'Jogos da forma recente (estatísticas)', 3, 10, 'Últimos resultados de cada equipe.')}
                     </div>
                 </Card>
 
