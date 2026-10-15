@@ -39,6 +39,7 @@ class LandingContent
                 ['title' => 'Marca própria', 'text' => 'Portal com o seu nome, cores e logotipo, e domínio próprio quando o pacote permitir.'],
             ],
             'gallery' => self::gallery(),
+            'video' => self::video(),
             'overlays' => [
                 'Placar completo com comemoração de gol',
                 'Faixas de lances: gol, cartões e substituições',
@@ -96,6 +97,22 @@ class LandingContent
         }
 
         return $gallery;
+    }
+
+    /**
+     * Vídeo curto do Modo operador (`npm run marketing:video`): a mesma tela real com dados fictícios, sem áudio.
+     * O pôster é o print `operador` da galeria; o arquivo só baixa quando a pessoa aperta "play".
+     *
+     * @return array{src: string, poster: string, title: string, text: string}
+     */
+    public static function video(): array
+    {
+        return [
+            'src' => '/marketing/operador.webm',
+            'poster' => '/marketing/operador.webp',
+            'title' => 'Veja o Modo operador em 20 segundos',
+            'text' => 'Escalação, telas extras, barra de patrocinadores e estatísticas acionadas com poucos cliques. Dados fictícios, sem áudio.',
+        ];
     }
 
     /** @return list<array{key: string, label: string, features: list<string>}> */

@@ -25,6 +25,7 @@ interface GalleryItem {
 interface Content {
     hero: { title: string; subtitle: string };
     gallery: GalleryItem[];
+    video: { src: string; poster: string; title: string; text: string };
     pillars: { title: string; text: string }[];
     overlays: string[];
     sports: string[];
@@ -136,6 +137,19 @@ function OperatorMock() {
                 </div>
             </div>
         </div>
+    );
+}
+
+/** Vídeo curto do Modo operador: não baixa nada até o "play", sem áudio e sem repetir sozinho (respeita quem prefere menos movimento). */
+function DemoVideo({ video }: { video: Content['video'] }) {
+    return (
+        <figure className="mx-auto mt-10 max-w-4xl overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <video src={video.src} poster={video.poster} controls muted playsInline preload="none" width={1280} height={720} aria-label={video.title} className="aspect-video w-full bg-black" />
+            <figcaption className="p-4">
+                <p className="font-bold text-gray-900">{video.title}</p>
+                <p className="mt-1 text-sm text-gray-600">{video.text}</p>
+            </figcaption>
+        </figure>
     );
 }
 
@@ -486,6 +500,7 @@ export default function Landing({ content, brand, analytics, links, seo }: Props
 
                 <Section id="galeria" tone="muted" title="O produto em ação" subtitle="Telas reais da plataforma, com dados fictícios. Clique para ampliar.">
                     <Gallery items={content.gallery} />
+                    <DemoVideo video={content.video} />
                 </Section>
 
                 <section id="overlays" className="bg-neutral-900 py-16 text-white">

@@ -3,34 +3,17 @@
 // tira o print no Chromium (CHROMIUM_PATH opcional, como nos testes de navegador) e converte para WebP 1280 x 720 dentro do
 // próprio navegador (canvas), sem dependências extras. Saída: public/marketing/{name}.webp. Rode de novo quando uma tela mudar.
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright-core';
-import { createServer } from 'vite';
-import react from '@vitejs/plugin-react';
+import { join } from 'node:path';
+import { launchBrowser, out, startHarness } from './harness.mjs';
 import { OUT_HEIGHT, OUT_WIDTH, SHOTS } from './shots.config.mjs';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const harness = join(root, 'scripts', 'marketing', 'harness');
-const out = join(root, 'public', 'marketing');
 const only = process.argv.slice(2);
 
-// O Tailwind/PostCSS resolvem os caminhos a partir da raiz do projeto.
-process.chdir(root);
 mkdirSync(out, { recursive: true });
 
-const server = await createServer({
-    root: harness,
-    configFile: false,
-    plugins: [react()],
-    resolve: { alias: [{ find: '@inertiajs/react', replacement: join(harness, 'inertia-stub.tsx') }, { find: '@', replacement: join(root, 'resources', 'js') }] },
-    css: { postcss: root },
-    server: { port: 0, host: '127.0.0.1', fs: { strict: false } },
-    logLevel: 'warn',
-});
-await server.listen();
-const base = server.resolvedUrls.local[0].replace(/\/$/, '');
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, args: ['--no-sandbox'] });
+const harness = await startHarness();
+const base = harness.base;
+const browser = await launchBrowser();
 let failed = false;
 
 try {
@@ -77,7 +60,7 @@ try {
     }
 } finally {
     await browser.close();
-    await server.close();
+    await harness.close();
 }
 
 process.exit(failed ? 1 : 0);
