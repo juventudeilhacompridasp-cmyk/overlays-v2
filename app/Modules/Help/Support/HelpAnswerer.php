@@ -55,7 +55,7 @@ PROMPT;
                     'model' => config('services.anthropic.model'),
                     'max_tokens' => 700,
                     'system' => self::PROMPT,
-                    'messages' => [['role' => 'user', 'content' => "Pergunta: ".self::scrub($question)."\n\nTrechos de ajuda:\n\n{$excerpts}"]],
+                    'messages' => [['role' => 'user', 'content' => 'Pergunta: '.self::scrub($question)."\n\nTrechos de ajuda:\n\n{$excerpts}"]],
                 ]);
         } catch (ConnectionException) {
             throw new HelpAnswerFailed('Não foi possível falar com o serviço de respostas. Tente de novo em instantes ou use a busca.');
