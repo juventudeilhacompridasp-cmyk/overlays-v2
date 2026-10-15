@@ -8,10 +8,11 @@ type Props = {
     mesario: { days_ahead: number; finished_hours: number; limit: number };
     portal: { home: number; widgets: number; scorers: number };
     public_api: boolean;
+    quick_result: boolean;
 };
 
-export default function Edit({ features, mesario, portal, public_api }: Props) {
-    const { data, setData, patch, processing, errors } = useForm({ disabled: features.filter((feature) => feature.off).map((feature) => feature.key), mesario, portal, public_api });
+export default function Edit({ features, mesario, portal, public_api, quick_result }: Props) {
+    const { data, setData, patch, processing, errors } = useForm({ disabled: features.filter((feature) => feature.off).map((feature) => feature.key), mesario, portal, public_api, quick_result });
 
     const toggle = (key: string, on: boolean) => setData('disabled', on ? data.disabled.filter((item) => item !== key) : [...data.disabled, key]);
     const submit = (event: FormEvent) => {
@@ -58,6 +59,13 @@ export default function Edit({ features, mesario, portal, public_api }: Props) {
                         {number('finished_hours', 'Horas de encerrados', 1, 48, 'Quanto tempo um jogo encerrado continua na tela.')}
                         {number('limit', 'Limite de jogos', 10, 100, 'Máximo de cartões na tela.')}
                     </div>
+                </Card>
+
+                <Card title="Lançamento de resultados" className="max-w-3xl">
+                    <label className="flex items-start gap-2 text-sm text-gray-700">
+                        <input type="checkbox" className="mt-0.5 rounded border-gray-300 text-emerald-600" checked={data.quick_result} onChange={(event) => setData('quick_result', event.target.checked)} />
+                        <span>Permitir o <strong>resultado rápido</strong> (placar final sem súmula detalhada) na tela da fase e no app do mesário. Desligado, só a súmula (eventos) lança o placar; W.O. continua disponível.</span>
+                    </label>
                 </Card>
 
                 <Card title="Portal público e widgets" className="max-w-3xl">

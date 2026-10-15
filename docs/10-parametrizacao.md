@@ -29,7 +29,7 @@ Entregue: interruptores dos e-mails da inscrição (4), convite/lembrete/mudanç
 | Textos dos e-mails fixos em português | `RegistrationMail`, `ManagerNotice`, `TeamManagerInvitation` | Organização: trechos editáveis (assunto/introdução/rodapé) com variáveis simples; nunca HTML livre. |
 
 ## 2. Ativar/desativar funcionalidades (prioridade alta) — **entregue em parte: Painel > Parâmetros**
-Entregue: a organização desliga recursos do próprio pacote (`settings.features_disabled`, só reduz; fora overlays/domínio/white-label) e as janelas do mesário (dias à frente, horas de encerrados, limite). Entregue também: interruptor da API pública (`settings.public_api`). Falta: seções do portal, resultado rápido por edição, fila offline.
+Entregue: a organização desliga recursos do próprio pacote (`settings.features_disabled`, só reduz; fora overlays/domínio/white-label) e as janelas do mesário (dias à frente, horas de encerrados, limite). Entregue também: interruptor da API pública (`settings.public_api`). Entregue também: seções da página inicial, página de estatísticas e botões de compartilhar (`PortalSettings`), e o resultado rápido (por organização, `OperationSettings`). Falta: resultado rápido por edição e fila offline.
 - Recursos por pacote já existem (`Feature`), mas **só a plataforma liga/desliga**. Falta, dentro de um recurso liberado,
   a organização escolher usar ou não: ex.: carteirinha, push, widgets, portal do gestor. Proposta: `settings.features_enabled`
   (lista) que só pode **reduzir** o que o pacote permite; `CurrentOrganization::has()` considera os dois.

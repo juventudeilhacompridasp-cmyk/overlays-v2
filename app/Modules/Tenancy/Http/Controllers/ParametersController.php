@@ -7,6 +7,7 @@ use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
 use App\Modules\Tenancy\Models\Organization;
 use App\Modules\Tenancy\Support\MesarioSettings;
+use App\Modules\Tenancy\Support\OperationSettings;
 use App\Modules\Tenancy\Support\PortalQuantities;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +35,7 @@ class ParametersController extends Controller
                 ->values(),
             'mesario' => MesarioSettings::all(),
             'portal' => PortalQuantities::all($organization),
+            'quick_result' => OperationSettings::quickResultAllowed($organization),
             'public_api' => ($organization->settings['public_api'] ?? true) !== false,
         ]);
     }
@@ -50,6 +52,7 @@ class ParametersController extends Controller
             'portal.widgets' => ['required', 'integer', 'between:3,20'],
             'portal.scorers' => ['required', 'integer', 'between:3,30'],
             'public_api' => ['required', 'boolean'],
+            'quick_result' => ['required', 'boolean'],
         ], [], [
             'mesario.days_ahead' => 'dias à frente',
             'mesario.finished_hours' => 'horas de encerrados',
@@ -68,6 +71,7 @@ class ParametersController extends Controller
         $settings['mesario'] = array_map('intval', $validated['mesario']);
         $settings['portal_quantities'] = array_map('intval', $validated['portal']);
         $settings['public_api'] = (bool) $validated['public_api'];
+        $settings['operation'] = ['quick_result' => (bool) $validated['quick_result']];
         $organization->update(['settings' => $settings]);
 
         return back()->with('success', 'Parâmetros atualizados.');

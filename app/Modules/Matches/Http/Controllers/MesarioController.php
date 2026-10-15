@@ -7,6 +7,7 @@ use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Tenancy\Support\MesarioSettings;
+use App\Modules\Tenancy\Support\OperationSettings;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,6 +19,7 @@ class MesarioController extends Controller
 {
     public function index(): Response
     {
+        $quickResult = OperationSettings::quickResultAllowed();
         $window = MesarioSettings::all();
         $games = Game::query()
             ->with(['homeEntry.team', 'awayEntry.team', 'venue', 'division.season.competition', 'stage'])
@@ -47,7 +49,7 @@ class MesarioController extends Controller
                 'competition' => "{$game->division->season->competition->name} · {$game->division->name}",
                 'stage' => $game->stage->name,
                 // Placar final direto (sem súmula) só faz sentido onde o placar é gols/pontos, não sets.
-                'quick_result' => $game->sport()->profile()->scoreModel !== 'sets',
+                'quick_result' => $quickResult && $game->sport()->profile()->scoreModel !== 'sets',
                 'knockout' => $game->stage->type === StageType::Knockout,
             ])->values(),
         ]);

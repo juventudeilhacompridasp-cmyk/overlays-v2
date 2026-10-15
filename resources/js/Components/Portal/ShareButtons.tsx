@@ -1,8 +1,10 @@
+import { usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 /** Compartilhar no WhatsApp (link com texto pronto) e copiar o endereço. Não envia nada a ninguém por conta própria. */
 export default function ShareButtons({ text, url }: { text: string; url: string }) {
     const [copied, setCopied] = useState(false);
+    const enabled = (usePage().props as { portal_share?: boolean }).portal_share !== false;
     const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`;
 
     const copy = async () => {
@@ -14,6 +16,8 @@ export default function ShareButtons({ text, url }: { text: string; url: string 
             // sem permissão da área de transferência
         }
     };
+
+    if (!enabled) return null;
 
     return (
         <span className="inline-flex gap-2 print:hidden">

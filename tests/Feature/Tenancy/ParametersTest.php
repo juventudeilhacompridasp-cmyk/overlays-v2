@@ -8,6 +8,7 @@ use App\Modules\Tenancy\Enums\Feature;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
 use App\Modules\Tenancy\Support\MesarioSettings;
+use App\Modules\Tenancy\Support\OperationSettings;
 use App\Modules\Tenancy\Support\PortalQuantities;
 
 beforeEach(function () {
@@ -16,7 +17,7 @@ beforeEach(function () {
 
 function parametersPayload(array $override = []): array
 {
-    return $override + ['disabled' => [], 'mesario' => ['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40], 'portal' => ['home' => 8, 'widgets' => 6, 'scorers' => 10], 'public_api' => true];
+    return $override + ['disabled' => [], 'mesario' => ['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40], 'portal' => ['home' => 8, 'widgets' => 6, 'scorers' => 10], 'public_api' => true, 'quick_result' => true];
 }
 
 describe('features the organization turns off by itself', function () {
@@ -137,5 +138,27 @@ describe('portal quantities and public API', function () {
 
         $this->patch(route('panel.parameters.update'), parametersPayload(['public_api' => true]));
         $this->getJson('/api/v1/competitions')->assertOk();
+    });
+});
+
+describe('quick result', function () {
+    it('is allowed by default and can be turned off by the organization', function () {
+        ['stage' => $stage] = fixtureDivision(2);
+        app(GenerateStageFixtures::class)->handle($stage);
+        $games = Game::query()->where('stage_id', $stage->id)->get();
+        $games->first()->update(['scheduled_at' => now()->addHour()]);
+
+        expect(OperationSettings::quickResultAllowed())->toBeTrue();
+
+        $this->actingAs(panelUser(Role::Admin))->patch(route('panel.parameters.update'), parametersPayload(['quick_result' => false]))->assertSessionHas('success');
+        expect(OperationSettings::quickResultAllowed(CurrentOrganization::get()->fresh()))->toBeFalse();
+
+        $this->get('/painel/mesario')->assertInertia(fn ($page) => $page->where('games.0.quick_result', false));
+        $this->post(route('panel.games.result', $games->first()), ['home_score' => 1, 'away_score' => 0])->assertSessionHas('error');
+        expect($games->first()->fresh()->status)->not->toBe(GameStatus::Finished);
+
+        $this->patch(route('panel.parameters.update'), parametersPayload(['quick_result' => true]));
+        $this->get('/painel/mesario')->assertInertia(fn ($page) => $page->where('games.0.quick_result', true));
+        $this->post(route('panel.games.result', $games->first()), ['home_score' => 1, 'away_score' => 0])->assertSessionHas('success');
     });
 });

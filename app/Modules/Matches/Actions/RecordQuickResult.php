@@ -5,6 +5,7 @@ namespace App\Modules\Matches\Actions;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
+use App\Modules\Tenancy\Support\OperationSettings;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -23,6 +24,10 @@ final class RecordQuickResult
 
     public function handle(Game $game, int $homeGoals, int $awayGoals, ?int $recordedBy = null, ?int $homePenalties = null, ?int $awayPenalties = null, ?Carbon $at = null): Game
     {
+        if (! OperationSettings::quickResultAllowed()) {
+            throw new InvalidArgumentException('O resultado rápido está desligado nesta organização (Painel > Parâmetros). Lance os eventos pela súmula.');
+        }
+
         if ($game->home_entry_id === null || $game->away_entry_id === null) {
             throw new InvalidArgumentException('O jogo ainda não tem os dois confrontantes definidos.');
         }

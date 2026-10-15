@@ -27,3 +27,6 @@ Define quantos itens aparecem nas listas públicas:
 
 ## API pública
 Por padrão a API de consulta (`/api/v1`: competições, edições, estatísticas e jogos publicados) está ligada. Desmarque para que ela responda "não encontrado" neste endereço. O portal, os widgets e o controle privado dos overlays (chave própria do canal) continuam funcionando.
+
+## Lançamento de resultados
+**Permitir o resultado rápido** liga ou desliga o lançamento do placar final sem súmula detalhada (tela da fase e [Mesário](route:panel.mesario)). Desligado, o placar só entra pela súmula, com eventos; o W.O. continua disponível. Padrão: permitido.

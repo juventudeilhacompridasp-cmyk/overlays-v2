@@ -108,3 +108,12 @@ it('is linked from the season page and listed in the sitemap', function () {
     $this->get("/competicoes/{$competition->slug}/edicoes/{$season->id}")->assertInertia(fn ($page) => $page->where('stats_url', route('portal.stats', [$competition->slug, $season->id])));
     $this->get('/sitemap.xml')->assertSee("/competicoes/{$competition->slug}/edicoes/{$season->id}/estatisticas", false);
 });
+
+it('turns the stats page off: 404, no link and out of the sitemap', function () {
+    ['season' => $season, 'competition' => $competition] = statsSeason();
+    CurrentOrganization::get()->update(['settings' => ['portal' => ['season_stats' => false]]]);
+
+    $this->get("/competicoes/{$competition->slug}/edicoes/{$season->id}/estatisticas")->assertNotFound();
+    $this->get("/competicoes/{$competition->slug}/edicoes/{$season->id}")->assertInertia(fn ($page) => $page->where('stats_url', null));
+    $this->get('/sitemap.xml')->assertDontSee("/competicoes/{$competition->slug}/edicoes/{$season->id}/estatisticas", false);
+});

@@ -49,17 +49,19 @@ class PortalController extends Controller
         $published = fn ($query) => $query->whereHas('division.season', fn ($season) => $season->published());
 
         $shown = PortalQuantities::all()['home'];
-        $live = Game::query()->where('status', GameStatus::InProgress)->tap($published)->with($withTeams)->orderBy('started_at')->limit($shown)->get();
+        $sections = ['live' => PortalSettings::enabled('home_live'), 'upcoming' => PortalSettings::enabled('home_upcoming'), 'recent' => PortalSettings::enabled('home_recent'), 'competitions' => PortalSettings::enabled('home_competitions')];
+        $live = Game::query()->where('status', GameStatus::InProgress)->tap($published)->with($withTeams)->orderBy('started_at')->limit($sections['live'] ? $shown : 0)->get();
         $upcoming = Game::query()->where('status', GameStatus::Scheduled)->whereNotNull('scheduled_at')->where('scheduled_at', '>=', now()->startOfDay())
-            ->whereNotNull('home_entry_id')->whereNotNull('away_entry_id')->tap($published)->with($withTeams)->orderBy('scheduled_at')->limit($shown)->get();
-        $recent = Game::query()->whereIn('status', [GameStatus::Finished, GameStatus::Walkover])->tap($published)->with($withTeams)->orderByDesc('finished_at')->limit($shown)->get();
+            ->whereNotNull('home_entry_id')->whereNotNull('away_entry_id')->tap($published)->with($withTeams)->orderBy('scheduled_at')->limit($sections['upcoming'] ? $shown : 0)->get();
+        $recent = Game::query()->whereIn('status', [GameStatus::Finished, GameStatus::Walkover])->tap($published)->with($withTeams)->orderByDesc('finished_at')->limit($sections['recent'] ? $shown : 0)->get();
 
         $theme = PublicTheme::current();
 
         return Inertia::render('Portal/Home', [
             'theme' => $theme,
             'seo' => $this->seo($theme['name'], $theme['tagline'] ?? "Competições, tabelas e resultados de {$theme['name']}.", route('portal.home')),
-            'competitions' => $competitions->map(fn (Competition $competition) => [
+            'sections' => $sections,
+            'competitions' => ! $sections['competitions'] ? [] : $competitions->map(fn (Competition $competition) => [
                 'id' => $competition->getKey(),
                 'name' => $competition->name,
                 'description' => $competition->description,
@@ -111,7 +113,7 @@ class PortalController extends Controller
             'seo' => $this->seo("{$title} · {$theme['name']}", "Classificação, jogos, resultados e artilharia — {$title}.", route('portal.season', [$competition->slug, $season->getKey()]), null, JsonLd::season($competition, $season, Game::query()->whereIn('division_id', $season->divisions()->pluck('id'))->with(['homeEntry.team', 'awayEntry.team', 'venue', 'division.season.competition', 'stage'])->orderByRaw('scheduled_at is null')->orderBy('scheduled_at')->limit(20)->get())),
             ...$data,
             'extras' => $extras->for($season),
-            'stats_url' => route('portal.stats', [$competition->slug, $season->getKey()]),
+            'stats_url' => PortalSettings::enabled('season_stats') ? route('portal.stats', [$competition->slug, $season->getKey()]) : null,
             'registration_url' => CurrentOrganization::has(Feature::OnlineRegistration) && $season->registrationOpen() ? route('registration.apply', [$competition->slug, $season->getKey()]) : null,
             'other_seasons' => $competition->seasons()->published()->orderByDesc('year')->orderByDesc('name')->get()
                 ->map(fn (Season $other) => ['id' => $other->getKey(), 'name' => $other->name, 'url' => route('portal.season', [$competition->slug, $other->getKey()]), 'current' => $other->is($season)])->values(),
@@ -120,7 +122,7 @@ class PortalController extends Controller
 
     public function stats(Competition $competition, Season $season, SeasonStats $stats): Response
     {
-        abort_unless($season->competition_id === $competition->getKey() && $season->isPublished(), 404);
+        abort_unless($season->competition_id === $competition->getKey() && $season->isPublished() && PortalSettings::enabled('season_stats'), 404);
 
         $theme = PublicTheme::current();
         $title = "{$competition->name} {$season->name}";
@@ -209,7 +211,9 @@ class PortalController extends Controller
         foreach (Competition::query()->with(['seasons' => fn ($query) => $query->published()])->get() as $competition) {
             foreach ($competition->seasons as $season) {
                 $urls[] = route('portal.season', [$competition->slug, $season->getKey()]);
-                $urls[] = route('portal.stats', [$competition->slug, $season->getKey()]);
+                if (PortalSettings::enabled('season_stats')) {
+                    $urls[] = route('portal.stats', [$competition->slug, $season->getKey()]);
+                }
             }
         }
 
