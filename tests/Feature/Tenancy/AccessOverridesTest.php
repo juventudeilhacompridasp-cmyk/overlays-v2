@@ -83,7 +83,8 @@ it('rejects unknown permissions and is for user managers only', function () {
     $membership = overridesMembershipOf($operator);
 
     $this->actingAs($admin)->put(route('panel.users.overrides', $membership), ['allow' => ['x.y']])->assertSessionHasErrors('allow.0');
-    $this->actingAs($operator)->put(route('panel.users.overrides', $membership), ['allow' => ['users.manage']])->assertForbidden();
+    $this->actingAs($operator)->put(route('panel.users.overrides', $membership), ['allow' => ['users.manage']])->assertRedirect();
+    expect($membership->overrides()->count())->toBe(0);
 });
 
 it('never gives panel permissions to a team manager through an exception', function () {
