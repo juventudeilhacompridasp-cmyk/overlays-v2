@@ -60,6 +60,7 @@ test('the new styles have their own frame and keep the same data', () => {
     const ribbon = scoreboardFrame(appearance({ preset: 'ribbon' }));
     const gradient = scoreboardFrame(appearance({ preset: 'gradient' }));
     const aurora = scoreboardFrame(appearance({ preset: 'aurora' }));
+    const studio = scoreboardFrame(appearance({ preset: 'studio' }));
 
     assert.match(glass.className, /backdrop-blur/);
     assert.equal(contrast.style.borderColor, '#14b8a6');
@@ -67,6 +68,8 @@ test('the new styles have their own frame and keep the same data', () => {
     assert.ok(ribbon.style.clipPath.includes('polygon'));
     assert.ok(gradient.style.background.startsWith('linear-gradient(120deg, #14b8a6'));
     assert.ok(aurora.style.background.startsWith('radial-gradient(circle at 12% 0%'));
+    assert.equal(studio.style.borderLeftColor, '#14b8a6');
+    assert.ok(studio.style.background.startsWith('linear-gradient(135deg, #0f172a'));
 });
 
 test('radius, surface and shadow override the style defaults', () => {

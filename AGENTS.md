@@ -76,7 +76,7 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 
 ## Regra adicional de overlays
 
-- O preset `aurora` deve manter o contrato de aparência existente e ser validado pela lista central `OverlayAppearance::PRESETS`; a renderização precisa permanecer sem dependências externas para uso no OBS.
+- Os presets `aurora` e `studio` devem manter o contrato de aparência existente e ser validados pela lista central `OverlayAppearance::PRESETS`; a renderização precisa permanecer sem dependências externas para uso no OBS.
 
 ## Regra adicional do vôlei
 
