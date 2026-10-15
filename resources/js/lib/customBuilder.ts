@@ -4,7 +4,7 @@
  */
 import type { CSSProperties } from 'react';
 
-export type ElementType = 'text' | 'image' | 'shape';
+export type ElementType = 'text' | 'image' | 'video' | 'shape';
 export type BuilderAnimation = 'none' | 'fade' | 'slide-left' | 'slide-right' | 'slide-up' | 'slide-down' | 'zoom' | 'pop' | 'wipe' | 'flip';
 
 export interface BuilderElement {
@@ -240,7 +240,7 @@ export function newElement(type: ElementType, taken: string[] = []): BuilderElem
         id = `el-${Date.now().toString(36).slice(-4)}${counter}`;
     } while (taken.includes(id));
 
-    const names = { text: 'Texto', image: 'Imagem', shape: 'Forma' };
+    const names = { text: 'Texto', image: 'Imagem', video: 'Vídeo', shape: 'Forma' };
     const base: BuilderElement = {
         id, type, name: names[type], x: 10, y: 10, w: 30, h: 12, rotation: 0, opacity: 100, visible: true, locked: false,
         text: type === 'text' ? 'Texto' : '', font: 'global', size: 48, weight: 700, color: '#ffffff', align: 'left', valign: 'middle', transform: 'none',
@@ -248,7 +248,7 @@ export function newElement(type: ElementType, taken: string[] = []): BuilderElem
         radius: 0, borderColor: '#ffffff', borderWidth: 0, shadow: 'none', padding: 0, src: '', fit: 'cover', shape: 'rect', animIn: 'fade', animOut: 'same', delay: 0, duration: 600,
     };
 
-    return type === 'shape' ? { ...base, fill: '#2563eb', h: 20 } : type === 'image' ? { ...base, w: 20, h: 30, fit: 'contain' } : base;
+    return type === 'shape' ? { ...base, fill: '#2563eb', h: 20 } : type === 'image' || type === 'video' ? { ...base, w: 20, h: 30, fit: 'contain' } : base;
 }
 
 /** Move o elemento (deslocamento em % do canvas), sem deixar o canto sair muito da tela. */

@@ -11,7 +11,7 @@ use App\Modules\Broadcast\Models\OverlaySponsor;
  */
 final class OverlayCustomElements
 {
-    public const TYPES = ['text', 'image', 'shape'];
+    public const TYPES = ['text', 'image', 'video', 'shape'];
 
     public const MAX_ELEMENTS = 60;
 
@@ -24,7 +24,7 @@ final class OverlayCustomElements
     /** Imagens que o jogo no ar preenche sozinho. */
     public const IMAGE_TOKENS = ['token:home.logo', 'token:away.logo', 'token:sponsor'];
 
-    public const NAMES = ['text' => 'Texto', 'image' => 'Imagem', 'shape' => 'Forma'];
+    public const NAMES = ['text' => 'Texto', 'image' => 'Imagem', 'video' => 'Vídeo', 'shape' => 'Forma'];
 
     /**
      * @return list<array<string, mixed>>
@@ -97,8 +97,8 @@ final class OverlayCustomElements
     }
 
     /**
-     * Imagem: https, `token:` do jogo no ar (escudos e patrocinador ativo) ou `sponsor:{id}` (logotipo de um patrocinador da
-     * biblioteca). Qualquer outra coisa (http, data:, javascript:, caminho) é descartada.
+     * Imagem/vídeo: HTTPS, `token:` do jogo no ar (escudos e patrocinador ativo) ou `sponsor:{id}` (logotipo de um patrocinador
+     * da biblioteca). Qualquer outra coisa (http, data:, javascript:, caminho) é descartada.
      */
     private static function source(mixed $value): string
     {

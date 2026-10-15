@@ -113,8 +113,16 @@ test('the export has the agreed format and every template builds valid elements'
         const elements = template.build();
         assert.ok(elements.length <= 60);
         assert.equal(new Set(elements.map((element) => element.id)).size, elements.length, template.key);
-        for (const element of elements) assert.ok(['text', 'image', 'shape'].includes(element.type));
+        for (const element of elements) assert.ok(['text', 'image', 'video', 'shape'].includes(element.type));
     }
+});
+
+test('video elements keep the same HTTPS source and visual defaults as images', () => {
+    const video = newElement('video');
+
+    assert.equal(video.type, 'video');
+    assert.equal(video.fit, 'contain');
+    assert.equal(video.src, '');
 });
 
 test('table tokens resolve rows of the standings and stay literal when unknown', () => {
