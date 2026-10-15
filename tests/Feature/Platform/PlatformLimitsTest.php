@@ -4,17 +4,12 @@ use App\Support\Images\ImageStore;
 use App\Support\PlatformLimits;
 use Illuminate\Support\Facades\Route;
 
-function routeThrottle(string $name): ?string
+/** Todos os limites da rota (o do grupo e o próprio da rota, se houver). */
+function routeThrottles(string $name): array
 {
     $middleware = Route::getRoutes()->getByName($name)?->gatherMiddleware() ?? [];
 
-    foreach ($middleware as $item) {
-        if (is_string($item) && str_starts_with($item, 'throttle:')) {
-            return $item;
-        }
-    }
-
-    return null;
+    return array_values(array_filter($middleware, fn (mixed $item) => is_string($item) && str_starts_with($item, 'throttle:')));
 }
 
 describe('requests per minute', function () {
@@ -35,13 +30,14 @@ describe('requests per minute', function () {
     });
 
     it('is what the routes actually use, with the same numbers as before', function () {
-        expect(routeThrottle('api.v1.games.show'))->toBe('throttle:60,1')
-            ->and(routeThrottle('overlay.state'))->toBe('throttle:120,1')
-            ->and(routeThrottle('embed.game'))->toBe('throttle:120,1')
-            ->and(routeThrottle('push.subscribe'))->toBe('throttle:30,1')
-            ->and(routeThrottle('portal.card'))->toBe('throttle:30,1')
-            ->and(routeThrottle('portal.search'))->toBe('throttle:60,1')
-            ->and(routeThrottle('registration.store'))->toBe('throttle:10,1');
+        expect(routeThrottles('api.v1.games.show'))->toContain('throttle:60,1')
+            ->and(routeThrottles('overlay.state'))->toContain('throttle:120,1')
+            ->and(routeThrottles('embed.game'))->toContain('throttle:120,1')
+            ->and(routeThrottles('push.subscribe'))->toContain('throttle:30,1')
+            ->and(routeThrottles('portal.card'))->toContain('throttle:30,1')
+            ->and(routeThrottles('portal.search'))->toContain('throttle:60,1')
+            // A inscrição tem o limite do grupo (60) e o próprio da rota (10): vale o mais estrito.
+            ->and(routeThrottles('registration.store'))->toContain('throttle:60,1', 'throttle:10,1');
     });
 
     it('configures every group in config/platform.php', function () {
