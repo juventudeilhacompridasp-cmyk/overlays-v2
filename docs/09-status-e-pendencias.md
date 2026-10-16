@@ -46,7 +46,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
   também foi adicionado, sem dependências externas e com contrato de aparência compatível com a API.
 - Portal: **dados estruturados (JSON-LD) nas páginas do jogo, da equipe e da edição** entregues; **busca por competições e equipes** (`/busca`) entregue; **feed Atom de resultados** (`/feed.xml`) e **página do local** (`/locais/{id}`) entregues; **imagem Open Graph por jogo** (`/jogos/{id}/imagem.png`, 1200x630 gerada com GD, só dados públicos) entregue.
 - **Sugestões de novos overlays** (cartela pré-jogo, comparativo, resumo do jogo, pênaltis, chaveamento...): `docs/12-sugestoes-overlays.md`.
-- Dashboard: visão operacional entregue com jogos encerrados por mês, situação dos jogos e próximos jogos; **filtros por competição, edição e janela de 3/6/12 meses e exportação em CSV entregues**; ficam para depois comparativos entre competições.
+- Dashboard: visão operacional entregue com jogos encerrados por mês, situação dos jogos e próximos jogos; **filtros por competição, edição e janela de 3/6/12 meses e exportação em CSV entregues**; **comparativo entre competições entregue** (contagens de jogos por competição, na tela e no CSV).
 - Visualizador unificado dos overlays otimizado: todas as camadas da rota `todos` compartilham uma única conexão Reverb e o polling de contingência.
 - Cobrança automática (fora do MVP).
 

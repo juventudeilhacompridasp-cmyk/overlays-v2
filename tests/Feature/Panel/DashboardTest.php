@@ -103,3 +103,26 @@ it('is for any member and never for guests', function () {
 
     $this->actingAs(panelUser(Role::Viewer))->get('/painel/resumo.csv')->assertOk();
 });
+
+it('compares the competitions by finished games, ignoring the competition and season filters', function () {
+    $one = dashboardSeason('Copa Um');
+    $two = dashboardSeason('Copa Dois');
+    dashboardGame($one);
+    dashboardGame($one);
+    dashboardGame($one, GameStatus::Scheduled);
+    dashboardGame($two);
+    $this->actingAs(panelUser());
+
+    $expected = fn ($rows) => collect($rows)->map(fn ($row) => [$row['name'], $row['finished_window'], $row['finished_total'], $row['open'], $row['seasons']])->all() === [['Copa Um', 2, 2, 1, 1], ['Copa Dois', 1, 1, 0, 1]];
+
+    $this->get('/painel')->assertInertia(fn ($page) => $page->where('comparison', $expected));
+    $this->get('/painel?competition='.$two->competition_id)->assertInertia(fn ($page) => $page->where('comparison', $expected));
+    $this->get('/painel?months=12')->assertInertia(fn ($page) => $page->where('comparison.0.per_month', 0.2));
+});
+
+it('exports the comparison too', function () {
+    dashboardGame(dashboardSeason('Copa Um'));
+    $this->actingAs(panelUser());
+
+    expect($this->get('/painel/resumo.csv')->streamedContent())->toContain('Comparativo: competição;Edições');
+});
