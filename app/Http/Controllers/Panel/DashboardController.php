@@ -36,6 +36,7 @@ class DashboardController extends Controller
         return Inertia::render('Panel/Dashboard', [
             'counts' => $this->counts(),
             ...$this->data($filters),
+            'comparison' => $this->comparison($filters['months']),
             'filters' => $filters,
             'month_options' => self::MONTH_OPTIONS,
             'competitions' => Competition::query()->orderBy('name')->get(['id', 'name'])->map(fn (Competition $competition) => ['id' => $competition->id, 'name' => $competition->name])->values(),
@@ -50,9 +51,10 @@ class DashboardController extends Controller
         $filters = $this->filters($request);
         $data = $this->data($filters);
         $counts = $this->counts();
+        $comparison = $this->comparison($filters['months']);
         $statusLabels = ['scheduled' => 'Agendados', 'in_progress' => 'Em andamento', 'finished' => 'Encerrados', 'postponed' => 'Adiados'];
 
-        return response()->streamDownload(function () use ($data, $counts, $statusLabels): void {
+        return response()->streamDownload(function () use ($data, $counts, $comparison, $statusLabels): void {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF"); // BOM: o Excel abre os acentos corretamente
 
@@ -75,6 +77,13 @@ class DashboardController extends Controller
 
             foreach ($data['status_breakdown'] as $status => $value) {
                 $write([$statusLabels[$status] ?? $status, $value]);
+            }
+
+            $write([]);
+            $write(['Comparativo: competição', 'Edições', 'Encerrados na janela', 'Média por mês', 'Encerrados (total)', 'Em aberto']);
+
+            foreach ($comparison as $row) {
+                $write([$row['name'], $row['seasons'], $row['finished_window'], $row['per_month'], $row['finished_total'], $row['open']]);
             }
 
             $write([]);
@@ -124,6 +133,36 @@ class DashboardController extends Controller
             'people' => Person::query()->count(),
             'games_finished' => Game::query()->whereIn('status', [GameStatus::Finished, GameStatus::Walkover])->count(),
         ];
+    }
+
+    /**
+     * Comparativo entre competições da organização (até 12): só contagens de jogos, SEM os filtros de competição/edição (a
+     * graça é comparar), mas com a janela de meses do gráfico. Ordenado por jogos encerrados na janela.
+     *
+     * @return list<array{id: string, name: string, seasons: int, finished_window: int, per_month: float, finished_total: int, open: int}>
+     */
+    private function comparison(int $months): array
+    {
+        $since = now()->startOfMonth()->subMonths($months - 1);
+        $done = [GameStatus::Finished, GameStatus::Walkover];
+        $open = [GameStatus::Scheduled, GameStatus::InProgress, GameStatus::Postponed];
+
+        return Competition::query()->withCount('seasons')->orderBy('name')->get()
+            ->map(function (Competition $competition) use ($since, $done, $open, $months): array {
+                $games = fn (): Builder => Game::query()->whereHas('division.season', fn (Builder $season) => $season->where('competition_id', $competition->id));
+                $window = $games()->whereIn('status', $done)->where('finished_at', '>=', $since)->count();
+
+                return [
+                    'id' => (string) $competition->id,
+                    'name' => $competition->name,
+                    'seasons' => (int) $competition->seasons_count,
+                    'finished_window' => $window,
+                    'per_month' => round($window / $months, 1),
+                    'finished_total' => $games()->whereIn('status', $done)->count(),
+                    'open' => $games()->whereIn('status', $open)->count(),
+                ];
+            })
+            ->sortByDesc('finished_window')->take(12)->values()->all();
     }
 
     /**

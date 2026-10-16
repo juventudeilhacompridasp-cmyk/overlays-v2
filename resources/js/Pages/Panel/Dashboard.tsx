@@ -8,6 +8,7 @@ interface Props {
     games_by_month: { label: string; value: number }[];
     status_breakdown: Record<string, number>;
     upcoming_games: { id: string; scheduled_at: string | null; status: string; home: string; away: string; division: string | null }[];
+    comparison: { id: string; name: string; seasons: number; finished_window: number; per_month: number; finished_total: number; open: number }[];
     filters: { competition: string | null; season: string | null; months: number };
     month_options: number[];
     competitions: { id: string; name: string }[];
@@ -17,7 +18,7 @@ interface Props {
 
 const statusLabels: Record<string, string> = { scheduled: 'Agendados', in_progress: 'Em andamento', finished: 'Encerrados', postponed: 'Adiados' };
 
-export default function Dashboard({ counts, games_by_month, status_breakdown, upcoming_games, filters, month_options, competitions, seasons, export_url }: Props) {
+export default function Dashboard({ counts, games_by_month, status_breakdown, upcoming_games, comparison, filters, month_options, competitions, seasons, export_url }: Props) {
     // Mudar a competição limpa a edição (ela pode ser de outra competição); tudo vai na URL, então dá para compartilhar e exportar.
     const filter = (change: Partial<{ competition: string; season: string; months: number }>) => {
         const next = { competition: filters.competition ?? '', season: filters.season ?? '', months: filters.months, ...change };
@@ -103,6 +104,32 @@ export default function Dashboard({ counts, games_by_month, status_breakdown, up
                     </div>
                 </Card>
             </div>
+
+            {comparison.length > 1 && (
+                <Card title="Comparativo entre competições" className="mt-6">
+                    <p className="-mt-2 mb-4 text-xs text-gray-500">Jogos encerrados nos últimos {filters.months} meses; não segue os filtros de competição e edição.</p>
+                    <div className="overflow-x-auto" data-testid="dashboard-comparison">
+                        <table className="w-full text-left text-sm">
+                            <thead className="text-xs uppercase text-gray-500">
+                                <tr><th className="py-2 pr-3">Competição</th><th className="px-3 py-2 text-right">Edições</th><th className="px-3 py-2 text-right">Na janela</th><th className="px-3 py-2 text-right">Média/mês</th><th className="px-3 py-2 text-right">Total</th><th className="py-2 pl-3 text-right">Em aberto</th></tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {comparison.map((row) => {
+                                    const max = Math.max(1, ...comparison.map((item) => item.finished_window));
+                                    return <tr key={row.id}>
+                                        <td className="py-2 pr-3 font-medium text-gray-900">{row.name}<div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-gray-100" aria-hidden="true"><div className="h-full rounded-full bg-indigo-500" style={{ width: `${(row.finished_window / max) * 100}%` }} /></div></td>
+                                        <td className="px-3 py-2 text-right text-gray-700">{row.seasons}</td>
+                                        <td className="px-3 py-2 text-right font-semibold text-gray-900">{row.finished_window}</td>
+                                        <td className="px-3 py-2 text-right text-gray-700">{row.per_month.toLocaleString('pt-BR')}</td>
+                                        <td className="px-3 py-2 text-right text-gray-700">{row.finished_total}</td>
+                                        <td className="py-2 pl-3 text-right text-gray-700">{row.open}</td>
+                                    </tr>;
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+            )}
 
             <Card title="Próximos jogos" className="mt-6">
                 <p className="-mt-2 mb-4 text-xs text-gray-500">Agenda operacional</p>
