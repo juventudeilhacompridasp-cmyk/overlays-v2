@@ -99,6 +99,12 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 - Indicadores e gráficos usam somente agregados da organização atual; não expor dados pessoais nem criar consultas por atleta sem necessidade.
 - Gráficos devem ser leves e progressivos (CSS/SVG, sem bibliotecas pesadas) para manter o painel responsivo.
 
+## Performance e otimizações
+
+- Em `OverlayState`, normalize cada configuração no máximo uma vez por montagem e reutilize o snapshot do jogo; não repita consultas ou serializações para cada camada.
+- Consultas de escalação devem restringir o elenco às pessoas presentes na partida. Camadas desligadas não devem calcular tabela, estatísticas, chaveamento ou fotos.
+- Registre novas medições e decisões em `docs/15-otimizacoes-e-performance.md`, sem introduzir cache que exponha dados privados ou congele o estado ao vivo.
+
 ## Relatórios PDF de partidas
 
 - Os relatórios internos ficam nas rotas `panel.games.reports.*`, protegidas por `feature:reports` e `panel.can:operate-games`.
