@@ -48,6 +48,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 - **Sugestões de novos overlays** (cartela pré-jogo, comparativo, resumo do jogo, pênaltis, chaveamento...): `docs/12-sugestoes-overlays.md`.
 - Dashboard: visão operacional entregue com jogos encerrados por mês, situação dos jogos e próximos jogos; **filtros por competição, edição e janela de 3/6/12 meses e exportação em CSV entregues**; ficam para depois comparativos entre competições.
 - Visualizador unificado dos overlays otimizado: todas as camadas da rota `todos` compartilham uma única conexão Reverb e o polling de contingência.
+- Otimização do estado dos overlays: normalizações e snapshot público são reutilizados por atualização, e a consulta de escalação carrega somente atletas da partida (`docs/15-otimizacoes-e-performance.md`).
 - Cobrança automática (fora do MVP).
 
 ## Limitações do ambiente de desenvolvimento do agente

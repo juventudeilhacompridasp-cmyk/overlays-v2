@@ -29,28 +29,34 @@ final class OverlayState
     public static function for(OverlayChannel $channel): array
     {
         $game = $channel->game_id ? Game::query()->find($channel->game_id) : null;
+        $appearance = OverlayAppearance::normalize($channel->appearance);
+        $lineupSettings = OverlayLineupSettings::normalize($channel->lineup_settings);
+        $screenSettings = OverlayScreenSettings::normalize($channel->screen_settings);
+        $screens = $channel->screensLive();
+        $customLive = $channel->customLive();
+        $gameSnapshot = $game ? PublicGameSnapshot::for($game) : null;
 
         return [
             'channel' => $channel->name,
-            'appearance' => $appearance = OverlayAppearance::normalize($channel->appearance),
+            'appearance' => $appearance,
             'font_face' => self::fontFace($channel, (string) $appearance['font']),
-            'lineup_settings' => OverlayLineupSettings::public($channel->lineup_settings),
+            'lineup_settings' => OverlayLineupSettings::public($lineupSettings),
             'lower_third_settings' => OverlayLowerThirdSettings::normalize($channel->lower_third_settings),
-            'sponsors' => OverlaySponsorSettings::public($channel->sponsor_settings, OverlayLineupSettings::normalize($channel->lineup_settings)['sponsor_banner'] || ($channel->screensLive()['sponsor_bar'] ?? false) || $channel->customLive() !== []),
+            'sponsors' => OverlaySponsorSettings::public($channel->sponsor_settings, $lineupSettings['sponsor_banner'] || ($screens['sponsor_bar'] ?? false) || $customLive !== []),
             'layers' => $channel->layerStates(),
             'championship' => $channel->championshipLive(),
-            'custom_live' => (object) $channel->customLive(),
-            'screens' => $screens = $channel->screensLive(),
-            'cartela' => array_diff_key(OverlayScreenSettings::normalize($channel->screen_settings), ['stoppage' => 0, 'mvp' => 0, 'social' => 0, 'serve' => 0]),
-            'social' => OverlayScreenSettings::normalize($channel->screen_settings)['social'],
-            'stoppage' => OverlayScreenSettings::normalize($channel->screen_settings)['stoppage'],
-            'serve' => OverlayScreenSettings::normalize($channel->screen_settings)['serve'],
+            'custom_live' => (object) $customLive,
+            'screens' => $screens,
+            'cartela' => array_diff_key($screenSettings, ['stoppage' => 0, 'mvp' => 0, 'social' => 0, 'serve' => 0]),
+            'social' => $screenSettings['social'],
+            'stoppage' => $screenSettings['stoppage'],
+            'serve' => $screenSettings['serve'],
             'compare' => $game && $screens['compare'] ? OverlayCompare::for($game) : null,
-            'summary' => $game && $screens['summary'] ? OverlaySummary::for($game, OverlayScreenSettings::normalize($channel->screen_settings)['mvp']) : null,
+            'summary' => $game && $screens['summary'] ? OverlaySummary::for($game, $screenSettings['mvp']) : null,
             'bracket' => $game && $screens['bracket'] ? OverlayBracket::for($game) : null,
-            'stats' => $game && $screens['stats'] ? OverlayStats::for($game, $channel->stats_settings, OverlayLineupSettings::normalize($channel->lineup_settings)['photo_person_ids']) : null,
-            'game' => $game ? PublicGameSnapshot::for($game) : null,
-            'lineup' => $game && $channel->layerOn('lineup') ? self::lineup($game, OverlayLineupSettings::normalize($channel->lineup_settings)['photo_person_ids']) : null,
+            'stats' => $game && $screens['stats'] ? OverlayStats::for($game, $channel->stats_settings, $lineupSettings['photo_person_ids']) : null,
+            'game' => $gameSnapshot,
+            'lineup' => $game && $channel->layerOn('lineup') ? self::lineup($game, $lineupSettings['photo_person_ids']) : null,
             'standings' => $game && $channel->layerOn('standings') ? self::standings($game) : null,
             'custom_table' => $game && $channel->customLive() !== [] ? self::customTable($game) : null,
             'server_time_ms' => (int) (microtime(true) * 1000),
@@ -124,7 +130,12 @@ final class OverlayState
 
         $side = function (Entry $entry) use ($game, $photos): array {
             $rows = GameLineup::query()->where('game_id', $game->getKey())->where('entry_id', $entry->getKey())->get();
-            $people = RosterEntry::query()->where('entry_id', $entry->getKey())->with('person:id,organization_id,name,nickname,birth_date,photo_path')->get()->keyBy('person_id');
+            $people = RosterEntry::query()
+                ->where('entry_id', $entry->getKey())
+                ->whereIn('person_id', $rows->pluck('person_id')->filter()->unique()->values())
+                ->with('person:id,organization_id,name,nickname,birth_date,photo_path')
+                ->get()
+                ->keyBy('person_id');
 
             $tactic = GameTactic::query()->where('game_id', $game->getKey())->where('entry_id', $entry->getKey())->first();
             $formation = $tactic?->formation !== null ? Formations::find($game->sport()->profile()->key, $tactic->formation) : null;
