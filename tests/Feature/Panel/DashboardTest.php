@@ -124,5 +124,5 @@ it('exports the comparison too', function () {
     dashboardGame(dashboardSeason('Copa Um'));
     $this->actingAs(panelUser());
 
-    expect($this->get('/painel/resumo.csv')->streamedContent())->toContain('Comparativo: competição;Edições');
+    expect($this->get('/painel/resumo.csv')->streamedContent())->toContain('"Comparativo: competição";Edições;"Encerrados na janela"');
 });
