@@ -90,7 +90,7 @@ describe('panel', function () {
         $asset = OverlayCustomAsset::query()->firstOrFail();
         expect($asset->variant_size)->toBe(OverlayCustomAsset::SIZE)
             ->and($asset->path)->toContain('/overlay-assets/image-');
-        Storage::disk('s3')->assertExists($asset->path.'-'.OverlayCustomAsset::SIZE.'.webp');
+        expect(Storage::disk('s3')->exists($asset->path.'-'.OverlayCustomAsset::SIZE.'.webp'))->toBeTrue();
     });
 
     it('creates, edits, duplicates and deletes an overlay, and tells the OBS', function () {
