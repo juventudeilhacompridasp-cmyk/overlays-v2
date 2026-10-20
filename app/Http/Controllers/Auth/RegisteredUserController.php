@@ -18,11 +18,13 @@ class RegisteredUserController extends Controller
 {
     /**
      * Cadastro público fechado por padrão: usuários são criados por um administrador (Painel > Usuários).
-     * Só abre com `OPEN_REGISTRATION=true` ou enquanto a instalação não tem nenhum usuário (o primeiro vira administrador).
+     * Só abre com `OPEN_REGISTRATION=true` ou, enquanto a instalação não tem nenhum usuário, com `ALLOW_FIRST_USER_SETUP`
+     * (o primeiro vira administrador). Em produção o padrão é desligado: o primeiro administrador nasce por
+     * `php artisan platform:create-admin`, para ninguém tomar a instalação chegando primeiro em /register.
      */
     public static function isOpen(): bool
     {
-        return (bool) config('platform.open_registration') || ! User::query()->exists();
+        return (bool) config('platform.open_registration') || ((bool) config('platform.first_user_setup') && ! User::query()->exists());
     }
 
     /**

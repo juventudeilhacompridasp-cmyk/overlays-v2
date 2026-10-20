@@ -27,6 +27,21 @@ return [
     'open_registration' => (bool) env('OPEN_REGISTRATION', false),
 
     /*
+    | O primeiro cadastro de uma instalação sem nenhum usuário vira administrador. Num site PÚBLICO isso é uma janela de
+    | tomada de controle (quem chegar primeiro em /register), então em produção o padrão é desligado
+    | (ALLOW_FIRST_USER_SETUP=false na stack) e o primeiro administrador nasce por `php artisan platform:create-admin`.
+    */
+    'first_user_setup' => (bool) env('ALLOW_FIRST_USER_SETUP', true),
+
+    /*
+    | Segurança das respostas. `hsts_seconds` = Strict-Transport-Security (só em HTTPS; 0 desliga). Sem `includeSubDomains`
+    | de propósito: subdomínios de organizações e domínios próprios podem ter ciclos de HTTPS diferentes.
+    */
+    'security' => [
+        'hsts_seconds' => max(0, (int) env('HSTS_SECONDS', 15552000)),
+    ],
+
+    /*
     | Endereço PÚBLICO do Reverb, usado pelo navegador (o servidor Laravel fala com o container "reverb" pelas
     | variáveis REVERB_*). Lido em tempo de execução, então não exige rebuild do front. Sem host, usa o do site.
     */

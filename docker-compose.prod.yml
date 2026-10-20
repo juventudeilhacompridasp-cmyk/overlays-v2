@@ -20,6 +20,13 @@ x-env: &env
   REDIS_HOST: redis
   CACHE_STORE: redis
   SESSION_DRIVER: redis
+  # Sessão: cookie só por HTTPS, cifrada no Redis. Proxies confiáveis: só a rede privada (nunca `*` com o app alcançável por fora).
+  SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
+  SESSION_ENCRYPT: ${SESSION_ENCRYPT:-true}
+  TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
+  HSTS_SECONDS: ${HSTS_SECONDS:-15552000}
+  # Site público: ninguém vira administrador só por chegar primeiro em /register. Crie o primeiro com `php artisan platform:create-admin`.
+  ALLOW_FIRST_USER_SETUP: ${ALLOW_FIRST_USER_SETUP:-false}
   QUEUE_CONNECTION: redis
   BROADCAST_CONNECTION: reverb
   REVERB_APP_ID: ${REVERB_APP_ID:?}
@@ -139,6 +146,20 @@ services:
     <<: *app
     command: php artisan horizon
     stop_grace_period: 60s
+
+  # Cloudflare Tunnel (opcional, perfil `tunnel`): conexão SÓ DE SAÍDA até a Cloudflare, sem abrir porta no servidor.
+  # `docker compose --profile tunnel up -d`. Hostnames públicos (no painel Zero Trust → Tunnels): o site → http://nginx:80 e
+  # ws.dominio → http://reverb:8080. Nenhum serviço publica porta no host.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: [tunnel]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?}
+    networks: [internal]
+    depends_on: [nginx, reverb]
+    logging: *logging
 
   scheduler:
     <<: *app

@@ -1,0 +1,31 @@
+name: Segurança
+
+# Vulnerabilidades conhecidas nas dependências. Roda quando o lock muda, toda segunda-feira (novas falhas aparecem em
+# pacotes que não mudamos) e sob demanda. Não faz parte do CI normal para um aviso novo de terceiros não travar PRs alheios.
+on:
+  pull_request:
+    paths: [composer.lock, package-lock.json, .github/workflows/security.yml]
+  schedule:
+    - cron: '17 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependencias:
+    name: Dependências (composer audit e npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - name: composer audit
+        run: composer audit --locked --no-interaction
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: npm audit (só o que vai para produção)
+        run: npm audit --omit=dev --audit-level=high

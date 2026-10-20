@@ -54,7 +54,7 @@ final class OrganizationResolver
         return self::defaultOrganization();
     }
 
-    private static function defaultOrganization(): Organization
+    public static function defaultOrganization(): Organization
     {
         return Organization::query()->firstOrCreate(
             ['slug' => config('platform.default_organization_slug')],

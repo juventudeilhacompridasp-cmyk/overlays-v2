@@ -1,5 +1,7 @@
 # 16 — Colocando em produção (1 servidor, banco e arquivos no próprio disco)
 
+> **Site público = leia também `docs/17-seguranca.md`** (túnel Cloudflare, firewall, Cloudflare Access, verificação e resposta a incidente).
+
 Roteiro para subir a stack de `docker-compose.prod.yml` num servidor só (VPS), com **Postgres no próprio servidor** e os
 **arquivos enviados no disco do servidor** (`STORAGE_DRIVER=local`). Visão geral da topologia: `docs/03-infra-cicd.md`.
 
@@ -54,11 +56,11 @@ Crie as pastas do host antes: `sudo mkdir -p /srv/data/postgres /srv/data/backup
 - Atrás da Cloudflare: proxy laranja liga no site; o WebSocket funciona na 443. Domínios de clientes (opcional) são cadastrados à mão em *Plataforma → organização → domínios*.
 
 ## 5. Primeiro acesso
-1. Abra `https://exemplo.com.br/register`: **o primeiro usuário vira administrador** da organização padrão (depois o cadastro público fecha).
-2. Para ter a área `/plataforma` (organizações, pacotes, status page, documentação das APIs), torne esse usuário Super Admin:
-   `docker exec -it <container-app> php artisan platform:make-admin SEU-EMAIL`
-3. Em *Painel → Parâmetros / Portal público / Termos e privacidade* ajuste a organização; crie os demais acessos em *Painel → Usuários*.
-4. Validações: `docker exec <app> php artisan realtime:check` (Reverb) e, se usar push, `php artisan push:check`. A página `/up` deve responder 200 e `/status` mostrar os componentes.
+1. Crie o primeiro administrador **pelo comando** (a stack de produção fecha o `/register` com `ALLOW_FIRST_USER_SETUP=false`, para ninguém assumir o sistema chegando primeiro; ver `docs/17-seguranca.md`):
+   `docker exec -it <container-app> php artisan platform:create-admin voce@exemplo.com.br --platform`
+   (a senha é pedida sem eco, mínimo 12 caracteres com letras e números; `--platform` também dá acesso à área `/plataforma`).
+2. Entre em `https://exemplo.com.br/login`. Em *Painel → Parâmetros / Portal público / Termos e privacidade* ajuste a organização; crie os demais acessos em *Painel → Usuários*.
+3. Validações: `docker exec <app> php artisan realtime:check` (Reverb) e, se usar push, `php artisan push:check`. A página `/up` deve responder 200 e `/status` mostrar os componentes.
 
 ## 6. Backup e restauração
 - O serviço `backup` roda todo dia (03h UTC): `pg_dump` em `/srv/data/backups/pg` (retém 14 dias) e **cópia aditiva** dos arquivos enviados em `/srv/data/backups/files` (nunca apaga no destino).
