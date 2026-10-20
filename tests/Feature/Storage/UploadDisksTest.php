@@ -13,21 +13,18 @@ afterEach(function () {
 });
 
 it('keeps the bucket (s3) engine by default', function () {
-    expect(UploadDisks::isLocal('s3'))->toBeFalse()
-        ->and(UploadDisks::publicDisk('s3')['driver'])->toBe('s3')
-        ->and(UploadDisks::privateDisk('s3')['driver'])->toBe('s3')
-        ->and(UploadDisks::privateDisk('s3')['visibility'])->toBe('private');
+    expect(config('filesystems.disks.s3.driver'))->toBe('s3')
+        ->and(config('filesystems.disks.s3-private.driver'))->toBe('s3')
+        ->and(config('filesystems.disks.s3-private.visibility'))->toBe('private');
 });
 
 it('stores on the server disk with STORAGE_DRIVER=local: public by the files URL, private by a signed route of its own', function () {
-    config(['app.url' => 'https://exemplo.com.br']);
+    $public = UploadDisks::publicLocal('https://exemplo.com.br/files/');
+    $private = UploadDisks::privateLocal('https://exemplo.com.br/private-files');
 
-    $public = UploadDisks::publicDisk('local');
-    $private = UploadDisks::privateDisk('local');
-
-    expect(UploadDisks::isLocal('local'))->toBeTrue()
-        ->and($public['driver'])->toBe('local')
+    expect($public['driver'])->toBe('local')
         ->and($public['visibility'])->toBe('public')
+        ->and($public['url'])->toBe('https://exemplo.com.br/files')
         ->and(str_ends_with($public['root'], 'storage/app/uploads/public'))->toBeTrue()
         ->and($private['driver'])->toBe('local')
         ->and($private['visibility'])->toBe('private')
@@ -41,7 +38,7 @@ it('stores on the server disk with STORAGE_DRIVER=local: public by the files URL
 
 it('saves, reads and removes an image on the local public disk and builds its URL', function () {
     $this->uploadsRoot = sys_get_temp_dir().'/uploads-'.bin2hex(random_bytes(4));
-    config(['filesystems.disks.s3' => ['root' => $this->uploadsRoot, 'url' => 'https://exemplo.com.br/files'] + UploadDisks::publicDisk('local')]);
+    config(['filesystems.disks.s3' => ['root' => $this->uploadsRoot] + UploadDisks::publicLocal('https://exemplo.com.br/files')]);
     Storage::purge('s3');
 
     $image = imagecreatetruecolor(300, 200);
