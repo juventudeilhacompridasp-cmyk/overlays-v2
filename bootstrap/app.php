@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\FrameOptions;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SecurityHeaders;
 use App\Modules\Market\Http\Middleware\EnsureAthlete;
 use App\Modules\Tenancy\Http\Middleware\EnsureFeature;
 use App\Modules\Tenancy\Http\Middleware\EnsureLegalAccepted;
@@ -10,6 +11,7 @@ use App\Modules\Tenancy\Http\Middleware\EnsurePanelAbility;
 use App\Modules\Tenancy\Http\Middleware\EnsurePlatformAdmin;
 use App\Modules\Tenancy\Http\Middleware\EnsureTeamManager;
 use App\Modules\Tenancy\Http\Middleware\ResolveOrganization;
+use App\Support\TrustedProxies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -27,8 +29,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // O nginx do app só é alcançável pelo Nginx Proxy Manager / Cloudflare.
-        $middleware->trustProxies(at: '*');
+        // Só proxies da rede interna (nginx, NPM, cloudflared) valem para X-Forwarded-*; `*` deixaria forjar o IP (limites e
+        // bloqueio de login por IP). Ver App\Support\TrustedProxies e docs/17-seguranca.md.
+        $middleware->trustProxies(at: TrustedProxies::resolve(env('TRUSTED_PROXIES')));
 
         // A organização ativa precisa estar definida ANTES da resolução de {team}, {season}...
         // pelas rotas (route model binding), senão o escopo da organização não vale nelas.
@@ -38,11 +41,14 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             FrameOptions::class,
+            SecurityHeaders::class,
         ]);
 
         // A API pública também precisa da organização ativa antes da resolução dos {parâmetros}.
         $middleware->api(prepend: [
             ResolveOrganization::class,
+        ], append: [
+            SecurityHeaders::class,
         ]);
 
         $middleware->alias([
