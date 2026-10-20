@@ -1,5 +1,7 @@
 <?php
 
+use App\Support\Storage\UploadDisks;
+
 return [
 
     /*
@@ -47,32 +49,11 @@ return [
             'report' => false,
         ],
 
-        's3' => [
-            'driver' => 's3',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
-            'report' => false,
-        ],
+        // Discos de envio do sistema (nomes fixos): motor por STORAGE_DRIVER = s3 (padrão) ou local. Ver UploadDisks.
+        's3' => UploadDisks::publicDisk(),
 
-        // Documentos pessoais (RG, CPF, atestados): bucket PRIVADO, acesso apenas por URL temporária assinada.
-        's3-private' => [
-            'driver' => 's3',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_PRIVATE_BUCKET'),
-            'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'visibility' => 'private',
-            'throw' => true,
-            'report' => false,
-        ],
+        // Documentos pessoais (RG, CPF, atestados), fotos e súmulas: PRIVADO, acesso apenas por URL temporária assinada.
+        's3-private' => UploadDisks::privateDisk(),
 
     ],
 
