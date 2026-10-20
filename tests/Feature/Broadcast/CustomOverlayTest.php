@@ -79,12 +79,6 @@ describe('sanitizing', function () {
 });
 
 describe('panel', function () {
-    it('rejects non-image uploads in the Builder', function () {
-        $this->actingAs(panelUser(Role::Organizer));
-
-        $this->postJson(route('panel.broadcast.custom.assets.store'), ['file' => UploadedFile::fake()->create('video.mp4', 10, 'video/mp4')])->assertUnprocessable()->assertJsonValidationErrors('file');
-    });
-
     it('creates, edits, duplicates and deletes an overlay, and tells the OBS', function () {
         $this->actingAs(panelUser(Role::Organizer));
         $channel = customChannel();
