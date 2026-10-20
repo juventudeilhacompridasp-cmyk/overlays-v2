@@ -1,3 +1,4 @@
+import DataTable, { Column } from '@/Components/DataTable';
 import { Badge, Button, Card, Empty, Input, LinkButton, Logo, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useFeature } from '@/lib/can';
@@ -76,11 +77,11 @@ export default function Entry({ entry, roster, window: rosterWindow, max_athlete
             )}
 
             <Card title={`Atletas (${athletes.length} de ${max_athletes})`} className="mb-6">
-                {athletes.length === 0 ? <Empty title="Nenhum atleta no elenco" /> : <MemberTable members={athletes} showShirt editable={!locked} />}
+                {athletes.length === 0 ? <Empty title="Nenhum atleta no elenco" /> : <MemberTable caption="Atletas do elenco" members={athletes} showShirt editable={!locked} />}
             </Card>
 
             <Card title={`Comissão técnica (${staff.length})`} className="mb-6">
-                {staff.length === 0 ? <Empty title="Ninguém na comissão" /> : <MemberTable members={staff} editable={!locked} />}
+                {staff.length === 0 ? <Empty title="Ninguém na comissão" /> : <MemberTable caption="Comissão técnica" members={staff} editable={!locked} />}
             </Card>
 
             {supplements.length > 0 && (
@@ -126,117 +127,130 @@ export default function Entry({ entry, roster, window: rosterWindow, max_athlete
     );
 }
 
-function MemberTable({ members, showShirt = false, editable }: { members: Member[]; showShirt?: boolean; editable: boolean }) {
-    const [editing, setEditing] = useState<string | null>(null);
-
-    return (
-        <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-                <thead className="text-xs uppercase text-gray-500">
-                    <tr>
-                        {showShirt && <th className="py-2 pr-3">Nº</th>}
-                        <th className="py-2 pr-3">Nome</th>
-                        <th className="py-2 pr-3">Função</th>
-                        <th className="py-2 pr-3">Idade</th>
-                        <th className="py-2 pr-3">Cartões</th>
-                        <th className="py-2 pr-3">Situação</th>
-                        {editable && <th className="py-2" />}
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                    {members.map((member) =>
-                        editing === member.id ? (
-                            <EditRow key={member.id} member={member} showShirt={showShirt} onDone={() => setEditing(null)} />
-                        ) : (
-                            <tr key={member.id}>
-                                {showShirt && <td className="py-2 pr-3 tabular-nums text-gray-700">{member.shirt_number ?? '—'}</td>}
-                                <td className="py-2 pr-3">
-                                    <div className="flex items-center gap-2">
-                                        <Logo src={member.photo_url} name={member.name} size={28} round />
-                                        <div>
-                                            <div className="font-medium text-gray-900">{member.nickname || member.name}</div>
-                                            {member.nickname && <div className="text-xs text-gray-500">{member.name}</div>}
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="py-2 pr-3 text-gray-600">{member.role_label}</td>
-                                <td className="py-2 pr-3 text-gray-600">{member.age ?? '—'}</td>
-                                <td className="py-2 pr-3 text-gray-600">
-                                    {member.yellow > 0 && <span className="mr-2">🟨 {member.yellow}</span>}
-                                    {member.red > 0 && <span>🟥 {member.red}</span>}
-                                    {member.yellow === 0 && member.red === 0 && '—'}
-                                </td>
-                                <td className="py-2 pr-3">
-                                    {member.suspended_games > 0 ? (
-                                        <Badge tone="red">Suspenso ({member.suspended_games} jogo{member.suspended_games > 1 ? 's' : ''})</Badge>
-                                    ) : member.series_yellows > 0 ? (
-                                        <Badge tone="amber">{member.series_yellows} amarelo{member.series_yellows > 1 ? 's' : ''} na série</Badge>
-                                    ) : (
-                                        <Badge tone="green">Regular</Badge>
-                                    )}
-                                </td>
-                                {editable && (
-                                    <td className="py-2 text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button small variant="secondary" onClick={() => setEditing(member.id)}>
-                                                Editar
-                                            </Button>
-                                            <Button
-                                                small
-                                                variant="danger"
-                                                onClick={() =>
-                                                    window.confirm(`Desligar ${member.nickname || member.name} do elenco? Ele(a) sai também das escalações dos jogos que ainda não começaram.`) &&
-                                                    router.delete(route('manager.roster.destroy', member.id), { preserveScroll: true })
-                                                }
-                                            >
-                                                Desligar
-                                            </Button>
-                                        </div>
-                                    </td>
-                                )}
-                            </tr>
-                        ),
-                    )}
-                </tbody>
-            </table>
-        </div>
-    );
-}
-
-function EditRow({ member, showShirt, onDone }: { member: Member; showShirt: boolean; onDone: () => void }) {
-    const [shirt, setShirt] = useState(member.shirt_number === null ? '' : String(member.shirt_number));
-    const [nickname, setNickname] = useState(member.nickname ?? '');
+function MemberTable({ members, showShirt = false, editable, caption }: { members: Member[]; showShirt?: boolean; editable: boolean; caption: string }) {
+    const [editing, setEditing] = useState<Member | null>(null);
+    const [shirt, setShirt] = useState('');
+    const [nickname, setNickname] = useState('');
     const [saving, setSaving] = useState(false);
 
-    const save = () => {
+    const startEditing = (member: Member) => {
+        setEditing(member);
+        setShirt(member.shirt_number === null ? '' : String(member.shirt_number));
+        setNickname(member.nickname ?? '');
+    };
+
+    const save = (member: Member) => {
         setSaving(true);
         router.patch(
             route('manager.roster.update', member.id),
             { ...(showShirt ? { shirt_number: shirt === '' ? null : Number(shirt) } : {}), nickname: nickname === '' ? null : nickname },
-            { preserveScroll: true, onSuccess: onDone, onFinish: () => setSaving(false) },
+            { preserveScroll: true, onSuccess: () => setEditing(null), onFinish: () => setSaving(false) },
         );
     };
 
-    return (
-        <tr>
-            {showShirt && (
-                <td className="py-2 pr-3">
-                    <Input aria-label="Camisa" type="number" min={0} max={99} className="!w-20" value={shirt} onChange={(event) => setShirt(event.target.value)} />
-                </td>
-            )}
-            <td className="py-2 pr-3" colSpan={4}>
-                <Input aria-label="Apelido" placeholder={`Apelido de ${member.name}`} maxLength={60} value={nickname} onChange={(event) => setNickname(event.target.value)} />
-            </td>
-            <td className="py-2 text-right" colSpan={2}>
-                <div className="flex justify-end gap-2">
-                    <Button small disabled={saving} onClick={save}>
-                        Salvar
-                    </Button>
-                    <Button small variant="ghost" onClick={onDone}>
-                        Cancelar
-                    </Button>
-                </div>
-            </td>
-        </tr>
-    );
+    const isEditing = (member: Member) => editing?.id === member.id;
+
+    const columns: Column<Member>[] = [
+        ...(showShirt
+            ? [
+                  {
+                      key: 'shirt',
+                      header: 'Nº',
+                      value: (member: Member) => member.shirt_number,
+                      nowrap: true,
+                      cell: (member: Member) =>
+                          isEditing(member) ? (
+                              <Input aria-label="Camisa" type="number" min={0} max={99} className="!w-20" value={shirt} onChange={(event) => setShirt(event.target.value)} />
+                          ) : (
+                              <span className="tabular-nums text-gray-700">{member.shirt_number ?? '—'}</span>
+                          ),
+                  },
+              ]
+            : []),
+        {
+            key: 'name',
+            header: 'Nome',
+            primary: true,
+            value: (member) => `${member.nickname ?? ''} ${member.name}`.trim(),
+            cell: (member) =>
+                isEditing(member) ? (
+                    <Input aria-label="Apelido" placeholder={`Apelido de ${member.name}`} maxLength={60} value={nickname} onChange={(event) => setNickname(event.target.value)} />
+                ) : (
+                    <div className="flex items-center gap-2">
+                        <Logo src={member.photo_url} name={member.name} size={28} round />
+                        <div>
+                            <div className="font-medium text-gray-900">{member.nickname || member.name}</div>
+                            {member.nickname && <div className="text-xs text-gray-500">{member.name}</div>}
+                        </div>
+                    </div>
+                ),
+        },
+        { key: 'role', header: 'Função', value: (member) => member.role_label, filter: true, cell: (member) => <span className="text-gray-600">{member.role_label}</span> },
+        { key: 'age', header: 'Idade', value: (member) => member.age, hideBelow: 'lg', cell: (member) => <span className="text-gray-600">{member.age ?? '—'}</span> },
+        {
+            key: 'cards',
+            header: 'Cartões',
+            value: (member) => member.yellow + member.red * 3,
+            cell: (member) => (
+                <span className="text-gray-600">
+                    {member.yellow > 0 && <span className="mr-2">🟨 {member.yellow}</span>}
+                    {member.red > 0 && <span>🟥 {member.red}</span>}
+                    {member.yellow === 0 && member.red === 0 && '—'}
+                </span>
+            ),
+        },
+        {
+            key: 'status',
+            header: 'Situação',
+            value: (member) => (member.suspended_games > 0 ? 'Suspenso' : member.series_yellows > 0 ? 'Amarelos na série' : 'Regular'),
+            filter: true,
+            cell: (member) =>
+                member.suspended_games > 0 ? (
+                    <Badge tone="red">Suspenso ({member.suspended_games} jogo{member.suspended_games > 1 ? 's' : ''})</Badge>
+                ) : member.series_yellows > 0 ? (
+                    <Badge tone="amber">{member.series_yellows} amarelo{member.series_yellows > 1 ? 's' : ''} na série</Badge>
+                ) : (
+                    <Badge tone="green">Regular</Badge>
+                ),
+        },
+        ...(editable
+            ? [
+                  {
+                      key: 'actions',
+                      header: 'Ações',
+                      align: 'right' as const,
+                      mobileLabel: false as const,
+                      cell: (member: Member) =>
+                          isEditing(member) ? (
+                              <div className="flex justify-end gap-2">
+                                  <Button small disabled={saving} onClick={() => save(member)}>
+                                      Salvar
+                                  </Button>
+                                  <Button small variant="ghost" onClick={() => setEditing(null)}>
+                                      Cancelar
+                                  </Button>
+                              </div>
+                          ) : (
+                              <div className="flex flex-wrap justify-end gap-2">
+                                  <Button small variant="secondary" onClick={() => startEditing(member)}>
+                                      Editar
+                                  </Button>
+                                  <Button
+                                      small
+                                      variant="danger"
+                                      onClick={() =>
+                                          window.confirm(`Desligar ${member.nickname || member.name} do elenco? Ele(a) sai também das escalações dos jogos que ainda não começaram.`) &&
+                                          router.delete(route('manager.roster.destroy', member.id), { preserveScroll: true })
+                                      }
+                                  >
+                                      Desligar
+                                  </Button>
+                              </div>
+                          ),
+                  },
+              ]
+            : []),
+    ];
+
+    return <DataTable flush className="-mx-5 -mb-5" caption={caption} searchPlaceholder="Buscar no elenco" rows={members} rowKey={(member) => member.id} columns={columns} pageSize={50} />;
 }

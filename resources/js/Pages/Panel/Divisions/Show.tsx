@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import Modal from '@/Components/Modal';
 import { Badge, Button, Card, DeleteButton, Empty, Field, Input, LinkButton, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
@@ -223,60 +224,61 @@ export default function Show({ competition, season, division, stages, entries, a
                     )}
                 </Card>
 
-                <Card
+                <DataTable
                     title={`Equipes inscritas (${entries.length})`}
+                    caption="Equipes inscritas na divisão"
+                    searchPlaceholder="Buscar equipe"
                     actions={<Button small onClick={() => setEntryModal({ open: true, entry: null })}>Inscrever equipe</Button>}
-                >
-                    {entries.length === 0 ? (
-                        <Empty title="Nenhuma equipe inscrita.">Inscreva as equipes que vão disputar esta divisão.</Empty>
-                    ) : (
-                        <div className="-m-5 overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-100 text-sm">
-                                <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
-                                    <tr>
-                                        <th className="px-5 py-3">Cabeça</th>
-                                        <th className="px-5 py-3">Equipe</th>
-                                        <th className="px-5 py-3">Situação</th>
-                                        <th className="px-5 py-3">Elenco</th>
-                                        <th className="px-5 py-3 text-right">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {entries.map((entry) => (
-                                        <tr key={entry.id}>
-                                            <td className="px-5 py-3 text-gray-600">{entry.seed ?? '—'}</td>
-                                            <td className="px-5 py-3 font-medium text-gray-900">
-                                                {entry.team.name}
-                                                {entry.team.city && <span className="ml-2 font-normal text-gray-500">{entry.team.city}</span>}
-                                            </td>
-                                            <td className="px-5 py-3">
-                                                <Badge tone={entryTone(entry.status)}>{entry.status_label}</Badge>
-                                            </td>
-                                            <td className="px-5 py-3 text-gray-600">
-                                                {entry.roster_count} {entry.roster_count === 1 ? 'pessoa' : 'pessoas'}
-                                            </td>
-                                            <td className="px-5 py-3">
-                                                <div className="flex justify-end gap-2">
-                                                    <LinkButton href={route('panel.entries.show', entry.id)} small>
-                                                        Elenco
-                                                    </LinkButton>
-                                                    <Button small variant="secondary" onClick={() => setEntryModal({ open: true, entry })}>
-                                                        Editar
-                                                    </Button>
-                                                    <DeleteButton
-                                                        href={route('panel.entries.destroy', entry.id)}
-                                                        message={`Remover a inscrição de "${entry.team.name}"?`}
-                                                        label="Remover"
-                                                    />
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </Card>
+                    rows={entries}
+                    rowKey={(entry) => entry.id}
+                    persistKey="panel-division-entries"
+                    empty={<Empty title="Nenhuma equipe inscrita.">Inscreva as equipes que vão disputar esta divisão.</Empty>}
+                    columns={[
+                        { key: 'seed', header: 'Cabeça', value: (entry) => entry.seed, hideBelow: 'lg', cell: (entry) => entry.seed ?? '—', nowrap: true },
+                        {
+                            key: 'team',
+                            header: 'Equipe',
+                            primary: true,
+                            value: (entry) => `${entry.team.name} ${entry.team.city ?? ''}`.trim(),
+                            cell: (entry) => (
+                                <span className="font-medium text-gray-900">
+                                    {entry.team.name}
+                                    {entry.team.city && <span className="ml-2 font-normal text-gray-500">{entry.team.city}</span>}
+                                </span>
+                            ),
+                        },
+                        {
+                            key: 'status',
+                            header: 'Situação',
+                            value: (entry) => entry.status_label,
+                            filter: true,
+                            cell: (entry) => <Badge tone={entryTone(entry.status)}>{entry.status_label}</Badge>,
+                        },
+                        {
+                            key: 'roster',
+                            header: 'Elenco',
+                            value: (entry) => entry.roster_count,
+                            cell: (entry) => `${entry.roster_count} ${entry.roster_count === 1 ? 'pessoa' : 'pessoas'}`,
+                        },
+                        {
+                            key: 'actions',
+                            header: 'Ações',
+                            align: 'right',
+                            mobileLabel: false,
+                            cell: (entry) => (
+                                <div className="flex flex-wrap justify-end gap-2">
+                                    <LinkButton href={route('panel.entries.show', entry.id)} small>
+                                        Elenco
+                                    </LinkButton>
+                                    <Button small variant="secondary" onClick={() => setEntryModal({ open: true, entry })}>
+                                        Editar
+                                    </Button>
+                                    <DeleteButton href={route('panel.entries.destroy', entry.id)} message={`Remover a inscrição de "${entry.team.name}"?`} label="Remover" />
+                                </div>
+                            ),
+                        },
+                    ]}
+                />
 
             </div>
 

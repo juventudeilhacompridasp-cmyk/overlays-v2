@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import Modal from '@/Components/Modal';
 import { Badge, Button, Card, Empty, Field, Input, Logo, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
@@ -357,51 +358,53 @@ export default function Show({ competition, season, division, stage, tables, gam
                 {generation.can_generate && <GenerateCard stage={stage} confirmedEntries={generation.confirmed_entries} />}
 
                 {tables.map((table) => (
-                    <Card key={table.id ?? 'single'} title={stage.type === 'groups' ? `Classificação: ${table.name}` : 'Classificação'}>
-                        {table.rows.length === 0 ? (
-                            <Empty title="Sem equipes nesta classificação." />
-                        ) : (
-                            <div className="-m-5 overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-100 text-sm">
-                                    <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-                                        <tr>
-                                            <th className="px-3 py-2 text-left">#</th>
-                                            <th className="px-3 py-2 text-left">Equipe</th>
-                                            {['Pts', 'J', 'V', 'E', 'D', 'GP', 'GC', 'SG', 'CA', 'CV'].map((label) => (
-                                                <th key={label} className="px-3 py-2 text-center">
-                                                    {label}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {table.rows.map((row) => (
-                                            <tr key={row.team}>
-                                                <td className="px-3 py-2 text-gray-500">{row.position}</td>
-                                                <td className="px-3 py-2 font-medium text-gray-900">
-                                                    <span className="flex items-center gap-2">
-                                                        <Logo src={row.logo} name={row.team} size={20} />
-                                                        {row.team}
-                                                        {row.tied && row.played > 0 && <span className="text-amber-600" title="Empate que só o sorteio resolve">*</span>}
-                                                    </span>
-                                                </td>
-                                                <td className="px-3 py-2 text-center font-semibold">{row.points}</td>
-                                                <td className="px-3 py-2 text-center">{row.played}</td>
-                                                <td className="px-3 py-2 text-center">{row.wins}</td>
-                                                <td className="px-3 py-2 text-center">{row.draws}</td>
-                                                <td className="px-3 py-2 text-center">{row.losses}</td>
-                                                <td className="px-3 py-2 text-center">{row.goals_for}</td>
-                                                <td className="px-3 py-2 text-center">{row.goals_against}</td>
-                                                <td className="px-3 py-2 text-center">{row.goal_difference}</td>
-                                                <td className="px-3 py-2 text-center">{row.yellow_cards}</td>
-                                                <td className="px-3 py-2 text-center">{row.red_cards}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </Card>
+                    <DataTable
+                        key={table.id ?? 'single'}
+                        title={stage.type === 'groups' ? `Classificação: ${table.name}` : 'Classificação'}
+                        caption={stage.type === 'groups' ? `Classificação do ${table.name}` : 'Classificação da fase'}
+                        rows={table.rows}
+                        rowKey={(row) => row.team}
+                        layout="table"
+                        paginated={false}
+                        searchable={false}
+                        empty={<Empty title="Sem equipes nesta classificação." />}
+                        columns={[
+                            { key: 'position', header: '#', value: (row) => row.position, cell: (row) => <span className="text-gray-500">{row.position}</span> },
+                            {
+                                key: 'team',
+                                header: 'Equipe',
+                                sticky: true,
+                                value: (row) => row.team,
+                                cell: (row) => (
+                                    <span className="flex items-center gap-2 font-medium text-gray-900">
+                                        <Logo src={row.logo} name={row.team} size={20} />
+                                        {row.team}
+                                        {row.tied && row.played > 0 && <span className="text-amber-600" title="Empate que só o sorteio resolve">*</span>}
+                                    </span>
+                                ),
+                            },
+                            ...(
+                                [
+                                    ['points', 'Pts', (row) => row.points],
+                                    ['played', 'J', (row) => row.played],
+                                    ['wins', 'V', (row) => row.wins],
+                                    ['draws', 'E', (row) => row.draws],
+                                    ['losses', 'D', (row) => row.losses],
+                                    ['goals_for', 'GP', (row) => row.goals_for],
+                                    ['goals_against', 'GC', (row) => row.goals_against],
+                                    ['goal_difference', 'SG', (row) => row.goal_difference],
+                                    ['yellow_cards', 'CA', (row) => row.yellow_cards],
+                                    ['red_cards', 'CV', (row) => row.red_cards],
+                                ] as [string, string, (row: Row) => number][]
+                            ).map(([key, header, value]) => ({
+                                key,
+                                header,
+                                align: 'center' as const,
+                                value,
+                                cell: (row: Row) => <span className={key === 'points' ? 'font-semibold' : ''}>{value(row)}</span>,
+                            })),
+                        ]}
+                    />
                 ))}
                 {hasTie && <p className="text-xs text-amber-700">* Empate que nenhum critério do regulamento resolve: a decisão é por sorteio.</p>}
 
