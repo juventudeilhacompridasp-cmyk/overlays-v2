@@ -72,11 +72,17 @@ x-env: &env
   DEFAULT_ORGANIZATION_SLUG: ${DEFAULT_ORGANIZATION_SLUG:-default}
   DOCUMENT_HASH_KEY: ${DOCUMENT_HASH_KEY:-}
   OPEN_REGISTRATION: ${OPEN_REGISTRATION:-false}
-  FILESYSTEM_DISK: s3
-  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:?}
-  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?}
+  # Arquivos enviados (escudos, fotos, documentos, súmulas): STORAGE_DRIVER=local grava no disco do servidor (volume `storage`,
+  # pasta storage/app/uploads); s3 usa bucket S3/R2 (preencha AWS_*). Trocar o motor NÃO migra os arquivos (docs/16).
+  FILESYSTEM_DISK: ${FILESYSTEM_DISK:-local}
+  STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+  FILES_PUBLIC_URL: ${FILES_PUBLIC_URL:-}
+  FILES_PRIVATE_URL: ${FILES_PRIVATE_URL:-}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
   AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-auto}
-  AWS_BUCKET: ${AWS_BUCKET:?}
+  AWS_BUCKET: ${AWS_BUCKET:-}
+  AWS_PRIVATE_BUCKET: ${AWS_PRIVATE_BUCKET:-}
   AWS_ENDPOINT: ${AWS_ENDPOINT:-}
   AWS_URL: ${AWS_URL:-}
   AWS_USE_PATH_STYLE_ENDPOINT: ${AWS_USE_PATH_STYLE_ENDPOINT:-true}
@@ -108,6 +114,9 @@ services:
     image: ${IMAGE_NGINX:?}
     restart: unless-stopped
     networks: [internal, proxy]
+    # Só leitura: o nginx serve os arquivos PÚBLICOS (/files); os privados só saem pela aplicação, por URL assinada.
+    volumes:
+      - storage:/var/www/html/storage:ro
     depends_on: [app]
     logging: *logging
 
@@ -188,14 +197,21 @@ services:
       PGUSER: ${DB_USERNAME:-overlays}
       PGPASSWORD: ${DB_PASSWORD:?}
       PGDATABASE: ${DB_DATABASE:-overlays}
-      BACKUP_REMOTE: ${BACKUP_REMOTE:?}
+      # Destino do dump e dos arquivos enviados: pasta local (padrão, /backups = BACKUP_PATH do servidor) ou remoto do rclone
+      # (ex.: r2:bucket/pg). Com remoto, preencha BACKUP_* abaixo.
+      BACKUP_REMOTE: ${BACKUP_REMOTE:-/backups/pg}
+      BACKUP_FILES_REMOTE: ${BACKUP_FILES_REMOTE:-/backups/files}
+      BACKUP_FILES_SOURCE: /data/storage/app/uploads
       RCLONE_CONFIG_R2_TYPE: s3
       RCLONE_CONFIG_R2_PROVIDER: ${BACKUP_S3_PROVIDER:-Cloudflare}
-      RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${BACKUP_ACCESS_KEY_ID:?}
-      RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${BACKUP_SECRET_ACCESS_KEY:?}
-      RCLONE_CONFIG_R2_ENDPOINT: ${BACKUP_ENDPOINT:?}
+      RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${BACKUP_ACCESS_KEY_ID:-}
+      RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${BACKUP_SECRET_ACCESS_KEY:-}
+      RCLONE_CONFIG_R2_ENDPOINT: ${BACKUP_ENDPOINT:-}
       BACKUP_HOUR: ${BACKUP_HOUR:-3}
       RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - storage:/data/storage:ro
+      - ${BACKUP_PATH:-/srv/data/backups}:/backups
     networks: [internal]
 
 networks:

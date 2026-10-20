@@ -1,5 +1,7 @@
 # 03 — Infra local, CI/CD e produção
 
+> Passo a passo de produção (servidor único, banco e arquivos no disco): **`docs/16-deploy-producao.md`**.
+
 ## 1. Topologia de produção (1 VPS, tudo em Docker Compose)
 ```
 Internet → Cloudflare (DNS, CDN, WAF) → Nginx Proxy Manager (80/443, TLS)
