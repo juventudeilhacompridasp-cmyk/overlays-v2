@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.2.4',
+        'date' => '2026-10-20',
+        'changes' => ['Nova rota interna `panel.broadcast.custom.assets.store`: envio de imagem própria para os overlays livres.'],
+    ],
+    [
         'version' => '1.2.3',
         'date' => '2026-10-15',
         'changes' => ['Rotas de site (portal público, status page, landing, inscrição online, cadastro do Mercado e autenticação/conta) agora têm descrição em `resources/api-docs/site.php`.'],

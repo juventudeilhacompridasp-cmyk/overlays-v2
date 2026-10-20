@@ -191,6 +191,7 @@ return [
     'panel.broadcast.models.import' => $action('Importa modelos de estilo (JSON `juventude-obs-models`)'),
     'panel.broadcast.models.destroy' => $action('Exclui um modelo de estilo'),
     'panel.broadcast.custom.store' => $action('Cria um overlay livre'),
+    'panel.broadcast.custom.assets.store' => $action('Envia uma imagem própria para usar num overlay livre', 'Reencodada em WebP e guardada no disco público (nome novo a cada envio); só JPG, PNG ou WebP, nunca SVG.'),
     'panel.broadcast.custom.import' => $action('Importa um overlay livre (JSON `juventude-overlay`)'),
     'panel.broadcast.custom.update' => $action('Atualiza o desenho de um overlay livre'),
     'panel.broadcast.custom.duplicate' => $action('Duplica um overlay livre'),

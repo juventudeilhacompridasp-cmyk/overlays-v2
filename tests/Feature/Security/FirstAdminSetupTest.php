@@ -15,7 +15,11 @@ it('closes the first-user door on a public installation, so nobody takes it by a
     expect(User::query()->count())->toBe(0);
 
     $this->get('/register')->assertForbidden();
-    $this->post('/register', ['name' => 'Intruso', 'email' => 'intruso@example.com', 'password' => 'SenhaForte12345', 'password_confirmation' => 'SenhaForte12345'])->assertForbidden();
+    // Ação (não-GET) sem permissão volta com aviso em vez de uma 403 crua (bootstrap/app.php); o que importa é nada ser criado.
+    $this->post('/register', ['name' => 'Intruso', 'email' => 'intruso@example.com', 'password' => 'SenhaForte12345', 'password_confirmation' => 'SenhaForte12345'])
+        ->assertRedirect()
+        ->assertSessionHas('error');
+    $this->assertGuest();
 
     expect(User::query()->count())->toBe(0)->and(Membership::query()->count())->toBe(0);
 });
