@@ -189,6 +189,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::post('broadcast/modelos/importar', [StyleModelController::class, 'import'])->name('broadcast.models.import');
         Route::delete('broadcast/modelos/{model}', [StyleModelController::class, 'destroy'])->name('broadcast.models.destroy');
         Route::post('broadcast/livres', [CustomItemController::class, 'store'])->name('broadcast.custom.store');
+        Route::post('broadcast/livres/imagens', [CustomItemController::class, 'asset'])->name('broadcast.custom.assets.store');
         Route::post('broadcast/livres/importar', [CustomItemController::class, 'import'])->name('broadcast.custom.import');
         Route::patch('broadcast/livres/{item}', [CustomItemController::class, 'update'])->name('broadcast.custom.update');
         Route::post('broadcast/livres/{item}/duplicar', [CustomItemController::class, 'duplicate'])->name('broadcast.custom.duplicate');

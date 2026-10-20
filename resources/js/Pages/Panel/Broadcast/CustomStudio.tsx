@@ -244,6 +244,7 @@ function Num({ label, value, min, max, step = 1, disabled, onChange }: { label: 
 
 function Properties({ element, sponsors, canManage, update, onDuplicate, onRemove }: { element: BuilderElement; sponsors: { id: string; name: string }[]; canManage: boolean; update: (patch: Partial<BuilderElement>) => void; onDuplicate: () => void; onRemove: () => void }) {
     const off = !canManage;
+    const [uploading, setUploading] = useState(false);
     const color = (label: string, key: 'color' | 'fill' | 'fill2' | 'borderColor') => (
         <label className="text-xs text-gray-600">{label}<input type="color" disabled={off} value={element[key] === '' ? '#000000' : element[key]} onChange={(event) => update({ [key]: event.target.value })} className="mt-0.5 h-8 w-full rounded border border-gray-300" /></label>
     );
@@ -316,6 +317,28 @@ function Properties({ element, sponsors, canManage, update, onDuplicate, onRemov
                     {element.src !== '' && !IMAGE_TOKENS.some((item) => item.token === element.src) && !element.src.startsWith('sponsor:') && (
                         <Input aria-label="Endereço da imagem" maxLength={500} disabled={off} value={element.src} onChange={(event) => update({ src: event.target.value })} placeholder="https://…" />
                     )}
+                    <label className={`block cursor-pointer rounded border border-dashed border-gray-300 p-2 text-center text-xs text-gray-600 hover:bg-gray-50 ${off || uploading ? 'pointer-events-none opacity-50' : ''}`}>
+                        {uploading ? 'Enviando imagem…' : 'Enviar imagem do computador (WebP otimizado)'}
+                        <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={off || uploading} onChange={async (event) => {
+                            const file = event.target.files?.[0];
+                            event.target.value = '';
+                            if (!file) return;
+                            setUploading(true);
+                            const body = new FormData();
+                            body.append('file', file);
+                            try {
+                                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+                                const response = await fetch(route('panel.broadcast.custom.assets.store'), { method: 'POST', body, headers: { Accept: 'application/json', 'X-CSRF-TOKEN': token } });
+                                const data = await response.json() as { url?: string; message?: string };
+                                if (!response.ok || !data.url) throw new Error(data.message ?? 'Não foi possível enviar a imagem.');
+                                update({ src: data.url });
+                            } catch (uploadError) {
+                                window.alert(uploadError instanceof Error ? uploadError.message : 'Não foi possível enviar a imagem.');
+                            } finally {
+                                setUploading(false);
+                            }
+                        }} />
+                    </label>
                     <label className="block text-xs text-gray-600">Ajuste
                         <select disabled={off} value={element.fit} onChange={(event) => update({ fit: event.target.value as BuilderElement['fit'] })} className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1 text-sm"><option value="cover">Preencher</option><option value="contain">Conter</option></select>
                     </label>
