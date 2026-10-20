@@ -2,7 +2,6 @@
 
 use App\Modules\Broadcast\Events\OverlayUpdated;
 use App\Modules\Broadcast\Models\OverlayChannel;
-use App\Modules\Broadcast\Models\OverlayCustomAsset;
 use App\Modules\Broadcast\Models\OverlayCustomItem;
 use App\Modules\Broadcast\Models\OverlaySponsor;
 use App\Modules\Broadcast\Support\OverlayCustomElements;
@@ -80,17 +79,10 @@ describe('sanitizing', function () {
 });
 
 describe('panel', function () {
-    it('uploads an optimized image for the Builder', function () {
-        Storage::fake('s3');
+    it('rejects non-image uploads in the Builder', function () {
         $this->actingAs(panelUser(Role::Organizer));
 
-        $response = $this->postJson(route('panel.broadcast.custom.assets.store'), ['file' => UploadedFile::fake()->image('placa.png', 400, 200)]);
-
-        $response->assertOk()->assertJsonStructure(['id', 'name', 'url']);
-        $asset = OverlayCustomAsset::query()->firstOrFail();
-        expect($asset->variant_size)->toBe(OverlayCustomAsset::SIZE)
-            ->and($asset->path)->toContain('/overlay-assets/image-');
-        Storage::disk('s3')->assertExists($asset->path.'-'.OverlayCustomAsset::SIZE.'.webp');
+        $this->postJson(route('panel.broadcast.custom.assets.store'), ['file' => UploadedFile::fake()->create('video.mp4', 10, 'video/mp4')])->assertUnprocessable()->assertJsonValidationErrors('file');
     });
 
     it('creates, edits, duplicates and deletes an overlay, and tells the OBS', function () {
