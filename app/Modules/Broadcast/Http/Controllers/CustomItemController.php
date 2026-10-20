@@ -4,7 +4,9 @@ namespace App\Modules\Broadcast\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Broadcast\Actions\SaveOverlayCustomItem;
+use App\Modules\Broadcast\Actions\StoreOverlayCustomAsset;
 use App\Modules\Broadcast\Models\OverlayCustomItem;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
@@ -12,6 +14,19 @@ use InvalidArgumentException;
 /** Overlays livres (Builder): criar, editar, duplicar, importar e excluir é de quem gerencia competições. */
 class CustomItemController extends Controller
 {
+    public function asset(Request $request, StoreOverlayCustomAsset $store): JsonResponse
+    {
+        $data = $request->validate(['file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:8192'], 'name' => ['nullable', 'string', 'max:80']], [], ['file' => 'imagem', 'name' => 'nome']);
+
+        try {
+            $asset = $store->handle($request->file('file'), (string) ($data['name'] ?? 'Imagem'));
+        } catch (InvalidArgumentException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        return response()->json(['id' => $asset->getKey(), 'name' => $asset->name, 'url' => $asset->url()]);
+    }
+
     public function store(Request $request, SaveOverlayCustomItem $save): RedirectResponse
     {
         $data = $this->validated($request);
