@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { GameList, PortalGame } from '@/Components/Portal/GameList';
 import ShareButtons from '@/Components/Portal/ShareButtons';
 import PortalLayout, { Seo, Theme } from '@/Components/Portal/PortalLayout';
@@ -80,42 +81,50 @@ interface Props {
 }
 
 function Table({ table, showCaption }: { table: Stage['tables'][number]; showCaption: boolean }) {
+    const numeric: [string, string, (row: Row) => number][] = [
+        ['points', 'P', (row) => row.points],
+        ['played', 'J', (row) => row.played],
+        ['wins', 'V', (row) => row.wins],
+        ['draws', 'E', (row) => row.draws],
+        ['losses', 'D', (row) => row.losses],
+        ['goals_for', 'GP', (row) => row.goals_for],
+        ['goals_against', 'GC', (row) => row.goals_against],
+        ['goal_difference', 'SG', (row) => row.goal_difference],
+    ];
+
     return (
-        <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-                <caption className={showCaption ? 'mb-1 text-left text-sm font-semibold text-gray-700' : 'sr-only'}>{table.name}</caption>
-                <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-                    <tr>
-                        <th className="px-2 py-2 text-left">#</th>
-                        <th className="px-2 py-2 text-left">Equipe</th>
-                        {['P', 'J', 'V', 'E', 'D', 'GP', 'GC', 'SG'].map((head) => (
-                            <th key={head} className="px-2 py-2 text-center">{head}</th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                    {table.rows.map((row) => (
-                        <tr key={row.team?.id ?? row.position}>
-                            <td className="px-2 py-2 text-gray-500">{row.position}</td>
-                            <td className="px-2 py-2 font-medium">
-                                <span className="flex items-center gap-2">
-                                    {row.team?.logo_url && <img src={row.team.logo_url} alt="" width={20} height={20} loading="lazy" className="h-5 w-5 object-contain" />}
-                                    {row.team ? <Link href={row.team.url} className="hover:underline">{row.team.name}</Link> : '—'}
-                                </span>
-                            </td>
-                            <td className="px-2 py-2 text-center font-bold">{row.points}</td>
-                            <td className="px-2 py-2 text-center">{row.played}</td>
-                            <td className="px-2 py-2 text-center">{row.wins}</td>
-                            <td className="px-2 py-2 text-center">{row.draws}</td>
-                            <td className="px-2 py-2 text-center">{row.losses}</td>
-                            <td className="px-2 py-2 text-center">{row.goals_for}</td>
-                            <td className="px-2 py-2 text-center">{row.goals_against}</td>
-                            <td className="px-2 py-2 text-center">{row.goal_difference}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
+        <DataTable
+            flush
+            layout="table"
+            paginated={false}
+            searchable={false}
+            caption={table.name}
+            title={showCaption ? table.name : undefined}
+            rows={table.rows}
+            rowKey={(row) => row.team?.id ?? row.position}
+            columns={[
+                { key: 'position', header: '#', value: (row) => row.position, cell: (row) => <span className="text-gray-500">{row.position}</span> },
+                {
+                    key: 'team',
+                    header: 'Equipe',
+                    sticky: true,
+                    value: (row) => row.team?.name,
+                    cell: (row) => (
+                        <span className="flex items-center gap-2 font-medium">
+                            {row.team?.logo_url && <img src={row.team.logo_url} alt="" width={20} height={20} loading="lazy" className="h-5 w-5 object-contain" />}
+                            {row.team ? <Link href={row.team.url} className="hover:underline">{row.team.name}</Link> : '—'}
+                        </span>
+                    ),
+                },
+                ...numeric.map(([key, header, value]) => ({
+                    key,
+                    header,
+                    align: 'center' as const,
+                    value,
+                    cell: (row: Row) => <span className={key === 'points' ? 'font-bold' : ''}>{value(row)}</span>,
+                })),
+            ]}
+        />
     );
 }
 

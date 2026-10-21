@@ -7,6 +7,7 @@ use App\Modules\Competitions\Enums\Sport;
 use App\Modules\Competitions\Http\Requests\CompetitionRequest;
 use App\Modules\Competitions\Models\Competition;
 use App\Modules\Tenancy\CurrentOrganization;
+use App\Support\Tables\TableQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -17,18 +18,25 @@ class CompetitionController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = trim((string) $request->query('q', ''));
+        $table = TableQuery::fromRequest($request, ['name', 'seasons'], 'name', ['seasons']);
 
-        $competitions = Competition::query()
-            ->withCount('seasons')
-            ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
-            ->orderBy('name')
-            ->paginate(15)
-            ->withQueryString();
+        $query = Competition::query()->withCount('seasons');
+        $table->search($query, ['name', 'description']);
+        $table->filter($query, [
+            'seasons' => fn ($builder, string $value) => match ($value) {
+                'with' => $builder->has('seasons'),
+                'without' => $builder->doesntHave('seasons'),
+                default => $builder,
+            },
+        ]);
+        $table->sort($query, [
+            'name' => ['column' => 'name', 'text' => true],
+            'seasons' => 'seasons_count',
+        ]);
 
         return Inertia::render('Panel/Competitions/Index', [
-            'competitions' => $competitions,
-            'filters' => ['q' => $search],
+            'competitions' => $query->paginate($table->perPage)->withQueryString(),
+            'filters' => $table->props(),
         ]);
     }
 

@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { Card, Empty, LinkButton, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, router } from '@inertiajs/react';
@@ -17,7 +18,7 @@ interface Props {
     rosters: Report;
 }
 
-function Table({ report, limit }: { report: Report; limit: number }) {
+function ReportTable({ report, limit, caption }: { report: Report; limit: number; caption: string }) {
     if (report.rows.length === 0) {
         return <Empty title="Nada por aqui." />;
     }
@@ -25,30 +26,23 @@ function Table({ report, limit }: { report: Report; limit: number }) {
 
     return (
         <>
-            <div className="-m-5 overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-100 text-sm">
-                    <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
-                        <tr>
-                            {columns.map((column) => (
-                                <th key={column} className="px-4 py-2">
-                                    {column}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {report.rows.map((row, index) => (
-                            <tr key={index}>
-                                {columns.map((column) => (
-                                    <td key={column} className="px-4 py-2">
-                                        {row[column] || '—'}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            <DataTable
+                flush
+                className="-mx-5 -mb-5"
+                caption={caption}
+                searchPlaceholder="Buscar no relatório"
+                rows={report.rows}
+                rowKey={(row) => JSON.stringify(row)}
+                persistKey={`panel-report-${caption}`}
+                columns={columns.map((column, index) => ({
+                    key: column,
+                    header: column,
+                    primary: index === 0,
+                    value: (row: Row) => row[column],
+                    filter: report.rows.length > 1 && new Set(report.rows.map((row) => row[column])).size <= 12 && new Set(report.rows.map((row) => row[column])).size > 1,
+                    cell: (row: Row) => row[column] || '—',
+                }))}
+            />
             {report.total > limit && <p className="mt-8 text-xs text-gray-500">Mostrando {limit} de {report.total}. O CSV traz tudo.</p>}
         </>
     );
@@ -81,7 +75,7 @@ export default function Index({ seasons, season_id, limit, pending, rosters }: P
                         }
                     >
                         <p className="mb-3 text-sm text-gray-600">Integrantes ativos sem data de nascimento, CPF ou foto.</p>
-                        <Table report={pending} limit={limit} />
+                        <ReportTable report={pending} limit={limit} caption="Pendências de cadastro" />
                     </Card>
                     <Card
                         title={`Elencos aprovados (${rosters.total})`}
@@ -91,7 +85,7 @@ export default function Index({ seasons, season_id, limit, pending, rosters }: P
                             </a>
                         }
                     >
-                        <Table report={rosters} limit={limit} />
+                        <ReportTable report={rosters} limit={limit} caption="Elencos aprovados" />
                     </Card>
                 </div>
             )}

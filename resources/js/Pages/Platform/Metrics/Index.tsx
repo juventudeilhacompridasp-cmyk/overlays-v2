@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { Card, Empty, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, Link } from '@inertiajs/react';
@@ -97,17 +98,20 @@ function DailyChart({ daily }: { daily: Day[] }) {
             </div>
             <details className="mt-4">
                 <summary className="cursor-pointer text-sm font-medium text-emerald-700">Ver como tabela</summary>
-                <div className="mt-2 max-h-72 overflow-y-auto rounded-md ring-1 ring-gray-200">
-                    <table className="w-full text-sm">
-                        <thead className="sticky top-0 bg-gray-50 text-left text-xs uppercase text-gray-500">
-                            <tr><th className="px-3 py-2">Dia</th><th className="px-3 py-2 text-right">Visitas</th><th className="px-3 py-2 text-right">Contatos</th></tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {[...daily].reverse().map((day) => (
-                                <tr key={day.date}><td className="px-3 py-1.5 text-gray-700">{shortDate(day.date)}</td><td className="px-3 py-1.5 text-right tabular-nums">{number(day.visits)}</td><td className="px-3 py-1.5 text-right tabular-nums">{number(day.leads)}</td></tr>
-                            ))}
-                        </tbody>
-                    </table>
+                <div className="mt-2">
+                    <DataTable
+                        caption="Visitas e contatos por dia"
+                        layout="table"
+                        searchable={false}
+                        pageSize={10}
+                        rows={[...daily].reverse()}
+                        rowKey={(day) => day.date}
+                        columns={[
+                            { key: 'date', header: 'Dia', value: (day) => day.date, cell: (day) => <span className="text-gray-700">{shortDate(day.date)}</span> },
+                            { key: 'visits', header: 'Visitas', align: 'right', value: (day) => day.visits, cell: (day) => <span className="tabular-nums">{number(day.visits)}</span> },
+                            { key: 'leads', header: 'Contatos', align: 'right', value: (day) => day.leads, cell: (day) => <span className="tabular-nums">{number(day.leads)}</span> },
+                        ]}
+                    />
                 </div>
             </details>
         </div>

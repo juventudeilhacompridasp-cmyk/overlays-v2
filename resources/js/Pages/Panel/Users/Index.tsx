@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { Badge, Button, Card, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
@@ -92,6 +93,12 @@ interface RoleInfo {
 // "role:operator" ou "profile:{id}": papel padrão ou perfil de acesso personalizado.
 const payload = (access: string) => (access.startsWith('profile:') ? { profile_id: access.slice(8) } : { role: access.slice(5) });
 
+function accessLabel(access: string, roles: RoleInfo[], profiles: ProfileInfo[]): string {
+    const [kind, id] = access.split(':');
+
+    return kind === 'profile' ? (profiles.find((profile) => profile.id === id)?.name ?? 'Perfil') : (roles.find((role) => role.value === id)?.label ?? id);
+}
+
 function AccessOptions({ roles, profiles }: { roles: RoleInfo[]; profiles: ProfileInfo[] }) {
     return (
         <>
@@ -130,42 +137,66 @@ export default function Index({ members, roles, profiles, catalog }: { members: 
             <PageHeader title="Usuários e papéis" subtitle="Quem acessa o painel e o que cada pessoa pode fazer. O cadastro público é fechado: os acessos são criados aqui." />
 
             <div className="space-y-6">
-                <Card title={`Usuários (${members.length})`}>
-                    <ul className="divide-y divide-gray-100">
-                        {members.map((member) => (
-                            <li key={member.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                                <div>
+                <DataTable
+                    title={`Usuários (${members.length})`}
+                    caption="Usuários com acesso ao painel"
+                    searchPlaceholder="Buscar por nome ou e-mail"
+                    rows={members}
+                    rowKey={(member) => member.id}
+                    persistKey="panel-users"
+                    layout="table"
+                    columns={[
+                        {
+                            key: 'name',
+                            header: 'Usuário',
+                            sticky: true,
+                            value: (member) => `${member.name} ${member.email}`,
+                            cell: (member) => (
+                                <div className="min-w-56 whitespace-normal">
                                     <div className="font-medium text-gray-900">
                                         {member.name} {member.is_me && <Badge tone="blue">você</Badge>}
                                     </div>
                                     <div className="text-sm text-gray-500">{member.email}</div>
+                                    <Exceptions key={`${member.id}:${member.access}:${member.allow.join()}:${member.deny.join()}`} member={member} catalog={catalog} />
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Select
-                                        aria-label={`Acesso de ${member.name}`}
-                                        className="!w-56"
-                                        value={member.access}
-                                        onChange={(event) => router.patch(route('panel.users.update', member.id), payload(event.target.value), { preserveScroll: true })}
-                                    >
-                                        <AccessOptions roles={roles} profiles={profiles} />
-                                    </Select>
-                                    <Button
-                                        small
-                                        variant="danger"
-                                        onClick={() => {
-                                            if (window.confirm(`Remover o acesso de ${member.name}? A conta continua existindo, sem acesso ao painel.`)) {
-                                                router.delete(route('panel.users.destroy', member.id), { preserveScroll: true });
-                                            }
-                                        }}
-                                    >
-                                        Remover acesso
-                                    </Button>
-                                </div>
-                                <Exceptions key={`${member.id}:${member.access}:${member.allow.join()}:${member.deny.join()}`} member={member} catalog={catalog} />
-                            </li>
-                        ))}
-                    </ul>
-                </Card>
+                            ),
+                        },
+                        {
+                            key: 'access',
+                            header: 'Acesso',
+                            value: (member) => accessLabel(member.access, roles, profiles),
+                            filter: true,
+                            cell: (member) => (
+                                <Select
+                                    aria-label={`Acesso de ${member.name}`}
+                                    className="!w-56"
+                                    value={member.access}
+                                    onChange={(event) => router.patch(route('panel.users.update', member.id), payload(event.target.value), { preserveScroll: true })}
+                                >
+                                    <AccessOptions roles={roles} profiles={profiles} />
+                                </Select>
+                            ),
+                        },
+                        {
+                            key: 'actions',
+                            header: 'Ações',
+                            align: 'right',
+                            cell: (member) => (
+                                <Button
+                                    small
+                                    variant="danger"
+                                    onClick={() => {
+                                        if (window.confirm(`Remover o acesso de ${member.name}? A conta continua existindo, sem acesso ao painel.`)) {
+                                            router.delete(route('panel.users.destroy', member.id), { preserveScroll: true });
+                                        }
+                                    }}
+                                >
+                                    Remover acesso
+                                </Button>
+                            ),
+                        },
+                    ]}
+                />
 
                 <Card title="Novo usuário">
                     <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2" aria-label="Novo usuário">

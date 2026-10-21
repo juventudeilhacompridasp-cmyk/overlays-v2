@@ -16,6 +16,7 @@ use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\Models\LegalDocument;
 use App\Modules\Tenancy\Support\CommunicationSettings;
+use App\Support\Tables\TableQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -29,15 +30,36 @@ class ReviewController extends Controller
 {
     public function index(Request $request): Response
     {
-        $status = $request->query('status');
+        // Compatibilidade: o endereço antigo `?status=` continua valendo (agora é `filter[status]`).
+        $legacy = $request->query('status');
 
-        $registrations = Registration::query()
+        if (is_string($legacy) && $legacy !== '' && ! is_array($request->query('filter'))) {
+            $request->query->set('filter', ['status' => $legacy]);
+        }
+
+        $table = TableQuery::fromRequest($request, ['priority', 'team', 'athletes', 'sent'], 'priority', ['status']);
+        $like = '%'.addcslashes(mb_strtolower($table->q), '\\%_').'%';
+
+        $query = Registration::query()
             ->with(['season.competition', 'division'])
-            ->withCount(['people', 'people as athletes_count' => fn ($query) => $query->where('role', RosterRole::Athlete)])
-            ->when(is_string($status) && RegistrationStatus::tryFrom($status) !== null, fn ($query) => $query->where('status', $status))
-            ->orderByRaw("case status when 'submitted' then 0 when 'returned' then 1 when 'draft' then 2 else 3 end")
-            ->orderByDesc('submitted_at')->orderByDesc('created_at')
-            ->paginate(20)->withQueryString()
+            ->withCount(['people', 'people as athletes_count' => fn ($builder) => $builder->where('role', RosterRole::Athlete)]);
+        $table->search($query, ['team_name'], function ($builder) use ($like): void {
+            $builder->whereHas('division', fn ($inner) => $inner->whereRaw("lower(name) like ? escape '\\'", [$like]))
+                ->orWhereHas('season', fn ($inner) => $inner->whereRaw("lower(name) like ? escape '\\'", [$like])
+                    ->orWhereHas('competition', fn ($deep) => $deep->whereRaw("lower(name) like ? escape '\\'", [$like])));
+        });
+        $table->filter($query, [
+            'status' => fn ($builder, string $value) => RegistrationStatus::tryFrom($value) !== null ? $builder->where('status', $value) : $builder,
+        ]);
+        $table->sort($query, [
+            // Padrão: o que precisa de análise primeiro (enviado, devolvido, rascunho, o resto), do mais recente ao mais antigo.
+            'priority' => ['raw' => "case status when 'submitted' then 0 when 'returned' then 1 when 'draft' then 2 else 3 end", 'then' => [['submitted_at', 'desc'], ['created_at', 'desc']]],
+            'team' => ['column' => 'team_name', 'text' => true],
+            'athletes' => 'athletes_count',
+            'sent' => ['column' => 'submitted_at', 'nullable' => true, 'then' => [['created_at', 'desc']]],
+        ]);
+
+        $registrations = $query->paginate($table->perPage)->withQueryString()
             ->through(fn (Registration $registration) => [
                 'id' => $registration->getKey(),
                 'team_name' => $registration->team_name,
@@ -55,7 +77,7 @@ class ReviewController extends Controller
 
         return Inertia::render('Panel/Registrations/Index', [
             'registrations' => $registrations,
-            'filters' => ['status' => is_string($status) ? $status : ''],
+            'filters' => $table->props(),
             'statuses' => array_map(fn (RegistrationStatus $item) => ['value' => $item->value, 'label' => $item->label()], RegistrationStatus::cases()),
             'pending' => Registration::query()->where('status', RegistrationStatus::Submitted)->count(),
         ]);

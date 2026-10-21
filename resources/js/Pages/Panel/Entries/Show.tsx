@@ -1,6 +1,7 @@
+import DataTable from '@/Components/DataTable';
 import Modal from '@/Components/Modal';
 import { maskCpf } from '@/Components/Panel/cpf';
-import { Badge, Button, Card, DeleteButton, Empty, Field, Input, LinkButton, PageHeader, Select } from '@/Components/Panel/ui';
+import { Badge, Button, DeleteButton, Empty, Field, Input, LinkButton, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Option } from '@/types/panel';
 import { useFeature } from '@/lib/can';
@@ -215,61 +216,63 @@ export default function Show({ competition, season, division, entry, team, roste
                 }
             />
 
-            <Card>
-                {roster.length === 0 ? (
+            <DataTable
+                caption="Elenco da equipe na divisão"
+                searchPlaceholder="Buscar no elenco"
+                rows={roster}
+                rowKey={(item) => item.id}
+                persistKey="panel-roster"
+                initialSort={{ key: 'shirt', dir: 'asc' }}
+                rowClassName={(item) => (item.status === 'removed' ? 'text-gray-400' : '')}
+                empty={
                     <Empty title="Elenco vazio.">Adicione os atletas e a comissão técnica desta equipe.</Empty>
-                ) : (
-                    <div className="-m-5 overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-100 text-sm">
-                            <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
-                                <tr>
-                                    <th className="px-5 py-3">Camisa</th>
-                                    <th className="px-5 py-3">Nome</th>
-                                    <th className="px-5 py-3">Idade</th>
-                                    <th className="px-5 py-3">Função</th>
-                                    <th className="px-5 py-3">Situação</th>
-                                    <th className="px-5 py-3 text-right">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {roster.map((item) => (
-                                    <tr key={item.id} className={item.status === 'removed' ? 'text-gray-400' : ''}>
-                                        <td className="px-5 py-3 font-semibold">{item.shirt_number ?? '—'}</td>
-                                        <td className="px-5 py-3">
-                                            <Link href={route('panel.people.edit', item.person.id)} className="font-medium hover:text-emerald-700">
-                                                {item.person.name}
-                                            </Link>
-                                            {item.person.nickname && <span className="ml-2 text-gray-500">({item.person.nickname})</span>}
-                                        </td>
-                                        <td className="px-5 py-3">{item.person.age !== null ? `${item.person.age} anos` : '—'}</td>
-                                        <td className="px-5 py-3">{item.role_label}</td>
-                                        <td className="px-5 py-3">
-                                            <Badge tone={item.status === 'active' ? 'green' : 'gray'}>{item.status_label}</Badge>
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <div className="flex justify-end gap-2">
-                                                {cards && item.status === 'active' && (
-                                                    <LinkButton small variant="secondary" href={route('panel.roster.card', item.id)}>
-                                                        Carteirinha
-                                                    </LinkButton>
-                                                )}
-                                                <Button small variant="secondary" onClick={() => setEditing(item)}>
-                                                    Editar
-                                                </Button>
-                                                <DeleteButton
-                                                    href={route('panel.roster.destroy', item.id)}
-                                                    message={`Tirar "${item.person.name}" do elenco?`}
-                                                    label="Remover"
-                                                />
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </Card>
+                }
+                columns={[
+                    { key: 'shirt', header: 'Camisa', value: (item) => item.shirt_number, cell: (item) => <span className="font-semibold">{item.shirt_number ?? '—'}</span>, nowrap: true },
+                    {
+                        key: 'name',
+                        header: 'Nome',
+                        primary: true,
+                        value: (item) => `${item.person.name} ${item.person.nickname ?? ''}`.trim(),
+                        cell: (item) => (
+                            <>
+                                <Link href={route('panel.people.edit', item.person.id)} className="font-medium hover:text-emerald-700">
+                                    {item.person.name}
+                                </Link>
+                                {item.person.nickname && <span className="ml-2 text-gray-500">({item.person.nickname})</span>}
+                            </>
+                        ),
+                    },
+                    { key: 'age', header: 'Idade', value: (item) => item.person.age, hideBelow: 'lg', cell: (item) => (item.person.age !== null ? `${item.person.age} anos` : '—') },
+                    { key: 'role', header: 'Função', value: (item) => item.role_label, filter: true, cell: (item) => item.role_label },
+                    {
+                        key: 'status',
+                        header: 'Situação',
+                        value: (item) => item.status_label,
+                        filter: true,
+                        cell: (item) => <Badge tone={item.status === 'active' ? 'green' : 'gray'}>{item.status_label}</Badge>,
+                    },
+                    {
+                        key: 'actions',
+                        header: 'Ações',
+                        align: 'right',
+                        mobileLabel: false,
+                        cell: (item) => (
+                            <div className="flex flex-wrap justify-end gap-2">
+                                {cards && item.status === 'active' && (
+                                    <LinkButton small variant="secondary" href={route('panel.roster.card', item.id)}>
+                                        Carteirinha
+                                    </LinkButton>
+                                )}
+                                <Button small variant="secondary" onClick={() => setEditing(item)}>
+                                    Editar
+                                </Button>
+                                <DeleteButton href={route('panel.roster.destroy', item.id)} message={`Tirar "${item.person.name}" do elenco?`} label="Remover" />
+                            </div>
+                        ),
+                    },
+                ]}
+            />
 
             {adding && <AddModal entryId={entry.id} people={people} roles={options.roles} onClose={() => setAdding(false)} />}
             {editing && <EditModal key={editing.id} item={editing} roles={options.roles} statuses={options.statuses} onClose={() => setEditing(null)} />}

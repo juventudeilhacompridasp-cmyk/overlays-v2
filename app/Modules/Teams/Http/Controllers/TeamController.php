@@ -9,6 +9,7 @@ use App\Modules\Teams\Models\Team;
 use App\Modules\Teams\Models\TeamManager;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
+use App\Support\Tables\TableQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,13 +19,25 @@ class TeamController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = trim((string) $request->query('q', ''));
+        $table = TableQuery::fromRequest($request, ['name', 'city', 'entries'], 'name', ['city', 'entries']);
 
-        $teams = Team::query()
-            ->withCount('entries')
-            ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
-            ->orderBy('name')
-            ->paginate(15)
+        $query = Team::query()->withCount('entries');
+        $table->search($query, ['name', 'short_name', 'city']);
+        $table->filter($query, [
+            'city' => fn ($builder, string $value) => $builder->where('city', $value),
+            'entries' => fn ($builder, string $value) => match ($value) {
+                'with' => $builder->has('entries'),
+                'without' => $builder->doesntHave('entries'),
+                default => $builder,
+            },
+        ]);
+        $table->sort($query, [
+            'name' => ['column' => 'name', 'text' => true],
+            'city' => ['column' => 'city', 'text' => true, 'nullable' => true],
+            'entries' => 'entries_count',
+        ]);
+
+        $teams = $query->paginate($table->perPage)
             ->withQueryString()
             ->through(fn (Team $team) => [
                 ...$team->only(['id', 'name', 'short_name', 'city', 'primary_color', 'entries_count']),
@@ -33,7 +46,8 @@ class TeamController extends Controller
 
         return Inertia::render('Panel/Teams/Index', [
             'teams' => $teams,
-            'filters' => ['q' => $search],
+            'filters' => $table->props(),
+            'city_options' => Team::query()->whereNotNull('city')->where('city', '!=', '')->distinct()->orderBy('city')->limit(200)->pluck('city'),
         ]);
     }
 
