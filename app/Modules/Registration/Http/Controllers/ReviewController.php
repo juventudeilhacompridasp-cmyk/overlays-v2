@@ -43,10 +43,11 @@ class ReviewController extends Controller
         $query = Registration::query()
             ->with(['season.competition', 'division'])
             ->withCount(['people', 'people as athletes_count' => fn ($builder) => $builder->where('role', RosterRole::Athlete)]);
-        $table->search($query, ['team_name'], fn ($builder) => $builder
-            ->whereHas('division', fn ($inner) => $inner->whereRaw("lower(name) like ? escape '\\'", [$like]))
-            ->orWhereHas('season', fn ($inner) => $inner->whereRaw("lower(name) like ? escape '\\'", [$like])
-                ->orWhereHas('competition', fn ($deep) => $deep->whereRaw("lower(name) like ? escape '\\'", [$like]))));
+        $table->search($query, ['team_name'], function ($builder) use ($like): void {
+            $builder->whereHas('division', fn ($inner) => $inner->whereRaw("lower(name) like ? escape '\\'", [$like]))
+                ->orWhereHas('season', fn ($inner) => $inner->whereRaw("lower(name) like ? escape '\\'", [$like])
+                    ->orWhereHas('competition', fn ($deep) => $deep->whereRaw("lower(name) like ? escape '\\'", [$like])));
+        });
         $table->filter($query, [
             'status' => fn ($builder, string $value) => RegistrationStatus::tryFrom($value) !== null ? $builder->where('status', $value) : $builder,
         ]);
