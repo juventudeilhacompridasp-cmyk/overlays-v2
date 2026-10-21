@@ -13,6 +13,7 @@ Uma competição (por exemplo, "Copa Ilha") tem **edições** (a temporada de ca
 2. Crie a edição e preencha o regulamento: pontos, critérios de desempate e regras de cartões e suspensão. Tudo é parâmetro, nada é fixo. Para esportes com relógio, o bloco **tempo de jogo e limites do esporte** ajusta a duração de cada tempo ou quarto, as faltas de equipe que dão tiro livre e os pedidos de tempo (basquete e vôlei); já vêm com o padrão do esporte. O bloco **lançamento de resultados** permite ou proíbe o **resultado rápido** (placar final sem súmula detalhada) nesta edição.
 3. Crie as divisões e inclua as equipes em cada uma (as equipes vêm de **Equipes**).
 4. Crie a fase e use **Gerar jogos**. Pontos corridos usa rodadas; mata-mata gera o chaveamento (1 jogo ou ida e volta).
+   **Já tem os confrontos definidos (sem sorteio)?** Na mesma tela da fase use **Importar tabela pronta**: cole uma linha por jogo, `Rodada; Mandante; Visitante; Data; Hora; Local; Grupo` (pode copiar direto de uma planilha). Data e hora vão juntas e são opcionais, o local precisa estar em **Estádios** e, em fase de grupos, o grupo é obrigatório (os grupos são criados com os nomes que você escrever). Os nomes das equipes precisam ser iguais aos cadastrados e as equipes, confirmadas na divisão. Se alguma linha estiver errada, nada é importado e a tela lista os problemas. Vale para pontos corridos e grupos.
 5. Ajuste datas e locais dos jogos.
 6. Mude o status da edição para publicá-la.
 

@@ -170,3 +170,13 @@ it('redirects guests away from the game routes', function () {
 
     $this->post('/painel/games/01abc/result', ['home_score' => 1, 'away_score' => 0])->assertRedirect(route('login'));
 });
+
+it('imports a ready-made table through the panel route', function () {
+    ['stage' => $stage, 'entries' => $entries] = fixtureDivision(2);
+    [$a, $b] = array_map(fn ($entry) => $entry->team->name, $entries);
+
+    $this->post("/painel/stages/{$stage->id}/fixtures/import", ['text' => "1;{$a};{$b}"])->assertSessionHas('success');
+    $this->post("/painel/stages/{$stage->id}/fixtures/import", [])->assertSessionHasErrors('text');
+
+    expect(Game::query()->where('stage_id', $stage->id)->count())->toBe(1);
+});

@@ -5,10 +5,12 @@ use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Competitions\Models\Group;
 use App\Modules\Matches\Actions\ClearStageFixtures;
 use App\Modules\Matches\Actions\GenerateStageFixtures;
+use App\Modules\Matches\Actions\ImportStageFixtures;
 use App\Modules\Matches\Actions\RecordQuickResult;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
+use App\Modules\Matches\Models\Venue;
 use App\Modules\Teams\Models\Person;
 
 it('generates a single round robin league with numbered rounds', function () {
@@ -118,3 +120,61 @@ it('refuses to clear fixtures when a game already has events', function () {
 
     app(ClearStageFixtures::class)->handle($stage);
 })->throws(InvalidArgumentException::class);
+
+describe('import of a ready-made table', function () {
+    it('imports league games with dates and venues without a draw', function () {
+        ['stage' => $stage, 'entries' => $entries] = fixtureDivision(3);
+        $venue = Venue::factory()->create(['name' => 'Estádio Municipal']);
+        [$a, $b, $c] = array_map(fn ($entry) => $entry->team->name, $entries);
+
+        $text = "Rodada;Mandante;Visitante;Data;Hora;Local\n1;{$a};{$b};10/05/2026;16:00;estadio municipal\n2;{$c};{$a};11/05/2026;18:30h;\n3;{$b};{$c};;;";
+        $created = app(ImportStageFixtures::class)->handle($stage, $text);
+
+        $games = Game::query()->where('stage_id', $stage->id)->orderBy('number')->get();
+        expect($created)->toBe(3)
+            ->and($games->pluck('round')->all())->toBe([1, 2, 3])
+            ->and($games[0]->home_entry_id)->toBe($entries[0]->id)
+            ->and($games[0]->venue_id)->toBe($venue->id)
+            ->and($games[0]->scheduled_at->format('Y-m-d H:i'))->toBe('2026-05-10 16:00')
+            ->and($games[1]->scheduled_at->format('H:i'))->toBe('18:30')
+            ->and($games[2]->scheduled_at)->toBeNull();
+    });
+
+    it('creates the groups named in the table', function () {
+        ['stage' => $stage, 'entries' => $entries] = fixtureDivision(4, StageType::Groups);
+        [$a, $b, $c, $d] = array_map(fn ($entry) => $entry->team->name, $entries);
+
+        app(ImportStageFixtures::class)->handle($stage, "1;{$a};{$b};;;;Grupo A\n1;{$c};{$d};;;;Grupo B");
+
+        $groups = Group::query()->where('stage_id', $stage->id)->orderBy('sequence')->get();
+        expect($groups->pluck('name')->all())->toBe(['Grupo A', 'Grupo B'])
+            ->and($groups[0]->entries)->toHaveCount(2)
+            ->and(Game::query()->where('stage_id', $stage->id)->whereNotNull('group_id')->count())->toBe(2);
+    });
+
+    it('imports nothing when any line has a problem', function () {
+        ['stage' => $stage, 'entries' => $entries] = fixtureDivision(2);
+        $a = $entries[0]->team->name;
+
+        expect(fn () => app(ImportStageFixtures::class)->handle($stage, "1;{$a};Time Fantasma;;;\n1;{$a};{$a};;;\nx;{$a};{$a}"))
+            ->toThrow(InvalidArgumentException::class, 'Time Fantasma');
+
+        expect(Game::query()->where('stage_id', $stage->id)->count())->toBe(0);
+    });
+
+    it('requires the group on group stages and refuses knockout and non-empty stages', function () {
+        ['stage' => $groups, 'entries' => $entries] = fixtureDivision(2, StageType::Groups);
+        [$a, $b] = array_map(fn ($entry) => $entry->team->name, $entries);
+        $import = app(ImportStageFixtures::class);
+
+        expect(fn () => $import->handle($groups, "1;{$a};{$b}"))->toThrow(InvalidArgumentException::class, 'informe o grupo');
+
+        ['stage' => $knockout] = fixtureDivision(2, StageType::Knockout);
+        expect(fn () => $import->handle($knockout, '1;a;b'))->toThrow(InvalidArgumentException::class, 'mata-mata');
+
+        ['stage' => $league, 'entries' => $entries] = fixtureDivision(2);
+        [$a, $b] = array_map(fn ($entry) => $entry->team->name, $entries);
+        $import->handle($league, "1;{$a};{$b}");
+        expect(fn () => $import->handle($league, "2;{$b};{$a}"))->toThrow(InvalidArgumentException::class, 'já tem jogos');
+    });
+});

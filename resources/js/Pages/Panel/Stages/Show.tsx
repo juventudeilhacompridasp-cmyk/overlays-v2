@@ -122,6 +122,46 @@ function GenerateCard({ stage, confirmedEntries }: { stage: Props['stage']; conf
     );
 }
 
+const IMPORT_EXAMPLE = `Rodada;Mandante;Visitante;Data;Hora;Local;Grupo
+1;Atlético Ilha;Real Cananéia;10/05/2026;16:00;Estádio Municipal;Grupo A
+1;Juventude;Estrela;10/05/2026;18:00;Estádio Municipal;Grupo A`;
+
+function ImportCard({ stage }: { stage: Props['stage'] }) {
+    const { data, setData, post, processing, reset } = useForm({ text: '' });
+    const isGroups = stage.type === 'groups';
+
+    return (
+        <Card title="Importar tabela pronta (sem sorteio)">
+            <form
+                onSubmit={(event: FormEvent) => {
+                    event.preventDefault();
+                    post(route('panel.stages.fixtures.import', stage.id), { preserveScroll: true, onSuccess: () => reset() });
+                }}
+                className="space-y-3"
+            >
+                <p className="text-sm text-gray-600">
+                    Já tem os confrontos definidos? Cole uma linha por jogo (também dá para copiar direto de uma planilha):{' '}
+                    <b>Rodada; Mandante; Visitante; Data (dd/mm/aaaa); Hora (hh:mm); Local; Grupo</b>. Data, hora e local são opcionais (data e hora vão juntas)
+                    {isGroups ? '; o grupo é obrigatório e os grupos são criados com os nomes que você escrever' : '; o grupo não é usado nesta fase'}. Os nomes das equipes precisam ser iguais aos cadastrados
+                    e estar confirmadas na divisão; o local, igual ao cadastrado em Estádios. Se algo estiver errado, nada é importado e a lista de problemas aparece.
+                </p>
+                <textarea
+                    value={data.text}
+                    onChange={(e) => setData('text', e.target.value)}
+                    rows={8}
+                    spellCheck={false}
+                    placeholder={IMPORT_EXAMPLE}
+                    aria-label="Jogos da tabela"
+                    className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 font-mono text-xs text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+                <Button type="submit" disabled={processing || data.text.trim() === ''}>
+                    Importar tabela
+                </Button>
+            </form>
+        </Card>
+    );
+}
+
 function ScheduleModal({ game, venues, statuses, onClose }: { game: Game; venues: Props['venues']; statuses: Option[]; onClose: () => void }) {
     const { data, setData, patch, processing, errors } = useForm({
         scheduled_at: game.scheduled_at ?? '',
@@ -356,6 +396,7 @@ export default function Show({ competition, season, division, stage, tables, gam
 
             <div className="space-y-6">
                 {generation.can_generate && <GenerateCard stage={stage} confirmedEntries={generation.confirmed_entries} />}
+                {generation.can_generate && stage.type !== 'knockout' && <ImportCard stage={stage} />}
 
                 {tables.map((table) => (
                     <DataTable
