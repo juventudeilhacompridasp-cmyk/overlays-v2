@@ -137,8 +137,22 @@ describe('moderation panel', function () {
         modTarget();
         modTarget(['status' => ProfileStatus::Paused, 'display_name' => 'Pausado']);
 
-        $this->actingAs(panelUser(Role::Organizer))->get(route('panel.market.index', ['status' => 'paused']))
+        $this->actingAs(panelUser(Role::Organizer))->get(route('panel.market.index', ['filter' => ['status' => 'paused']]))
             ->assertInertia(fn ($page) => $page->has('profiles.data', 1)->where('profiles.data.0.name', 'Pausado'));
+    });
+
+    it('searches and sorts the profiles on the server', function () {
+        modTarget(['display_name' => 'Zeca Ilhéu', 'city' => 'Cananéia']);
+        modTarget(['display_name' => 'Abel Costa', 'city' => 'Registro']);
+
+        $organizer = panelUser(Role::Organizer);
+
+        $this->actingAs($organizer)->get(route('panel.market.index', ['q' => 'cananéia']))
+            ->assertInertia(fn ($page) => $page->has('profiles.data', 1)->where('profiles.data.0.name', 'Zeca Ilhéu'));
+        $this->actingAs($organizer)->get(route('panel.market.index', ['q' => 'Zeca']))
+            ->assertInertia(fn ($page) => $page->has('profiles.data', 1)->where('profiles.data.0.name', 'Zeca Ilhéu'));
+        $this->actingAs($organizer)->get(route('panel.market.index', ['sort' => 'name', 'dir' => 'asc']))
+            ->assertInertia(fn ($page) => $page->where('profiles.data.0.name', 'Abel Costa')->where('filters.sort', 'name'));
     });
 
     it('suspends a profile: out of the search, reason shown to the athlete, no publishing until reactivated', function () {

@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { Badge, Button, Card, DeleteButton, Empty, Field, Input, PageHeader, Select, Textarea } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
@@ -78,33 +79,39 @@ export default function Index({ notes, audiences, limit, gaps }: Props) {
                 </Card>
 
                 <Card title="Notas da organização">
-                    {notes.length === 0 ? (
-                        <Empty title="Nenhuma nota ainda">Escreva o primeiro procedimento (ex.: como pedir a camisa nova, quem chamar no dia do jogo).</Empty>
-                    ) : (
-                        <ul className="divide-y divide-gray-100" data-testid="notes">
-                            {notes.map((note) => (
-                                <li key={note.id} className="flex flex-wrap items-start justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                                    <div className="min-w-0">
-                                        <p className="font-medium text-gray-900">{note.title}</p>
-                                        <div className="mt-1">
-                                            <Badge tone="blue">{label(note.audience)}</Badge>
+                    <div data-testid="notes">
+                        <DataTable
+                            flush
+                            caption="Notas da organização"
+                            searchPlaceholder="Buscar nota"
+                            rows={notes}
+                            rowKey={(note) => note.id}
+                            empty={<Empty title="Nenhuma nota ainda">Escreva o primeiro procedimento (ex.: como pedir a camisa nova, quem chamar no dia do jogo).</Empty>}
+                            columns={[
+                                { key: 'title', header: 'Título', primary: true, value: (note) => `${note.title} ${note.body}`, cell: (note) => <span className="font-medium text-gray-900">{note.title}</span> },
+                                { key: 'audience', header: 'Quem vê', filter: audiences, value: (note) => label(note.audience), cell: (note) => <Badge tone="blue">{label(note.audience)}</Badge> },
+                                {
+                                    key: 'actions',
+                                    header: 'Ações',
+                                    align: 'right',
+                                    mobileLabel: false,
+                                    cell: (note) => (
+                                        <div className="flex flex-wrap items-center justify-end gap-2">
+                                            {note.audience === 'panel' && (
+                                                <Link href={route('panel.help.show', `nota-${note.id.toLowerCase()}`)} className="text-sm text-emerald-700 hover:underline">
+                                                    Ver
+                                                </Link>
+                                            )}
+                                            <Button type="button" small variant="secondary" onClick={() => edit(note)}>
+                                                Editar
+                                            </Button>
+                                            <DeleteButton href={route('panel.help-notes.destroy', note.id)} message={`Excluir a nota "${note.title}"?`} />
                                         </div>
-                                    </div>
-                                    <div className="flex shrink-0 items-center gap-2">
-                                        {note.audience === 'panel' && (
-                                            <Link href={route('panel.help.show', `nota-${note.id.toLowerCase()}`)} className="text-sm text-emerald-700 hover:underline">
-                                                Ver
-                                            </Link>
-                                        )}
-                                        <Button type="button" small variant="secondary" onClick={() => edit(note)}>
-                                            Editar
-                                        </Button>
-                                        <DeleteButton href={route('panel.help-notes.destroy', note.id)} message={`Excluir a nota "${note.title}"?`} />
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
+                                    ),
+                                },
+                            ]}
+                        />
+                    </div>
                 </Card>
 
                 {gaps !== null && (

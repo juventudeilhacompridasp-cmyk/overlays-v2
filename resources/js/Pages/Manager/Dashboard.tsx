@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { Badge, Button, Card, Empty, LinkButton, Logo, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, Link, router } from '@inertiajs/react';
@@ -45,25 +46,31 @@ export default function Dashboard({ notify, teams, entries, upcoming, recent }: 
                     </Card>
 
                     <Card title="Elencos por edição">
-                        {entries.length === 0 ? (
-                            <p className="text-sm text-gray-500">Suas equipes ainda não estão inscritas em nenhuma edição.</p>
-                        ) : (
-                            <ul className="divide-y divide-gray-100">
-                                {entries.map((entry) => (
-                                    <li key={entry.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                                        <div>
-                                            <div className="font-medium text-gray-900">{entry.team}</div>
-                                            <div className="text-sm text-gray-500">
-                                                {entry.competition} · {entry.season} · {entry.division}
-                                            </div>
-                                        </div>
+                        <DataTable
+                            flush
+                            caption="Elencos por edição"
+                            searchPlaceholder="Buscar equipe ou edição"
+                            rows={entries}
+                            rowKey={(entry) => entry.id}
+                            empty="Suas equipes ainda não estão inscritas em nenhuma edição."
+                            columns={[
+                                { key: 'team', header: 'Equipe', primary: true, value: (entry) => entry.team, cell: (entry) => <span className="font-medium text-gray-900">{entry.team}</span> },
+                                { key: 'competition', header: 'Competição', filter: true, value: (entry) => entry.competition, cell: (entry) => <span className="text-gray-600">{entry.competition}</span> },
+                                { key: 'season', header: 'Edição', value: (entry) => entry.season, cell: (entry) => <span className="text-gray-600">{entry.season}</span> },
+                                { key: 'division', header: 'Divisão', hideBelow: 'lg', value: (entry) => entry.division, cell: (entry) => <span className="text-gray-600">{entry.division}</span> },
+                                {
+                                    key: 'actions',
+                                    header: 'Ações',
+                                    align: 'right',
+                                    mobileLabel: false,
+                                    cell: (entry) => (
                                         <LinkButton small variant="secondary" href={route('manager.entries.show', entry.id)}>
                                             Elenco e disciplina
                                         </LinkButton>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
+                                    ),
+                                },
+                            ]}
+                        />
                     </Card>
 
                     <Card title="Avisos por e-mail">

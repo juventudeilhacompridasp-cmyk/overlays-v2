@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { Badge, Card, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
@@ -82,28 +83,31 @@ export default function SheetReport({ upload, summary, sections, status_labels, 
                 )}
             </Card>
 
-            <div className="max-w-4xl space-y-4">
+            <div className="max-w-5xl space-y-4">
                 {sections.map((section) => (
-                    <Card key={section.title} title={section.title}>
-                        <ul className="divide-y divide-gray-100" data-testid="report-section">
-                            {section.items.map((item, index) => (
-                                <li key={index} className="grid gap-1 py-2 text-sm sm:grid-cols-[8rem_1fr_1fr]">
-                                    <div className="flex items-center gap-2">
-                                        <Badge tone={tone(item.status)}>{status_labels[item.status]}</Badge>
-                                    </div>
-                                    <div>
-                                        <div className="text-xs uppercase text-gray-400">Súmula enviada</div>
-                                        <div className="text-gray-900">{item.sheet ?? '—'}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-xs uppercase text-gray-400">Sistema</div>
-                                        <div className="text-gray-900">{item.system ?? '—'}</div>
-                                    </div>
-                                    {item.note && <div className="text-xs text-gray-500 sm:col-span-3">{item.label}: {item.note}</div>}
-                                </li>
-                            ))}
-                        </ul>
-                    </Card>
+                    <div key={section.title} data-testid="report-section">
+                        <DataTable
+                            title={section.title}
+                            caption={`Conferência: ${section.title}`}
+                            searchPlaceholder="Buscar item"
+                            rows={section.items}
+                            rowKey={(item) => `${item.section}:${item.label}:${item.sheet ?? ''}:${item.system ?? ''}`}
+                            pageSize={25}
+                            columns={[
+                                {
+                                    key: 'status',
+                                    header: 'Situação',
+                                    filter: (Object.keys(status_labels) as Item['status'][]).map((status) => ({ value: status_labels[status], label: status_labels[status] })),
+                                    value: (item) => status_labels[item.status],
+                                    cell: (item) => <Badge tone={tone(item.status)}>{status_labels[item.status]}</Badge>,
+                                },
+                                { key: 'label', header: 'Item', primary: true, value: (item) => item.label, cell: (item) => <span className="text-gray-900">{item.label}</span> },
+                                { key: 'sheet', header: 'Súmula enviada', value: (item) => item.sheet, cell: (item) => <span className="text-gray-900">{item.sheet ?? '—'}</span> },
+                                { key: 'system', header: 'Sistema', value: (item) => item.system, cell: (item) => <span className="text-gray-900">{item.system ?? '—'}</span> },
+                                { key: 'note', header: 'Observação', sortable: false, hideBelow: 'lg', value: (item) => item.note, cell: (item) => <span className="text-xs text-gray-500">{item.note ?? ''}</span> },
+                            ]}
+                        />
+                    </div>
                 ))}
             </div>
         </PanelLayout>

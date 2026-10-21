@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { Badge, Button, Card, DeleteButton, Empty, Field, Input, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
@@ -133,17 +134,24 @@ export default function Uploads({ game, max_mb, ai, uploads }: Props) {
                 </Card>
             )}
 
-            {uploads.length === 0 ? (
-                <Empty title="Nenhuma súmula enviada">Quando a súmula de papel for enviada depois do jogo, ela aparece aqui.</Empty>
-            ) : (
-                <Card className="max-w-3xl">
-                    <ul className="divide-y divide-gray-100" data-testid="uploads">
-                        {uploads.map((upload) => (
-                            <li key={upload.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+            <div data-testid="uploads">
+                <DataTable
+                    caption="Súmulas enviadas"
+                    searchPlaceholder="Buscar súmula"
+                    rows={uploads}
+                    rowKey={(upload) => upload.id}
+                    empty={<Empty title="Nenhuma súmula enviada">Quando a súmula de papel for enviada depois do jogo, ela aparece aqui.</Empty>}
+                    columns={[
+                        {
+                            key: 'name',
+                            header: 'Arquivo',
+                            primary: true,
+                            value: (upload) => `${upload.name} ${upload.uploaded_by ?? ''}`,
+                            cell: (upload) => (
                                 <div className="min-w-0">
                                     <div className="truncate font-medium text-gray-900">{upload.name}</div>
                                     <div className="text-xs text-gray-500">
-                                        {kindLabel[upload.kind]} · {size(upload.size)} · {new Date(upload.created_at).toLocaleString('pt-BR')}
+                                        {size(upload.size)}
                                         {upload.uploaded_by ? ` · ${upload.uploaded_by}` : ''}
                                     </div>
                                     {upload.error && <div className="text-xs text-red-700">{upload.error}</div>}
@@ -155,8 +163,18 @@ export default function Uploads({ game, max_mb, ai, uploads }: Props) {
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Badge tone={tone(upload.status)}>{upload.status_label}</Badge>
+                            ),
+                        },
+                        { key: 'kind', header: 'Tipo', filter: true, hideBelow: 'lg', value: (upload) => kindLabel[upload.kind], cell: (upload) => <span className="text-gray-600">{kindLabel[upload.kind]}</span> },
+                        { key: 'status', header: 'Situação', filter: true, value: (upload) => upload.status_label, cell: (upload) => <Badge tone={tone(upload.status)}>{upload.status_label}</Badge> },
+                        { key: 'when', header: 'Enviada em', hideBelow: 'lg', value: (upload) => upload.created_at, cell: (upload) => <span className="text-xs text-gray-500">{new Date(upload.created_at).toLocaleString('pt-BR')}</span> },
+                        {
+                            key: 'actions',
+                            header: 'Ações',
+                            align: 'right',
+                            mobileLabel: false,
+                            cell: (upload) => (
+                                <div className="flex flex-wrap items-center justify-end gap-2 text-sm">
                                     {canOperate && ['uploaded', 'failed', 'read'].includes(upload.status) && (
                                         <Button type="button" small variant="secondary" onClick={() => read(upload.id)}>
                                             {upload.status === 'uploaded' ? 'Ler súmula' : 'Ler de novo'}
@@ -177,11 +195,11 @@ export default function Uploads({ game, max_mb, ai, uploads }: Props) {
                                     </a>
                                     {canOperate && <DeleteButton href={route('panel.games.uploads.destroy', upload.id)} message="Excluir esta súmula enviada?" label="Excluir" />}
                                 </div>
-                            </li>
-                        ))}
-                    </ul>
-                </Card>
-            )}
+                            ),
+                        },
+                    ]}
+                />
+            </div>
         </PanelLayout>
     );
 }

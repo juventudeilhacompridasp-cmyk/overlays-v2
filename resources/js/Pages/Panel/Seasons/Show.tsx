@@ -1,4 +1,5 @@
 import { Badge, Button, Card, DeleteButton, Empty, Field, Input, LinkButton, PageHeader, Select, Textarea } from '@/Components/Panel/ui';
+import DataTable from '@/Components/DataTable';
 import Modal from '@/Components/Modal';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Option, RulesData } from '@/types/panel';
@@ -193,28 +194,42 @@ export default function Show({ registration, competition, season, rules, tiebrea
 
             <div className="space-y-6">
                 <Card title="Divisões" actions={<Button small onClick={() => setCreating(true)}>Nova divisão</Button>}>
-                    {divisions.length === 0 ? (
-                        <Empty title="Nenhuma divisão cadastrada.">Crie a primeira divisão (categoria) desta edição.</Empty>
-                    ) : (
-                        <ul className="-my-3 divide-y divide-gray-100">
-                            {divisions.map((division) => (
-                                <li key={division.id} className="flex items-center justify-between gap-3 py-3">
-                                    <div>
-                                        <Link href={route('panel.divisions.show', division.id)} className="font-medium text-gray-900 hover:text-emerald-700">
-                                            {division.name}
-                                        </Link>
-                                        <div className="mt-0.5 text-sm text-gray-500">
-                                            {[division.category, division.gender_label].filter(Boolean).join(' · ')} · {division.entries_count} equipes ·{' '}
-                                            {division.stages_count} {division.stages_count === 1 ? 'fase' : 'fases'}
-                                        </div>
-                                    </div>
+                    <DataTable
+                        flush
+                        caption="Divisões da edição"
+                        searchPlaceholder="Buscar divisão"
+                        rows={divisions}
+                        rowKey={(division) => division.id}
+                        empty={<Empty title="Nenhuma divisão cadastrada.">Crie a primeira divisão (categoria) desta edição.</Empty>}
+                        columns={[
+                            {
+                                key: 'name',
+                                header: 'Divisão',
+                                primary: true,
+                                value: (division) => division.name,
+                                cell: (division) => (
+                                    <Link href={route('panel.divisions.show', division.id)} className="font-medium text-gray-900 hover:text-emerald-700">
+                                        {division.name}
+                                    </Link>
+                                ),
+                            },
+                            { key: 'category', header: 'Categoria', hideBelow: 'lg', value: (division) => division.category, cell: (division) => <span className="text-gray-600">{division.category ?? '—'}</span> },
+                            { key: 'gender', header: 'Gênero', filter: true, value: (division) => division.gender_label, cell: (division) => <span className="text-gray-600">{division.gender_label}</span> },
+                            { key: 'entries', header: 'Equipes', value: (division) => division.entries_count, cell: (division) => <span className="text-gray-600">{division.entries_count}</span> },
+                            { key: 'stages', header: 'Fases', value: (division) => division.stages_count, cell: (division) => <span className="text-gray-600">{division.stages_count}</span> },
+                            {
+                                key: 'actions',
+                                header: 'Ações',
+                                align: 'right',
+                                mobileLabel: false,
+                                cell: (division) => (
                                     <LinkButton href={route('panel.divisions.show', division.id)} variant="secondary" small>
                                         Abrir
                                     </LinkButton>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
+                                ),
+                            },
+                        ]}
+                    />
                 </Card>
 
                 {registration && <RegistrationCard seasonId={season.id} registration={registration} />}

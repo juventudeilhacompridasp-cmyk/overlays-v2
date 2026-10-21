@@ -1,8 +1,8 @@
-import { Empty, Pagination, PageHeader } from '@/Components/Panel/ui';
+import DataTable from '@/Components/DataTable';
+import { Badge, Empty, LinkButton, Logo, Pagination, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { PaginationLink } from '@/types/panel';
 import { Head, Link } from '@inertiajs/react';
-import { GameLine } from '../Dashboard';
 import { GameRow } from './GameRow';
 
 interface Props {
@@ -34,19 +34,63 @@ export default function Index({ games, filter }: Props) {
                 ))}
             </div>
 
-            {games.data.length === 0 ? (
-                <Empty title="Nenhum jogo por aqui" />
-            ) : (
-                <div className="rounded-lg bg-white px-5 shadow-sm ring-1 ring-gray-200">
-                    <ul className="divide-y divide-gray-100">
-                        {games.data.map((game) => (
-                            <li key={game.id}>
-                                <GameLine game={game} />
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+            <DataTable
+                caption="Jogos da sua equipe"
+                searchPlaceholder="Buscar por equipe, adversário, competição ou local"
+                rows={games.data}
+                rowKey={(game) => game.id}
+                pageSize={15}
+                empty={<Empty title="Nenhum jogo por aqui" />}
+                columns={[
+                    {
+                        key: 'game',
+                        header: 'Jogo',
+                        primary: true,
+                        value: (game) => `${game.my_team} ${game.opponent ?? ''}`,
+                        cell: (game) => (
+                            <Link href={route('manager.games.show', game.id)} className="flex items-center gap-3 hover:underline">
+                                <Logo src={game.my_logo} name={game.my_team} size={28} />
+                                <span className="font-medium text-gray-900">
+                                    {game.my_team} {game.decided ? <span className="tabular-nums">{game.my_score} x {game.opponent_score}</span> : 'x'} {game.opponent ?? 'A definir'}
+                                </span>
+                            </Link>
+                        ),
+                    },
+                    { key: 'when', header: 'Data', value: (game) => (game.scheduled_at ? game.scheduled_at.split(' ').map((part, index) => (index === 0 ? part.split('/').reverse().join('-') : part)).join(' ') : null), cell: (game) => <span className="text-gray-600">{game.scheduled_at ?? 'Sem data'}</span> },
+                    { key: 'competition', header: 'Competição', hideBelow: 'lg', value: (game) => `${game.competition} ${game.stage}`, cell: (game) => <span className="text-gray-600">{game.competition} · {game.stage}</span> },
+                    { key: 'venue', header: 'Local', hideBelow: 'xl', value: (game) => game.venue, cell: (game) => <span className="text-gray-600">{game.venue ?? '—'}</span> },
+                    {
+                        key: 'lineup',
+                        header: 'Escalação',
+                        filter: [
+                            { value: 'Confirmada', label: 'Confirmada' },
+                            { value: 'Rascunho', label: 'Rascunho' },
+                            { value: 'Sem escalação', label: 'Sem escalação' },
+                        ],
+                        value: (game) => (game.decided ? null : game.lineup === 'confirmed' ? 'Confirmada' : game.lineup === 'draft' ? 'Rascunho' : 'Sem escalação'),
+                        cell: (game) =>
+                            game.lineup && !game.decided ? (
+                                <Badge tone={game.lineup === 'confirmed' ? 'green' : game.lineup === 'draft' ? 'amber' : 'gray'}>
+                                    {game.lineup === 'confirmed' ? 'Confirmada' : game.lineup === 'draft' ? 'Rascunho' : 'Sem escalação'}
+                                </Badge>
+                            ) : (
+                                <span className="text-gray-400">—</span>
+                            ),
+                    },
+                    { key: 'status', header: 'Situação', filter: true, value: (game) => game.status_label, cell: (game) => <Badge tone={game.status === 'in_progress' ? 'red' : game.decided ? 'gray' : 'blue'}>{game.status_label}</Badge> },
+                    {
+                        key: 'actions',
+                        header: 'Ações',
+                        align: 'right',
+                        mobileLabel: false,
+                        cell: (game) => (
+                            <LinkButton small variant="secondary" href={route('manager.games.show', game.id)}>
+                                Abrir
+                            </LinkButton>
+                        ),
+                    },
+                ]}
+            />
             <Pagination links={games.links} />
         </PanelLayout>
     );
