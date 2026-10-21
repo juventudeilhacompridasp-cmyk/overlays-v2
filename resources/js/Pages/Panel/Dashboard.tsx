@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { Card, LinkButton, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
@@ -106,29 +107,43 @@ export default function Dashboard({ counts, games_by_month, status_breakdown, up
             </div>
 
             {comparison.length > 1 && (
-                <Card title="Comparativo entre competições" className="mt-6">
-                    <p className="-mt-2 mb-4 text-xs text-gray-500">Jogos encerrados nos últimos {filters.months} meses; não segue os filtros de competição e edição.</p>
-                    <div className="overflow-x-auto" data-testid="dashboard-comparison">
-                        <table className="w-full text-left text-sm">
-                            <thead className="text-xs uppercase text-gray-500">
-                                <tr><th className="py-2 pr-3">Competição</th><th className="px-3 py-2 text-right">Edições</th><th className="px-3 py-2 text-right">Na janela</th><th className="px-3 py-2 text-right">Média/mês</th><th className="px-3 py-2 text-right">Total</th><th className="py-2 pl-3 text-right">Em aberto</th></tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {comparison.map((row) => {
+                <div className="mt-6" data-testid="dashboard-comparison">
+                    <DataTable
+                        title="Comparativo entre competições"
+                        caption={`Jogos encerrados por competição nos últimos ${filters.months} meses (não segue os filtros de competição e edição)`}
+                        layout="table"
+                        paginated={false}
+                        searchable={false}
+                        rows={comparison}
+                        rowKey={(row) => row.id}
+                        columns={[
+                            {
+                                key: 'name',
+                                header: 'Competição',
+                                sticky: true,
+                                value: (row) => row.name,
+                                cell: (row) => {
                                     const max = Math.max(1, ...comparison.map((item) => item.finished_window));
-                                    return <tr key={row.id}>
-                                        <td className="py-2 pr-3 font-medium text-gray-900">{row.name}<div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-gray-100" aria-hidden="true"><div className="h-full rounded-full bg-indigo-500" style={{ width: `${(row.finished_window / max) * 100}%` }} /></div></td>
-                                        <td className="px-3 py-2 text-right text-gray-700">{row.seasons}</td>
-                                        <td className="px-3 py-2 text-right font-semibold text-gray-900">{row.finished_window}</td>
-                                        <td className="px-3 py-2 text-right text-gray-700">{row.per_month.toLocaleString('pt-BR')}</td>
-                                        <td className="px-3 py-2 text-right text-gray-700">{row.finished_total}</td>
-                                        <td className="py-2 pl-3 text-right text-gray-700">{row.open}</td>
-                                    </tr>;
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </Card>
+
+                                    return (
+                                        <>
+                                            <span className="font-medium text-gray-900">{row.name}</span>
+                                            <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-gray-100" aria-hidden="true">
+                                                <div className="h-full rounded-full bg-indigo-500" style={{ width: `${(row.finished_window / max) * 100}%` }} />
+                                            </div>
+                                        </>
+                                    );
+                                },
+                            },
+                            { key: 'seasons', header: 'Edições', align: 'right', value: (row) => row.seasons, cell: (row) => row.seasons },
+                            { key: 'window', header: `Últimos ${filters.months} meses`, align: 'right', value: (row) => row.finished_window, cell: (row) => <strong className="text-gray-900">{row.finished_window}</strong> },
+                            { key: 'per_month', header: 'Média/mês', align: 'right', value: (row) => row.per_month, cell: (row) => row.per_month.toLocaleString('pt-BR') },
+                            { key: 'total', header: 'Total', align: 'right', value: (row) => row.finished_total, cell: (row) => row.finished_total },
+                            { key: 'open', header: 'Em aberto', align: 'right', value: (row) => row.open, cell: (row) => row.open },
+                        ]}
+                    />
+                    <p className="mt-2 text-xs text-gray-500">Jogos encerrados nos últimos {filters.months} meses; não segue os filtros de competição e edição.</p>
+                </div>
             )}
 
             <Card title="Próximos jogos" className="mt-6">

@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { GameList, PortalGame } from '@/Components/Portal/GameList';
 import PushButton from '@/Components/Portal/PushButton';
 import ShareButtons from '@/Components/Portal/ShareButtons';
@@ -70,38 +71,37 @@ export default function Team({ theme, seo, team, participations, games, push_key
                     </ul>
                 </section>
                 {extras.campaigns && extras.campaigns.length > 0 && (
-                    <section className="overflow-x-auto rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200" data-testid="team-campaigns">
-                        <h2 className="mb-2 text-lg font-bold">Campanhas</h2>
-                        <table className="w-full text-left text-sm">
-                            <thead className="text-xs uppercase text-gray-500">
-                                <tr>
-                                    <th className="py-1 pr-3">Edição</th>
-                                    <th className="px-2 text-center">Pos.</th>
-                                    <th className="px-2 text-center">J</th>
-                                    <th className="px-2 text-center">V</th>
-                                    <th className="px-2 text-center">E</th>
-                                    <th className="px-2 text-center">D</th>
-                                    <th className="px-2 text-center">Gols</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {extras.campaigns.map((item) => (
-                                    <tr key={item.url + item.division} className="border-t border-gray-100">
-                                        <td className="py-1.5 pr-3">
+                    <div data-testid="team-campaigns">
+                        <DataTable
+                            title="Campanhas"
+                            caption="Campanhas da equipe por edição"
+                            layout="table"
+                            paginated={false}
+                            searchable={false}
+                            rows={extras.campaigns}
+                            rowKey={(item) => item.url + item.division}
+                            columns={[
+                                {
+                                    key: 'season',
+                                    header: 'Edição',
+                                    sticky: true,
+                                    value: (item) => `${item.competition} ${item.season}`,
+                                    cell: (item) => (
+                                        <>
                                             <Link href={item.url} className="font-medium hover:underline">{item.competition} {item.season}</Link>
                                             <span className="block text-xs text-gray-500">{item.division} · {item.status}</span>
-                                        </td>
-                                        <td className="px-2 text-center tabular-nums">{item.position ? `${item.position.position}º/${item.position.of}` : '—'}</td>
-                                        <td className="px-2 text-center tabular-nums">{item.played}</td>
-                                        <td className="px-2 text-center tabular-nums">{item.wins}</td>
-                                        <td className="px-2 text-center tabular-nums">{item.draws}</td>
-                                        <td className="px-2 text-center tabular-nums">{item.losses}</td>
-                                        <td className="px-2 text-center tabular-nums">{item.for}:{item.against}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </section>
+                                        </>
+                                    ),
+                                },
+                                { key: 'position', header: 'Pos.', align: 'center', value: (item) => item.position?.position, cell: (item) => <span className="tabular-nums">{item.position ? `${item.position.position}º/${item.position.of}` : '—'}</span> },
+                                { key: 'played', header: 'J', align: 'center', value: (item) => item.played, cell: (item) => <span className="tabular-nums">{item.played}</span> },
+                                { key: 'wins', header: 'V', align: 'center', value: (item) => item.wins, cell: (item) => <span className="tabular-nums">{item.wins}</span> },
+                                { key: 'draws', header: 'E', align: 'center', value: (item) => item.draws, cell: (item) => <span className="tabular-nums">{item.draws}</span> },
+                                { key: 'losses', header: 'D', align: 'center', value: (item) => item.losses, cell: (item) => <span className="tabular-nums">{item.losses}</span> },
+                                { key: 'goals', header: 'Gols', align: 'center', value: (item) => item.for - item.against, cell: (item) => <span className="tabular-nums">{item.for}:{item.against}</span> },
+                            ]}
+                        />
+                    </div>
                 )}
                 {extras.scorers && extras.scorers.length > 0 && (
                     <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200" data-testid="team-scorers">

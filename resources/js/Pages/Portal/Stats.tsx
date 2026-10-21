@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { GameList, PortalGame } from '@/Components/Portal/GameList';
 import PortalLayout, { Seo, Theme } from '@/Components/Portal/PortalLayout';
 import { Link } from '@inertiajs/react';
@@ -115,37 +116,56 @@ export default function Stats({ theme, seo, competition, season, unit, divisions
                                 <Highlight title="Melhor defesa" row={division.best_defense} value={`${division.best_defense?.avg_against} ${unit} sofridos por jogo · ${division.best_defense?.clean_sheets} sem sofrer`} />
                             </div>
 
-                            <section className="overflow-x-auto rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200">
-                                <h2 className="mb-3 text-lg font-bold">Equipes</h2>
-                                <table className="min-w-full text-sm">
-                                    <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-                                        <tr>
-                                            <th className="px-2 py-2 text-left">Equipe</th>
-                                            {['J', 'V', 'E', 'D', 'Pró', 'Contra', 'Méd. pró', 'Méd. contra', 'Aprov.'].map((head) => (
-                                                <th key={head} className="px-2 py-2 text-center">{head}</th>
-                                            ))}
-                                            <th className="px-2 py-2 text-left">Forma</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {division.teams.map((row) => (
-                                            <tr key={row.team?.id}>
-                                                <td className="px-2 py-2 font-medium">{row.team ? <Link href={row.team.url} className="hover:underline">{row.team.name}</Link> : '—'}</td>
-                                                {[row.played, row.wins, row.draws, row.losses, row.for, row.against, row.avg_for, row.avg_against, `${row.win_rate}%`].map((value, index) => (
-                                                    <td key={index} className="px-2 py-2 text-center tabular-nums">{value}</td>
+                            <DataTable
+                                title="Equipes"
+                                caption="Estatísticas por equipe"
+                                layout="table"
+                                paginated={false}
+                                searchable={false}
+                                rows={division.teams}
+                                rowKey={(row) => row.team?.id ?? ''}
+                                columns={[
+                                    {
+                                        key: 'team',
+                                        header: 'Equipe',
+                                        sticky: true,
+                                        value: (row) => row.team?.name,
+                                        cell: (row) => <span className="font-medium">{row.team ? <Link href={row.team.url} className="hover:underline">{row.team.name}</Link> : '—'}</span>,
+                                    },
+                                    ...(
+                                        [
+                                            ['played', 'J', (row) => row.played],
+                                            ['wins', 'V', (row) => row.wins],
+                                            ['draws', 'E', (row) => row.draws],
+                                            ['losses', 'D', (row) => row.losses],
+                                            ['for', 'Pró', (row) => row.for],
+                                            ['against', 'Contra', (row) => row.against],
+                                            ['avg_for', 'Méd. pró', (row) => row.avg_for],
+                                            ['avg_against', 'Méd. contra', (row) => row.avg_against],
+                                            ['win_rate', 'Aprov.', (row) => row.win_rate],
+                                        ] as [string, string, (row: TeamRow) => number][]
+                                    ).map(([key, header, value]) => ({
+                                        key,
+                                        header,
+                                        align: 'center' as const,
+                                        value,
+                                        cell: (row: TeamRow) => <span className="tabular-nums">{key === 'win_rate' ? `${value(row)}%` : value(row)}</span>,
+                                    })),
+                                    {
+                                        key: 'form',
+                                        header: 'Forma',
+                                        sortable: false,
+                                        value: (row) => row.form.join(''),
+                                        cell: (row) => (
+                                            <span className="flex gap-1">
+                                                {row.form.map((result, index) => (
+                                                    <span key={index} className={`inline-flex h-5 w-5 items-center justify-center rounded text-xs font-bold ${formTone[result]}`}>{result}</span>
                                                 ))}
-                                                <td className="px-2 py-2">
-                                                    <span className="flex gap-1">
-                                                        {row.form.map((result, index) => (
-                                                            <span key={index} className={`inline-flex h-5 w-5 items-center justify-center rounded text-xs font-bold ${formTone[result]}`}>{result}</span>
-                                                        ))}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </section>
+                                            </span>
+                                        ),
+                                    },
+                                ]}
+                            />
 
                             <div className="grid gap-6 lg:grid-cols-2">
                                 <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200">
