@@ -5,7 +5,7 @@ import ThemeToggle from '@/Components/ThemeToggle';
 import { useCan } from '@/lib/can';
 import { activeGroupOf, buildNav, groupOpen, NavGroup, NavGroupId, NavItem } from '@/lib/panelNav';
 import { registerServiceWorker, useOnline } from '@/lib/pwa';
-import { PropsWithChildren, useEffect, useState } from 'react';
+import { PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 const NAV_KEY = 'panel:nav-groups';
 
@@ -22,10 +22,38 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const [open, setOpen] = useState(false);
     const canManageUsers = useCan('manage-users');
     const online = useOnline();
+    const menuButton = useRef<HTMLButtonElement>(null);
+    const closeButton = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         registerServiceWorker();
     }, []);
+
+    // Gaveta do celular: Esc fecha, a página de trás não rola, o foco vai ao botão de fechar e volta ao hambúrguer,
+    // e ela se fecha sozinha se a tela passar a ser larga (girar o aparelho, por exemplo).
+    useEffect(() => {
+        if (!open) return;
+
+        const onKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setOpen(false);
+        };
+        const wide = window.matchMedia('(min-width: 1024px)');
+        const onWide = () => wide.matches && setOpen(false);
+        const previous = document.body.style.overflow;
+        const opener = menuButton.current;
+
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', onKey);
+        wide.addEventListener('change', onWide);
+        closeButton.current?.focus();
+
+        return () => {
+            document.body.style.overflow = previous;
+            document.removeEventListener('keydown', onKey);
+            wide.removeEventListener('change', onWide);
+            opener?.focus();
+        };
+    }, [open]);
     const canManageCompetitions = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
     const canModerateMarket = useCan('manage-market');
@@ -60,7 +88,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
                 href={route(entry.route)}
                 onClick={() => setOpen(false)}
                 aria-current={active ? 'page' : undefined}
-                className={`flex items-center gap-3 rounded-md py-2 pr-3 text-sm font-medium ${nested ? 'pl-5' : 'pl-3'} ${active ? 'bg-emerald-50 text-emerald-800' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
+                className={`flex min-h-11 items-center gap-3 rounded-md py-2 pr-3 text-sm font-medium lg:min-h-0 ${nested ? 'pl-5' : 'pl-3'} ${active ? 'bg-emerald-50 text-emerald-800' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
             >
                 <Icon path={entry.icon} />
                 {entry.label}
@@ -77,7 +105,7 @@ export default function PanelLayout({ children }: PropsWithChildren) {
 
                 return (
                     <div key={group.id} className={separated ? 'mt-2 border-t border-gray-100 pt-2' : 'mt-1'} data-nav-group={group.id} data-area={group.area}>
-                        <button type="button" onClick={() => toggleGroup(group)} aria-expanded={expanded} aria-controls={`nav-${group.id}`} className="flex w-full items-center justify-between rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-400 hover:bg-gray-50 hover:text-gray-600">
+                        <button type="button" onClick={() => toggleGroup(group)} aria-expanded={expanded} aria-controls={`nav-${group.id}`} className="flex min-h-11 w-full items-center justify-between rounded-md px-3 py-1.5 text-[11px] lg:min-h-0 font-bold uppercase tracking-wide text-gray-400 hover:bg-gray-50 hover:text-gray-600">
                             <span className="flex items-center gap-1.5">
                                 {separated && <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M7 11V8a5 5 0 0110 0v3M6 11h12v9H6z" /></svg>}
                                 {group.label}
@@ -92,6 +120,24 @@ export default function PanelLayout({ children }: PropsWithChildren) {
         </nav>
     );
 
+    const account = (
+        <div className="shrink-0 border-t border-gray-100 px-6 pt-4 text-sm">
+            <div className="mb-3">
+                <ThemeToggle />
+            </div>
+            <div className="truncate font-medium text-gray-800">{auth.user.name}</div>
+            {auth.role_label && <div className="text-xs text-gray-500">{auth.role_label}</div>}
+            <div className="mt-1 flex gap-4 text-gray-500">
+                <Link href={route('profile.edit')} onClick={() => setOpen(false)} className="inline-flex min-h-11 items-center hover:text-emerald-700 lg:min-h-0">
+                    Perfil
+                </Link>
+                <Link href={route('logout')} method="post" as="button" className="inline-flex min-h-11 items-center hover:text-emerald-700 lg:min-h-0">
+                    Sair
+                </Link>
+            </div>
+        </div>
+    );
+
     return (
         <div className="min-h-screen bg-gray-50 print:bg-[#ffffff]">
             <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-gray-200 bg-white py-5 lg:flex print:hidden">
@@ -100,34 +146,55 @@ export default function PanelLayout({ children }: PropsWithChildren) {
                     <span className="truncate">{brand.name}</span>
                 </div>
                 {menu}
-                <div className="shrink-0 border-t border-gray-100 px-6 pt-4 text-sm">
-                    <div className="mb-3">
-                        <ThemeToggle />
-                    </div>
-                    <div className="truncate font-medium text-gray-800">{auth.user.name}</div>
-                    {auth.role_label && <div className="text-xs text-gray-500">{auth.role_label}</div>}
-                    <div className="mt-1 flex gap-3 text-gray-500">
-                        <Link href={route('profile.edit')} className="hover:text-emerald-700">
-                            Perfil
-                        </Link>
-                        <Link href={route('logout')} method="post" as="button" className="hover:text-emerald-700">
-                            Sair
-                        </Link>
-                    </div>
-                </div>
+                {account}
             </aside>
 
             <div className="lg:pl-60 print:pl-0">
-                <header className="sticky top-0 z-30 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 lg:hidden print:hidden">
-                    <span className="font-bold text-emerald-700">{brand.name}</span>
-                    <ThemeToggle />
-                    <button type="button" onClick={() => setOpen(!open)} className="rounded-md p-2 text-gray-600 hover:bg-gray-100" aria-label="Menu">
-                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-gray-200 bg-white px-4 py-2 lg:hidden print:hidden">
+                    <span className="flex min-w-0 items-center gap-2 font-bold text-emerald-700">
+                        {brand.logo_url && <img src={brand.logo_url} alt="" className="h-7 w-7 shrink-0 rounded bg-[#ffffff] object-contain p-0.5" />}
+                        <span className="truncate">{brand.name}</span>
+                    </span>
+                    <button
+                        ref={menuButton}
+                        type="button"
+                        onClick={() => setOpen(true)}
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100"
+                        aria-label="Abrir menu"
+                        aria-expanded={open}
+                        aria-controls="mobile-menu"
+                    >
+                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                             <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
                 </header>
-                {open && <div className="flex max-h-[calc(100vh-4rem)] flex-col border-b border-gray-200 bg-white py-3 lg:hidden">{menu}</div>}
+
+                <div className={`fixed inset-0 z-40 lg:hidden print:hidden ${open ? '' : 'pointer-events-none'}`} aria-hidden={!open}>
+                    <div onClick={() => setOpen(false)} className={`absolute inset-0 bg-black/50 transition-opacity duration-200 ${open ? 'opacity-100' : 'opacity-0'}`} />
+                    <aside
+                        id="mobile-menu"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Menu"
+                        className={`absolute inset-y-0 left-0 flex w-[85vw] max-w-xs flex-col bg-white pt-3 shadow-xl transition-[transform,visibility] duration-200 ${open ? 'visible translate-x-0' : 'invisible -translate-x-full'}`}
+                        style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+                    >
+                        <div className="mb-3 flex shrink-0 items-center justify-between gap-2 px-4">
+                            <span className="flex min-w-0 items-center gap-2 text-lg font-bold text-emerald-700">
+                                {brand.logo_url && <img src={brand.logo_url} alt="" className="h-8 w-8 shrink-0 rounded bg-[#ffffff] object-contain p-0.5" />}
+                                <span className="truncate">{brand.name}</span>
+                            </span>
+                            <button ref={closeButton} type="button" onClick={() => setOpen(false)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100" aria-label="Fechar menu">
+                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                    <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
+                                </svg>
+                            </button>
+                        </div>
+                        {menu}
+                        {account}
+                    </aside>
+                </div>
 
                 {!online && (
                     <div role="alert" className="bg-amber-500 px-4 py-2 text-center text-sm font-medium text-black print:hidden" data-testid="offline-banner">
