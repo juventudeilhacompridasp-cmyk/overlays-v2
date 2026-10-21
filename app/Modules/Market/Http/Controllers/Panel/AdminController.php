@@ -31,7 +31,9 @@ class AdminController extends Controller
 
         $query = MarketProfile::query()->with('user:id,name')
             ->withCount(['reports as open_reports_count' => fn ($builder) => $builder->where('status', ReportStatus::Open->value)]);
-        $table->search($query, ['display_name', 'city', 'sport'], fn ($builder) => $builder->whereHas('user', fn ($user) => $user->whereRaw("lower(name) like ? escape '\\'", ['%'.addcslashes(mb_strtolower($table->q), '\\%_').'%'])));
+        $table->search($query, ['display_name', 'city', 'sport'], function ($builder) use ($table): void {
+            $builder->whereHas('user', fn ($user) => $user->whereRaw("lower(name) like ? escape '\\'", ['%'.addcslashes(mb_strtolower($table->q), '\\%_').'%']));
+        });
         $table->filter($query, ['status' => fn ($builder, string $value) => ProfileStatus::tryFrom($value) !== null ? $builder->where('status', $value) : $builder]);
         $table->sort($query, [
             'name' => ['column' => 'display_name', 'text' => true, 'nullable' => true],
