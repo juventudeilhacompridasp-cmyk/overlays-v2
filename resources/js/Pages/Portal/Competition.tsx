@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { GameList, PortalGame, PortalTeam } from '@/Components/Portal/GameList';
 import PortalLayout, { Seo, Theme } from '@/Components/Portal/PortalLayout';
 import { Link } from '@inertiajs/react';
@@ -68,55 +69,77 @@ export default function Competition({ theme, seo, competition, latest_url, seaso
 
             <section className="mt-8">
                 <h2 className="mb-3 text-lg font-bold">Edições</h2>
-                <ul className="divide-y divide-gray-200 rounded-lg bg-white shadow-sm ring-1 ring-gray-200">
-                    {seasons.map((season) => (
-                        <li key={season.id} className="px-4 py-3">
-                            <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <DataTable
+                    caption={`Edições de ${competition.name}`}
+                    searchPlaceholder="Buscar edição, campeão ou vice"
+                    rows={seasons}
+                    rowKey={(season) => season.id}
+                    initialSort={{ key: 'year', dir: 'desc' }}
+                    pageSize={10}
+                    columns={[
+                        {
+                            key: 'year',
+                            header: 'Edição',
+                            primary: true,
+                            value: (season) => season.year ?? season.name,
+                            cell: (season) => (
                                 <Link href={season.url} className="font-semibold hover:underline">
                                     {season.name}
                                 </Link>
-                                <span className="text-xs text-gray-500">{season.status_label}</span>
-                            </div>
-                            {season.divisions.map((division) => (
-                                <div key={division.name} className="mt-1 text-sm text-gray-700">
-                                    {season.divisions.length > 1 && <span className="mr-2 text-gray-500">{division.name}:</span>}
-                                    {division.champion ? (
-                                        <>
-                                            <span className="mr-1" aria-hidden>
-                                                🏆
-                                            </span>
-                                            <span className="sr-only">Campeã:</span>
-                                            <TeamName team={division.champion} />
-                                            {division.runner_up && (
-                                                <span className="ml-3 text-gray-600">
-                                                    Vice: <TeamName team={division.runner_up} />
-                                                </span>
+                            ),
+                        },
+                        { key: 'status', header: 'Situação', filter: true, value: (season) => season.status_label, cell: (season) => <span className="text-xs text-gray-500">{season.status_label}</span> },
+                        {
+                            key: 'podium',
+                            header: 'Campeão e vice',
+                            sortable: false,
+                            value: (season) => season.divisions.map((division) => `${division.name} ${division.champion?.name ?? ''} ${division.runner_up?.name ?? ''}`).join(' '),
+                            cell: (season) => (
+                                <div className="space-y-1">
+                                    {season.divisions.map((division) => (
+                                        <div key={division.name} className="text-sm text-gray-700">
+                                            {season.divisions.length > 1 && <span className="mr-2 text-gray-500">{division.name}:</span>}
+                                            {division.champion ? (
+                                                <>
+                                                    <span className="mr-1" aria-hidden>
+                                                        🏆
+                                                    </span>
+                                                    <span className="sr-only">Campeã:</span>
+                                                    <TeamName team={division.champion} />
+                                                    {division.runner_up && (
+                                                        <span className="ml-3 text-gray-600">
+                                                            Vice: <TeamName team={division.runner_up} />
+                                                        </span>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <span className="text-gray-400">Campeão ainda não definido</span>
                                             )}
-                                        </>
-                                    ) : (
-                                        <span className="text-gray-400">Campeão ainda não definido</span>
-                                    )}
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </li>
-                    ))}
-                </ul>
+                            ),
+                        },
+                    ]}
+                />
             </section>
 
             {titles.length > 0 && (
                 <section className="mt-8">
                     <h2 className="mb-3 text-lg font-bold">Títulos</h2>
-                    <ul className="divide-y divide-gray-200 rounded-lg bg-white shadow-sm ring-1 ring-gray-200">
-                        {titles.map((item) => (
-                            <li key={item.team.id} className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
-                                <span>
-                                    <TeamName team={item.team} />
-                                    <span className="ml-2 text-xs text-gray-500">{item.seasons.join(', ')}</span>
-                                </span>
-                                <span className="font-bold">{item.titles}</span>
-                            </li>
-                        ))}
-                    </ul>
+                    <DataTable
+                        caption={`Títulos de ${competition.name}`}
+                        searchPlaceholder="Buscar equipe"
+                        rows={titles}
+                        rowKey={(item) => item.team.id}
+                        initialSort={{ key: 'titles', dir: 'desc' }}
+                        pageSize={10}
+                        columns={[
+                            { key: 'team', header: 'Equipe', primary: true, value: (item) => item.team.name, cell: (item) => <TeamName team={item.team} /> },
+                            { key: 'titles', header: 'Títulos', align: 'right', value: (item) => item.titles, cell: (item) => <span className="font-bold tabular-nums">{item.titles}</span> },
+                            { key: 'seasons', header: 'Edições', sortable: false, hideBelow: 'lg', value: (item) => item.seasons.join(' '), cell: (item) => <span className="text-xs text-gray-500">{item.seasons.join(', ')}</span> },
+                        ]}
+                    />
                 </section>
             )}
 

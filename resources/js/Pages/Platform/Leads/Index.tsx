@@ -1,7 +1,8 @@
-import { Badge, Card, DeleteButton, Empty, PageHeader } from '@/Components/Panel/ui';
+import DataTable from '@/Components/DataTable';
+import { Badge, DeleteButton, Empty, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { formatWhen } from '@/lib/statusPage';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 
 interface Lead {
     id: string;
@@ -23,60 +24,65 @@ interface Props {
 
 const TONE: Record<string, 'amber' | 'blue' | 'gray'> = { new: 'amber', contacted: 'blue', archived: 'gray' };
 
-export default function LeadsIndex({ leads, statuses, filter, counts }: Props) {
+export default function LeadsIndex({ leads, statuses, counts }: Props) {
     const setStatus = (lead: Lead, status: string) => router.patch(route('platform.leads.update', lead.id), { status }, { preserveScroll: true });
+    const label = (value: string) => statuses.find((status) => status.value === value)?.label ?? value;
 
     return (
         <PanelLayout>
             <Head title="Contatos da landing" />
-            <PageHeader title="Contatos da landing page" subtitle="Mensagens enviadas pelo formulário da página do produto. Responda pelo e-mail e atualize a situação." />
+            <PageHeader
+                title="Contatos da landing page"
+                subtitle={`Mensagens enviadas pelo formulário da página do produto. Responda pelo e-mail e atualize a situação. ${statuses.map((status) => `${status.label}: ${counts[status.value] ?? 0}`).join(' · ')}`}
+            />
 
-            <div className="mb-4 flex flex-wrap gap-2 text-sm" role="tablist" aria-label="Filtrar por situação">
-                <Link href={route('platform.leads.index')} className={`rounded-md border px-3 py-1.5 font-semibold ${filter === null ? 'border-emerald-600 bg-emerald-50 text-emerald-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
-                    Todos
-                </Link>
-                {statuses.map((status) => (
-                    <Link key={status.value} href={route('platform.leads.index', { status: status.value })} className={`rounded-md border px-3 py-1.5 font-semibold ${filter === status.value ? 'border-emerald-600 bg-emerald-50 text-emerald-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
-                        {status.label} ({counts[status.value] ?? 0})
-                    </Link>
-                ))}
-            </div>
-
-            {leads.length === 0 ? (
-                <Empty title="Nenhum contato por aqui">Quando alguém enviar o formulário da landing page, a mensagem aparece nesta lista.</Empty>
-            ) : (
-                <div className="space-y-4">
-                    {leads.map((lead) => (
-                        <Card key={lead.id}>
+            <DataTable
+                caption="Contatos da landing page"
+                searchPlaceholder="Buscar por nome, e-mail, organização ou mensagem"
+                rows={leads}
+                rowKey={(lead) => lead.id}
+                persistKey="platform:leads"
+                empty={<Empty title="Nenhum contato por aqui">Quando alguém enviar o formulário da landing page, a mensagem aparece nesta lista.</Empty>}
+                columns={[
+                    {
+                        key: 'name',
+                        header: 'Contato',
+                        primary: true,
+                        value: (lead) => `${lead.name} ${lead.email}`,
+                        cell: (lead) => (
                             <div data-testid="lead">
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <h3 className="font-semibold text-gray-900">{lead.name}</h3>
-                                        <Badge tone={TONE[lead.status] ?? 'gray'}>{statuses.find((status) => status.value === lead.status)?.label ?? lead.status}</Badge>
-                                        {lead.interest && <Badge>{lead.interest}</Badge>}
-                                    </div>
-                                    {lead.created_at && <span className="text-xs text-gray-500">{formatWhen(lead.created_at)}</span>}
-                                </div>
-                                <p className="mt-1 text-sm text-gray-600">
-                                    <a className="text-emerald-700 hover:underline" href={`mailto:${lead.email}`}>
-                                        {lead.email}
-                                    </a>
-                                    {lead.organization_name && <> · {lead.organization_name}</>}
-                                </p>
-                                <p className="mt-3 whitespace-pre-line text-sm text-gray-800">{lead.message}</p>
-                                <div className="mt-4 flex flex-wrap items-center gap-2">
-                                    {statuses.filter((status) => status.value !== lead.status).map((status) => (
+                                <div className="font-semibold text-gray-900">{lead.name}</div>
+                                <a className="text-sm text-emerald-700 hover:underline" href={`mailto:${lead.email}`}>
+                                    {lead.email}
+                                </a>
+                            </div>
+                        ),
+                    },
+                    { key: 'organization', header: 'Organização', hideBelow: 'lg', value: (lead) => lead.organization_name, cell: (lead) => <span className="text-gray-600">{lead.organization_name ?? '—'}</span> },
+                    { key: 'interest', header: 'Assunto', filter: true, value: (lead) => lead.interest, cell: (lead) => (lead.interest ? <Badge>{lead.interest}</Badge> : <span className="text-gray-400">—</span>) },
+                    { key: 'status', header: 'Situação', filter: statuses, value: (lead) => label(lead.status), cell: (lead) => <Badge tone={TONE[lead.status] ?? 'gray'}>{label(lead.status)}</Badge> },
+                    { key: 'when', header: 'Recebido em', value: (lead) => lead.created_at, cell: (lead) => <span className="text-xs text-gray-500">{lead.created_at ? formatWhen(lead.created_at) : '—'}</span> },
+                    { key: 'message', header: 'Mensagem', sortable: false, hideBelow: 'xl', value: (lead) => lead.message, cell: (lead) => <span className="line-clamp-3 whitespace-pre-line text-sm text-gray-800">{lead.message}</span> },
+                    {
+                        key: 'actions',
+                        header: 'Ações',
+                        align: 'right',
+                        mobileLabel: false,
+                        cell: (lead) => (
+                            <div className="flex flex-wrap justify-end gap-2">
+                                {statuses
+                                    .filter((status) => status.value !== lead.status)
+                                    .map((status) => (
                                         <button key={status.value} type="button" onClick={() => setStatus(lead, status.value)} className="rounded-md border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">
                                             Marcar como {status.label.toLowerCase()}
                                         </button>
                                     ))}
-                                    <DeleteButton href={route('platform.leads.destroy', lead.id)} message={`Remover o contato de ${lead.name}? Os dados pessoais serão apagados.`} />
-                                </div>
+                                <DeleteButton href={route('platform.leads.destroy', lead.id)} message={`Remover o contato de ${lead.name}? Os dados pessoais serão apagados.`} />
                             </div>
-                        </Card>
-                    ))}
-                </div>
-            )}
+                        ),
+                    },
+                ]}
+            />
         </PanelLayout>
     );
 }

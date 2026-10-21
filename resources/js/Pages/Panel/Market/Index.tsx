@@ -1,7 +1,8 @@
-import { Badge, Button, Card, Empty, Field, Input, PageHeader, Pagination } from '@/Components/Panel/ui';
+import DataTable, { serverTable } from '@/Components/DataTable';
+import { Badge, Button, Card, Empty, Field, Input, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
-import { PaginationLink } from '@/types/panel';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Paginated, TableFilters } from '@/types/panel';
+import { Head, router, useForm } from '@inertiajs/react';
 
 interface Report {
     id: string;
@@ -31,8 +32,8 @@ interface ProfileRow {
 
 interface Props {
     reports: Report[];
-    profiles: { data: ProfileRow[]; links: PaginationLink[] };
-    status: string | null;
+    profiles: Paginated<ProfileRow>;
+    filters: TableFilters;
     statuses: { value: string; label: string }[];
     totals: { published: number; open_reports: number; pending_requests: number };
     settings: { daily_requests: number };
@@ -40,7 +41,7 @@ interface Props {
 
 const tone = (status: string) => (status === 'published' ? 'green' : status === 'suspended' ? 'red' : status === 'signed' ? 'blue' : 'gray');
 
-export default function Index({ reports, profiles, status, statuses, totals, settings }: Props) {
+export default function Index({ reports, profiles, filters, statuses, totals, settings }: Props) {
     const form = useForm({ daily_requests: settings.daily_requests.toString() });
 
     const suspend = (profile: { id: string; name: string }) => {
@@ -75,68 +76,97 @@ export default function Index({ reports, profiles, status, statuses, totals, set
 
             <div className="space-y-6">
                 <Card title="Denúncias">
-                    {reports.length === 0 ? (
-                        <Empty title="Nenhuma denúncia">Quando um gestor ou atleta denunciar, ela aparece aqui.</Empty>
-                    ) : (
-                        <ul className="divide-y divide-gray-100">
-                            {reports.map((report) => (
-                                <li key={report.id} className="py-3">
-                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                    <DataTable
+                        flush
+                        caption="Denúncias do Mercado"
+                        searchPlaceholder="Buscar denúncia"
+                        rows={reports}
+                        rowKey={(report) => report.id}
+                        empty={<Empty title="Nenhuma denúncia">Quando um gestor ou atleta denunciar, ela aparece aqui.</Empty>}
+                        columns={[
+                            {
+                                key: 'report',
+                                header: 'Denúncia',
+                                primary: true,
+                                value: (report) => `${report.reporter} ${report.about} ${report.reason}`,
+                                cell: (report) => (
+                                    <div>
                                         <span className="text-sm text-gray-900">
-                                            <span className="font-medium">{report.reporter}</span> denunciou <span className="font-medium">{report.about}</span>{' '}
-                                            <Badge tone={report.status === 'open' ? 'amber' : report.status === 'actioned' ? 'green' : 'gray'}>{report.status_label}</Badge>
-                                            <span className="ml-2 text-xs text-gray-500">{report.created_at}</span>
+                                            <span className="font-medium">{report.reporter}</span> denunciou <span className="font-medium">{report.about}</span>
                                         </span>
-                                        {report.status === 'open' && (
-                                            <span className="flex gap-2">
-                                                <Button small onClick={() => resolve(report, 'actioned')}>
-                                                    Procedente
-                                                </Button>
-                                                <Button small variant="secondary" onClick={() => resolve(report, 'dismissed')}>
-                                                    Arquivar
-                                                </Button>
-                                            </span>
-                                        )}
+                                        <p className="mt-1 whitespace-pre-line text-sm text-gray-600">“{report.reason}”</p>
+                                        {report.note && <p className="mt-1 text-xs text-gray-500">Observação: {report.note}</p>}
                                     </div>
-                                    <p className="mt-1 whitespace-pre-line text-sm text-gray-600">“{report.reason}”</p>
-                                    {report.note && <p className="mt-1 text-xs text-gray-500">Observação: {report.note}</p>}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
+                                ),
+                            },
+                            {
+                                key: 'status',
+                                header: 'Situação',
+                                filter: true,
+                                value: (report) => report.status_label,
+                                cell: (report) => <Badge tone={report.status === 'open' ? 'amber' : report.status === 'actioned' ? 'green' : 'gray'}>{report.status_label}</Badge>,
+                            },
+                            { key: 'when', header: 'Data', value: (report) => report.created_at.split('/').reverse().join('-'), cell: (report) => <span className="text-xs text-gray-500">{report.created_at}</span> },
+                            {
+                                key: 'actions',
+                                header: 'Ações',
+                                align: 'right',
+                                mobileLabel: false,
+                                cell: (report) =>
+                                    report.status === 'open' ? (
+                                        <span className="flex flex-wrap justify-end gap-2">
+                                            <Button small onClick={() => resolve(report, 'actioned')}>
+                                                Procedente
+                                            </Button>
+                                            <Button small variant="secondary" onClick={() => resolve(report, 'dismissed')}>
+                                                Arquivar
+                                            </Button>
+                                        </span>
+                                    ) : null,
+                            },
+                        ]}
+                    />
                 </Card>
 
                 <Card title="Perfis">
-                    <div className="mb-3 flex flex-wrap gap-2">
-                        <Link href={route('panel.market.index')} className={`rounded-full px-3 py-1 text-sm ${status === null ? 'bg-emerald-600 text-white' : 'bg-white text-gray-600 ring-1 ring-gray-200'}`}>
-                            Todos
-                        </Link>
-                        {statuses.map((item) => (
-                            <Link
-                                key={item.value}
-                                href={route('panel.market.index', { status: item.value })}
-                                className={`rounded-full px-3 py-1 text-sm ${status === item.value ? 'bg-emerald-600 text-white' : 'bg-white text-gray-600 ring-1 ring-gray-200'}`}
-                            >
-                                {item.label}
-                            </Link>
-                        ))}
-                    </div>
-                    {profiles.data.length === 0 ? (
-                        <p className="text-sm text-gray-500">Nenhum perfil nesta situação.</p>
-                    ) : (
-                        <ul className="divide-y divide-gray-100">
-                            {profiles.data.map((profile) => (
-                                <li key={profile.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                                    <span className="text-sm text-gray-900">
-                                        <span className="font-medium">{profile.name}</span>{' '}
-                                        <span className="text-gray-500">
-                                            {[profile.sport, profile.city].filter(Boolean).join(' · ')}
-                                        </span>{' '}
+                    <DataTable
+                        flush
+                        caption="Perfis do Mercado"
+                        searchPlaceholder="Buscar por nome, cidade ou esporte"
+                        rows={profiles.data}
+                        rowKey={(profile) => profile.id}
+                        server={serverTable(route('panel.market.index'), profiles, filters, { sort: 'created', dir: 'desc' }, ['profiles', 'filters'])}
+                        empty="Nenhum perfil nesta situação."
+                        columns={[
+                            { key: 'name', header: 'Atleta', primary: true, value: (profile) => profile.name, cell: (profile) => <span className="font-medium text-gray-900">{profile.name}</span> },
+                            { key: 'sport', header: 'Esporte', hideBelow: 'lg', value: (profile) => profile.sport, cell: (profile) => <span className="text-gray-600">{profile.sport ?? '—'}</span> },
+                            { key: 'city', header: 'Cidade', hideBelow: 'lg', value: (profile) => profile.city, cell: (profile) => <span className="text-gray-600">{profile.city ?? '—'}</span> },
+                            {
+                                key: 'status',
+                                header: 'Situação',
+                                filter: statuses,
+                                value: (profile) => profile.status_label,
+                                cell: (profile) => (
+                                    <span>
                                         <Badge tone={tone(profile.status)}>{profile.status_label}</Badge>
-                                        {profile.open_reports > 0 && <Badge tone="amber">{profile.open_reports} denúncia(s)</Badge>}
                                         {profile.suspended_reason && <span className="ml-2 text-xs text-gray-500">Motivo: {profile.suspended_reason}</span>}
                                     </span>
-                                    {profile.status === 'suspended' ? (
+                                ),
+                            },
+                            {
+                                key: 'reports',
+                                header: 'Denúncias abertas',
+                                value: (profile) => profile.open_reports,
+                                cell: (profile) => (profile.open_reports > 0 ? <Badge tone="amber">{profile.open_reports}</Badge> : <span className="text-gray-400">0</span>),
+                            },
+                            { key: 'created', header: 'Criado', hideBelow: 'xl', value: (profile) => profile.published_at, cell: (profile) => <span className="text-xs text-gray-500">{profile.published_at ?? '—'}</span> },
+                            {
+                                key: 'actions',
+                                header: 'Ações',
+                                align: 'right',
+                                mobileLabel: false,
+                                cell: (profile) =>
+                                    profile.status === 'suspended' ? (
                                         <Button small variant="secondary" onClick={() => router.post(route('panel.market.restore', profile.id), {}, { preserveScroll: true })}>
                                             Reativar
                                         </Button>
@@ -144,12 +174,10 @@ export default function Index({ reports, profiles, status, statuses, totals, set
                                         <Button small variant="danger" onClick={() => suspend(profile)}>
                                             Suspender
                                         </Button>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                    <Pagination links={profiles.links} />
+                                    ),
+                            },
+                        ]}
+                    />
                 </Card>
 
                 <Card title="Cota de pedidos">

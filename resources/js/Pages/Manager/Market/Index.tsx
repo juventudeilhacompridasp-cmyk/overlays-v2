@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { Badge, Button, Card, Empty, Field, Input, Logo, PageHeader, Pagination, Select, Textarea } from '@/Components/Panel/ui';
 import VideoEmbed, { MarketVideo } from '@/Components/Market/VideoEmbed';
 import PanelLayout from '@/Layouts/PanelLayout';
@@ -192,15 +193,37 @@ export default function Index({ profiles, filters, daily_limit, my_requests, opt
 
             {my_requests.length > 0 && (
                 <Card title="Meus pedidos" className="mb-6">
-                    <ul className="divide-y divide-gray-100">
-                        {my_requests.map((row) => (
-                            <li key={row.id} className="py-2">
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <span className="text-sm text-gray-900">
-                                        <span className="font-medium">{row.name}</span> · {row.team}{' '}
-                                        <Badge tone={statusTone(row.status)}>{row.status_label}</Badge>
-                                    </span>
-                                    {(row.status === 'pending' || row.status === 'accepted') && (
+                    <DataTable
+                        flush
+                        caption="Meus pedidos de contato"
+                        searchPlaceholder="Buscar por atleta ou equipe"
+                        rows={my_requests}
+                        rowKey={(row) => row.id}
+                        columns={[
+                            {
+                                key: 'name',
+                                header: 'Atleta',
+                                primary: true,
+                                value: (row) => `${row.name ?? ''} ${row.team}`,
+                                cell: (row) => (
+                                    <div>
+                                        <span className="text-sm text-gray-900">
+                                            <span className="font-medium">{row.name}</span> · {row.team}
+                                        </span>
+                                        <ContactBox row={row} />
+                                        <HiringBox row={row} />
+                                    </div>
+                                ),
+                            },
+                            { key: 'status', header: 'Situação', filter: true, value: (row) => row.status_label, cell: (row) => <Badge tone={statusTone(row.status)}>{row.status_label}</Badge> },
+                            { key: 'expires', header: 'Vale até', hideBelow: 'lg', value: (row) => row.expires_at.split('/').reverse().join('-'), cell: (row) => <span className="text-xs text-gray-500">{row.expires_at}</span> },
+                            {
+                                key: 'actions',
+                                header: 'Ações',
+                                align: 'right',
+                                mobileLabel: false,
+                                cell: (row) =>
+                                    row.status === 'pending' || row.status === 'accepted' ? (
                                         <Button
                                             small
                                             variant="ghost"
@@ -210,13 +233,10 @@ export default function Index({ profiles, filters, daily_limit, my_requests, opt
                                         >
                                             Cancelar
                                         </Button>
-                                    )}
-                                </div>
-                                <ContactBox row={row} />
-                                <HiringBox row={row} />
-                            </li>
-                        ))}
-                    </ul>
+                                    ) : null,
+                            },
+                        ]}
+                    />
                 </Card>
             )}
 

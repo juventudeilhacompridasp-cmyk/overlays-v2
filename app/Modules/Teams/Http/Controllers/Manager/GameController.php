@@ -44,7 +44,7 @@ class GameController extends Controller
             ->when($filter === 'done', fn ($query) => $query->whereIn('status', [GameStatus::Finished, GameStatus::Walkover])->orderByDesc('finished_at'))
             ->when($filter === 'all', fn ($query) => $query->orderByRaw('scheduled_at is null')->orderBy('scheduled_at'))
             ->orderBy('id')
-            ->paginate(20)->withQueryString();
+            ->paginate(100)->withQueryString();
 
         $mine = fn (Game $game): Entry => $entries->get($game->home_entry_id) ?? $entries->get($game->away_entry_id) ?? abort(404);
         $status = ManagerGameRow::lineupStatuses($games->getCollection(), $mine);

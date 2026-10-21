@@ -5,10 +5,10 @@ tags: tabela, busca, filtro, ordenar, celular, paginação
 order: 3
 route: panel.teams.index
 ---
-As listas e tabelas do painel (equipes, pessoas, estádios, elencos, inscritos, classificação e relatórios) funcionam **sem recarregar a página**: tudo o que você muda aparece na hora.
+As listas e tabelas do painel (competições, edições, divisões, equipes, pessoas, estádios, inscrições, usuários, perfis, elencos, classificação, relatórios, súmulas enviadas e moderação do Mercado, entre outras) funcionam **sem recarregar a página**: tudo o que você muda aparece na hora.
 
 ## Buscar
-Digite na caixa de busca. Todas as palavras precisam aparecer no registro, em qualquer ordem, sem diferenciar maiúsculas nem acentos. Nas listas grandes (equipes, pessoas e estádios) a busca espera você terminar de digitar e consulta o servidor, então ela acha também o que está em outras páginas. Em Pessoas, o **CPF completo** também funciona.
+Digite na caixa de busca. Todas as palavras precisam aparecer no registro, em qualquer ordem, sem diferenciar maiúsculas nem acentos. Nas listas grandes (competições, equipes, pessoas, estádios, inscrições e perfis do Mercado) a busca espera você terminar de digitar e consulta o servidor, então ela acha também o que está em outras páginas. Em Pessoas, o **CPF completo** também funciona.
 
 ## Ordenar
 Clique no título de uma coluna para ordenar do menor para o maior, clique de novo para inverter e uma terceira vez para voltar à ordem original. Valores vazios ficam sempre no fim. No celular use o campo **Ordenar por** e o botão de seta ao lado.

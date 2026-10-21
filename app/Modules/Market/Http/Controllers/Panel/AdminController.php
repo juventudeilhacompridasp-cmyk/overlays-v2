@@ -11,6 +11,7 @@ use App\Modules\Market\Models\ContactRequest;
 use App\Modules\Market\Models\MarketProfile;
 use App\Modules\Market\Models\MarketReport;
 use App\Modules\Market\Support\MarketSettings;
+use App\Support\Tables\TableQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -26,12 +27,22 @@ class AdminController extends Controller
 {
     public function index(Request $request): Response
     {
-        $status = ProfileStatus::tryFrom((string) $request->query('status'));
+        $table = TableQuery::fromRequest($request, ['name', 'sport', 'city', 'status', 'reports', 'created'], 'created', ['status'], 'desc');
 
-        $profiles = MarketProfile::query()->with('user:id,name')
-            ->withCount(['reports as open_reports_count' => fn ($query) => $query->where('status', ReportStatus::Open->value)])
-            ->when($status, fn ($query) => $query->where('status', $status->value))
-            ->latest()->paginate(15)->withQueryString()
+        $query = MarketProfile::query()->with('user:id,name')
+            ->withCount(['reports as open_reports_count' => fn ($builder) => $builder->where('status', ReportStatus::Open->value)]);
+        $table->search($query, ['display_name', 'city', 'sport'], fn ($builder) => $builder->whereHas('user', fn ($user) => $user->whereRaw("lower(name) like ? escape '\\'", ['%'.addcslashes(mb_strtolower($table->q), '\\%_').'%'])));
+        $table->filter($query, ['status' => fn ($builder, string $value) => ProfileStatus::tryFrom($value) !== null ? $builder->where('status', $value) : $builder]);
+        $table->sort($query, [
+            'name' => ['column' => 'display_name', 'text' => true, 'nullable' => true],
+            'sport' => ['column' => 'sport', 'nullable' => true],
+            'city' => ['column' => 'city', 'text' => true, 'nullable' => true],
+            'status' => 'status',
+            'reports' => 'open_reports_count',
+            'created' => 'created_at',
+        ]);
+
+        $profiles = $query->paginate($table->perPage)->withQueryString()
             ->through(fn (MarketProfile $profile) => [
                 'id' => $profile->getKey(),
                 'name' => $this->name($profile),
@@ -63,7 +74,7 @@ class AdminController extends Controller
         return Inertia::render('Panel/Market/Index', [
             'reports' => $reports,
             'profiles' => $profiles,
-            'status' => $status?->value,
+            'filters' => $table->props(),
             'statuses' => collect(ProfileStatus::cases())->map(fn (ProfileStatus $item) => ['value' => $item->value, 'label' => $item->label()])->values(),
             'totals' => [
                 'published' => MarketProfile::query()->where('status', ProfileStatus::Published->value)->count(),
