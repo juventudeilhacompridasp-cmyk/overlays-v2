@@ -98,7 +98,7 @@ final class FixtureSheet
 
     private static function time(string $value): ?string
     {
-        if (preg_match('/^(\d{1,2})(?::|h)(\d{2})$/i', $value, $m) !== 1 || (int) $m[1] > 23 || (int) $m[2] > 59) {
+        if (preg_match('/^(\d{1,2})(?::|h)(\d{2})h?$/i', $value, $m) !== 1 || (int) $m[1] > 23 || (int) $m[2] > 59) {
             return null;
         }
 
