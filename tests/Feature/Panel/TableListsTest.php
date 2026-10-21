@@ -3,6 +3,8 @@
 use App\Modules\Competitions\Models\Entry;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\Venue;
+use App\Modules\Registration\Enums\RegistrationStatus;
+use App\Modules\Registration\Models\Registration;
 use App\Modules\Teams\Models\Person;
 use App\Modules\Teams\Models\RosterEntry;
 use App\Modules\Teams\Models\Team;
@@ -146,5 +148,22 @@ describe('venues list', function () {
         $this->get('/painel/venues?filter[games]=without')->assertInertia(fn ($page) => expect(tableNames($page, 'venues'))->toBe(['Arena Sul']));
         $this->get('/painel/venues?filter[city]=Registro')->assertInertia(fn ($page) => expect(tableNames($page, 'venues'))->toBe(['Municipal']));
         $this->get('/painel/venues?q=rua')->assertInertia(fn ($page) => expect(tableNames($page, 'venues'))->toBe(['Municipal']));
+    });
+});
+
+describe('registrations list', function () {
+    it('puts what needs review first, sorts, filters and searches, keeping the old ?status= address', function () {
+        $draft = Registration::factory()->create(['team_name' => 'Zebra FC', 'status' => RegistrationStatus::Draft]);
+        $sent = Registration::factory()->create(['team_name' => 'Alfa FC', 'status' => RegistrationStatus::Submitted, 'submitted_at' => now()]);
+        $done = Registration::factory()->create(['team_name' => 'Meio FC', 'status' => RegistrationStatus::Approved]);
+
+        $ids = fn ($page) => collect($page->toArray()['props']['registrations']['data'])->pluck('id')->all();
+
+        $this->get('/painel/registrations')->assertInertia(fn ($page) => expect($ids($page))->toBe([$sent->id, $draft->id, $done->id]));
+        $this->get('/painel/registrations?sort=team&dir=desc')->assertInertia(fn ($page) => expect($ids($page))->toBe([$draft->id, $done->id, $sent->id]));
+        $this->get('/painel/registrations?filter[status]=approved')->assertInertia(fn ($page) => expect($ids($page))->toBe([$done->id]));
+        $this->get('/painel/registrations?status=draft')->assertInertia(fn ($page) => expect($ids($page))->toBe([$draft->id])->and($page->toArray()['props']['filters']['values'])->toBe(['status' => 'draft']));
+        $this->get('/painel/registrations?q=meio')->assertInertia(fn ($page) => expect($ids($page))->toBe([$done->id]));
+        $this->get('/painel/registrations?q=nada-aqui')->assertInertia(fn ($page) => expect($ids($page))->toBe([]));
     });
 });

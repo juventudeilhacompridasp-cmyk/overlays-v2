@@ -114,25 +114,35 @@ final class TableQuery
      * - `text`: ignora maiúsculas/minúsculas (`lower(coluna)`);
      * - `nullable`: vazios vão para o fim nos dois sentidos (NÃO use em alias de `withCount`: o Postgres não deixa usar o
      *   alias dentro de uma expressão);
-     * - `inverted`: coluna "ao contrário" (idade crescente = nascimento decrescente).
+     * - `inverted`: coluna "ao contrário" (idade crescente = nascimento decrescente);
+     * - `raw`: expressão SQL ESCRITA NO CÓDIGO no lugar da coluna (ex.: `case status when ... end`), nunca vinda da requisição;
+     * - `then`: ordenações seguintes, `[[coluna, 'asc'|'desc'], ...]`.
      *
-     * @param  array<string, string|array{column: string, text?: bool, nullable?: bool, inverted?: bool}>  $map
+     * @param  array<string, string|array{column?: string, raw?: string, text?: bool, nullable?: bool, inverted?: bool, then?: list<array{string, string}>}>  $map
      */
     public function sort(Builder $query, array $map): Builder
     {
         $entry = $map[$this->sort] ?? reset($map);
         $options = is_array($entry) ? $entry : ['column' => $entry];
-        $column = $options['column'];
+        $column = $options['column'] ?? '';
         $direction = ($this->dir === 'asc') !== ($options['inverted'] ?? false) ? 'asc' : 'desc';
 
-        if ($options['nullable'] ?? false) {
-            $query->orderByRaw("({$column} is null) asc");
+        if (isset($options['raw'])) {
+            $query->orderByRaw("({$options['raw']}) {$direction}");
+        } else {
+            if ($options['nullable'] ?? false) {
+                $query->orderByRaw("({$column} is null) asc");
+            }
+
+            if ($options['text'] ?? false) {
+                $query->orderByRaw("lower({$column}) {$direction}");
+            } else {
+                $query->orderBy($column, $direction);
+            }
         }
 
-        if ($options['text'] ?? false) {
-            $query->orderByRaw("lower({$column}) {$direction}");
-        } else {
-            $query->orderBy($column, $direction);
+        foreach ($options['then'] ?? [] as [$thenColumn, $thenDirection]) {
+            $query->orderBy($thenColumn, $thenDirection === 'desc' ? 'desc' : 'asc');
         }
 
         return $query->orderBy('id');
