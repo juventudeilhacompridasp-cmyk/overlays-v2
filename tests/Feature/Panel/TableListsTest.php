@@ -1,6 +1,8 @@
 <?php
 
+use App\Modules\Competitions\Models\Competition;
 use App\Modules\Competitions\Models\Entry;
+use App\Modules\Competitions\Models\Season;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\Venue;
 use App\Modules\Registration\Enums\RegistrationStatus;
@@ -165,5 +167,22 @@ describe('registrations list', function () {
         $this->get('/painel/registrations?status=draft')->assertInertia(fn ($page) => expect($ids($page))->toBe([$draft->id])->and($page->toArray()['props']['filters']['values'])->toBe(['status' => 'draft']));
         $this->get('/painel/registrations?q=meio')->assertInertia(fn ($page) => expect($ids($page))->toBe([$done->id]));
         $this->get('/painel/registrations?q=nada-aqui')->assertInertia(fn ($page) => expect($ids($page))->toBe([]));
+    });
+});
+
+describe('competitions list', function () {
+    it('searches, filters by editions and sorts by editions count', function () {
+        $with = Competition::factory()->create(['name' => 'Copa Ilha']);
+        Season::factory()->create(['competition_id' => $with->id]);
+        Competition::factory()->create(['name' => 'Taça Vazia']);
+
+        $this->get('/painel/competitions?q=Copa')->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Panel/Competitions/Index')->has('competitions.data', 1));
+
+        $this->get('/painel/competitions?filter[seasons]=without')->assertOk()
+            ->assertInertia(fn ($page) => $page->has('competitions.data', 1)->where('competitions.data.0.name', 'Taça Vazia'));
+
+        $this->get('/painel/competitions?sort=seasons&dir=desc')->assertOk()
+            ->assertInertia(fn ($page) => $page->where('competitions.data.0.name', 'Copa Ilha'));
     });
 });

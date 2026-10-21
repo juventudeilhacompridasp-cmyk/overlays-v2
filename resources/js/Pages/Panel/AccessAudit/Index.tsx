@@ -1,3 +1,4 @@
+import DataTable from '@/Components/DataTable';
 import { Badge, Card, Empty, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head } from '@inertiajs/react';
@@ -27,27 +28,34 @@ export default function Index({ entries }: { entries: Entry[] }) {
             <Head title="Auditoria de acesso" />
             <PageHeader title="Auditoria de acesso" subtitle="Quem mudou perfis, papéis e exceções de acesso. Mostra as 200 mudanças mais recentes; não guarda endereço IP." />
 
-            <Card title={`Mudanças (${entries.length})`}>
-                {entries.length === 0 ? (
-                    <Empty title="Nenhuma mudança registrada">As próximas alterações de acesso aparecem aqui.</Empty>
-                ) : (
-                    <ul className="divide-y divide-gray-100">
-                        {entries.map((entry) => (
-                            <li key={entry.id} className="py-3">
-                                <div className="flex flex-wrap items-center gap-2 text-sm">
-                                    <Badge tone="blue">{LABELS[entry.action] ?? entry.action}</Badge>
-                                    {entry.subject && <span className="font-medium text-gray-900">{entry.subject}</span>}
-                                    <span className="text-gray-500">
-                                        por {entry.actor}
-                                        {entry.at && ` · ${new Date(entry.at).toLocaleString('pt-BR')}`}
-                                    </span>
-                                </div>
-                                <p className="mt-1 text-sm text-gray-700">{entry.summary}</p>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </Card>
+            <DataTable
+                title={`Mudanças (${entries.length})`}
+                caption="Mudanças de acesso"
+                searchPlaceholder="Buscar por pessoa, ação ou resumo"
+                rows={entries}
+                rowKey={(entry) => entry.id}
+                persistKey="panel-access-audit"
+                empty={<Empty title="Nenhuma mudança registrada">As próximas alterações de acesso aparecem aqui.</Empty>}
+                columns={[
+                    {
+                        key: 'at',
+                        header: 'Quando',
+                        value: (entry) => entry.at,
+                        nowrap: true,
+                        cell: (entry) => <span className="text-gray-600">{entry.at ? new Date(entry.at).toLocaleString('pt-BR') : '—'}</span>,
+                    },
+                    {
+                        key: 'action',
+                        header: 'Ação',
+                        value: (entry) => LABELS[entry.action] ?? entry.action,
+                        filter: true,
+                        cell: (entry) => <Badge tone="blue">{LABELS[entry.action] ?? entry.action}</Badge>,
+                    },
+                    { key: 'subject', header: 'Quem foi afetado', primary: true, value: (entry) => entry.subject, cell: (entry) => <span className="font-medium text-gray-900">{entry.subject ?? '—'}</span> },
+                    { key: 'actor', header: 'Feito por', value: (entry) => entry.actor, filter: true, cell: (entry) => <span className="text-gray-600">{entry.actor}</span> },
+                    { key: 'summary', header: 'O que mudou', sortable: false, value: (entry) => entry.summary, hideBelow: 'lg', cell: (entry) => <span className="text-gray-700">{entry.summary}</span> },
+                ]}
+            />
         </PanelLayout>
     );
 }
