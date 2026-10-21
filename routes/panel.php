@@ -84,6 +84,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::resource('divisions.entries', EntryController::class)->shallow()->only(['store', 'show', 'update', 'destroy']);
 
         Route::post('stages/{stage}/fixtures', [FixtureController::class, 'store'])->name('stages.fixtures.store');
+        Route::post('stages/{stage}/fixtures/import', [FixtureController::class, 'import'])->name('stages.fixtures.import');
         Route::delete('stages/{stage}/fixtures', [FixtureController::class, 'destroy'])->name('stages.fixtures.destroy');
 
         Route::patch('games/{game}', [GameController::class, 'update'])->name('games.update');

@@ -5,6 +5,7 @@ Atualize este arquivo em todo PR que entregar ou descobrir algo. O detalhe técn
 CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição em português.
 
 ## Entregue
+- **Importar tabela pronta (sem sorteio):** na fase (pontos corridos ou grupos) o organizador cola `rodada; mandante; visitante; data; hora; local; grupo` (`ImportStageFixtures`, `FixtureSheet`, rota `panel.stages.fixtures.import`); tudo ou nada, equipes confirmadas na divisão, estádios cadastrados. Mata-mata continua só pelo chaveamento gerado.
 - Fases 1–6: competições, súmula, regras, mata-mata, portal público, overlays do OBS, inscrição online, carteirinhas e
   relatórios, pacotes/recursos/limites, onboarding de organizações, domínios próprios, marca própria, termos e privacidade.
 - Fase 7: multiesporte (futsal, vôlei, basquete).

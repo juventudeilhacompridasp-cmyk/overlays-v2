@@ -72,13 +72,13 @@ it('puts the structured data in the game page, the team page and the season page
 
 it('never leaks athletes, cards, lineups or ids', function () {
     ['game' => $game, 'home' => $home, 'hp' => $hp] = jsonLdGame();
-    Person::query()->whereKey($hp[0])->update(['name' => 'Rafael Souza']);
+    Person::query()->whereKey($hp[0])->update(['name' => 'Zyxwvut Qkjhgf']);
     Team::query()->whereKey($home->team_id)->update(['city' => 'Ilhabela']);
     $season = $game->division->season;
 
     $json = json_encode([JsonLd::game($game->fresh()), JsonLd::teamPage($home->team->fresh()), JsonLd::season($season->competition, $season, [$game->fresh()])]);
 
-    expect($json)->not->toContain('Rafael')->not->toContain($hp[0])->not->toContain('document')->not->toContain('birth')
+    expect($json)->not->toContain('Zyxwvut')->not->toContain($hp[0])->not->toContain('document')->not->toContain('birth')
         ->and($json)->toContain('Ilhabela');
 });
 

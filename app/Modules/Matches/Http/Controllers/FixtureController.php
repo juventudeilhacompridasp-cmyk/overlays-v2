@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Modules\Competitions\Models\Stage;
 use App\Modules\Matches\Actions\ClearStageFixtures;
 use App\Modules\Matches\Actions\GenerateStageFixtures;
+use App\Modules\Matches\Actions\ImportStageFixtures;
 use App\Modules\Matches\Http\Requests\FixtureRequest;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use InvalidArgumentException;
 
 class FixtureController extends Controller
@@ -26,6 +28,19 @@ class FixtureController extends Controller
         }
 
         return back()->with('success', "Tabela gerada com {$created} jogos.");
+    }
+
+    public function import(Request $request, Stage $stage, ImportStageFixtures $import): RedirectResponse
+    {
+        $data = $request->validate(['text' => ['required', 'string', 'max:200000']]);
+
+        try {
+            $created = $import->handle($stage, $data['text']);
+        } catch (InvalidArgumentException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return back()->with('success', "Tabela importada com {$created} jogos.");
     }
 
     public function destroy(Stage $stage, ClearStageFixtures $clear): RedirectResponse

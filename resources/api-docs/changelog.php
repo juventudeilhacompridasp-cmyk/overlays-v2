@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.3.0',
+        'date' => '2026-10-21',
+        'changes' => ['Nova rota interna panel.stages.fixtures.import: importa uma tabela de jogos já definida (sem sorteio).'],
+    ],
+    [
         'version' => '1.2.4',
         'date' => '2026-10-20',
         'changes' => ['Nova rota interna `panel.broadcast.custom.assets.store`: envio de imagem própria para os overlays livres.'],
