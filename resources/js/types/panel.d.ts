@@ -10,6 +10,18 @@ export interface Paginated<T> {
     total: number;
     from: number | null;
     to: number | null;
+    current_page: number;
+    last_page: number;
+    per_page: number;
+}
+
+/** Estado de uma lista dinâmica no servidor (`App\Support\Tables\TableQuery::props`). */
+export interface TableFilters {
+    q: string;
+    sort: string;
+    dir: 'asc' | 'desc';
+    per_page: number;
+    values: Record<string, string>;
 }
 
 export interface Option {

@@ -14,6 +14,7 @@ Inventário vivo das otimizações analisadas e entregues. O objetivo é manter 
 | Camadas inativas | Escalação, tabela, estatísticas e telas extras só são montadas quando estão no ar. | O estado enviado ao OBS não calcula dados que a transmissão não usa. |
 | Builder | Animações usam `transform`/`opacity`; vídeos são HTTPS, sem áudio e em loop. | Composição compatível com Chromium/OBS sem filtros pesados ou dependências externas. |
 | Pré-visualização | O estúdio usa uma única prévia ativa e o PGM mantém um iframe único para as telas empilhadas. | Reduz conexões e trabalho de renderização no painel. |
+| Tabelas | Só a página atual vai ao DOM; busca com índice normalizado calculado uma vez por lista e `useDeferredValue`; no servidor, busca adiada em 350 ms, visitas parciais do Inertia (`only`) e paginação no banco com `id` de desempate. | Digitação fluida e respostas pequenas, mesmo com listas grandes. |
 | Portal e embeds | Imagens têm dimensões declaradas e carregamento `lazy` nas listas e galerias. | Evita reflow e adia downloads fora da área visível. |
 
 ## Decisões de operação

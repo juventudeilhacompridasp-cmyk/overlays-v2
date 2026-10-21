@@ -8,6 +8,7 @@ use App\Modules\Teams\Actions\ChangePersonPhoto;
 use App\Modules\Teams\Http\Requests\PersonRequest;
 use App\Modules\Teams\Models\Person;
 use App\Modules\Teams\Support\Cpf;
+use App\Support\Tables\TableQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,23 +18,44 @@ class PersonController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = trim((string) $request->query('q', ''));
-        $digits = Cpf::normalize($search);
+        $table = TableQuery::fromRequest($request, ['name', 'age', 'rosters'], 'name', ['age', 'rosters', 'document']);
+        $digits = Cpf::normalize($table->q);
 
-        $people = Person::query()
-            ->withCount('rosterEntries')
-            ->when($search !== '', function ($query) use ($search, $digits) {
-                $query->where(function ($inner) use ($search, $digits) {
-                    $inner->where('name', 'like', "%{$search}%")->orWhere('nickname', 'like', "%{$search}%");
+        $query = Person::query()->withCount('rosterEntries');
+        $table->search($query, ['name', 'nickname'], function ($builder) use ($digits): void {
+            // Busca por CPF completo: compara o hash (o CPF não é guardado em claro).
+            if (strlen($digits) === 11 && Cpf::isValid($digits)) {
+                $builder->where('document_hash', Cpf::hash($digits));
+            } else {
+                $builder->whereRaw('1 = 0');
+            }
+        });
+        $table->filter($query, [
+            'age' => fn ($builder, string $value) => match ($value) {
+                'minor' => $builder->whereDate('birth_date', '>', now()->subYears(18)->toDateString()),
+                'adult' => $builder->whereDate('birth_date', '<=', now()->subYears(18)->toDateString()),
+                'unknown' => $builder->whereNull('birth_date'),
+                default => $builder,
+            },
+            'rosters' => fn ($builder, string $value) => match ($value) {
+                'with' => $builder->has('rosterEntries'),
+                'without' => $builder->doesntHave('rosterEntries'),
+                default => $builder,
+            },
+            'document' => fn ($builder, string $value) => match ($value) {
+                'informed' => $builder->whereNotNull('document_hash'),
+                'missing' => $builder->whereNull('document_hash'),
+                default => $builder,
+            },
+        ]);
+        $table->sort($query, [
+            'name' => ['column' => 'name', 'text' => true],
+            // Idade crescente = nascimento decrescente; quem não tem data vai sempre para o fim.
+            'age' => ['column' => 'birth_date', 'inverted' => true, 'nullable' => true],
+            'rosters' => 'roster_entries_count',
+        ]);
 
-                    // Busca por CPF completo: compara o hash (o CPF não é guardado em claro).
-                    if (strlen($digits) === 11 && Cpf::isValid($digits)) {
-                        $inner->orWhere('document_hash', Cpf::hash($digits));
-                    }
-                });
-            })
-            ->orderBy('name')
-            ->paginate(15)
+        $people = $query->paginate($table->perPage)
             ->withQueryString()
             ->through(fn (Person $person) => [
                 'id' => $person->id,
@@ -48,7 +70,7 @@ class PersonController extends Controller
 
         return Inertia::render('Panel/People/Index', [
             'people' => $people,
-            'filters' => ['q' => $search],
+            'filters' => $table->props(),
         ]);
     }
 

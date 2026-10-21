@@ -5,6 +5,7 @@ namespace App\Modules\Matches\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Matches\Http\Requests\VenueRequest;
 use App\Modules\Matches\Models\Venue;
+use App\Support\Tables\TableQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,18 +15,29 @@ class VenueController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = trim((string) $request->query('q', ''));
+        $table = TableQuery::fromRequest($request, ['name', 'city', 'address', 'games'], 'name', ['city', 'games']);
 
-        $venues = Venue::query()
-            ->withCount('games')
-            ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
-            ->orderBy('name')
-            ->paginate(15)
-            ->withQueryString();
+        $query = Venue::query()->withCount('games');
+        $table->search($query, ['name', 'city', 'address']);
+        $table->filter($query, [
+            'city' => fn ($builder, string $value) => $builder->where('city', $value),
+            'games' => fn ($builder, string $value) => match ($value) {
+                'with' => $builder->has('games'),
+                'without' => $builder->doesntHave('games'),
+                default => $builder,
+            },
+        ]);
+        $table->sort($query, [
+            'name' => ['column' => 'name', 'text' => true],
+            'city' => ['column' => 'city', 'text' => true, 'nullable' => true],
+            'address' => ['column' => 'address', 'text' => true, 'nullable' => true],
+            'games' => 'games_count',
+        ]);
 
         return Inertia::render('Panel/Venues/Index', [
-            'venues' => $venues,
-            'filters' => ['q' => $search],
+            'venues' => $query->paginate($table->perPage)->withQueryString(),
+            'filters' => $table->props(),
+            'city_options' => Venue::query()->whereNotNull('city')->where('city', '!=', '')->distinct()->orderBy('city')->limit(200)->pluck('city'),
         ]);
     }
 

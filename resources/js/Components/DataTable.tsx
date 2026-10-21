@@ -15,6 +15,7 @@ import {
     sortRows,
     summaryText,
 } from '@/lib/dataTable';
+import { Paginated, TableFilters } from '@/types/panel';
 import { router } from '@inertiajs/react';
 import { ReactNode, useCallback, useDeferredValue, useEffect, useId, useMemo, useRef, useState } from 'react';
 
@@ -573,4 +574,21 @@ export default function DataTable<T>({
             )}
         </section>
     );
+}
+
+/** Monta a configuração do modo servidor a partir do que o controlador devolve (paginador + `TableQuery::props`). */
+export function serverTable(
+    url: string,
+    paginator: Paginated<unknown>,
+    filters: TableFilters,
+    defaults: { sort: string; dir?: SortDir; per_page?: number },
+    only: string[],
+): ServerConfig {
+    return {
+        url,
+        paginator,
+        state: { q: filters.q, sort: filters.sort, dir: filters.dir, per_page: filters.per_page, filters: filters.values ?? {} },
+        defaults: { per_page: defaults.per_page ?? 15, sort: defaults.sort, dir: defaults.dir ?? 'asc' },
+        only,
+    };
 }
