@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.6.1',
+        'date' => '2026-10-26',
+        'changes' => ['panel.stages.draw.store aceita partial no mata-mata: só parte das equipes confirmadas entra na chave (ex.: classificados da fase anterior).'],
+    ],
+    [
         'version' => '1.6.0',
         'date' => '2026-10-26',
         'changes' => ['Nova rota interna panel.stages.schedule: agenda da fase por dia, com aviso de conflito de estádio e de descanso das equipes.'],

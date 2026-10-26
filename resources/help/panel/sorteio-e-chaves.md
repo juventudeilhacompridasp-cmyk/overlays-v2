@@ -22,7 +22,8 @@ Em uma fase de **grupos** ou de **mata-mata**, o botão **Sortear / montar arras
 2. Arraste as equipes para os lados A e B de cada confronto da 1ª rodada. Se soltar uma equipe numa vaga ocupada, as duas trocam de lugar.
 3. Vaga vazia em um confronto é **folga**: a equipe passa direto para a 2ª rodada. Escolha onde ficam as folgas colocando as equipes onde quiser.
 4. Use **Sortear** (ao acaso) ou **Por cabeças de chave** (1º x último, 2º x penúltimo...) como ponto de partida e ajuste arrastando.
-5. **Salvar sorteio e gerar jogos** cria a chave inteira; o vencedor de cada confronto avança sozinho.
+5. Se só parte das equipes avança (por exemplo, os classificados da fase de grupos), escolha em **Equipes na chave** quantas entram. A chave encolhe e as demais ficam em **fora da chave**; arraste só as classificadas para os confrontos.
+6. **Salvar sorteio e gerar jogos** cria a chave inteira; o vencedor de cada confronto avança sozinho.
 
 ## Equipes da mesma cidade
 Se há equipes da mesma cidade na divisão, aparece a opção **Evitar equipes da mesma cidade juntas nos sorteios** (ligada). Os sorteios tentam várias distribuições e ficam com a que separa melhor; o que não der para separar aparece como aviso (você pode salvar assim ou arrastar para ajustar).
@@ -33,4 +34,4 @@ Monte exatamente como foi sorteado, arrastando cada equipe para o lugar certo, e
 ## No celular
 Segure a equipe por um instante e arraste, ou use o seletor **Mover para…** que aparece ao lado de cada equipe.
 
-> Todas as equipes confirmadas da divisão precisam entrar no sorteio. Para refazer, limpe a tabela da fase e abra o sorteio de novo.
+> Nos grupos, todas as equipes confirmadas da divisão precisam entrar no sorteio (no mata-mata, só se você não reduzir o número de equipes na chave). Para refazer, limpe a tabela da fase e abra o sorteio de novo.

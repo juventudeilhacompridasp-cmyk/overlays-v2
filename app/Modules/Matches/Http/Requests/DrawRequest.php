@@ -24,6 +24,7 @@ class DrawRequest extends FormRequest
         if ($stage->type === StageType::Knockout || $stage->type === StageType::League) {
             return [
                 'legs' => [$stage->type === StageType::Knockout ? 'required' : 'nullable', 'integer', 'in:1,2'],
+                'partial' => ['nullable', 'boolean'],
                 'double_round' => [$stage->type === StageType::League ? 'required' : 'nullable', 'boolean'],
                 'pairs' => ['required', 'array', 'min:1', 'max:1024'],
                 'pairs.*' => ['array', 'size:2'],
