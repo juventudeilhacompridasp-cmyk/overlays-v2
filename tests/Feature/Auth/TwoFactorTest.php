@@ -360,4 +360,3 @@ describe('configurable parameters', function () {
         expect($other->fresh()->hasTwoFactorEnabled())->toBeFalse();
     });
 });
-
