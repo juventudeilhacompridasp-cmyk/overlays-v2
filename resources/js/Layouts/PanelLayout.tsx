@@ -57,8 +57,9 @@ export default function PanelLayout({ children }: PropsWithChildren) {
     const canManageCompetitions = useCan('manage-competitions');
     const canOperate = useCan('operate-games');
     const canModerateMarket = useCan('manage-market');
+    const canManageRegistry = useCan('manage-registry');
     const { features } = usePage().props;
-    const menuData = buildNav({ role: auth.role ?? null, platformAdmin: auth.platform_admin === true, features, can: { competitions: canManageCompetitions, operate: canOperate, users: canManageUsers, market: canModerateMarket } });
+    const menuData = buildNav({ role: auth.role ?? null, platformAdmin: auth.platform_admin === true, features, can: { competitions: canManageCompetitions, operate: canOperate, users: canManageUsers, market: canModerateMarket, registry: canManageRegistry } });
     const activeGroup = activeGroupOf(menuData, (match) => route().current(match));
     // Grupos abertos/fechados pela pessoa ficam neste navegador; o grupo da página atual abre sempre.
     const [saved, setSaved] = useState<Partial<Record<NavGroupId, boolean>>>(() => {

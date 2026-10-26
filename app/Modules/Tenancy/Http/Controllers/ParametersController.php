@@ -50,6 +50,7 @@ class ParametersController extends Controller
             'mesario.days_ahead' => ['required', 'integer', 'between:0,7'],
             'mesario.finished_hours' => ['required', 'integer', 'between:1,48'],
             'mesario.limit' => ['required', 'integer', 'between:10,100'],
+            'mesario.history' => ['nullable', 'integer', 'between:0,50'],
             'portal.home' => ['required', 'integer', 'between:4,24'],
             'portal.widgets' => ['required', 'integer', 'between:3,20'],
             'portal.scorers' => ['required', 'integer', 'between:3,30'],
@@ -62,6 +63,7 @@ class ParametersController extends Controller
             'mesario.days_ahead' => 'dias à frente',
             'mesario.finished_hours' => 'horas de encerrados',
             'mesario.limit' => 'limite de jogos',
+            'mesario.history' => 'alterações recentes',
             'portal.home' => 'itens por bloco da página inicial',
             'portal.widgets' => 'jogos por lista dos widgets',
             'portal.scorers' => 'artilheiros por divisão',
@@ -75,7 +77,9 @@ class ParametersController extends Controller
         $settings = $organization->settings ?? [];
         // Só mexe nos recursos que a organização tem; o que a plataforma liberar depois continua ligado.
         $settings['features_disabled'] = array_values(array_unique($validated['disabled']));
-        $settings['mesario'] = array_map('intval', $validated['mesario']);
+        $mesario = $validated['mesario'];
+        $mesario['history'] = $mesario['history'] ?? MesarioSettings::HISTORY;
+        $settings['mesario'] = array_map('intval', $mesario);
         $settings['portal_quantities'] = array_map('intval', $validated['portal']);
         $settings['public_api'] = (bool) $validated['public_api'];
         $settings['operation'] = ['quick_result' => (bool) $validated['quick_result']];

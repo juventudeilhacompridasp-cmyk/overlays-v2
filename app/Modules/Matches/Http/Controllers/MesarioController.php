@@ -4,10 +4,13 @@ namespace App\Modules\Matches\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Competitions\Enums\StageType;
+use App\Modules\Competitions\Models\Competition;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Tenancy\Support\MesarioSettings;
 use App\Modules\Tenancy\Support\OperationSettings;
+use App\Support\Tables\TableQuery;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -52,6 +55,51 @@ class MesarioController extends Controller
                 'quick_result' => $quickResult && $game->division->ruleSet()->allowQuickResult && $game->sport()->profile()->scoreModel !== 'sets',
                 'knockout' => $game->stage->type === StageType::Knockout,
             ])->values(),
+        ]);
+    }
+
+    /**
+     * Jogos do campeonato (todas as edições da organização) para o mesário consultar e abrir o painel do operador: lista
+     * paginada no banco com busca e filtros por situação e competição. Só dados do jogo; nada pessoal.
+     */
+    public function games(Request $request): Response
+    {
+        $table = TableQuery::fromRequest($request, ['when', 'status'], 'when', ['status', 'competition'], 'desc', 25);
+        $query = Game::query()
+            ->with(['homeEntry.team', 'awayEntry.team', 'venue', 'division.season.competition', 'stage'])
+            ->whereNotNull('home_entry_id')->whereNotNull('away_entry_id');
+
+        $table->search($query, ['(select lower(t.name) from entries e join teams t on t.id = e.team_id where e.id = games.home_entry_id)', '(select lower(t.name) from entries e join teams t on t.id = e.team_id where e.id = games.away_entry_id)']);
+        $table->filter($query, [
+            'status' => fn ($builder, string $value) => GameStatus::tryFrom($value) !== null ? $builder->where('status', $value) : $builder,
+            'competition' => fn ($builder, string $value) => $builder->whereHas('division.season', fn ($season) => $season->where('competition_id', $value)),
+        ]);
+        $table->sort($query, [
+            'when' => ['column' => 'scheduled_at', 'nullable' => true],
+            'status' => 'status',
+        ]);
+
+        $games = $query->paginate($table->perPage)->withQueryString()->through(fn (Game $game) => [
+            'id' => $game->getKey(),
+            'home' => $game->homeEntry->team->name,
+            'away' => $game->awayEntry->team->name,
+            'home_score' => $game->home_score,
+            'away_score' => $game->away_score,
+            'status' => $game->status->value,
+            'status_label' => $game->status->label(),
+            'live' => $game->status === GameStatus::InProgress,
+            'open' => ! $game->status->isDecided(),
+            'scheduled_at' => $game->scheduled_at?->toIso8601String(),
+            'venue' => $game->venue?->name,
+            'competition' => "{$game->division->season->competition->name} · {$game->division->name}",
+            'stage' => $game->stage->name,
+        ]);
+
+        return Inertia::render('Panel/Mesario/Games', [
+            'games' => $games,
+            'filters' => $table->props(),
+            'statuses' => collect(GameStatus::cases())->map(fn (GameStatus $status) => ['value' => $status->value, 'label' => $status->label()])->values(),
+            'competitions' => Competition::query()->orderBy('name')->get(['id', 'name'])->map(fn (Competition $competition) => ['value' => $competition->getKey(), 'label' => $competition->name])->values(),
         ]);
     }
 }

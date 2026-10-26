@@ -25,6 +25,7 @@ use App\Modules\Matches\Http\Controllers\DrawController;
 use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
 use App\Modules\Matches\Http\Controllers\GameMediaController;
+use App\Modules\Matches\Http\Controllers\GameOperatorController;
 use App\Modules\Matches\Http\Controllers\GameReportController;
 use App\Modules\Matches\Http\Controllers\MesarioController;
 use App\Modules\Matches\Http\Controllers\OfficialAssignmentController;
@@ -163,6 +164,8 @@ Route::middleware(['auth', 'verified', 'panel.member', 'two-factor.admins', 'leg
     // Operação do jogo: escalação, súmula, cronômetro, pênaltis e encerramento.
     Route::middleware('panel.can:operate-games')->group(function () {
         Route::get('mesario', [MesarioController::class, 'index'])->name('mesario');
+        Route::get('mesario/jogos', [MesarioController::class, 'games'])->name('mesario.games');
+        Route::get('games/{game}/operador', [GameOperatorController::class, 'show'])->name('games.operator');
         Route::get('games/{game}/sheet', [SheetController::class, 'show'])->name('games.sheet');
         Route::middleware('feature:reports')->prefix('games/{game}/reports')->name('games.reports.')->group(function () {
             Route::get('escalacao.pdf', [GameReportController::class, 'lineup'])->name('lineup');

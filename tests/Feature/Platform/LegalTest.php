@@ -113,11 +113,12 @@ describe('panel acceptance', function () {
         $this->get('/aceite-termos')->assertOk()->assertInertia(fn ($page) => $page->component('Legal/Accept')->has('documents', 2));
 
         $this->post('/aceite-termos', [])->assertSessionHasErrors('accept');
-        $this->post('/aceite-termos', ['accept' => true])->assertRedirect('/painel');
+        // Quem só opera jogos volta para o app do mesário.
+        $this->post('/aceite-termos', ['accept' => true])->assertRedirect('/painel/mesario');
 
         expect(LegalAcceptance::query()->where('user_id', $user->id)->pluck('legal_document_id')->sort()->values()->all())->toBe(collect([$terms->id, $privacy->id])->sort()->values()->all());
         $this->get('/painel')->assertOk();
-        $this->get('/aceite-termos')->assertRedirect('/painel');
+        $this->get('/aceite-termos')->assertRedirect('/painel/mesario');
     });
 
     it('asks again only for the document that changed', function () {

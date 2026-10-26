@@ -48,7 +48,7 @@ class LegalAcceptController extends Controller
         return match ($request->user()?->role()) {
             Role::TeamManager => 'manager.dashboard',
             Role::Athlete => 'athlete.dashboard',
-            default => 'panel.dashboard',
+            default => $request->user()?->isOperatorOnly() ? 'panel.mesario' : 'panel.dashboard',
         };
     }
 }

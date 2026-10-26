@@ -74,6 +74,18 @@ class User extends Authenticatable implements MustVerifyEmail
         return in_array($permission, $this->permissions(), true);
     }
 
+    /**
+     * Perfil "só mesário": opera jogos e não tem nenhuma outra permissão do painel (competições, cadastros, usuários, Mercado).
+     * Quem é assim entra direto no app do mesário e vê um menu enxuto.
+     */
+    public function isOperatorOnly(): bool
+    {
+        $permissions = $this->permissions();
+
+        return in_array(Permission::GamesOperate, $permissions, true)
+            && array_filter($permissions, fn (Permission $permission): bool => $permission !== Permission::GamesOperate) === [];
+    }
+
     /** Descarta a participação guardada (depois de alterar o papel/perfil do usuário). */
     public function forgetRole(): void
     {

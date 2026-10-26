@@ -19,7 +19,7 @@ beforeEach(function () {
 
 function parametersPayload(array $override = []): array
 {
-    return $override + ['disabled' => [], 'mesario' => ['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40], 'portal' => ['home' => 8, 'widgets' => 6, 'scorers' => 10, 'stats_top' => 5, 'stats_form' => 5], 'public_api' => true, 'quick_result' => true];
+    return $override + ['disabled' => [], 'mesario' => ['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40, 'history' => 15], 'portal' => ['home' => 8, 'widgets' => 6, 'scorers' => 10, 'stats_top' => 5, 'stats_form' => 5], 'public_api' => true, 'quick_result' => true];
 }
 
 describe('features the organization turns off by itself', function () {
@@ -70,11 +70,11 @@ describe('features the organization turns off by itself', function () {
 
 describe('mesário windows', function () {
     it('keeps the original windows by default and clamps saved values', function () {
-        expect(MesarioSettings::all())->toBe(['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40]);
+        expect(MesarioSettings::all())->toBe(['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40, 'history' => 15]);
 
         CurrentOrganization::get()->update(['settings' => ['mesario' => ['days_ahead' => 99, 'finished_hours' => 0, 'limit' => 'x']]]);
 
-        expect(MesarioSettings::all())->toBe(['days_ahead' => 7, 'finished_hours' => 1, 'limit' => 40]);
+        expect(MesarioSettings::all())->toBe(['days_ahead' => 7, 'finished_hours' => 1, 'limit' => 40, 'history' => 15]);
     });
 
     it('changes which games the mesário sees', function () {
@@ -97,6 +97,22 @@ describe('mesário windows', function () {
 
         $this->patch(route('panel.parameters.update'), parametersPayload(['mesario' => ['days_ahead' => 7, 'finished_hours' => 6, 'limit' => 10]]))->assertSessionHas('success');
         $sees('', 10);
+    });
+
+    it('saves how many recent changes the operator screen shows, with the original default', function () {
+        $admin = panelUser(Role::Admin);
+
+        $this->actingAs($admin)->patch(route('panel.parameters.update'), parametersPayload(['mesario' => ['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40, 'history' => 5]]))->assertSessionHas('success');
+        expect(MesarioSettings::all()['history'])->toBe(5);
+
+        // Sem o campo, volta ao padrão original; 0 esconde.
+        $this->patch(route('panel.parameters.update'), parametersPayload(['mesario' => ['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40]]))->assertSessionHas('success');
+        expect(MesarioSettings::all()['history'])->toBe(15);
+
+        $this->patch(route('panel.parameters.update'), parametersPayload(['mesario' => ['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40, 'history' => 0]]))->assertSessionHas('success');
+        expect(MesarioSettings::all()['history'])->toBe(0);
+
+        $this->patch(route('panel.parameters.update'), parametersPayload(['mesario' => ['days_ahead' => 2, 'finished_hours' => 6, 'limit' => 40, 'history' => 99]]))->assertSessionHasErrors('mesario.history');
     });
 
     it('validates the ranges', function () {

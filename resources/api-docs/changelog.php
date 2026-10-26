@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.15.0',
+        'date' => '2026-10-26',
+        'changes' => ['Novas rotas internas panel.mesario.games (jogos do campeonato) e panel.games.operator (painel do operador da partida).'],
+    ],
+    [
         'version' => '1.14.0',
         'date' => '2026-10-26',
         'changes' => ['Novas rotas internas panel.activity-log.index e panel.activity-log.export: registro de atividades (auditoria) de tudo o que os usuários fazem.'],
