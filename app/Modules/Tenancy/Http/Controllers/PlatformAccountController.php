@@ -9,6 +9,7 @@ use App\Support\Auth\TwoFactor;
 use App\Support\Auth\TwoFactorNotice;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,7 +29,7 @@ class PlatformAccountController extends Controller
                 'id' => $user->getKey(),
                 'name' => $user->name,
                 'email' => $user->email,
-                'enabled_at' => $user->two_factor_confirmed_at?->copy()->utc()->toIso8601String(),
+                'enabled_at' => Carbon::parse($user->two_factor_confirmed_at)->utc()->toIso8601String(),
                 'recovery_left' => TwoFactor::recoveryCodesLeft($user),
                 'is_platform_admin' => (bool) $user->is_platform_admin,
             ])->all(),
