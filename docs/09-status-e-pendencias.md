@@ -20,7 +20,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 **Fora do MVP:** cobrança automática. **Decidido não fazer:** interruptor da fila offline (aumentaria o risco no jogo).
 
 ## Entregue
-- **QR code para partidas (26/10):** a agenda do painel, a página pública e o editor de artes geram e permitem baixar um QR que abre diretamente o jogo no celular.
+- **QR code para partidas (26/10):** a agenda do painel, a página pública e o editor de artes geram e permitem baixar um QR que abre diretamente o jogo no celular; o editor também pode incluir o QR no PNG exportado.
 - **Transmissão do jogo no YouTube (26/10):** o organizador pode vincular um vídeo/live do YouTube ao jogo; a página pública mostra o player responsivo somente para links YouTube validados.
 - **Escalações públicas opcionais (26/10):** a página do jogo aceita o interruptor `settings.portal.game_lineup` e exibe titulares/reservas com nome público, camisa e capitão; fotos, nascimento, documentos e demais dados pessoais nunca são publicados.
 - **Agenda dos jogos e sorteio com restrição (26/10):** `panel.stages.schedule` (`ScheduleController`, `Panel/Stages/Schedule`, `lib/schedule.ts`, `GameConflicts` puro): jogos por dia, remarcar arrastando (mesma rota `panel.games.update`), editar horário/estádio e aviso de conflito em todas as fases e divisões. A duração considerada no estádio e o descanso mínimo da equipe agora vêm do regulamento da edição. No sorteio, opção de **separar equipes da mesma cidade, clube ou patrocinador** (`bestOf`, `groupClashes`/`bracketClashes`; só avisa). Os vínculos opcionais pertencem à inscrição da edição e são configurados na divisão.

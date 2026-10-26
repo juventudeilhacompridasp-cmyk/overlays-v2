@@ -7,6 +7,7 @@ import { drawArt, loadImages } from '@/lib/artsDraw';
 import type { RequestPayload } from '@inertiajs/core';
 import { Head, Link, router } from '@inertiajs/react';
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import QRCode from 'qrcode';
 
 type Option = { value: string; label: string };
 type Format = { key: string; width: number; height: number };
@@ -127,6 +128,8 @@ export default function Editor({ game, kind, kinds, data, initial, templates, pr
     const [format, setFormat] = useState<Format>(initial.format);
     const [name, setName] = useState(initial.name);
     const [templateId, setTemplateId] = useState<string | null>(initial.template_id);
+    const [includeQr, setIncludeQr] = useState(false);
+    const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
     const canvas = useRef<HTMLCanvasElement>(null);
     const images = useRef(new Map<string, HTMLImageElement>());
@@ -146,7 +149,24 @@ export default function Editor({ game, kind, kinds, data, initial, templates, pr
     const previewW = Math.round(format.width * scale);
     const previewH = Math.round(format.height * scale);
     const assetUrls = useMemo(() => Object.fromEntries(assets.map((asset) => [asset.id, asset.url])), [assets]);
-    const ops = useMemo(() => buildArt(style, data, previewW, previewH, assetUrls), [style, data, previewW, previewH, assetUrls]);
+    const baseOps = useMemo(() => buildArt(style, data, previewW, previewH, assetUrls), [style, data, previewW, previewH, assetUrls]);
+    const ops = useMemo(() => (includeQr && qrDataUrl ? [...baseOps, { t: 'rect' as const, x: previewW - 22, y: previewH - 22, w: 20, h: 20, fill: '#ffffff', radius: 1 }, { t: 'image' as const, src: qrDataUrl, x: previewW - 21, y: previewH - 21, w: 18, h: 18 }] : baseOps), [baseOps, includeQr, previewW, previewH, qrDataUrl]);
+
+    useEffect(() => {
+        if (!includeQr) {
+            setQrDataUrl(null);
+            return;
+        }
+
+        let active = true;
+        QRCode.toDataURL(route('public.games.show', game.id), { margin: 0, width: 256, errorCorrectionLevel: 'M' })
+            .then((value) => active && setQrDataUrl(value))
+            .catch(() => active && setQrDataUrl(null));
+
+        return () => {
+            active = false;
+        };
+    }, [includeQr, game.id]);
 
     useEffect(() => {
         let cancelled = false;
@@ -174,6 +194,9 @@ export default function Editor({ game, kind, kinds, data, initial, templates, pr
             full.width = format.width;
             full.height = format.height;
             const fullOps = buildArt(style, data, format.width, format.height, assetUrls);
+            if (includeQr && qrDataUrl) {
+                fullOps.push({ t: 'rect', x: format.width - 22, y: format.height - 22, w: 20, h: 20, fill: '#ffffff', radius: 1 }, { t: 'image', src: qrDataUrl, x: format.width - 21, y: format.height - 21, w: 18, h: 18 });
+            }
             await Promise.all([ensureFonts(style), loadImages(fullOps, images.current)]);
             drawArt(full, fullOps, style, images.current);
             const blob = await new Promise<Blob | null>((resolve) => full.toBlob(resolve, 'image/png'));
@@ -300,6 +323,7 @@ export default function Editor({ game, kind, kinds, data, initial, templates, pr
                     <Section title="Compartilhar a partida">
                         <p className="mb-3 text-sm text-gray-600">Inclua este QR na divulgação impressa ou baixe-o para combinar com a arte.</p>
                         <GameQrCode url={route('public.games.show', game.id)} label={`QR code de ${game.home} x ${game.away}`} />
+                        <Check label="Incluir o QR no PNG exportado" checked={includeQr} onChange={setIncludeQr} />
                     </Section>
 
                     <Section title="Formato">
