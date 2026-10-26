@@ -35,3 +35,6 @@ Por padrão a API de consulta (`/api/v1`: competições, edições, estatística
 
 ## Fechamento da súmula
 **Assinaturas mínimas** define quantas assinaturas confirmadas da súmula (veja [Painel do operador](help:fechar-a-sumula)) são exigidas para fechá-la (0 a 10; padrão 0, nenhuma). **Exigir motivo para reabrir** (padrão ligado) pede uma justificativa quando alguém reabre um jogo cuja súmula já foi fechada.
+
+## Alertas operacionais
+**Horas à frente** (1 a 72, padrão 24) define até quando os jogos são verificados e as caixas escolhem o que verificar: equipe sem escalação, sem árbitro ou mesário, sem estádio e conflito de agenda. Veja [Alertas operacionais](help:alertas-operacionais).

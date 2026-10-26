@@ -113,6 +113,12 @@ return [
         'monthly' => (int) env('HELP_AI_MONTHLY', 300),
     ],
 
+    // Alertas operacionais (App\Modules\Matches\Support\OperationalAlerts): resumo por e-mail dos jogos próximos com algo a resolver.
+    'operational_alerts' => [
+        'enabled' => filter_var(env('OPERATIONAL_ALERTS', true), FILTER_VALIDATE_BOOL),
+        'max_games' => (int) env('OPERATIONAL_ALERTS_MAX_GAMES', 200),
+    ],
+
     // Verificação dos arquivos pessoais enviados (App\Support\Uploads\UploadScanner). ClamAV é opcional (host vazio = desligado).
     'uploads' => [
         'scan' => [

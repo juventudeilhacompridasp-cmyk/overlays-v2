@@ -10,11 +10,12 @@ type Props = {
     public_api: boolean;
     quick_result: boolean;
     sheet_closing: { min_signatures: number; reopen_reason: boolean };
+    operational_alerts: { hours_ahead: number; checks: Record<'lineup' | 'officials' | 'venue' | 'conflicts', boolean> };
     help_ai: { released: boolean; enabled: boolean; configured: boolean };
 };
 
-export default function Edit({ features, mesario, portal, public_api, quick_result, sheet_closing, help_ai }: Props) {
-    const { data, setData, patch, processing, errors } = useForm({ disabled: features.filter((feature) => feature.off).map((feature) => feature.key), mesario, portal, public_api, quick_result, sheet_closing, help_ai: help_ai.enabled });
+export default function Edit({ features, mesario, portal, public_api, quick_result, sheet_closing, operational_alerts, help_ai }: Props) {
+    const { data, setData, patch, processing, errors } = useForm({ disabled: features.filter((feature) => feature.off).map((feature) => feature.key), mesario, portal, public_api, quick_result, sheet_closing, operational_alerts, help_ai: help_ai.enabled });
 
     const toggle = (key: string, on: boolean) => setData('disabled', on ? data.disabled.filter((item) => item !== key) : [...data.disabled, key]);
     const submit = (event: FormEvent) => {
@@ -69,6 +70,30 @@ export default function Edit({ features, mesario, portal, public_api, quick_resu
                         <input type="checkbox" className="mt-0.5 rounded border-gray-300 text-emerald-600" checked={data.quick_result} onChange={(event) => setData('quick_result', event.target.checked)} />
                         <span>Permitir o <strong>resultado rápido</strong> (placar final sem súmula detalhada) na tela da fase e no app do mesário. Desligado, só a súmula (eventos) lança o placar; W.O. continua disponível.</span>
                     </label>
+                </Card>
+
+                <Card title="Alertas operacionais" className="max-w-3xl">
+                    <p className="mb-3 text-sm text-gray-600">Jogos que estão chegando e ainda têm algo a resolver, avisados por e-mail a quem gerencia competições (liga e desliga em Comunicações).</p>
+                    <label className="block text-sm text-gray-700 sm:max-w-xs">
+                        <span className="font-medium">Horas à frente</span>
+                        <input type="number" min={1} max={72} className="mt-1 block w-full rounded-md border-gray-300 text-sm" value={data.operational_alerts.hours_ahead} onChange={(event) => setData('operational_alerts', { ...data.operational_alerts, hours_ahead: Number(event.target.value) })} />
+                        {errors['operational_alerts.hours_ahead' as keyof typeof errors] && <span className="text-xs text-red-600">{errors['operational_alerts.hours_ahead' as keyof typeof errors]}</span>}
+                    </label>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {(
+                            [
+                                ['lineup', 'Equipe sem escalação'],
+                                ['officials', 'Sem árbitro ou mesário escalado'],
+                                ['venue', 'Sem estádio definido'],
+                                ['conflicts', 'Conflito de agenda (estádio ou descanso)'],
+                            ] as const
+                        ).map(([key, label]) => (
+                            <label key={key} className="flex items-center gap-2 text-sm text-gray-700">
+                                <input type="checkbox" className="rounded border-gray-300 text-emerald-600" checked={data.operational_alerts.checks[key]} onChange={(event) => setData('operational_alerts', { ...data.operational_alerts, checks: { ...data.operational_alerts.checks, [key]: event.target.checked } })} />
+                                {label}
+                            </label>
+                        ))}
+                    </div>
                 </Card>
 
                 <Card title="Fechamento da súmula" className="max-w-3xl">

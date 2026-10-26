@@ -8,6 +8,7 @@ use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
 use App\Modules\Tenancy\Models\Organization;
 use App\Modules\Tenancy\Support\MesarioSettings;
+use App\Modules\Tenancy\Support\OperationalAlertSettings;
 use App\Modules\Tenancy\Support\OperationSettings;
 use App\Modules\Tenancy\Support\PortalQuantities;
 use App\Modules\Tenancy\Support\SheetClosingSettings;
@@ -39,6 +40,7 @@ class ParametersController extends Controller
             'portal' => PortalQuantities::all($organization),
             'quick_result' => OperationSettings::quickResultAllowed($organization),
             'sheet_closing' => SheetClosingSettings::all($organization),
+            'operational_alerts' => OperationalAlertSettings::all($organization),
             'help_ai' => ['released' => HelpAiSettings::released(), 'enabled' => HelpAiSettings::enabled(), 'configured' => HelpAiSettings::configured()],
             'public_api' => ($organization->settings['public_api'] ?? true) !== false,
         ]);
@@ -60,6 +62,10 @@ class ParametersController extends Controller
             'portal.stats_form' => ['required', 'integer', 'between:3,10'],
             'public_api' => ['required', 'boolean'],
             'quick_result' => ['required', 'boolean'],
+            'operational_alerts' => ['sometimes', 'array'],
+            'operational_alerts.hours_ahead' => ['required_with:operational_alerts', 'integer', 'min:'.OperationalAlertSettings::HOURS_MIN, 'max:'.OperationalAlertSettings::HOURS_MAX],
+            'operational_alerts.checks' => ['required_with:operational_alerts', 'array'],
+            'operational_alerts.checks.*' => ['boolean'],
             'sheet_closing' => ['sometimes', 'array'],
             'sheet_closing.min_signatures' => ['required_with:sheet_closing', 'integer', 'min:'.SheetClosingSettings::MIN_SIGNATURES, 'max:'.SheetClosingSettings::MAX_SIGNATURES],
             'sheet_closing.reopen_reason' => ['required_with:sheet_closing', 'boolean'],
@@ -70,6 +76,7 @@ class ParametersController extends Controller
             'mesario.limit' => 'limite de jogos',
             'mesario.history' => 'alterações recentes',
             'sheet_closing.min_signatures' => 'assinaturas mínimas para fechar a súmula',
+            'operational_alerts.hours_ahead' => 'horas à frente dos alertas',
             'portal.home' => 'itens por bloco da página inicial',
             'portal.widgets' => 'jogos por lista dos widgets',
             'portal.scorers' => 'artilheiros por divisão',
@@ -89,6 +96,16 @@ class ParametersController extends Controller
         $settings['portal_quantities'] = array_map('intval', $validated['portal']);
         $settings['public_api'] = (bool) $validated['public_api'];
         $settings['operation'] = ['quick_result' => (bool) $validated['quick_result']];
+
+        if (isset($validated['operational_alerts'])) {
+            $checks = [];
+
+            foreach (OperationalAlertSettings::CHECKS as $check) {
+                $checks[$check] = (bool) ($validated['operational_alerts']['checks'][$check] ?? false);
+            }
+
+            $settings['operational_alerts'] = ['hours_ahead' => (int) $validated['operational_alerts']['hours_ahead'], 'checks' => $checks];
+        }
 
         if (isset($validated['sheet_closing'])) {
             $settings['sheet_closing'] = [
