@@ -8,7 +8,16 @@ final class PdfReport
     /** @param list<string> $lines */
     public static function make(array $lines): string
     {
-        $pages = array_chunk($lines, 44);
+        // O escritor é propositalmente pequeno, mas não pode deixar uma escalação longa sair da página: uma linha com
+        // muitos atletas era cortada pelo leitor do PDF. Quebramos antes de paginar, mantendo linhas vazias como separadores.
+        $wrapped = [];
+        foreach ($lines as $line) {
+            $line = trim(preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/', '', $line) ?? '');
+            $parts = $line === '' ? [''] : explode("\n", wordwrap($line, 88, "\n", false));
+            $wrapped = [...$wrapped, ...$parts];
+        }
+
+        $pages = array_chunk($wrapped, 44);
         $pages = $pages === [] ? [['']] : $pages;
         $pageIds = [];
         for ($id = 4; $id <= 3 + count($pages) * 2; $id += 2) {

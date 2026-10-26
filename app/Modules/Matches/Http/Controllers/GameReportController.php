@@ -12,9 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
 /** PDFs internos da partida: escalação antes do jogo e relatório final. */
 final class GameReportController extends Controller
 {
-    public function lineup(Game $game): Response
+    public function lineup(Request $request, Game $game): Response
     {
-        return $this->download($game, 'escalacao', GameReportPdf::lineup($game));
+        return $this->download($game, 'escalacao', GameReportPdf::lineup($game), $request->boolean('visualizar'));
     }
 
     public function finalReport(Request $request, Game $game): Response
@@ -26,15 +26,15 @@ final class GameReportController extends Controller
             default => 'relatorio-final',
         };
 
-        return $this->download($game, $label, GameReportPdf::finalReport($game, $type));
+        return $this->download($game, $label, GameReportPdf::finalReport($game, $type), $request->boolean('visualizar'));
     }
 
     /** @param list<string> $lines */
-    private function download(Game $game, string $kind, array $lines): Response
+    private function download(Game $game, string $kind, array $lines, bool $inline = false): Response
     {
         return response(PdfReport::make($lines), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="'.$kind.'-'.$game->getKey().'.pdf"',
+            'Content-Disposition' => ($inline ? 'inline' : 'attachment').'; filename="'.$kind.'-'.$game->getKey().'.pdf"',
             'Cache-Control' => 'private, no-store',
         ]);
     }

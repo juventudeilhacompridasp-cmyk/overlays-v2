@@ -115,6 +115,7 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 - A escalação pré-partida e os relatórios da partida são downloads privados em PDF; o organizador pode escolher escalação, atividades (resumo, períodos e linha do tempo) ou completo (inclui escalações, placar, sets e situação).
 - Eventos devem ser consultados com `GameEvent::effective()` e os PDFs nunca podem ser publicados em snapshots, overlays ou páginas públicas.
 - O gerador usa apenas recursos nativos para permanecer leve em instalações OBS e não introduzir dependências de renderização.
+- O PDF nativo deve quebrar linhas longas antes de paginar para não cortar nomes; `visualizar=1` usa `Content-Disposition: inline`, enquanto o link padrão continua como download privado.
 
 ## Builder de overlays livres
 
