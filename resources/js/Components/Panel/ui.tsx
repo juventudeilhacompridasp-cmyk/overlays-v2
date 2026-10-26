@@ -45,12 +45,12 @@ export function PageHeader({
                     ))}
                 </nav>
             )}
-            <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-start">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
                     {subtitle && <p className="mt-1 text-sm text-gray-600">{subtitle}</p>}
                 </div>
-                {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+                {actions && <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">{actions}</div>}
             </div>
         </div>
     );
@@ -65,9 +65,9 @@ export function Card({
     return (
         <section className={`rounded-lg bg-white shadow-sm ring-1 ring-gray-200 ${className}`}>
             {(title || actions) && (
-                <header className="flex items-center justify-between gap-3 border-b border-gray-100 px-5 py-3">
+                <header className="flex flex-col items-stretch justify-between gap-2 border-b border-gray-100 px-4 py-3 sm:flex-row sm:items-center sm:px-5">
                     <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-                    {actions && <div className="flex items-center gap-2">{actions}</div>}
+                    {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
                 </header>
             )}
             <div className="p-5">{children}</div>
@@ -118,7 +118,7 @@ const variants: Record<Variant, string> = {
 
 const buttonClasses = (variant: Variant, small: boolean) =>
     `inline-flex items-center justify-center rounded-md font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 ${
-        small ? 'px-2.5 py-1 text-xs' : 'px-4 py-2 text-sm'
+        small ? 'min-h-11 px-2.5 py-1 text-xs sm:min-h-0' : 'min-h-11 px-4 py-2 text-sm sm:min-h-0'
     } ${variants[variant]}`;
 
 export function Button({
@@ -243,14 +243,14 @@ export function SearchBox({
 }) {
     return (
         <form
-            className="flex gap-2"
+            className="flex flex-col gap-2 sm:flex-row"
             onSubmit={(event) => {
                 event.preventDefault();
                 onSubmit();
             }}
         >
             <Input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="sm:w-72" />
-            <Button type="submit" variant="secondary">
+            <Button type="submit" variant="secondary" className="w-full sm:w-auto">
                 Buscar
             </Button>
         </form>
