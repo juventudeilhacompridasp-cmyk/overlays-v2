@@ -8,6 +8,7 @@ Regra adicional: escalações na página pública do jogo só aparecem quando `s
 Regra adicional: transmissões vinculadas a jogos aceitam somente links do YouTube; o portal deve gerar o `youtube.com/embed` a partir do ID validado, nunca incorporar uma URL arbitrária.
 Regra adicional: QR codes de partidas devem apontar para a página pública do jogo, usar a biblioteca `qrcode` no navegador e oferecer texto alternativo e download; não devem carregar identificadores privados.
 Regra adicional: o PWA público usa `portal.webmanifest`; o service worker continua guardando apenas assets versionados e a tela offline, nunca páginas públicas, respostas de API ou dados de organização.
+Regra adicional: mídia de partida segue o ADR 0016; upload público passa por variantes WebP sem EXIF, vídeo externo usa somente hosts HTTPS permitidos e itens não publicados nunca entram no portal, feed, widgets ou overlays.
 
 ## Contexto
 **Status e pendências atuais: `docs/09-status-e-pendencias.md` (leia primeiro e atualize a cada PR).**
