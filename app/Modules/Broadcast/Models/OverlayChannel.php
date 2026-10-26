@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
  * @property array<string, mixed>|null $screen_settings
  * @property array<string, mixed>|null $automation_settings
  * @property array<string, mixed>|null $stats_settings
+ * @property array<string, mixed>|null $report_settings
  * @property string|null $control_token_hash
  */
 #[Unguarded]
@@ -39,10 +40,10 @@ class OverlayChannel extends Model
     public const CHAMPIONSHIP_VIEWS = ['standings', 'fixtures', 'results', 'scorers', 'discipline', 'matchcard', 'ticker', 'champion'];
 
     /** Telas extras sob demanda (começam ocultas): cartela pré-jogo, comparativo, cartela de transmissão, resumo do jogo e chaveamento. */
-    public const SCREENS = ['pregame', 'compare', 'cartela', 'summary', 'bracket', 'social', 'sponsor_bar', 'stats', 'shootout'];
+    public const SCREENS = ['pregame', 'compare', 'cartela', 'summary', 'bracket', 'social', 'sponsor_bar', 'stats', 'shootout', 'report'];
 
     /** Camadas e telas que o PVW do Modo operador pode mostrar antes de irem ao ar (`withPreview`). */
-    public const PREVIEWABLE = ['lineup', 'standings', 'sponsors', 'pregame', 'compare', 'cartela', 'summary', 'bracket', 'social', 'sponsor_bar', 'stats', 'shootout'];
+    public const PREVIEWABLE = ['lineup', 'standings', 'sponsors', 'pregame', 'compare', 'cartela', 'summary', 'bracket', 'social', 'sponsor_bar', 'stats', 'shootout', 'report'];
 
     /** Camadas que valem como ligadas quando o operador nunca mexeu nelas. */
     public const DEFAULT_ON = ['scoreboard', 'lower_third'];
@@ -63,6 +64,7 @@ class OverlayChannel extends Model
         'barra-patrocinio' => 'Barra de patrocinadores 1500 x 200 (sob demanda)',
         'estatisticas' => 'Estatísticas da partida (sob demanda)',
         'penaltis' => 'Disputa de pênaltis (cobrança a cobrança)',
+        'relatorio' => 'Relatórios ilustrados da partida ou do campeonato (sob demanda, slide a slide)',
         'todos' => 'Todas as camadas numa só fonte (placar, lances, escalação, tabela, patrocinadores, estatísticas)',
     ];
 
@@ -71,7 +73,7 @@ class OverlayChannel extends Model
      */
     protected function casts(): array
     {
-        return ['layers' => 'array', 'appearance' => 'array', 'lineup_settings' => 'array', 'sponsor_settings' => 'array', 'lower_third_settings' => 'array', 'screen_settings' => 'array', 'automation_settings' => 'array', 'stats_settings' => 'array'];
+        return ['layers' => 'array', 'appearance' => 'array', 'lineup_settings' => 'array', 'sponsor_settings' => 'array', 'lower_third_settings' => 'array', 'screen_settings' => 'array', 'automation_settings' => 'array', 'stats_settings' => 'array', 'report_settings' => 'array'];
     }
 
     public static function newToken(): string

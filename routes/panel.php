@@ -39,6 +39,7 @@ use App\Modules\Matches\Http\Controllers\VenueController;
 use App\Modules\Portal\Http\Controllers\EmbedPanelController;
 use App\Modules\Registration\Http\Controllers\ReviewController;
 use App\Modules\Registration\Http\Controllers\SeasonSettingsController;
+use App\Modules\Reports\Http\Controllers\VisualReportController;
 use App\Modules\Teams\Http\Controllers\CardController;
 use App\Modules\Teams\Http\Controllers\PersonController;
 use App\Modules\Teams\Http\Controllers\PersonDocumentController;
@@ -174,6 +175,12 @@ Route::middleware(['auth', 'verified', 'panel.member', 'two-factor.admins', 'leg
             Route::get('sumula.pdf', [GameReportController::class, 'sheet'])->name('sheet');
             Route::get('final.pdf', [GameReportController::class, 'finalReport'])->name('final');
             Route::post('assinaturas', [GameReportController::class, 'inviteSignature'])->name('signatures.invite');
+        });
+        // Relatórios ilustrados (módulo Reports): prévia e PDF da partida ou da divisão; consultar é de qualquer membro.
+        Route::middleware('feature:reports')->prefix('relatorios-ilustrados')->name('visual-reports.')->group(function () {
+            Route::get('/', [VisualReportController::class, 'index'])->name('index');
+            Route::get('partida/{game}.pdf', [VisualReportController::class, 'game'])->name('game');
+            Route::get('campeonato/{division}.pdf', [VisualReportController::class, 'championship'])->name('championship');
         });
         Route::put('games/{game}/lineups/{entry}', [SheetController::class, 'lineup'])->name('games.lineup');
         Route::post('games/{game}/sync', [SheetController::class, 'sync'])->name('games.sync');

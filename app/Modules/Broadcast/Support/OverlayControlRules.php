@@ -5,6 +5,8 @@ namespace App\Modules\Broadcast\Support;
 use App\Modules\Broadcast\Models\OverlayChannel;
 use App\Modules\Broadcast\Models\OverlayFont;
 use App\Modules\Matches\Enums\LineupSlot;
+use App\Modules\Reports\Enums\ReportKind;
+use App\Modules\Reports\Support\ReportSections;
 use Illuminate\Validation\Rule;
 
 final class OverlayControlRules
@@ -35,6 +37,17 @@ final class OverlayControlRules
             'automation_settings.enabled' => ['sometimes', 'boolean'],
             'automation_settings.pregame' => ['sometimes', 'boolean'],
             'automation_settings.summary' => ['sometimes', 'boolean'],
+            'report_settings' => ['sometimes', 'array'],
+            'report_settings.kind' => ['sometimes', 'string', Rule::in(array_column(ReportKind::cases(), 'value'))],
+            'report_settings.division_id' => ['sometimes', 'nullable', 'string', Rule::exists('divisions', 'id')->where('organization_id', $channel->organization_id)],
+            'report_settings.sections' => ['sometimes', 'array', 'max:12'],
+            'report_settings.sections.*' => ['string', Rule::in(array_unique([...array_keys(ReportSections::GAME), ...array_keys(ReportSections::CHAMPIONSHIP)]))],
+            'report_settings.mode' => ['sometimes', 'string', Rule::in(OverlayReportSettings::MODES)],
+            'report_settings.seconds' => ['sometimes', 'integer', 'between:5,60'],
+            'report_settings.style' => ['sometimes', 'string', Rule::in(OverlayReportSettings::STYLES)],
+            'report_settings.animation' => ['sometimes', 'string', Rule::in(OverlayReportSettings::ANIMATIONS)],
+            'report_settings.scale' => ['sometimes', 'integer', 'between:50,150'],
+            'report_command' => ['sometimes', 'string', Rule::in(OverlayReportSettings::COMMANDS)],
             'stats_settings' => ['sometimes', 'array'],
             'stats_settings.home' => ['sometimes', 'array'],
             'stats_settings.home.*' => ['integer', 'between:0,999'],

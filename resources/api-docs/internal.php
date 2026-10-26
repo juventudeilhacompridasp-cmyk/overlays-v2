@@ -65,6 +65,7 @@ return [
     'panel.widgets.index' => $page('Gerador do código dos widgets embutíveis'),
     'panel.reports.index' => $page('Relatórios por edição (pendências e elencos aprovados)'),
     'panel.reports.csv' => $download('Baixa um relatório da edição em CSV', 'CSV (`;`, UTF-8 com BOM), sem CPF.'),
+    'panel.reports.sponsor-pdf' => $download('Relatório institucional da edição em PDF (para patrocinadores)', 'PDF.'),
     'panel.mesario' => $page('App do mesário: jogos ao vivo, de hoje, próximos e encerrados', 'As janelas (dias à frente, horas de encerrados e limite) vêm de Painel > Parâmetros.'),
 
     // ───────────── Painel: cadastros ─────────────
@@ -177,6 +178,9 @@ return [
     'panel.games.reports.signatures.invite' => $action('Envia o convite de assinatura (link único por e-mail) da escalação, da súmula ou do relatório final'),
     'panel.games.reports.sheet' => $download('Súmula oficial do jogo em PDF para imprimir', 'PDF.', 'Escalações, arbitragem e mesa, ocorrências (ou linhas em branco), observações e assinaturas. Exige o recurso `reports`.'),
     'panel.games.reports.final' => $download('Súmula final do jogo em PDF', 'PDF.', 'Exige o recurso `reports`.'),
+    'panel.visual-reports.index' => $page('Relatórios ilustrados: escolher a partida ou a divisão e as seções, com prévia', '`?tipo=game|championship`, `?jogo=`, `?divisao=`, `?secoes=a,b`. Exige o recurso `reports`.'),
+    'panel.visual-reports.game' => $download('Relatório ilustrado da partida em PDF (gráficos, ícones e indicadores)', 'PDF interno.', '`?secoes=` escolhe as seções (vazio = todas). Só eventos válidos. Exige o recurso `reports`.'),
+    'panel.visual-reports.championship' => $download('Relatório ilustrado do campeonato (divisão) em PDF', 'PDF interno.', 'Classificação, artilharia, ataque e defesa, rodadas, destaques, forma e disciplina por equipe. `?secoes=`. Exige o recurso `reports`.'),
     'panel.games.uploads' => $page('Súmulas enviadas depois do jogo', 'Exige o recurso `sheet_import` (sob demanda).'),
     'panel.games.uploads.store' => $action('Envia a foto, PDF, CSV ou XLSX da súmula (até 15 MB)', 'Guardado no disco privado; só abre por URL assinada de 10 min.'),
     'panel.games.uploads.show' => $download('Abre o arquivo da súmula enviada', 'Redireciona para a URL assinada.'),

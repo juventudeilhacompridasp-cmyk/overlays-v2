@@ -81,6 +81,7 @@ final class ChannelPayload
             'custom_overlays' => $customItems->map(fn (OverlayCustomItem $item) => ['id' => $item->getKey(), 'name' => $item->name, 'url' => $channel->customUrl((string) $item->getKey()), 'live' => ($channel->customLive()[$item->getKey()] ?? false) === true])->values(),
             'screen_settings' => $screenSettings,
             'stats_settings' => OverlayStatsSettings::normalize($channel->stats_settings),
+            'report_settings' => OverlayReportSettings::normalize($channel->report_settings),
             'appearance' => OverlayAppearance::normalize($channel->appearance),
             'lineup_settings' => OverlayLineupSettings::normalize($channel->lineup_settings),
             'sponsor_settings' => OverlaySponsorSettings::normalize($channel->sponsor_settings),

@@ -8,6 +8,7 @@ import Compare from './Compare';
 import Lineup from './Lineup';
 import LowerThird from './LowerThird';
 import Pregame from './Pregame';
+import Report from './Report';
 import Scoreboard from './Scoreboard';
 import Shootout from './Shootout';
 import Social from './Social';
@@ -87,6 +88,7 @@ export default function Pgm({ token, state, realtime, preview = false }: { token
             <Bracket {...props} />
             <Stats {...props} />
             <Shootout {...props} />
+            <Report {...props} />
             <Scoreboard {...props} />
             <Social {...props} />
             <SponsorBar {...props} />

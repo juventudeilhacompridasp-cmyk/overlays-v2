@@ -5,6 +5,7 @@ import { LowerThirdBannerData, LowerThirdSettings } from './lowerThird';
 import { createContext, createElement, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { BarLook, SponsorItem, SponsorLook } from './sponsorLook';
 import type { ShootoutData } from './shootout';
+import type { ReportOverlayState } from './report';
 import type { StatsState } from './statsLook';
 
 export interface OverlayTeam {
@@ -145,8 +146,9 @@ export interface OverlayState {
     stoppage: number;
     serve: 'home' | 'away' | null;
     social: { items: { label: string; value: string }[]; url: string | null };
-    screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean; social: boolean; sponsor_bar: boolean; stats: boolean; shootout: boolean };
+    screens: { pregame: boolean; compare: boolean; cartela: boolean; summary: boolean; bracket: boolean; social: boolean; sponsor_bar: boolean; stats: boolean; shootout: boolean; report: boolean };
     stats: StatsState | null;
+    report: ReportOverlayState | null;
     custom_live: Record<string, boolean>;
     custom_table: { position: number; team: string; points: number; played: number; won: number; drawn: number; lost: number; goal_difference: number }[] | null;
     cartela: { title: string; subtitle: string; until_ms: number | null };

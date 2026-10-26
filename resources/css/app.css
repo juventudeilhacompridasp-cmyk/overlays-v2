@@ -271,6 +271,14 @@
 .stats-in-wipe { animation: stats-wipe 700ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 .stats-in-fade { animation: stats-fade 500ms ease-out both; }
 
+/* Relatórios ilustrados no overlay: barras crescem e a rosca gira para dentro (só transform/opacity). */
+@keyframes report-grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes report-grow-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes report-pop { from { opacity: 0; transform: scale(0.6) rotate(-90deg); } to { opacity: 1; transform: none; } }
+.report-grow-x { animation: report-grow-x 900ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.report-grow-y { animation: report-grow-y 900ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.report-pop { animation: report-pop 800ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
 /* Overlay livre (Builder): texto rolante. */
 @keyframes custom-marquee { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 

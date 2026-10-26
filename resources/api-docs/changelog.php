@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.19.0',
+        'date' => '2026-10-26',
+        'changes' => ['Relatórios ilustrados: novas rotas internas panel.visual-reports.index, .game e .championship (PDF com gráficos). A API de controle do overlay aceita report_settings e report_command, e a nova tela relatorio mostra o relatório em slides.'],
+    ],
+    [
         'version' => '1.18.0',
         'date' => '2026-10-26',
         'changes' => ['Nova rota de site portal.athlete: perfil público do atleta (desligado por padrão). O cadastro de pessoas passa a aceitar o campo public_profile (autorização do perfil público).'],

@@ -34,7 +34,7 @@ it('starts with every extra screen hidden and no comparison data', function () {
     ['game' => $game] = sheetGame();
     $state = OverlayState::for(screensChannel($game));
 
-    expect($state['screens'])->toBe(['pregame' => false, 'compare' => false, 'cartela' => false, 'summary' => false, 'bracket' => false, 'social' => false, 'sponsor_bar' => false, 'stats' => false, 'shootout' => false])
+    expect($state['screens'])->toBe(['pregame' => false, 'compare' => false, 'cartela' => false, 'summary' => false, 'bracket' => false, 'social' => false, 'sponsor_bar' => false, 'stats' => false, 'shootout' => false, 'report' => false])
         ->and($state['compare'])->toBeNull()
         ->and($state['cartela'])->toBe(['title' => 'Começamos em breve', 'subtitle' => '', 'until_ms' => null])
         ->and($state['layers'])->toBe(['lineup' => false, 'standings' => false, 'scoreboard' => true, 'lower_third' => true]);
@@ -49,7 +49,7 @@ it('lets the operator show and hide the screens, ignores unknown ones and tells 
     $this->patch("/painel/broadcast/{$channel->id}", ['screens_live' => ['cartela' => false]])->assertSessionHasNoErrors();
 
     $live = $channel->fresh()->screensLive();
-    expect($live)->toBe(['pregame' => true, 'compare' => false, 'cartela' => false, 'summary' => false, 'bracket' => false, 'social' => false, 'sponsor_bar' => false, 'stats' => false, 'shootout' => false])
+    expect($live)->toBe(['pregame' => true, 'compare' => false, 'cartela' => false, 'summary' => false, 'bracket' => false, 'social' => false, 'sponsor_bar' => false, 'stats' => false, 'shootout' => false, 'report' => false])
         ->and($channel->fresh()->layerStates())->toBe(['lineup' => false, 'standings' => false, 'scoreboard' => true, 'lower_third' => true]);
     Event::assertDispatched(OverlayUpdated::class, fn (OverlayUpdated $event) => $event->state['screens']['pregame'] === true);
 

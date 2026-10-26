@@ -16,10 +16,13 @@ use App\Modules\Broadcast\Support\OverlayAutomationSettings;
 use App\Modules\Broadcast\Support\OverlayControlRules;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
 use App\Modules\Broadcast\Support\OverlayLowerThirdSettings;
+use App\Modules\Broadcast\Support\OverlayReportSettings;
 use App\Modules\Broadcast\Support\OverlaySponsorSettings;
 use App\Modules\Broadcast\Support\OverlayStatsSettings;
 use App\Modules\Competitions\Models\Season;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Reports\Enums\ReportKind;
+use App\Modules\Reports\Support\ReportSections;
 use App\Modules\Tenancy\CurrentOrganization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -58,7 +61,9 @@ class ChannelController extends Controller
                 'sponsor_settings' => OverlaySponsorSettings::normalize([]),
                 'stats_settings' => OverlayStatsSettings::normalize([]),
                 'automation_settings' => OverlayAutomationSettings::normalize([]),
+                'report_settings' => OverlayReportSettings::normalize([]),
             ],
+            'report_sections' => ['game' => ReportSections::options(ReportKind::Game), 'championship' => ReportSections::options(ReportKind::Championship)],
             'fonts' => OverlayFont::query()->orderBy('name')->get()->map(fn (OverlayFont $font) => ['id' => $font->id, 'name' => $font->name, 'format' => $font->format])->values(),
             'font_limit' => OverlayFont::LIMIT,
             'scenes' => OverlayScene::query()->orderBy('name')->get()->map(fn (OverlayScene $scene) => ['id' => $scene->id, 'name' => $scene->name])->values(),

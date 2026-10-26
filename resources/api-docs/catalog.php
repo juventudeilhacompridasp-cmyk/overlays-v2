@@ -274,6 +274,17 @@ return [
                     'goal_team_seconds' => ['type' => 'integer', 'description' => 'Segundos do nome da equipe depois da palavra, 0 a 6 (0 = não mostra).'],
                     'goal_animation' => ['type' => 'string', 'enum' => ['typewriter', 'bounce', 'sweep']],
                 ]],
+                'report_settings' => ['type' => 'object', 'description' => 'Relatório ilustrado em slides (tela `relatorio`; ligue com `screens_live.report`). Versão pública: nomes como no portal e cartões só com `game_cards`. Mudar relatório, divisão, seções, modo ou tempo recomeça do 1º slide.', 'properties' => [
+                    'kind' => ['type' => 'string', 'enum' => ['game', 'championship'], 'description' => 'Da partida no ar ou do campeonato.'],
+                    'division_id' => ['type' => ['string', 'null'], 'description' => 'Divisão do relatório do campeonato (nulo = a do jogo no ar).'],
+                    'sections' => ['type' => 'array', 'maxItems' => 12, 'items' => ['type' => 'string'], 'description' => 'Seções (uma por slide, na ordem do relatório). Partida: overview, comparison, periods, timeline, lineups, standings, form. Campeonato: overview, standings, knockout, scorers, attack_defense, rounds, results, form, discipline.'],
+                    'mode' => ['type' => 'string', 'enum' => ['manual', 'auto']],
+                    'seconds' => ['type' => 'integer', 'minimum' => 5, 'maximum' => 60, 'description' => 'Segundos por slide no automático.'],
+                    'style' => ['type' => 'string', 'enum' => ['broadcast', 'glass', 'light']],
+                    'animation' => ['type' => 'string', 'enum' => ['rise', 'slide', 'zoom', 'fade']],
+                    'scale' => ['type' => 'integer', 'minimum' => 50, 'maximum' => 150],
+                ]],
+                'report_command' => ['type' => 'string', 'enum' => ['next', 'previous', 'reset'], 'description' => 'Passa os slides do relatório: próximo, anterior ou volta ao primeiro.'],
                 'stats_settings' => ['type' => 'object', 'description' => 'Estatísticas da partida no ar (tela `estatisticas`). Os números valem para o jogo no ar; trocar de jogo zera. Para ligar a tela use `screens_live.stats`.', 'properties' => [
                     'home' => ['type' => 'object', 'description' => 'Números do mandante (0 a 999): shots, shots_on_target, corners, fouls, offsides, saves. Mescla com o que já estava salvo.', 'additionalProperties' => ['type' => 'integer']],
                     'away' => ['type' => 'object', 'description' => 'Números do visitante (mesmas chaves).', 'additionalProperties' => ['type' => 'integer']],

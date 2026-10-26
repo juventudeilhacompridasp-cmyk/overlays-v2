@@ -3,6 +3,7 @@ import { OverlayProvider, OverlayState } from '@/lib/overlay';
 import { Head } from '@inertiajs/react';
 import Lineup from './Lineup';
 import LowerThird from './LowerThird';
+import Report from './Report';
 import Scoreboard from './Scoreboard';
 import SponsorBar from './SponsorBar';
 import Sponsors from './Sponsors';
@@ -22,6 +23,7 @@ export default function All({ token, state, realtime }: { token: string; state: 
             <Standings token={token} state={state} realtime={realtime} />
             <Lineup token={token} state={state} realtime={realtime} />
             <Stats token={token} state={state} realtime={realtime} />
+            <Report token={token} state={state} realtime={realtime} />
             <Scoreboard token={token} state={state} realtime={realtime} />
             <SponsorBar token={token} state={state} realtime={realtime} />
             <LowerThird token={token} state={state} realtime={realtime} />

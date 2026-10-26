@@ -18,7 +18,7 @@ test('consulta vê só o básico, sem administração nem plataforma', () => {
     const menu = buildNav(ctx());
 
     assert.deepEqual(menu.top.map((i) => i.label), ['Painel']);
-    assert.deepEqual(labels(menu, 'competition'), ['Competições', 'Equipes', 'Atletas e comissão', 'Estádios']);
+    assert.deepEqual(labels(menu, 'competition'), ['Competições', 'Equipes', 'Atletas e comissão', 'Estádios', 'Relatórios ilustrados']);
     assert.deepEqual(labels(menu, 'broadcast'), ['Transmissão', 'Artes']);
     assert.equal(menu.groups.some((g) => g.area !== 'main'), false);
     assert.deepEqual(menu.bottom.map((i) => i.route), ['panel.help.index']);
@@ -28,7 +28,7 @@ test('organizador ganha inscrições, relatórios e widgets; operador ganha o me
     const menu = buildNav(ctx({ can: { competitions: true, operate: true, users: false, market: false } }));
 
     assert.deepEqual(menu.top.map((i) => i.label), ['Painel', 'Mesário']);
-    assert.deepEqual(labels(menu, 'competition'), ['Competições', 'Inscrições', 'Equipes', 'Atletas e comissão', 'Estádios', 'Documentos a vencer', 'Árbitros e mesários', 'Relatórios']);
+    assert.deepEqual(labels(menu, 'competition'), ['Competições', 'Inscrições', 'Equipes', 'Atletas e comissão', 'Estádios', 'Documentos a vencer', 'Árbitros e mesários', 'Relatórios', 'Relatórios ilustrados']);
     assert.deepEqual(labels(menu, 'broadcast'), ['Transmissão', 'Controle remoto', 'Artes', 'Widgets']);
 });
 

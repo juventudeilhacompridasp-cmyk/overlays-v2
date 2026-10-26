@@ -13,6 +13,7 @@ use App\Modules\Broadcast\Support\OverlayAutomationSettings;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
 use App\Modules\Broadcast\Support\OverlayLineupTimeline;
 use App\Modules\Broadcast\Support\OverlayLowerThirdSettings;
+use App\Modules\Broadcast\Support\OverlayReportSettings;
 use App\Modules\Broadcast\Support\OverlayScreenSettings;
 use App\Modules\Broadcast\Support\OverlaySponsorSettings;
 use App\Modules\Broadcast\Support\OverlayState;
@@ -70,6 +71,24 @@ final class UpdateOverlayChannel
         if (isset($data['screens_live']) && is_array($data['screens_live']) && array_key_exists('stats', $data['screens_live'])) {
             // Ligar a tela marca quando ela sai sozinha (duração > 0); ocultar limpa o prazo.
             $channel->stats_settings = OverlayStatsSettings::withExpiry($channel->stats_settings, (bool) $data['screens_live']['stats'], (int) (microtime(true) * 1000));
+        }
+
+        // Relatório no ar: mudar o que mostra recomeça do 1º slide; ligar a tela ou trocar o jogo (relatório da partida) também.
+        $now = (int) (microtime(true) * 1000);
+        $reportWasOn = $channel->screensLive()['report'];
+
+        if (isset($data['report_settings']) && is_array($data['report_settings'])) {
+            $channel->report_settings = OverlayReportSettings::apply($channel->report_settings, $data['report_settings'], $now);
+        }
+
+        $reportTurnsOn = ! $reportWasOn && isset($data['screens_live']) && is_array($data['screens_live']) && ($data['screens_live']['report'] ?? false) == true;
+
+        if ($reportTurnsOn || ($gameChanged && OverlayReportSettings::normalize($channel->report_settings)['division_id'] === null)) {
+            $channel->report_settings = OverlayReportSettings::restart(OverlayReportSettings::normalize($channel->report_settings), $now);
+        }
+
+        if (isset($data['report_command']) && is_string($data['report_command'])) {
+            $channel->report_settings = OverlayReportSettings::command($channel->report_settings, $data['report_command'], $now);
         }
 
         if (isset($data['screens_live']) && is_array($data['screens_live'])) {

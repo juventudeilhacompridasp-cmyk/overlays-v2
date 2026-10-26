@@ -141,7 +141,14 @@ function Controls({ channel, games, scenes, canOperate, onExit, layout, editing,
                             ))}
                         </div>
         ) },
-        screens: { body: (
+        screens: { right: screens.report === true ? (
+                        <span className="flex items-center gap-1" role="group" aria-label="Slides do relatório">
+                            <span className="text-[10px] font-semibold text-gray-400">Relatório</span>
+                            {([['previous', '◀', 'Slide anterior'], ['next', '▶', 'Próximo slide'], ['reset', '⟲', 'Voltar ao primeiro slide']] as const).map(([command, icon, label]) => (
+                                <button key={command} type="button" disabled={!canOperate} aria-label={label} title={label} onClick={() => send({ report_command: command })} className="h-6 w-6 rounded border border-gray-300 bg-white text-[11px] font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-40">{icon}</button>
+                            ))}
+                        </span>
+                    ) : undefined, body: (
                         <div className="grid grid-cols-2 gap-1">
                             {OPERATOR_SCREENS.map((screen) => (
                                 <Tile key={screen.key} preview={previewOf(screen.key)} on={screens[screen.key] === true} label={screen.label} hint={screens[screen.key] === true ? 'ON' : ''} disabled={!canOperate || (screen.needsGame && !hasGame)} onClick={() => toggleScreen(screen.key)} />

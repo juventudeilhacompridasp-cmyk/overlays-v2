@@ -15,6 +15,7 @@ import ExtraScreensStudio from './ExtraScreensStudio';
 import LowerThirdStudio from './LowerThirdStudio';
 import OperatorConsole from './OperatorConsole';
 import OverlayPreviewStudio from './OverlayPreviewStudio';
+import ReportStudio, { ReportSettings } from './ReportStudio';
 import StatsStudio, { StatsSettings } from './StatsStudio';
 
 interface Appearance {
@@ -161,6 +162,7 @@ export interface Channel {
     lineup_steps: number;
     sponsor_settings: SponsorSettings;
     stats_settings: StatsSettings;
+    report_settings: ReportSettings;
     custom_overlays: ChannelCustom[];
     lower_third_settings: LowerThirdSettings;
     has_control_token: boolean;
@@ -257,7 +259,7 @@ function ChannelCard({ channel, defaults, games, fonts, scenes, sceneLimit, seas
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
-    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; championship_live?: Record<string, boolean>; stoppage_minutes?: number; screens_live?: Record<string, boolean>; automation_settings?: Partial<Channel['automation_settings']>; screen_settings?: { title?: string; subtitle?: string; minutes?: number; mvp_person_id?: string | null; serve?: 'home' | 'away' | null; social?: { items: { label: string; value: string }[]; url: string | null } }; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings>; lower_third_settings?: Partial<LowerThirdSettings>; stats_settings?: Partial<StatsSettings>; custom_live?: Record<string, boolean>; lower_third_show?: { kind: string; title?: string; subtitle?: string; person_id?: string } }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { async: true, preserveScroll: true, preserveState: true, ...options });
+    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; championship_live?: Record<string, boolean>; stoppage_minutes?: number; screens_live?: Record<string, boolean>; automation_settings?: Partial<Channel['automation_settings']>; screen_settings?: { title?: string; subtitle?: string; minutes?: number; mvp_person_id?: string | null; serve?: 'home' | 'away' | null; social?: { items: { label: string; value: string }[]; url: string | null } }; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings>; lower_third_settings?: Partial<LowerThirdSettings>; stats_settings?: Partial<StatsSettings>; report_settings?: Partial<ReportSettings>; report_command?: 'next' | 'previous' | 'reset'; custom_live?: Record<string, boolean>; lower_third_show?: { kind: string; title?: string; subtitle?: string; person_id?: string } }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { async: true, preserveScroll: true, preserveState: true, ...options });
 
     // Comandos de exibir/ocultar: o botão muda no clique e a mudança segue direto para o OBS; se o servidor recusar, volta ao estado real.
     const [layers, setLayers] = useState(channel.layers);
@@ -794,6 +796,10 @@ function ChannelCard({ channel, defaults, games, fonts, scenes, sceneLimit, seas
                     <section className="w-[34rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Estatísticas">
                         <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Estatísticas da partida</h3>
                         <StatsStudio channelId={channel.id} settings={channel.stats_settings} people={channel.lineup_people} hasGame={channel.game_id !== null} live={channel.screens_live.stats === true} canOperate={canOperate} patch={patch} />
+                    </section>
+                    <section className="w-[34rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Relatório">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Relatório ilustrado (slides)</h3>
+                        <ReportStudio channelId={channel.id} settings={channel.report_settings} seasons={seasons} hasGame={channel.game_id !== null} live={channel.screens_live.report === true} canOperate={canOperate} patch={patch} />
                     </section>
                     <section className="w-[26rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Overlays livres">
                         <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Overlays livres (Builder)</h3>

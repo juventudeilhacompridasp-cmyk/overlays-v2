@@ -91,6 +91,7 @@ export function buildNav(ctx: NavContext): NavMenu {
     if (ctx.can.competitions) competition.push(item('Documentos a vencer', 'panel.documents.index', 'panel.documents.*', ICONS.doc));
     if (ctx.can.competitions) competition.push(item('Árbitros e mesários', 'panel.officials.index', 'panel.officials.*', ICONS.person));
     if (ctx.can.competitions) competition.push(item('Relatórios', 'panel.reports.index', 'panel.reports.*', ICONS.chart, 'reports'));
+    competition.push(item('Relatórios ilustrados', 'panel.visual-reports.index', 'panel.visual-reports.*', ICONS.chart, 'reports'));
     if (ctx.can.market) competition.push(item('Mercado de jogadores', 'panel.market.index', 'panel.market.*', ICONS.team, 'market'));
 
     const broadcast: NavItem[] = [item('Transmissão', 'panel.broadcast.index', 'panel.broadcast.index', ICONS.camera, 'overlays')];
@@ -163,6 +164,7 @@ export const QUICK_HINTS: Record<string, string> = {
     'panel.officials.index': 'Quem apita e anota os jogos',
     'panel.documents.index': 'Atestados e documentos vencendo',
     'panel.reports.index': 'Pendências e elencos por edição',
+    'panel.visual-reports.index': 'PDFs com gráficos da partida ou do campeonato',
     'panel.market.index': 'Moderar jogadores livres',
     'panel.broadcast.index': 'Overlays do OBS ao vivo',
     'panel.broadcast.remote': 'Controle da transmissão no celular',

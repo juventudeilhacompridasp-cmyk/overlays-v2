@@ -14,7 +14,7 @@ test('the five live layers have unique hotkeys 1 to 5 and only lineup and table 
     assert.deepEqual(OPERATOR_LAYERS.map((layer) => layer.hotkey), ['1', '2', '3', '4', '5']);
     assert.deepEqual(OPERATOR_LAYERS.filter((layer) => layer.needsGame).map((layer) => layer.key), ['lineup', 'standings']);
     assert.equal(new Set(OPERATOR_SCREENS.map((screen) => screen.key)).size, OPERATOR_SCREENS.length);
-    assert.equal(OPERATOR_SCREENS.length, 9);
+    assert.equal(OPERATOR_SCREENS.length, 10);
     assert.ok(OPERATOR_NOTICES.length >= 6 && OPERATOR_CARTELAS.length >= 4);
 });
 

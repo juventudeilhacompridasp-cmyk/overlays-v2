@@ -33,6 +33,7 @@ class OverlayController extends Controller
         'barra-patrocinio' => 'Overlay/SponsorBar',
         'estatisticas' => 'Overlay/Stats',
         'penaltis' => 'Overlay/Shootout',
+        'relatorio' => 'Overlay/Report',
         'todos' => 'Overlay/All',
         // Monitor do Modo operador (não é fonte do OBS; fora de `OverlayChannel::OVERLAYS`).
         'pgm' => 'Overlay/Pgm',
