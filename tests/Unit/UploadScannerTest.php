@@ -26,7 +26,7 @@ it('refuses code hidden in images', function () {
 
 it('is configurable', function () {
     config(['platform.uploads.scan.block_pdf_active' => false]);
-    UploadScanner::check("%PDF-1.4 /JavaScript", 'application/pdf');
+    UploadScanner::check('%PDF-1.4 /JavaScript', 'application/pdf');
 
     config(['platform.uploads.scan.enabled' => false]);
     UploadScanner::check("\xFF\xD8<?php", 'image/jpeg');
