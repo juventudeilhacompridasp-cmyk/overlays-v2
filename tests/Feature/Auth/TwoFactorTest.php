@@ -60,12 +60,16 @@ describe('activation in the profile', function () {
         expect($fresh->hasTwoFactorEnabled())->toBeTrue()
             ->and(TwoFactor::recoveryCodesLeft($fresh))->toBe(8);
 
+        // A primeira abertura do perfil depois de ativar mostra os códigos (flash); a seguinte já não mostra.
         $this->actingAs($fresh)->get(route('profile.edit'))->assertInertia(fn ($page) => $page
             ->where('twoFactor.enabled', true)
             ->where('twoFactor.secret', null)
             ->where('twoFactor.otpauth', null)
+            ->has('twoFactor.recovery_codes', 8)
+            ->where('twoFactor.recovery_codes_left', 8));
+
+        $this->actingAs($fresh)->get(route('profile.edit'))->assertInertia(fn ($page) => $page
             ->where('twoFactor.recovery_codes', null)
-            ->where('twoFactor.recovery_codes_left', 8)
             ->missing('auth.user.two_factor_secret')
             ->missing('auth.user.two_factor_recovery_codes'));
     });

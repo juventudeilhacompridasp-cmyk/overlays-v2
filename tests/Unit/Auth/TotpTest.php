@@ -29,7 +29,7 @@ it('gera segredos Base32 de 32 caracteres e converte de ida e volta', function (
 
     expect($secret)->toMatch('/^[A-Z2-7]{32}$/')
         ->and(Totp::base32Encode(Totp::base32Decode($secret)))->toBe($secret)
-        ->and(Totp::base32Decode('GEZDGNBV'))->toBe('123456');
+        ->and(Totp::base32Decode('GEZDGNBV'))->toBe('12345');
 });
 
 it('monta o endereço otpauth lido pelos aplicativos', function () {
