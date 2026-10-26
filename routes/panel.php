@@ -58,7 +58,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
 
     // Cadastros: equipes, estádios, atletas e comissão, elencos.
     Route::middleware('panel.can:manage-registry')->group(function () {
-        Route::resource('teams', TeamController::class)->except('show');
+        Route::resource('teams', TeamController::class);
         Route::post('teams/{team}/logo', [TeamLogoController::class, 'store'])->name('teams.logo.store');
         Route::delete('teams/{team}/logo', [TeamLogoController::class, 'destroy'])->name('teams.logo.destroy');
         Route::middleware('feature:team_portal')->group(function () {

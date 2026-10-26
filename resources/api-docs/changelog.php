@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.4.0',
+        'date' => '2026-10-26',
+        'changes' => ['Nova rota interna panel.teams.show: ficha da equipe (dados, inscrições, elenco e jogos).'],
+    ],
+    [
         'version' => '1.3.0',
         'date' => '2026-10-21',
         'changes' => ['Nova rota interna panel.stages.fixtures.import: importa uma tabela de jogos já definida (sem sorteio).'],

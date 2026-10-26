@@ -2,8 +2,10 @@
 
 use App\Modules\Competitions\Models\Entry;
 use App\Modules\Matches\Models\Venue;
+use App\Modules\Teams\Models\RosterEntry;
 use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\CurrentOrganization;
+use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
 
 beforeEach(function () {
@@ -36,7 +38,7 @@ it('creates, updates and deletes a team', function () {
         ->and($team->primary_color)->toBe('#00aa55');
 
     $this->put("/painel/teams/{$team->id}", ['name' => 'Juventude Registro'])
-        ->assertRedirect(route('panel.teams.index'));
+        ->assertRedirect(route('panel.teams.show', $team));
     expect($team->fresh()->name)->toBe('Juventude Registro');
 
     $this->delete("/painel/teams/{$team->id}")->assertRedirect(route('panel.teams.index'));
@@ -86,4 +88,35 @@ it('creates, updates and deletes a venue', function () {
 
     $this->delete("/painel/venues/{$venue->id}")->assertRedirect(route('panel.venues.index'));
     expect(Venue::query()->count())->toBe(0);
+});
+
+it('shows the team page with info, entries, roster and games', function () {
+    $entry = Entry::factory()->create();
+    $team = $entry->team;
+    RosterEntry::factory()->create(['entry_id' => $entry->id, 'shirt_number' => 9]);
+
+    $this->get("/painel/teams/{$team->id}")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Panel/Teams/Show')
+            ->where('team.name', $team->name)
+            ->has('entries', 1)
+            ->has('roster', 1)
+            ->where('roster.0.shirt_number', 9)
+            ->where('record.played', 0));
+});
+
+it('opens the team page for read-only roles and hides nothing private', function () {
+    $team = Team::factory()->create();
+    $this->actingAs(panelUser(Role::Viewer));
+
+    $response = $this->get("/painel/teams/{$team->id}")->assertOk();
+
+    expect(json_encode($response->viewData('page')['props']))->not->toContain('document_hash');
+});
+
+it('does not open the page of a team from another organization', function () {
+    $foreign = Team::factory()->create(['organization_id' => Organization::factory()->create()->id]);
+
+    $this->get("/painel/teams/{$foreign->id}")->assertNotFound();
 });

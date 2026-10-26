@@ -69,6 +69,7 @@ return [
 
     // ───────────── Painel: cadastros ─────────────
     'panel.teams.index' => $page('Lista as equipes'),
+    'panel.teams.show' => $page('Ficha da equipe: dados, inscrições, elenco e jogos', 'Consultar vale para qualquer papel; o botão de editar exige o cadastro.'),
     'panel.teams.create' => $page('Formulário de nova equipe'),
     'panel.teams.store' => $action('Cria uma equipe'),
     'panel.teams.edit' => $page('Formulário de edição da equipe, com gestores convidados'),
