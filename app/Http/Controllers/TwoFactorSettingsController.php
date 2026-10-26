@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TwoFactorChanged;
 use App\Support\Auth\TwoFactor;
+use App\Support\Auth\TwoFactorNotice;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -34,6 +36,8 @@ class TwoFactorSettingsController extends Controller
             return back()->withErrors(['code' => 'Código inválido. Confira o aplicativo e tente de novo.']);
         }
 
+        TwoFactorNotice::send($request->user(), TwoFactorChanged::ENABLED);
+
         return to_route('profile.edit')->with('recovery_codes', $codes)->with('success', 'Autenticação em dois fatores ativada. Guarde os códigos de recuperação.');
     }
 
@@ -52,7 +56,12 @@ class TwoFactorSettingsController extends Controller
     {
         $request->validate(['password' => ['required', 'current_password']]);
 
+        $wasEnabled = $request->user()->hasTwoFactorEnabled();
         TwoFactor::disable($request->user());
+
+        if ($wasEnabled) {
+            TwoFactorNotice::send($request->user(), TwoFactorChanged::DISABLED);
+        }
 
         return to_route('profile.edit')->with('success', 'Autenticação em dois fatores desativada.');
     }

@@ -1,11 +1,14 @@
 <?php
 
+use App\Mail\TwoFactorChanged;
 use App\Models\User;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
 use App\Support\Auth\Totp;
 use App\Support\Auth\TwoFactor;
+use App\Support\Auth\TwoFactorSettings;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 
 beforeEach(function () {
@@ -212,5 +215,148 @@ describe('required for administrators', function () {
         config(['platform.two_factor.required_for_admins' => true]);
 
         $this->actingAs($super)->get('/plataforma')->assertRedirect(route('profile.edit'));
+    });
+});
+
+describe('security notices', function () {
+    it('emails the person when the two factors are turned on and off', function () {
+        Mail::fake();
+        $user = User::factory()->create();
+        $secret = TwoFactor::begin($user);
+
+        $this->actingAs($user)->post(route('profile.two-factor.confirm'), ['code' => Totp::code($secret)]);
+        Mail::assertSent(TwoFactorChanged::class, fn (TwoFactorChanged $mail) => $mail->hasTo($user->email) && $mail->kind === TwoFactorChanged::ENABLED);
+
+        $this->actingAs($user->fresh())->delete(route('profile.two-factor.disable'), ['password' => 'password']);
+        Mail::assertSent(TwoFactorChanged::class, fn (TwoFactorChanged $mail) => $mail->kind === TwoFactorChanged::DISABLED);
+    });
+
+    it('does not email when disabling an account that never had two factors', function () {
+        Mail::fake();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->delete(route('profile.two-factor.disable'), ['password' => 'password']);
+
+        Mail::assertNothingSent();
+    });
+
+    it('does not undo the change when the email cannot be sent', function () {
+        Mail::shouldReceive('to')->andThrow(new RuntimeException('smtp fora do ar'));
+        [$user] = twoFactorUser();
+
+        $this->actingAs($user)->delete(route('profile.two-factor.disable'), ['password' => 'password'])->assertRedirect(route('profile.edit'));
+
+        expect($user->fresh()->hasTwoFactorEnabled())->toBeFalse();
+    });
+});
+
+describe('reset by a platform administrator', function () {
+    function superAdmin(): User
+    {
+        $super = User::factory()->create();
+        $super->forceFill(['is_platform_admin' => true])->save();
+
+        return $super;
+    }
+
+    it('lists only accounts with two factors, without any secret', function () {
+        twoFactorUser(User::factory()->create(['email' => 'com@example.com']));
+        User::factory()->create(['email' => 'sem@example.com']);
+
+        $this->actingAs(superAdmin())->get(route('platform.accounts.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Platform/Accounts/Index')
+                ->has('accounts', 1)
+                ->where('accounts.0.email', 'com@example.com')
+                ->missing('accounts.0.two_factor_secret'));
+    });
+
+    it('resets the two factors with the administrator password and warns the person', function () {
+        Mail::fake();
+        [$target] = twoFactorUser();
+
+        $this->actingAs(superAdmin())->post(route('platform.accounts.reset', $target), ['password' => 'errada'])->assertSessionHasErrors('password');
+        expect($target->fresh()->hasTwoFactorEnabled())->toBeTrue();
+
+        $this->actingAs(superAdmin())->post(route('platform.accounts.reset', $target), ['password' => 'password'])->assertSessionHas('success');
+
+        $fresh = $target->fresh();
+        expect($fresh->hasTwoFactorEnabled())->toBeFalse()->and($fresh->two_factor_secret)->toBeNull();
+        Mail::assertSent(TwoFactorChanged::class, fn (TwoFactorChanged $mail) => $mail->hasTo($target->email) && $mail->kind === TwoFactorChanged::RESET);
+    });
+
+    it('is a 404 for everyone who is not a platform administrator', function () {
+        [$target] = twoFactorUser();
+
+        $this->actingAs(User::factory()->create())->get(route('platform.accounts.index'))->assertNotFound();
+        $this->actingAs(User::factory()->create())->post(route('platform.accounts.reset', $target), ['password' => 'password'])->assertNotFound();
+        expect($target->fresh()->hasTwoFactorEnabled())->toBeTrue();
+    });
+});
+
+describe('configurable parameters', function () {
+    it('keeps the original behavior by default', function () {
+        expect(TwoFactorSettings::recoveryCodes())->toBe(8)
+            ->and(TwoFactorSettings::challengeMinutes())->toBe(10)
+            ->and(TwoFactorSettings::maxAttempts())->toBe(5)
+            ->and(TwoFactorSettings::window())->toBe(1)
+            ->and(TwoFactorSettings::notify())->toBeTrue();
+    });
+
+    it('clamps out of range values to the nearest limit', function () {
+        config(['platform.two_factor.recovery_codes' => 99, 'platform.two_factor.challenge_minutes' => 0, 'platform.two_factor.max_attempts' => -3, 'platform.two_factor.window' => 9]);
+
+        expect(TwoFactorSettings::recoveryCodes())->toBe(16)
+            ->and(TwoFactorSettings::challengeMinutes())->toBe(1)
+            ->and(TwoFactorSettings::maxAttempts())->toBe(1)
+            ->and(TwoFactorSettings::window())->toBe(2);
+    });
+
+    it('generates the configured number of recovery codes', function () {
+        config(['platform.two_factor.recovery_codes' => 4]);
+        [$user] = twoFactorUser();
+
+        expect(TwoFactor::regenerateRecoveryCodes($user))->toHaveCount(4);
+    });
+
+    it('blocks after the configured number of wrong codes', function () {
+        config(['platform.two_factor.max_attempts' => 2]);
+        [$user, $secret] = twoFactorUser();
+        RateLimiter::clear('two-factor|'.$user->id.'|127.0.0.1');
+        $this->post('/login', ['email' => $user->email, 'password' => 'password']);
+
+        foreach (range(1, 2) as $ignored) {
+            $this->post(route('two-factor.verify'), ['code' => '000000'])->assertSessionHasErrors('code');
+        }
+
+        $this->post(route('two-factor.verify'), ['code' => nextCode($secret)])->assertSessionHasErrors('code');
+        $this->assertGuest();
+    });
+
+    it('keeps the verification valid for the configured minutes', function () {
+        config(['platform.two_factor.challenge_minutes' => 30]);
+        [$user, $secret] = twoFactorUser();
+        $this->post('/login', ['email' => $user->email, 'password' => 'password']);
+
+        $this->travel(20)->minutes();
+        $this->post(route('two-factor.verify'), ['code' => nextCode($secret)])->assertRedirect(route('dashboard', absolute: false));
+        $this->assertAuthenticatedAs($user);
+    });
+
+    it('stops sending the notice when the installation or the organization turns it off', function () {
+        Mail::fake();
+        [$user] = twoFactorUser();
+
+        config(['platform.two_factor.notify' => false]);
+        $this->actingAs($user)->delete(route('profile.two-factor.disable'), ['password' => 'password']);
+        Mail::assertNothingSent();
+
+        config(['platform.two_factor.notify' => true]);
+        CurrentOrganization::get()->update(['settings' => ['communications' => ['two_factor_notice' => false]]]);
+        [$other] = twoFactorUser();
+        $this->actingAs($other)->delete(route('profile.two-factor.disable'), ['password' => 'password']);
+        Mail::assertNothingSent();
+        expect($other->fresh()->hasTwoFactorEnabled())->toBeFalse();
     });
 });

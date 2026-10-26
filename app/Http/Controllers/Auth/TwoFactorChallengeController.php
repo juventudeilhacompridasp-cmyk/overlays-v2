@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\Auth\TwoFactor;
+use App\Support\Auth\TwoFactorSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,8 +21,6 @@ use Inertia\Response;
 class TwoFactorChallengeController extends Controller
 {
     public const SESSION_KEY = 'two_factor';
-
-    private const MINUTES = 10;
 
     public function create(Request $request): Response|RedirectResponse
     {
@@ -47,7 +46,7 @@ class TwoFactorChallengeController extends Controller
 
         $key = 'two-factor|'.$pending['id'].'|'.$request->ip();
 
-        if (RateLimiter::tooManyAttempts($key, 5)) {
+        if (RateLimiter::tooManyAttempts($key, TwoFactorSettings::maxAttempts())) {
             throw ValidationException::withMessages(['code' => 'Muitas tentativas. Aguarde um minuto e tente de novo.']);
         }
 
@@ -77,7 +76,7 @@ class TwoFactorChallengeController extends Controller
     {
         $pending = $request->session()->get(self::SESSION_KEY);
 
-        if (! is_array($pending) || ! isset($pending['id'], $pending['at']) || now()->getTimestamp() - (int) $pending['at'] > self::MINUTES * 60) {
+        if (! is_array($pending) || ! isset($pending['id'], $pending['at']) || now()->getTimestamp() - (int) $pending['at'] > TwoFactorSettings::challengeMinutes() * 60) {
             $request->session()->forget(self::SESSION_KEY);
 
             return null;

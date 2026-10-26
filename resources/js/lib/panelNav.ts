@@ -105,6 +105,7 @@ export function buildNav(ctx: NavContext): NavMenu {
         ? [
               item('Organizações', 'platform.organizations.index', 'platform.organizations.*', ICONS.layers),
               item('Status page', 'platform.status.index', 'platform.status.*', ICONS.pulse),
+              item('Contas e dois fatores', 'platform.accounts.index', 'platform.accounts.*', ICONS.shield),
               item('Contatos da landing', 'platform.leads.index', 'platform.leads.*', ICONS.mail),
               item('Medição da landing', 'platform.metrics.index', 'platform.metrics.*', ICONS.chart),
               item('Documentação das APIs', 'platform.api-docs.index', 'platform.api-docs.*', ICONS.code),
@@ -162,6 +163,7 @@ export const QUICK_HINTS: Record<string, string> = {
     'panel.legal.edit': 'Termos de uso e privacidade',
     'platform.organizations.index': 'Organizações, pacotes e domínios',
     'platform.status.index': 'Incidentes e manutenções',
+    'platform.accounts.index': 'Reiniciar os dois fatores de uma conta',
     'platform.leads.index': 'Mensagens da página do produto',
     'platform.metrics.index': 'Visitas da página do produto',
     'platform.api-docs.index': 'Rotas e coleção do Postman',

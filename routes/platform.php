@@ -5,6 +5,7 @@ use App\Modules\Help\Http\Controllers\HelpController;
 use App\Modules\Marketing\Http\Controllers\PlatformLeadController;
 use App\Modules\Marketing\Http\Controllers\PlatformMetricsController;
 use App\Modules\Status\Http\Controllers\PlatformStatusController;
+use App\Modules\Tenancy\Http\Controllers\PlatformAccountController;
 use App\Modules\Tenancy\Http\Controllers\PlatformOrganizationController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,8 @@ Route::middleware(['auth', 'verified', 'platform.admin', 'two-factor.admins'])->
     Route::get('contatos', [PlatformLeadController::class, 'index'])->name('leads.index');
     Route::patch('contatos/{lead}', [PlatformLeadController::class, 'update'])->name('leads.update');
     Route::delete('contatos/{lead}', [PlatformLeadController::class, 'destroy'])->name('leads.destroy');
+    Route::get('contas', [PlatformAccountController::class, 'index'])->name('accounts.index');
+    Route::post('contas/{user}/reiniciar-dois-fatores', [PlatformAccountController::class, 'reset'])->middleware('throttle:10,1')->name('accounts.reset');
     Route::get('status', [PlatformStatusController::class, 'index'])->name('status.index');
     Route::post('status/incidents', [PlatformStatusController::class, 'store'])->name('status.incidents.store');
     Route::post('status/incidents/{incident}/updates', [PlatformStatusController::class, 'update'])->name('status.incidents.update');

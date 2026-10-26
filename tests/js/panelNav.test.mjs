@@ -45,7 +45,7 @@ test('a administração é um grupo separado só de quem gerencia usuários', ()
 test('Super Admin vê o grupo Plataforma; sem papel só tem plataforma e ajuda da plataforma', () => {
     const menu = buildNav(ctx({ platformAdmin: true }));
 
-    assert.deepEqual(labels(menu, 'platform'), ['Organizações', 'Status page', 'Contatos da landing', 'Medição da landing', 'Documentação das APIs']);
+    assert.deepEqual(labels(menu, 'platform'), ['Organizações', 'Status page', 'Contas e dois fatores', 'Contatos da landing', 'Medição da landing', 'Documentação das APIs']);
 
     const only = buildNav({ role: null, platformAdmin: true, features: [], can: { competitions: false, operate: false, users: false, market: false } });
 

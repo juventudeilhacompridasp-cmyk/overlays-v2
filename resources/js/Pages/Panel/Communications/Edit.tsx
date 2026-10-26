@@ -21,6 +21,7 @@ type Settings = {
     market_profile_expiring: boolean;
     sheet_read_finished: boolean;
     official_assignment: boolean;
+    two_factor_notice: boolean;
     reminder_first_minutes: number;
     reminder_second_minutes: number;
 };
@@ -82,6 +83,12 @@ const groups: { title: string; hint: string; feature: 'online_registration' | 't
         hint: 'Árbitros e mesários não têm login: o e-mail com função, jogo, data e local é a única via. Sem e-mail no cadastro, nada é enviado.',
         feature: null,
         items: [{ key: 'official_assignment', label: 'Pessoa escalada para um jogo recebe o aviso' }],
+    },
+    {
+        title: 'Segurança da conta',
+        hint: 'Aviso de segurança à própria pessoa quando os dois fatores da conta são ativados, desativados ou reiniciados por um administrador da plataforma. A instalação também pode desligar (PLATFORM_2FA_NOTIFY).',
+        feature: null,
+        items: [{ key: 'two_factor_notice', label: 'Avisar a pessoa por e-mail quando os dois fatores mudam' }],
     },
 ];
 
