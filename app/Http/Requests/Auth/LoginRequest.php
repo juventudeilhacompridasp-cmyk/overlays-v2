@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -31,6 +32,30 @@ class LoginRequest extends FormRequest
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ];
+    }
+
+    /**
+     * Confere e-mail e senha SEM abrir a sessão (o login só termina depois do segundo fator, se a pessoa o ativou). Falha conta
+     * no limite de tentativas; o acerto só limpa o limite quando o login termina.
+     *
+     * @throws ValidationException
+     */
+    public function validatedUser(): User
+    {
+        $this->ensureIsNotRateLimited();
+
+        $credentials = $this->only('email', 'password');
+        $user = Auth::validate($credentials) ? User::query()->where('email', $credentials['email'])->first() : null;
+
+        if (! $user instanceof User) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
+        }
+
+        return $user;
     }
 
     /**

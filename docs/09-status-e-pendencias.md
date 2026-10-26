@@ -68,7 +68,7 @@ Ideias levantadas e combinadas para deixar a plataforma mais completa. Ordem sug
 
 **Plataforma e negócio**
 - [ ] Cobrança e planos (mensalidade por organização, taxa de inscrição das equipes por Pix, conciliação). Hoje fora do MVP.
-- [ ] Segurança que falta: autenticação em dois fatores para administradores, varredura de arquivos enviados, registro de quem leu documentos pessoais, teste de intrusão e CSP completo.
+- [ ] Segurança: **autenticação em dois fatores (TOTP) entregue** (opcional por pessoa, exigível para administradores por `PLATFORM_2FA_REQUIRED_FOR_ADMINS`; falta aviso por e-mail ao ativar/desativar e reinício por um Super Admin). Falta: varredura de arquivos enviados, registro de quem leu documentos pessoais, teste de intrusão e CSP completo.
 - [ ] Backup e restauração com teste periódico e aviso de falha.
 - [ ] Relatórios para patrocinadores e prefeitura (público, jogos, participação) em PDF.
 

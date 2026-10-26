@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.10.0',
+        'date' => '2026-10-26',
+        'changes' => ['Novas rotas de autenticação em dois fatores (TOTP): two-factor.challenge e two-factor.verify no login e profile.two-factor.* em Meu perfil. O login (POST /login) passa a redirecionar ao código quando a conta tem dois fatores.'],
+    ],
+    [
         'version' => '1.9.0',
         'date' => '2026-10-26',
         'changes' => ['Novas rotas internas panel.people.documents.* e panel.documents.index: documentos com validade das pessoas (atestado médico) e lista de vencimentos. Regulamento da edição ganha documents.medical_required e documents.warn_days.'],

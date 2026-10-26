@@ -14,6 +14,7 @@ da máquina e do túnel, e (3) o que ainda falta.
 | Proteção | Onde | Teste |
 |---|---|---|
 | IP do visitante não é forjável (`X-Forwarded-For`): só proxies da rede PRIVADA são confiáveis, nunca `*` | `App\Support\TrustedProxies`, `bootstrap/app.php` (`TRUSTED_PROXIES`) | `ForgedIpTest`, `TrustedProxiesTest` |
+| Segundo fator no login (TOTP): a sessão só abre com código válido (cada código vale uma vez) ou de recuperação; exigível de administradores | `TwoFactor`, `Totp`, `TwoFactorChallengeController`, `EnsureTwoFactorForAdmins` | `TwoFactorTest`, `TotpTest` |
 | Bloqueio de login (5 tentativas por e-mail + IP) e limites por IP valem de verdade (dependem do item acima) | `LoginRequest`, `PlatformLimits` | `ForgedIpTest` |
 | Cabeçalhos: `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS (só HTTPS), anti-clickjacking | `SecurityHeaders`, `FrameOptions` | `SecurityHeadersTest` |
 | Cookie de sessão `Secure` (HTTPS) e sessão cifrada no Redis | `config/session.php`, `docker-compose.prod.yml` | — (configuração) |

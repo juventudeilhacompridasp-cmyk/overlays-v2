@@ -34,6 +34,14 @@ return [
     'first_user_setup' => (bool) env('ALLOW_FIRST_USER_SETUP', true),
 
     /*
+    | Autenticação em dois fatores (TOTP). Cada pessoa liga a sua em Meu perfil. `required_for_admins` (padrão desligado)
+    | obriga quem administra usuários da organização e os Super Admins a ativá-la antes de usar o painel/plataforma.
+    */
+    'two_factor' => [
+        'required_for_admins' => (bool) env('PLATFORM_2FA_REQUIRED_FOR_ADMINS', false),
+    ],
+
+    /*
     | Segurança das respostas. `hsts_seconds` = Strict-Transport-Security (só em HTTPS; 0 desliga). Sem `includeSubDomains`
     | de propósito: subdomínios de organizações e domínios próprios podem ter ciclos de HTTPS diferentes.
     */
