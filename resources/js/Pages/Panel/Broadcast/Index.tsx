@@ -154,6 +154,7 @@ export interface Channel {
     stoppage: number;
     screens_live: Record<string, boolean>;
     screen_settings: { title: string; subtitle: string; until_ms: number | null; serve: 'home' | 'away' | null; social: { items: { label: string; value: string }[]; url: string | null } };
+    automation_settings: { enabled: boolean; pregame: boolean; summary: boolean };
     appearance: Appearance;
     lineup_settings: LineupSettings;
     lineup_people: LineupPerson[];
@@ -256,7 +257,7 @@ function ChannelCard({ channel, defaults, games, fonts, scenes, sceneLimit, seas
     const [appearance, setAppearance] = useState(channel.appearance);
     const [lineupSettings, setLineupSettings] = useState(channel.lineup_settings);
     const [sponsorSettings, setSponsorSettings] = useState(channel.sponsor_settings);
-    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; championship_live?: Record<string, boolean>; stoppage_minutes?: number; screens_live?: Record<string, boolean>; screen_settings?: { title?: string; subtitle?: string; minutes?: number; mvp_person_id?: string | null; serve?: 'home' | 'away' | null; social?: { items: { label: string; value: string }[]; url: string | null } }; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings>; lower_third_settings?: Partial<LowerThirdSettings>; stats_settings?: Partial<StatsSettings>; custom_live?: Record<string, boolean>; lower_third_show?: { kind: string; title?: string; subtitle?: string; person_id?: string } }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { async: true, preserveScroll: true, preserveState: true, ...options });
+    const patch = (data: { game_id?: string | null; layers?: Record<string, boolean>; championship_live?: Record<string, boolean>; stoppage_minutes?: number; screens_live?: Record<string, boolean>; automation_settings?: Partial<Channel['automation_settings']>; screen_settings?: { title?: string; subtitle?: string; minutes?: number; mvp_person_id?: string | null; serve?: 'home' | 'away' | null; social?: { items: { label: string; value: string }[]; url: string | null } }; appearance?: Partial<Appearance>; lineup_settings?: Partial<LineupSettings>; lineup_command?: 'next' | 'previous' | 'reset'; sponsor_settings?: Partial<SponsorSettings>; lower_third_settings?: Partial<LowerThirdSettings>; stats_settings?: Partial<StatsSettings>; custom_live?: Record<string, boolean>; lower_third_show?: { kind: string; title?: string; subtitle?: string; person_id?: string } }, options: { onError?: () => void } = {}) => router.patch(route('panel.broadcast.update', channel.id), data, { async: true, preserveScroll: true, preserveState: true, ...options });
 
     // Comandos de exibir/ocultar: o botão muda no clique e a mudança segue direto para o OBS; se o servidor recusar, volta ao estado real.
     const [layers, setLayers] = useState(channel.layers);
@@ -318,6 +319,17 @@ function ChannelCard({ channel, defaults, games, fonts, scenes, sceneLimit, seas
             <div className="-mx-1 flex snap-x gap-4 overflow-x-auto px-1 pb-3" data-testid="broadcast-board">
                     <section className="w-[26rem] shrink-0 snap-start space-y-4 rounded-xl bg-gray-50 p-3" aria-label="Ao vivo">
                         <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Ao vivo</h3>
+                <div>
+                    <div className="mb-2 text-sm font-medium text-gray-700">Automação da transmissão</div>
+                    <div className="flex flex-wrap gap-2">
+                        <Button small variant={channel.automation_settings.enabled ? 'primary' : 'secondary'} disabled={!canOperate || !channel.game_id} aria-pressed={channel.automation_settings.enabled} onClick={() => patch({ automation_settings: { enabled: !channel.automation_settings.enabled } })}>
+                            {channel.automation_settings.enabled ? 'Automação ligada' : 'Ligar automação'}
+                        </Button>
+                        <Button small variant={channel.automation_settings.pregame ? 'primary' : 'secondary'} disabled={!canOperate || !channel.game_id || !channel.automation_settings.enabled} onClick={() => patch({ automation_settings: { pregame: !channel.automation_settings.pregame } })}>Pré-jogo</Button>
+                        <Button small variant={channel.automation_settings.summary ? 'primary' : 'secondary'} disabled={!canOperate || !channel.game_id || !channel.automation_settings.enabled} onClick={() => patch({ automation_settings: { summary: !channel.automation_settings.summary } })}>Resumo final</Button>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Mostra cartelas automaticamente conforme o status do jogo. As demais camadas continuam manuais.</p>
+                </div>
                 <div>
                     <Field label="Jogo no ar" htmlFor={`game-${channel.id}`} hint="Todas as telas deste canal passam a acompanhar este jogo, sem mexer no OBS.">
                         <Select id={`game-${channel.id}`} disabled={!canOperate} value={channel.game_id ?? ''} onChange={(event) => patch({ game_id: event.target.value || null })}>
