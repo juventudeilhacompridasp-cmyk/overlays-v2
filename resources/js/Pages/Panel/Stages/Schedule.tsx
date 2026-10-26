@@ -1,7 +1,7 @@
 import Modal from '@/Components/Modal';
 import { Badge, Button, Card, Empty, Field, Input, LinkButton, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
-import { NO_DAY, conflictText, formatDay, groupByDay, isDay, moveToDay, timeOf, withTime } from '@/lib/schedule';
+import { NO_DAY, ScheduleFilter, conflictText, filterSchedule, formatDay, groupByDay, isDay, moveToDay, timeOf, withTime } from '@/lib/schedule';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, KeyboardSensor, MouseSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core';
 import { Head, router } from '@inertiajs/react';
 import { FormEvent, useMemo, useState } from 'react';
@@ -142,11 +142,15 @@ export default function Schedule({ competition, season, division, stage, games, 
     const [newDay, setNewDay] = useState('');
     const [active, setActive] = useState<string | null>(null);
     const [editing, setEditing] = useState<GameItem | null>(null);
+    const [filter, setFilter] = useState<ScheduleFilter>({ query: '', status: '', from: '', to: '' });
+    const [order, setOrder] = useState<'asc' | 'desc'>('asc');
 
     const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 6 } }), useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }), useSensor(KeyboardSensor));
-    const days = useMemo(() => groupByDay(games, extraDays), [games, extraDays]);
+    const filteredGames = useMemo(() => filterSchedule(games, filter, (game) => [game.home, game.away, game.group, game.venue, game.round ? `rodada ${game.round}` : '', game.number ? `jogo ${game.number}` : ''].filter(Boolean).join(' ')), [games, filter]);
+    const days = useMemo(() => groupByDay(filteredGames, extraDays, order), [filteredGames, extraDays, order]);
     const byId = useMemo(() => new Map(games.map((game) => [game.id, game])), [games]);
-    const conflicting = games.filter((game) => game.conflicts.length > 0).length;
+    const conflicting = filteredGames.filter((game) => game.conflicts.length > 0).length;
+    const activeFilters = Object.values(filter).filter(Boolean).length + (order === 'desc' ? 1 : 0);
 
     const save = (game: GameItem, change: { scheduled_at: string | null; venue_id: string | null }, done?: () => void) => {
         router.patch(route('panel.games.update', game.id), { ...change, status: game.status }, { preserveScroll: true, onSuccess: done });
@@ -198,22 +202,38 @@ export default function Schedule({ competition, season, division, stage, games, 
                     <p className="mb-3 text-sm text-gray-600">
                         Arraste um jogo para outro dia (o horário se mantém; no celular, segure e arraste) ou use <strong>Editar</strong> para mudar horário e estádio. Cada mudança é salva na hora. Aviso de conflito: mesmo estádio com menos de {rules.venue_minutes / 60} h entre jogos ou a mesma equipe com menos de {rules.team_rest_minutes / 60} h de descanso, contando jogos de todas as fases e divisões.
                     </p>
-                    <div className="mb-4 flex flex-wrap items-end gap-3 rounded-lg bg-white p-3 shadow-sm ring-1 ring-gray-200">
-                        <Field label="Adicionar um dia à agenda" htmlFor="new-day">
-                            <Input id="new-day" type="date" value={newDay} onChange={(event) => setNewDay(event.target.value)} />
-                        </Field>
-                        <Button variant="secondary" onClick={addDay} disabled={!isDay(newDay)}>
-                            Adicionar dia
-                        </Button>
-                        <p className={`ml-auto text-sm font-medium ${conflicting > 0 ? 'text-red-700' : 'text-emerald-700'}`} data-testid="schedule-summary">
-                            {conflicting > 0 ? `${conflicting} jogo(s) com conflito` : 'Nenhum conflito de agenda'}
-                        </p>
+                    <div className="mb-4 space-y-3 rounded-lg bg-white p-3 shadow-sm ring-1 ring-gray-200" data-testid="schedule-filters">
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                            <Field label="Buscar jogo, equipe, grupo ou estádio" htmlFor="schedule-query">
+                                <Input id="schedule-query" value={filter.query} onChange={(event) => setFilter({ ...filter, query: event.target.value })} placeholder="Ex.: Leões, rodada 2…" />
+                            </Field>
+                            <Field label="Situação" htmlFor="schedule-status">
+                                <Select id="schedule-status" value={filter.status} onChange={(event) => setFilter({ ...filter, status: event.target.value })}>
+                                    <option value="">Todas as situações</option>
+                                    {['scheduled', 'postponed', 'suspended', 'in_progress', 'finished', 'cancelled'].map((status) => <option key={status} value={status}>{games.find((game) => game.status === status)?.status_label ?? status}</option>)}
+                                </Select>
+                            </Field>
+                            <Field label="De" htmlFor="schedule-from"><Input id="schedule-from" type="date" value={filter.from} onChange={(event) => setFilter({ ...filter, from: event.target.value })} /></Field>
+                            <Field label="Até" htmlFor="schedule-to"><Input id="schedule-to" type="date" value={filter.to} onChange={(event) => setFilter({ ...filter, to: event.target.value })} /></Field>
+                        </div>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                            <div className="flex flex-wrap items-end gap-2">
+                                <Field label="Ordenar por data" htmlFor="schedule-order">
+                                    <Select id="schedule-order" value={order} onChange={(event) => setOrder(event.target.value as 'asc' | 'desc')}>
+                                        <option value="asc">Mais antigos primeiro</option>
+                                        <option value="desc">Mais recentes primeiro</option>
+                                    </Select>
+                                </Field>
+                                <Field label="Adicionar dia à agenda" htmlFor="new-day"><Input id="new-day" type="date" value={newDay} onChange={(event) => setNewDay(event.target.value)} /></Field>
+                                <Button variant="secondary" onClick={addDay} disabled={!isDay(newDay)}>Adicionar dia</Button>
+                                {activeFilters > 0 && <Button variant="ghost" onClick={() => { setFilter({ query: '', status: '', from: '', to: '' }); setOrder('asc'); }}>Limpar filtros</Button>}
+                            </div>
+                            <p className={`text-sm font-medium ${conflicting > 0 ? 'text-red-700' : 'text-emerald-700'}`} data-testid="schedule-summary">
+                                {filteredGames.length} de {games.length} jogo(s) · {conflicting > 0 ? `${conflicting} com conflito` : 'nenhum conflito'}
+                            </p>
+                        </div>
                     </div>
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                        {days.map((group) => (
-                            <DayCard key={group.day} day={group.day} games={group.games} onEdit={setEditing} />
-                        ))}
-                    </div>
+                    {filteredGames.length === 0 ? <Card><Empty title="Nenhum jogo encontrado">Ajuste os filtros para visualizar os jogos desta fase.</Empty></Card> : <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{days.map((group) => <DayCard key={group.day} day={group.day} games={group.games} onEdit={setEditing} />)}</div>}
                     <DragOverlay>
                         {active && byId.get(active) ? <div className="rounded-lg bg-white px-3 py-2 text-sm font-medium shadow-lg ring-2 ring-emerald-500">{title(byId.get(active)!)}</div> : null}
                     </DragOverlay>

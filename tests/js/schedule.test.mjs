@@ -17,6 +17,17 @@ test('dia e horário saem do texto da data', () => {
     assert.equal(s.timeOf(null), '');
 });
 
+test('filtra por texto, situação e intervalo de datas', () => {
+    const games = [
+        { id: 'a', status: 'scheduled', scheduled_at: '2026-05-10T16:00', label: 'Leões x Tigres' },
+        { id: 'b', status: 'postponed', scheduled_at: '2026-05-12T16:00', label: 'Águias x Leões' },
+        { id: 'c', status: 'scheduled', scheduled_at: null, label: 'Tigres x Águias' },
+    ];
+
+    assert.deepEqual(s.filterSchedule(games, { query: 'leões', status: 'scheduled', from: '2026-05-01', to: '2026-05-11' }, (game) => game.label).map((game) => game.id), ['a']);
+    assert.deepEqual(s.filterSchedule(games, { query: '', status: '', from: '2026-05-11', to: '', }, (game) => game.label).map((game) => game.id), ['b']);
+});
+
 test('mover para outro dia mantém o horário e usa o padrão quando não havia', () => {
     assert.equal(s.moveToDay('2026-05-10T18:15', '2026-05-17'), '2026-05-17T18:15');
     assert.equal(s.moveToDay(null, '2026-05-17'), '2026-05-17T16:00');
@@ -44,6 +55,15 @@ test('agrupar por dia: dias em ordem, jogos por horário, sem data por último e
     assert.deepEqual(groups[1].games, []);
     assert.deepEqual(groups[3].games.map((g) => g.id), ['d']);
     assert.deepEqual(s.groupByDay([]).map((g) => g.day), ['none']);
+});
+
+test('agrupa do dia mais recente para o mais antigo quando solicitado', () => {
+    const groups = s.groupByDay([
+        { id: 'a', scheduled_at: '2026-05-10T09:00' },
+        { id: 'b', scheduled_at: '2026-05-17T09:00' },
+    ], [], 'desc');
+
+    assert.deepEqual(groups.map((group) => group.day), ['2026-05-17', '2026-05-10', 'none']);
 });
 
 test('formatação do dia e dos conflitos', () => {
