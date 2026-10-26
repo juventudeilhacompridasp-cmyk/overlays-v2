@@ -79,7 +79,11 @@ export function buildNav(ctx: NavContext): NavMenu {
     if (ctx.can.competitions) competition.push(item('Relatórios', 'panel.reports.index', 'panel.reports.*', ICONS.chart, 'reports'));
     if (ctx.can.market) competition.push(item('Mercado de jogadores', 'panel.market.index', 'panel.market.*', ICONS.team, 'market'));
 
-    const broadcast: NavItem[] = [item('Transmissão', 'panel.broadcast.index', 'panel.broadcast.*', ICONS.camera, 'overlays'), item('Artes', 'panel.arts.index', 'panel.arts.*', ICONS.image, 'arts')];
+    const broadcast: NavItem[] = [item('Transmissão', 'panel.broadcast.index', 'panel.broadcast.index', ICONS.camera, 'overlays')];
+
+    if (ctx.can.operate) broadcast.push(item('Controle remoto', 'panel.broadcast.remote', 'panel.broadcast.remote', ICONS.phone, 'overlays'));
+
+    broadcast.push(item('Artes', 'panel.arts.index', 'panel.arts.*', ICONS.image, 'arts'));
 
     if (ctx.can.competitions) broadcast.push(item('Widgets', 'panel.widgets.index', 'panel.widgets.*', ICONS.code, 'embeds'));
 
@@ -144,6 +148,7 @@ export const QUICK_HINTS: Record<string, string> = {
     'panel.reports.index': 'Pendências e elencos por edição',
     'panel.market.index': 'Moderar jogadores livres',
     'panel.broadcast.index': 'Overlays do OBS ao vivo',
+    'panel.broadcast.remote': 'Controle da transmissão no celular',
     'panel.arts.index': 'Artes dos jogos para redes sociais',
     'panel.widgets.index': 'Placar e tabela para outros sites',
     'panel.users.index': 'Quem acessa e com qual papel',

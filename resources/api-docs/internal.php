@@ -193,6 +193,7 @@ return [
 
     // ───────────── Painel: transmissão ─────────────
     'panel.broadcast.index' => $page('Transmissão: canais, estúdio e Modo operador', 'Exige o recurso `overlays`.'),
+    'panel.broadcast.remote' => $page('Controle remoto da transmissão para celular e tablet (botões grandes, mesmos comandos do Modo operador)', 'Qualquer membro abre; só quem opera jogos comanda. Exige o recurso `overlays`.'),
     'panel.broadcast.store' => $action('Cria um canal de overlay (gera o token público)'),
     'panel.broadcast.update' => $action('Altera o canal: jogo no ar, camadas, aparência, escalação, telas extras, lower thirds e comandos do operador', 'É a única via de mudança do canal; o Modo operador usa esta mesma rota.'),
     'panel.broadcast.regenerate' => $action('Troca o token público do canal (as URLs antigas deixam de valer)'),

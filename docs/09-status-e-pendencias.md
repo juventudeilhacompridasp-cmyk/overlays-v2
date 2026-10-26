@@ -64,7 +64,7 @@ Ideias levantadas e combinadas para deixar a plataforma mais completa. Ordem sug
 
 **Transmissão**
 - [ ] Marcar lances na súmula (minuto) e gerar lista de melhores momentos.
-- [ ] Controle do operador pelo celular ou tablet, com atalhos grandes para uso ao vivo.
+- [x] Controle do operador pelo celular ou tablet (`panel.broadcast.remote`): botões grandes, barra fixa da escalação, tela sempre ligada, atalho no app instalado. Falta conferir em aparelho real (a CI não renderiza a interface) e, se pedirem, controle de estatísticas e do placar por ali.
 - [ ] Relatório de exibição de patrocinadores (vezes e tempo no ar), útil para vender cotas.
 
 **Plataforma e negócio**

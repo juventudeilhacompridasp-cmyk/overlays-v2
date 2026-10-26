@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.12.0',
+        'date' => '2026-10-26',
+        'changes' => ['Nova rota interna panel.broadcast.remote: controle remoto da transmissão para celular e tablet. Os canais do painel passam a trazer o campo stoppage (acréscimos).'],
+    ],
+    [
         'version' => '1.11.0',
         'date' => '2026-10-26',
         'changes' => ['Nova rota interna panel.document-access.index: registro de quem abriu documentos pessoais. As rotas que abrem documentos (panel.registrations.documents.show, panel.people.documents.show, panel.games.uploads.show) passam a gravar o acesso.'],

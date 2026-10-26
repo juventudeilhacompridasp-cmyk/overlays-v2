@@ -7,6 +7,7 @@ use App\Modules\Arts\Http\Controllers\TemplateController as ArtTemplateControlle
 use App\Modules\Broadcast\Http\Controllers\ChannelController;
 use App\Modules\Broadcast\Http\Controllers\CustomItemController;
 use App\Modules\Broadcast\Http\Controllers\FontController;
+use App\Modules\Broadcast\Http\Controllers\RemoteController;
 use App\Modules\Broadcast\Http\Controllers\SceneController;
 use App\Modules\Broadcast\Http\Controllers\SponsorController;
 use App\Modules\Broadcast\Http\Controllers\StyleModelController;
@@ -198,6 +199,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'two-factor.admins', 'leg
     // escolhe o jogo no ar e liga camadas durante o jogo.
     Route::middleware('feature:overlays')->group(function () {
         Route::get('broadcast', [ChannelController::class, 'index'])->name('broadcast.index');
+        Route::get('broadcast/controle', [RemoteController::class, 'show'])->name('broadcast.remote');
         Route::patch('broadcast/operator-layout', [ChannelController::class, 'operatorLayout'])->middleware('panel.can:operate-games')->name('broadcast.operator-layout');
         Route::patch('broadcast/{channel}', [ChannelController::class, 'update'])->middleware('panel.can:operate-games')->name('broadcast.update');
         Route::patch('broadcast/{channel}/cenas/{scene}', [SceneController::class, 'apply'])->middleware('panel.can:operate-games')->name('broadcast.scenes.apply');
