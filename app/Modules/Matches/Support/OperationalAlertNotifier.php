@@ -75,11 +75,17 @@ final class OperationalAlertNotifier
             return 0;
         }
 
-        $recipients = Membership::query()->with('user')->get()
-            ->filter(fn (Membership $membership) => in_array(Permission::CompetitionsManage, $membership->permissions(), true) && $membership->user?->email)
-            ->map(fn (Membership $membership) => $membership->user)->unique('id')->values();
+        $recipients = [];
 
-        if ($recipients->isEmpty()) {
+        foreach (Membership::query()->with('user')->get() as $membership) {
+            $user = $membership->user;
+
+            if ($user !== null && $user->email && in_array(Permission::CompetitionsManage, $membership->permissions(), true)) {
+                $recipients[$user->getKey()] = $user;
+            }
+        }
+
+        if ($recipients === []) {
             return 0;
         }
 
