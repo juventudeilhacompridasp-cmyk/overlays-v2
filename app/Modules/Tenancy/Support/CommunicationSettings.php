@@ -31,6 +31,7 @@ final class CommunicationSettings
         'market_profile_expiring' => true,
         'sheet_read_finished' => true,
         'official_assignment' => true,
+        'two_factor_notice' => true,
     ];
 
     /** Minutos antes do prazo do gestor em que sai o primeiro e o segundo lembrete de escalação. */

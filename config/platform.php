@@ -39,6 +39,14 @@ return [
     */
     'two_factor' => [
         'required_for_admins' => (bool) env('PLATFORM_2FA_REQUIRED_FOR_ADMINS', false),
+        // Parâmetros da validação (lidos por `App\Support\Auth\TwoFactorSettings`, que aplica os limites): quantos códigos de
+        // recuperação gerar, por quantos minutos vale a verificação depois da senha, erros de código por minuto antes de
+        // bloquear, tolerância do relógio em passos de 30 s e se a pessoa recebe e-mail ao ativar/desativar/reiniciar.
+        'recovery_codes' => (int) env('PLATFORM_2FA_RECOVERY_CODES', 8),
+        'challenge_minutes' => (int) env('PLATFORM_2FA_CHALLENGE_MINUTES', 10),
+        'max_attempts' => (int) env('PLATFORM_2FA_MAX_ATTEMPTS', 5),
+        'window' => (int) env('PLATFORM_2FA_WINDOW', 1),
+        'notify' => (bool) env('PLATFORM_2FA_NOTIFY', true),
     ],
 
     /*

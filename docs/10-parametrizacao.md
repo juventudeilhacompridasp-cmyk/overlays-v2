@@ -50,6 +50,7 @@ Entregue: janelas do mesário e quantidades do portal/widgets/artilharia (Painel
 | Links assinados de documento/foto: 10 min e 30 min | `ManageRegistrationDocuments` (10), `ImageStore` (30) | Plataforma (`config/platform.php`): TTL por tipo (segurança, não por organização). |
 | Throttles (push 30/min, embeds 120/min, carteirinha 30/min, inscrição 10/min, API 60/min, estado do overlay 120/min) | `routes/web.php`, `routes/api.php` | Plataforma: valores em `config/platform.php` via ambiente. |
 | Prazo de apagar pedidos de push de jogos encerrados (1 dia) e agendamentos (`push:prune` diário, lembretes a cada 10 min) | `routes/console.php`, `PruneWebPushSubscriptions` | Plataforma: dias de retenção; frequência por ambiente. |
+| Dois fatores: 8 códigos de recuperação, verificação de 10 min, 5 erros/min, tolerância de ±1 passo, e-mail de aviso | `TwoFactor`, `TwoFactorChallengeController` | **Entregue** (`TwoFactorSettings`, `PLATFORM_2FA_*`); o aviso também liga/desliga por organização em Comunicações (`two_factor_notice`). |
 | Tamanho máximo de imagem e variantes (40 Mpx, 512/128/400/96 px) | `ImageVariants` | Plataforma (já é política de armazenamento; só externalizar). |
 | Cor padrão do portal | `PublicTheme::DEFAULT_COLOR` | Plataforma: padrão por ambiente (a organização já sobrescreve). |
 

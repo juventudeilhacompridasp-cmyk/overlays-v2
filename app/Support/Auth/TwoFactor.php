@@ -10,8 +10,6 @@ use App\Models\User;
  */
 final class TwoFactor
 {
-    public const RECOVERY_CODES = 8;
-
     /** Começa a ativação: guarda um segredo novo, ainda NÃO confirmado (o login segue sem segundo fator). */
     public static function begin(User $user): string
     {
@@ -39,7 +37,7 @@ final class TwoFactor
             return null;
         }
 
-        $step = Totp::verify($user->two_factor_secret, $code);
+        $step = Totp::verify($user->two_factor_secret, $code, null, TwoFactorSettings::window());
 
         if ($step === null) {
             return null;
@@ -62,7 +60,7 @@ final class TwoFactor
             return false;
         }
 
-        $step = Totp::verify((string) $user->two_factor_secret, $code);
+        $step = Totp::verify((string) $user->two_factor_secret, $code, null, TwoFactorSettings::window());
 
         if ($step === null || ($user->two_factor_last_step !== null && $step <= (int) $user->two_factor_last_step)) {
             return false;
@@ -123,7 +121,7 @@ final class TwoFactor
     {
         $codes = [];
 
-        for ($i = 0; $i < self::RECOVERY_CODES; $i++) {
+        for ($i = 0; $i < TwoFactorSettings::recoveryCodes(); $i++) {
             $codes[] = substr($raw = bin2hex(random_bytes(5)), 0, 5).'-'.substr($raw, 5, 5);
         }
 
