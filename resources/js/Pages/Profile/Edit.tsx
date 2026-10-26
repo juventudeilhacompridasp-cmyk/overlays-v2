@@ -4,12 +4,14 @@ import { PageProps } from '@/types';
 import { Head } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
+import TwoFactorForm, { TwoFactorState } from './Partials/TwoFactorForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 
 export default function Edit({
     mustVerifyEmail,
     status,
-}: PageProps<{ mustVerifyEmail: boolean; status?: string }>) {
+    twoFactor,
+}: PageProps<{ mustVerifyEmail: boolean; status?: string; twoFactor: TwoFactorState }>) {
     return (
         <PanelLayout>
             <Head title="Meu perfil" />
@@ -19,6 +21,7 @@ export default function Edit({
             <div className="max-w-3xl space-y-6">
                 <UpdateProfileInformationForm mustVerifyEmail={mustVerifyEmail} status={status} />
                 <UpdatePasswordForm />
+                <TwoFactorForm state={twoFactor} />
                 <DeleteUserForm />
             </div>
         </PanelLayout>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TwoFactorSettingsController;
 use App\Http\Middleware\PrivateNoIndex;
 use App\Modules\Broadcast\Http\Controllers\ChampionshipOverlayController;
 use App\Modules\Broadcast\Http\Controllers\OverlayController;
@@ -126,6 +127,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/two-factor', [TwoFactorSettingsController::class, 'begin'])->middleware('throttle:10,1')->name('profile.two-factor.begin');
+    Route::post('/profile/two-factor/confirm', [TwoFactorSettingsController::class, 'confirm'])->middleware('throttle:10,1')->name('profile.two-factor.confirm');
+    Route::post('/profile/two-factor/recovery-codes', [TwoFactorSettingsController::class, 'recoveryCodes'])->middleware('throttle:10,1')->name('profile.two-factor.recovery');
+    Route::delete('/profile/two-factor', [TwoFactorSettingsController::class, 'disable'])->middleware('throttle:10,1')->name('profile.two-factor.disable');
 });
 
 // Aceite dos termos/privacidade publicados (exigido antes de usar o painel).

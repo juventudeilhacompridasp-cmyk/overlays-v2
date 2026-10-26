@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 | Área da plataforma: administradores da plataforma (`users.is_platform_admin`, criados por `php artisan platform:make-admin`).
 | Não depende de papel numa organização. Quem não é administrador da plataforma recebe 404.
 */
-Route::middleware(['auth', 'verified', 'platform.admin'])->prefix('plataforma')->name('platform.')->group(function () {
+Route::middleware(['auth', 'verified', 'platform.admin', 'two-factor.admins'])->prefix('plataforma')->name('platform.')->group(function () {
     Route::get('/', [PlatformOrganizationController::class, 'index'])->name('organizations.index');
     Route::get('ajuda', [HelpController::class, 'index'])->defaults('area', 'platform')->name('help.index');
     Route::get('ajuda/{slug}', [HelpController::class, 'show'])->defaults('area', 'platform')->name('help.show');

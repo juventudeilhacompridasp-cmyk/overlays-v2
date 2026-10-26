@@ -27,6 +27,7 @@ x-env: &env
   HSTS_SECONDS: ${HSTS_SECONDS:-15552000}
   # Site público: ninguém vira administrador só por chegar primeiro em /register. Crie o primeiro com `php artisan platform:create-admin`.
   ALLOW_FIRST_USER_SETUP: ${ALLOW_FIRST_USER_SETUP:-false}
+  PLATFORM_2FA_REQUIRED_FOR_ADMINS: ${PLATFORM_2FA_REQUIRED_FOR_ADMINS:-false}
   QUEUE_CONNECTION: redis
   BROADCAST_CONNECTION: reverb
   REVERB_APP_ID: ${REVERB_APP_ID:?}

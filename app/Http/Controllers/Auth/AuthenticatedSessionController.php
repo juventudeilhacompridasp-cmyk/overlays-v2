@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -29,7 +30,22 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        $user = $request->validatedUser();
+
+        // Com dois fatores ativos o login ainda NÃO abre a sessão: guarda só quem passou na senha e pede o código.
+        if ($user->hasTwoFactorEnabled()) {
+            $request->session()->put(TwoFactorChallengeController::SESSION_KEY, [
+                'id' => $user->getKey(),
+                'remember' => $request->boolean('remember'),
+                'throttle' => $request->throttleKey(),
+                'at' => now()->getTimestamp(),
+            ]);
+
+            return redirect()->route('two-factor.challenge');
+        }
+
+        Auth::login($user, $request->boolean('remember'));
+        RateLimiter::clear($request->throttleKey());
 
         $request->session()->regenerate();
 

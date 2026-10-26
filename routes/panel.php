@@ -57,7 +57,7 @@ use Illuminate\Support\Facades\Route;
 | Painel do organizador. Entra quem está autenticado, verificado e tem papel na organização (`panel.member`).
 | Consultar vale para qualquer papel; escrever exige a permissão da área (`panel.can:{ability}`, ver `Role`).
 */
-Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefix('painel')->name('panel.')->group(function () {
+Route::middleware(['auth', 'verified', 'panel.member', 'two-factor.admins', 'legal.accepted'])->prefix('painel')->name('panel.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('resumo.csv', [DashboardController::class, 'export'])->name('dashboard.export');
 

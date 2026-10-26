@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Support\Auth\Totp;
+use App\Support\Auth\TwoFactor;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +23,30 @@ class ProfileController extends Controller
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'twoFactor' => $this->twoFactor($request),
         ]);
+    }
+
+    /**
+     * Estado da autenticação em dois fatores: ativa, em ativação (segredo e QR só enquanto não confirmado) e, logo depois de
+     * ativar ou renovar, os códigos de recuperação (mostrados uma única vez, via flash).
+     *
+     * @return array<string, mixed>
+     */
+    private function twoFactor(Request $request): array
+    {
+        $user = $request->user();
+        $pending = $user->two_factor_secret !== null && ! $user->hasTwoFactorEnabled();
+
+        return [
+            'enabled' => $user->hasTwoFactorEnabled(),
+            'pending' => $pending,
+            'secret' => $pending ? $user->two_factor_secret : null,
+            'otpauth' => $pending ? Totp::uri(config('app.name'), $user->email, (string) $user->two_factor_secret) : null,
+            'recovery_codes_left' => TwoFactor::recoveryCodesLeft($user),
+            'recovery_codes' => session('recovery_codes'),
+            'required_for_admins' => (bool) config('platform.two_factor.required_for_admins'),
+        ];
     }
 
     /**
