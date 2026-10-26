@@ -20,6 +20,7 @@ Súmulas oficiais e relatórios precisam registrar a aprovação de árbitros, c
 ## Entregue nesta etapa
 
 - `DocumentSignature::hash()` gera o SHA-256 determinístico do PDF, sem persistir o conteúdo nem expor dados pessoais.
+- A tabela `game_document_signatures` guarda versão, hash, papel, método, estado e hashes de token/IP/user-agent; tokens e dados de rede nunca são persistidos em claro.
 
 ## Consequências
 
