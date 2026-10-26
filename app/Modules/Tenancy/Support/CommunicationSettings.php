@@ -32,6 +32,7 @@ final class CommunicationSettings
         'sheet_read_finished' => true,
         'official_assignment' => true,
         'two_factor_notice' => true,
+        'operational_alerts' => true,
     ];
 
     /** Minutos antes do prazo do gestor em que sai o primeiro e o segundo lembrete de escalação. */

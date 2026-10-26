@@ -20,4 +20,5 @@ Em [Comunicações](route:panel.communications.edit) o administrador escolhe **o
 - Cada aviso a gestor é enviado **uma só vez** por situação. Se você desligar e religar, voltam a ser avisadas as situações que ainda valem.
 - Os gestores podem desligar os avisos para si mesmos.
 - No basquete o push avisa apenas início e fim do jogo.
+- **Alertas operacionais:** o resumo por e-mail dos jogos que estão chegando e ainda têm algo a resolver ([saiba mais](help:alertas-operacionais)).
 - **Segurança da conta:** o e-mail avisando que os dois fatores foram ativados, desativados ou reiniciados pode ser desligado aqui; a instalação também pode desligá-lo para todos.

@@ -22,6 +22,7 @@ type Settings = {
     sheet_read_finished: boolean;
     official_assignment: boolean;
     two_factor_notice: boolean;
+    operational_alerts: boolean;
     reminder_first_minutes: number;
     reminder_second_minutes: number;
 };
@@ -83,6 +84,12 @@ const groups: { title: string; hint: string; feature: 'online_registration' | 't
         hint: 'Árbitros e mesários não têm login: o e-mail com função, jogo, data e local é a única via. Sem e-mail no cadastro, nada é enviado.',
         feature: null,
         items: [{ key: 'official_assignment', label: 'Pessoa escalada para um jogo recebe o aviso' }],
+    },
+    {
+        title: 'Alertas operacionais',
+        hint: 'Resumo por e-mail, a quem gerencia competições, dos jogos que estão chegando sem escalação, árbitro ou estádio, ou com conflito de agenda. Cada problema é avisado uma vez. Janela e verificações em Parâmetros; a instalação também pode desligar (OPERATIONAL_ALERTS).',
+        feature: null,
+        items: [{ key: 'operational_alerts', label: 'Avisar sobre jogos próximos com algo a resolver' }],
     },
     {
         title: 'Segurança da conta',
