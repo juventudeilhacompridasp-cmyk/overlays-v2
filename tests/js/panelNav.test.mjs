@@ -81,3 +81,17 @@ test('abertura dos grupos: escolha salva, padrão e grupo da página atual', () 
     assert.equal(activeGroupOf(menu, (match) => match === 'panel.users.*'), 'admin');
     assert.equal(activeGroupOf(menu, (match) => match === 'panel.dashboard'), null);
 });
+
+test('cartões do início repetem o menu, sem o próprio início, e todos têm frase', async () => {
+    const { quickSections } = await import(out);
+    const menu = buildNav(ctx({ role: 'admin', can: { competitions: true, operate: true, users: true, market: false } }));
+    const sections = quickSections(menu);
+    const routes = sections.flatMap((section) => section.items.map((entry) => entry.route));
+
+    assert.equal(routes.includes('panel.dashboard'), false);
+    assert.equal(routes.includes('panel.teams.index'), true);
+    assert.equal(routes.includes('panel.help.index'), true);
+    assert.equal(sections.every((section) => section.items.every((entry) => entry.hint !== '')), true);
+    assert.deepEqual(sections.map((section) => section.area).includes('admin'), true);
+    assert.equal(quickSections(buildNav(ctx({ role: 'manager' }))).flatMap((section) => section.items).some((entry) => entry.route === 'manager.dashboard'), false);
+});

@@ -1,4 +1,5 @@
 import DataTable from '@/Components/DataTable';
+import QuickCards from '@/Components/Panel/QuickCards';
 import { Badge, Button, Card, Empty, LinkButton, Logo, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, Link, router } from '@inertiajs/react';
@@ -17,6 +18,8 @@ export default function Dashboard({ notify, teams, entries, upcoming, recent }: 
         <PanelLayout>
             <Head title="Área do gestor" />
             <PageHeader title="Área do gestor" subtitle="Defina a escalação e o esquema tático dos seus jogos e acompanhe o elenco." />
+
+            <QuickCards />
 
             {teams.length === 0 ? (
                 <Empty title="Você ainda não tem equipes vinculadas">Peça ao organizador da competição para vincular a sua equipe ao seu acesso.</Empty>

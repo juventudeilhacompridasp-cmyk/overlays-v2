@@ -20,6 +20,7 @@ use App\Modules\Help\Http\Controllers\HelpAskController;
 use App\Modules\Help\Http\Controllers\HelpController;
 use App\Modules\Help\Http\Controllers\HelpNoteController;
 use App\Modules\Market\Http\Controllers\Panel\AdminController as MarketAdminController;
+use App\Modules\Matches\Http\Controllers\DrawController;
 use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
 use App\Modules\Matches\Http\Controllers\GameReportController;
@@ -84,6 +85,8 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::resource('divisions.entries', EntryController::class)->shallow()->only(['store', 'show', 'update', 'destroy']);
 
         Route::post('stages/{stage}/fixtures', [FixtureController::class, 'store'])->name('stages.fixtures.store');
+        Route::get('stages/{stage}/draw', [DrawController::class, 'show'])->name('stages.draw');
+        Route::post('stages/{stage}/draw', [DrawController::class, 'store'])->name('stages.draw.store');
         Route::post('stages/{stage}/fixtures/import', [FixtureController::class, 'import'])->name('stages.fixtures.import');
         Route::delete('stages/{stage}/fixtures', [FixtureController::class, 'destroy'])->name('stages.fixtures.destroy');
 
