@@ -4,6 +4,7 @@ namespace App\Modules\Matches\Models;
 
 use App\Modules\Tenancy\Concerns\BelongsToOrganization;
 use App\Modules\Market\Support\VideoLink;
+use App\Support\Images\ImageStore;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -30,5 +31,10 @@ class GameMedia extends Model
     public function embedUrl(): ?string
     {
         return VideoLink::embedUrl((string) $this->provider, (string) $this->external_id);
+    }
+
+    public function imageUrl(int $size = 1200): ?string
+    {
+        return $this->type === 'image' ? ImageStore::publicUrl($this->path, $size) : null;
     }
 }

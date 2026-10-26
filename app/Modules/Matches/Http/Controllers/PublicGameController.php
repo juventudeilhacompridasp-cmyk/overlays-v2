@@ -33,7 +33,7 @@ class PublicGameController extends Controller
             'json_ld' => JsonLd::game($game),
             'share_image' => route('public.games.image', $game->getKey()),
             'youtube_embed_url' => YouTubeLiveUrl::embed($game->youtube_live_url),
-            'media' => PortalSettings::enabled('game_media') ? GameMedia::query()->where('game_id', $game->getKey())->where('published', true)->orderBy('sort')->get()->map(fn (GameMedia $item) => ['title' => $item->title, 'provider' => $item->provider, 'embed_url' => $item->embedUrl(), 'url' => $item->url]) : [],
+            'media' => PortalSettings::enabled('game_media') ? GameMedia::query()->where('game_id', $game->getKey())->where('published', true)->orderBy('sort')->get()->map(fn (GameMedia $item) => ['title' => $item->title, 'type' => $item->type, 'provider' => $item->provider, 'embed_url' => $item->embedUrl(), 'image_url' => $item->imageUrl(), 'url' => $item->url]) : [],
             'push_key' => PushConfig::publicKeyFor(),
             'realtime' => [
                 'key' => $realtime['key'],

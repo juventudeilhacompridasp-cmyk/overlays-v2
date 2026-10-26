@@ -104,6 +104,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'two-factor.admins', 'leg
         Route::patch('games/{game}', [GameController::class, 'update'])->name('games.update');
         Route::get('games/{game}/media', [GameMediaController::class, 'index'])->name('games.media');
         Route::post('games/{game}/media', [GameMediaController::class, 'store'])->name('games.media.store');
+        Route::post('games/{game}/media/imagem', [GameMediaController::class, 'image'])->name('games.media.image');
         Route::patch('game-media/{media}/publicar', [GameMediaController::class, 'toggle'])->name('games.media.toggle');
         Route::delete('game-media/{media}', [GameMediaController::class, 'destroy'])->name('games.media.destroy');
         Route::post('games/{game}/result', [GameController::class, 'result'])->name('games.result');

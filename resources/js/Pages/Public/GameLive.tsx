@@ -375,7 +375,7 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
                 )}
                 {media.length > 0 && (
                     <Section title="Vídeos e replays" testid="game-media">
-                        <div className="grid gap-4 sm:grid-cols-2">{media.map((item) => <a key={item.url} href={item.url} target="_blank" rel="noreferrer" className="rounded-lg bg-black/40 p-3 text-sm text-gray-200 hover:bg-black/60"><span className="font-semibold">{item.title ?? `Vídeo · ${item.provider}`}</span><span className="mt-1 block text-xs text-gray-500">Abrir no {item.provider}</span></a>)}</div>
+                        <div className="grid gap-4 sm:grid-cols-2">{media.map((item) => item.type === 'image' ? <a key={item.image_url ?? item.title} href={item.image_url ?? '#'} target="_blank" rel="noreferrer"><img src={item.image_url ?? undefined} alt={item.title ?? 'Foto da partida'} className="aspect-video w-full rounded-lg object-cover" /></a> : <a key={item.url} href={item.url} target="_blank" rel="noreferrer" className="rounded-lg bg-black/40 p-3 text-sm text-gray-200 hover:bg-black/60"><span className="font-semibold">{item.title ?? `Vídeo · ${item.provider}`}</span><span className="mt-1 block text-xs text-gray-500">Abrir no {item.provider}</span></a>)}</div>
                     </Section>
                 )}
                 {snapshot.venue && <p className="mt-8 text-center text-sm text-gray-500">{snapshot.venue}</p>}
