@@ -26,7 +26,7 @@ final class YouTubeLiveUrl
 
         $id = null;
         if ($host === 'youtu.be') {
-            $id = explode('/', $path)[0] ?? null;
+            $id = explode('/', $path)[0];
         } elseif (isset($parts['query']) && preg_match('/(?:^|&)v=([^&]+)/', (string) $parts['query'], $match) === 1) {
             $id = $match[1];
         } elseif (preg_match('#^(?:live|embed|shorts)/([^/]+)$#', $path, $match) === 1) {
