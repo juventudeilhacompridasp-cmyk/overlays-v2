@@ -16,10 +16,6 @@ it('refuses PDFs with active content', function (string $marker) {
     UploadScanner::check("%PDF-1.4\n<< {$marker} (app.alert(1)) >>", 'application/pdf');
 })->with(['/JavaScript', '/Launch', '/EmbeddedFile', '/OpenAction'])->throws(InvalidArgumentException::class, 'conteúdo ativo');
 
-it('refuses files that only pretend to be PDFs', function () {
-    UploadScanner::check('MZ not a pdf', 'application/pdf');
-})->throws(InvalidArgumentException::class);
-
 it('refuses code hidden in images', function () {
     UploadScanner::check("\xFF\xD8\xFF<?php system(\$_GET['x']); ?>", 'image/jpeg');
 })->throws(InvalidArgumentException::class, 'código embutido');

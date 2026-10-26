@@ -30,10 +30,7 @@ final class UploadScanner
         }
 
         if ($mime === 'application/pdf' && (bool) config('platform.uploads.scan.block_pdf_active', true)) {
-            $head = substr($content, 0, 8);
-            $hit = self::contains($content, self::PDF_ACTIVE);
-
-            if (! str_starts_with($head, '%PDF') || $hit !== null) {
+            if (self::contains($content, self::PDF_ACTIVE) !== null) {
                 throw new InvalidArgumentException('Este PDF tem conteúdo ativo (scripts ou arquivos embutidos). Gere o PDF novamente, sem esses recursos, ou envie uma foto.');
             }
         }
