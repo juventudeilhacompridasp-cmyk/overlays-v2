@@ -26,7 +26,7 @@ toda IA recebe escopo, critérios de aceite e comandos de teste. Humano revisa m
 | 7 Multiesporte | Entregue: futsal, vôlei (sets) e basquete (pontos) — ver `docs/adr/0002-modelo-de-placar-por-esporte.md` |
 | 8 Extras | Entregue: estatísticas públicas, widgets embutíveis, app do mesário (PWA), avisos push e compartilhamento no WhatsApp. **Só se houver demanda:** escolinhas, reservas e editais |
 
-**Pendências conhecidas (sem ordem):** pedidos de tempo, faltas técnicas e relógio de posse no basquete; limite de substituições por set e rodízio/líbero no vôlei; fila de lançamentos offline no app do mesário; WhatsApp Business API (envio automático) e aviso por e-mail; teste real do Reverb e do push em HTTPS; deploy e escolha do nome da plataforma (ver ADR 0001).
+**Pendências:** a lista atual e priorizada fica em `docs/09-status-e-pendencias.md` (esta linha não é mais mantida aqui; pedidos de tempo, faltas técnicas, relógio de posse, substituições por set, rodízio/líbero e fila offline já foram entregues).
 
 ## Divisão para múltiplas IAs (paralelizável após a Fase 0)
 | Trilha | Escopo (pasta) | Dependências |
