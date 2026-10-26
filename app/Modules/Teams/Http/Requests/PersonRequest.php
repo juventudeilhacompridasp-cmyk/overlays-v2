@@ -90,9 +90,9 @@ class PersonRequest extends FormRequest
 
         // A data da autorização é guardada na primeira vez que ela é dada; desmarcar revoga na hora.
         if ($this->has('public_profile')) {
-            /** @var Person|null $existing */
             $existing = $this->route('person');
-            $data['public_profile_at'] = $this->boolean('public_profile') ? ($existing?->public_profile_at ?? now()) : null;
+            $current = $existing instanceof Person ? $existing->public_profile_at : null;
+            $data['public_profile_at'] = $this->boolean('public_profile') ? ($current ?? now()) : null;
         }
 
         $document = (string) $this->input('document', '');
