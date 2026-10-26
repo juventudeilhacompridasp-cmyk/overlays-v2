@@ -1,6 +1,7 @@
 import { GameList, PortalGame } from '@/Components/Portal/GameList';
 import PortalLayout, { Seo, Theme } from '@/Components/Portal/PortalLayout';
 import { Link } from '@inertiajs/react';
+import { useInstallPrompt } from '@/lib/pwa';
 
 interface Props {
     theme: Theme;
@@ -22,6 +23,8 @@ function Section({ id, title, children }: { id?: string; title: string; children
 }
 
 export default function Home({ theme, seo, competitions, live, upcoming, recent, sections }: Props) {
+    const { available, install } = useInstallPrompt();
+
     return (
         <PortalLayout theme={theme} seo={seo}>
             <h1 className="sr-only">{theme.name}</h1>
@@ -42,6 +45,11 @@ export default function Home({ theme, seo, competitions, live, upcoming, recent,
                             <span className="mt-1 block text-sm text-gray-600">Conheça a plataforma para gestão e transmissão.</span>
                         </a>
                     </div>
+                    {available && (
+                        <button type="button" onClick={install} className="mt-4 rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
+                            Instalar portal no celular
+                        </button>
+                    )}
                 </section>
                 {sections.live && live.length > 0 && (
                     <Section title="Ao vivo agora" id="ao-vivo">
