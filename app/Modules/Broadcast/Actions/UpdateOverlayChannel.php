@@ -9,6 +9,7 @@ use App\Modules\Broadcast\Models\OverlayCustomItem;
 use App\Modules\Broadcast\Models\OverlayScene;
 use App\Modules\Broadcast\Support\LowerThirdBanner;
 use App\Modules\Broadcast\Support\OverlayAppearance;
+use App\Modules\Broadcast\Support\OverlayAutomationSettings;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
 use App\Modules\Broadcast\Support\OverlayLineupTimeline;
 use App\Modules\Broadcast\Support\OverlayLowerThirdSettings;
@@ -79,6 +80,10 @@ final class UpdateOverlayChannel
 
         if (isset($data['screen_settings']) && is_array($data['screen_settings'])) {
             $channel->screen_settings = OverlayScreenSettings::apply($channel->screen_settings, $data['screen_settings'], (int) (microtime(true) * 1000));
+        }
+
+        if (isset($data['automation_settings']) && is_array($data['automation_settings'])) {
+            $channel->automation_settings = OverlayAutomationSettings::normalize(array_merge($channel->automation_settings ?? [], $data['automation_settings']));
         }
 
         // Overlays livres (Builder): liga/desliga por ID; só vale para overlays que existem na organização.
