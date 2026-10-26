@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Models\Organization;
 use App\Modules\Tenancy\Support\MesarioSettings;
 use App\Modules\Tenancy\Support\OperationSettings;
 use App\Modules\Tenancy\Support\PortalQuantities;
+use App\Modules\Tenancy\Support\SheetClosingSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -37,6 +38,7 @@ class ParametersController extends Controller
             'mesario' => MesarioSettings::all(),
             'portal' => PortalQuantities::all($organization),
             'quick_result' => OperationSettings::quickResultAllowed($organization),
+            'sheet_closing' => SheetClosingSettings::all($organization),
             'help_ai' => ['released' => HelpAiSettings::released(), 'enabled' => HelpAiSettings::enabled(), 'configured' => HelpAiSettings::configured()],
             'public_api' => ($organization->settings['public_api'] ?? true) !== false,
         ]);
@@ -58,12 +60,16 @@ class ParametersController extends Controller
             'portal.stats_form' => ['required', 'integer', 'between:3,10'],
             'public_api' => ['required', 'boolean'],
             'quick_result' => ['required', 'boolean'],
+            'sheet_closing' => ['sometimes', 'array'],
+            'sheet_closing.min_signatures' => ['required_with:sheet_closing', 'integer', 'min:'.SheetClosingSettings::MIN_SIGNATURES, 'max:'.SheetClosingSettings::MAX_SIGNATURES],
+            'sheet_closing.reopen_reason' => ['required_with:sheet_closing', 'boolean'],
             'help_ai' => ['sometimes', 'boolean'],
         ], [], [
             'mesario.days_ahead' => 'dias à frente',
             'mesario.finished_hours' => 'horas de encerrados',
             'mesario.limit' => 'limite de jogos',
             'mesario.history' => 'alterações recentes',
+            'sheet_closing.min_signatures' => 'assinaturas mínimas para fechar a súmula',
             'portal.home' => 'itens por bloco da página inicial',
             'portal.widgets' => 'jogos por lista dos widgets',
             'portal.scorers' => 'artilheiros por divisão',
@@ -83,6 +89,13 @@ class ParametersController extends Controller
         $settings['portal_quantities'] = array_map('intval', $validated['portal']);
         $settings['public_api'] = (bool) $validated['public_api'];
         $settings['operation'] = ['quick_result' => (bool) $validated['quick_result']];
+
+        if (isset($validated['sheet_closing'])) {
+            $settings['sheet_closing'] = [
+                'min_signatures' => (int) $validated['sheet_closing']['min_signatures'],
+                'reopen_reason' => (bool) $validated['sheet_closing']['reopen_reason'],
+            ];
+        }
 
         // O interruptor das respostas com IA só muda se o recurso foi liberado pela plataforma.
         if (array_key_exists('help_ai', $validated) && HelpAiSettings::released()) {

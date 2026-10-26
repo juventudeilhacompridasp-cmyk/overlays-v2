@@ -1,7 +1,7 @@
 import { Badge, Card, Empty, LinkButton, PageHeader } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
-import { Head } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 
 interface TeamInfo {
     name: string;
@@ -28,6 +28,7 @@ interface Props {
         knockout: boolean;
         quick_result: boolean;
     };
+    closure: { closed: boolean; can_close: boolean; by: string | null; at: string | null; signatures: number; required: number; notes: string | null };
     officials: { role: string; name: string }[];
     events: { id: string; label: string; minute: number | null; period: number; team: string | null; person: string | null }[];
     history: { id: string; at: string; actor: string; role: string | null; summary: string; outcome: 'ok' | 'refused' | 'failed'; changes: Record<string, [unknown, unknown]> }[];
@@ -50,7 +51,47 @@ function TeamLineup({ team }: { team: TeamInfo }) {
     );
 }
 
-export default function Operator({ game, officials, events, history, links }: Props) {
+function SheetClosing({ gameId, closure, canOperate }: { gameId: string; closure: Props['closure']; canOperate: boolean }) {
+    const { data, setData, post, processing } = useForm({ notes: '' });
+    const missing = Math.max(0, closure.required - closure.signatures);
+
+    return (
+        <Card title="Fechamento da súmula">
+            {closure.closed ? (
+                <div className="space-y-1 text-sm">
+                    <Badge tone="green">Súmula fechada</Badge>
+                    <p className="text-gray-600">
+                        Por {closure.by}{closure.at ? ` em ${new Date(closure.at).toLocaleString('pt-BR')}` : ''} · {closure.signatures} assinatura(s) confirmada(s).
+                    </p>
+                    {closure.notes && <p className="text-gray-700">{closure.notes}</p>}
+                </div>
+            ) : closure.can_close ? (
+                <form
+                    className="space-y-3 text-sm"
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        post(route('panel.games.sheet.close', gameId), { preserveScroll: true });
+                    }}
+                >
+                    <p className="text-gray-600">
+                        Assinaturas confirmadas da súmula: <strong>{closure.signatures}</strong>{closure.required > 0 ? ` de ${closure.required} exigidas` : ' (nenhuma exigida)'}.
+                        {missing > 0 && <span className="text-amber-700"> Faltam {missing}.</span>}
+                    </p>
+                    <textarea className="block w-full rounded-md border-gray-300 text-sm" rows={2} maxLength={500} placeholder="Observação do fechamento (opcional)" value={data.notes} onChange={(event) => setData('notes', event.target.value)} disabled={!canOperate} />
+                    {canOperate && (
+                        <button type="submit" disabled={processing || missing > 0} className="inline-flex min-h-11 items-center rounded-md bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700 disabled:opacity-50">
+                            Fechar súmula
+                        </button>
+                    )}
+                </form>
+            ) : (
+                <p className="text-sm text-gray-500">A súmula só pode ser fechada depois que o jogo for encerrado.</p>
+            )}
+        </Card>
+    );
+}
+
+export default function Operator({ game, closure, officials, events, history, links }: Props) {
     const canOperate = useCan('operate-games');
 
     return (
@@ -112,6 +153,8 @@ export default function Operator({ game, officials, events, history, links }: Pr
                         <TeamLineup team={game.away} />
                     </ul>
                 </Card>
+
+                <SheetClosing gameId={game.id} closure={closure} canOperate={canOperate} />
 
                 <Card title="Mesa e arbitragem">
                     {officials.length === 0 ? (

@@ -34,7 +34,7 @@ class StageController extends Controller
 
         $games = Game::query()
             ->where('stage_id', $stage->getKey())
-            ->with(['homeEntry.team', 'awayEntry.team', 'venue', 'group'])
+            ->with(['homeEntry.team', 'awayEntry.team', 'venue', 'group', 'sheetClosure'])
             ->orderBy('round')
             ->orderBy('number')
             ->get();
@@ -91,6 +91,7 @@ class StageController extends Controller
                 'status' => $game->status->value,
                 'status_label' => $game->status->label(),
                 'decided' => $game->status->isDecided(),
+                'sheet_closed' => $game->sheetClosure !== null,
                 'round_label' => $stage->type === StageType::Knockout ? KnockoutBracket::roundLabel($knockoutRounds, (int) $game->round) : null,
                 'leg' => $game->leg,
                 'legs' => $game->tie_id === null ? 1 : $games->where('tie_id', $game->tie_id)->count(),

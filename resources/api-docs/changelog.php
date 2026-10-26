@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.17.0',
+        'date' => '2026-10-26',
+        'changes' => ['Nova rota interna panel.games.sheet.close: fecha a súmula de um jogo encerrado. panel.games.reopen passa a aceitar o campo reason (motivo da reabertura).'],
+    ],
+    [
         'version' => '1.16.0',
         'date' => '2026-10-26',
         'changes' => ['Nova rota csp.report: recebe os relatórios de violação da Content-Security-Policy. O envio de documentos pessoais passa por verificação de conteúdo.'],

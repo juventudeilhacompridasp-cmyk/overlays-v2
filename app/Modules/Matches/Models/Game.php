@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -104,6 +105,16 @@ class Game extends Model
     public function venue(): BelongsTo
     {
         return $this->belongsTo(Venue::class);
+    }
+
+    /**
+     * Fechamento vigente da súmula (o que ainda não foi reaberto).
+     *
+     * @return HasOne<GameSheetClosure, $this>
+     */
+    public function sheetClosure(): HasOne
+    {
+        return $this->hasOne(GameSheetClosure::class)->whereNull('reopened_at')->latestOfMany('closed_at');
     }
 
     /**

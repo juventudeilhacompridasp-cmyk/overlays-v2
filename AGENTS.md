@@ -10,6 +10,7 @@ Regra adicional: QR codes de partidas devem apontar para a página pública do j
 Regra adicional: o PWA público usa `portal.webmanifest`; o service worker continua guardando apenas assets versionados e a tela offline, nunca páginas públicas, respostas de API ou dados de organização.
 Regra adicional: mídia de partida segue o ADR 0016; upload público passa por variantes WebP sem EXIF, vídeo externo usa somente hosts HTTPS permitidos e itens não publicados nunca entram no portal, feed, widgets ou overlays.
 Regra adicional: a CSP (`ContentSecurityPolicy`, `PLATFORM_CSP_MODE` = off|report|enforce, padrão report) é montada em `FrameOptions` junto do `frame-ancestors`; script inline novo precisa do `nonce` (`Vite::cspNonce()`), e arquivo pessoal novo enviado ao servidor passa por `UploadScanner::check` antes de ir ao disco.
+Regra adicional: o fechamento da súmula (`CloseGameSheet`, `game_sheet_closures`, `SheetClosingSettings` em `settings.sheet_closing`: `min_signatures` 0–10 e `reopen_reason`) só vale para jogo encerrado/W.O., conta assinaturas `sheet` confirmadas depois do `finished_at` atual e nunca altera o jogo; `ReopenGame` exige motivo quando há fechamento vigente e guarda o histórico em `reopened_*`.
 Regra adicional: assinatura digital segue o ADR 0017; registra hash imutável do documento e evidências mínimas, nunca imagem de assinatura, biometria, CPF ou segredo reutilizável.
 
 ## Contexto

@@ -5,6 +5,7 @@ namespace App\Modules\Matches\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Competitions\Enums\StageType;
+use App\Modules\Matches\Actions\CloseGameSheet;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Models\Game;
@@ -15,6 +16,8 @@ use App\Modules\Tenancy\Enums\Permission;
 use App\Modules\Tenancy\Models\ActivityLog;
 use App\Modules\Tenancy\Support\MesarioSettings;
 use App\Modules\Tenancy\Support\OperationSettings;
+use App\Modules\Tenancy\Support\SheetClosingSettings;
+use Carbon\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -66,6 +69,7 @@ class GameOperatorController extends Controller
                 'knockout' => $game->stage->type === StageType::Knockout,
                 'quick_result' => OperationSettings::quickResultAllowed() && $game->division->ruleSet()->allowQuickResult && $game->sport()->profile()->scoreModel !== 'sets' && $game->stage->type !== StageType::Knockout,
             ],
+            'closure' => $this->closure($game),
             'officials' => $game->officials->map(fn ($assignment) => ['role' => $assignment->role->label(), 'name' => $assignment->official->name])->values(),
             'events' => $events,
             'history' => $history > 0 ? ActivityLog::query()->where('game_id', $game->getKey())->latest('created_at')->latest('id')->limit($history)->get()
@@ -85,6 +89,22 @@ class GameOperatorController extends Controller
                 'activity' => $user instanceof User && $user->hasPermission(Permission::UsersManage) ? route('panel.activity-log.index', ['game' => $game->getKey()]) : null,
             ],
         ]);
+    }
+
+    /** @return array{closed: bool, can_close: bool, by: ?string, at: ?string, signatures: int, required: int, notes: ?string} */
+    private function closure(Game $game): array
+    {
+        $closure = $game->sheetClosure;
+
+        return [
+            'closed' => $closure !== null,
+            'can_close' => $closure === null && $game->status->isDecided(),
+            'by' => $closure?->closed_by_name,
+            'at' => $closure !== null ? Carbon::parse($closure->closed_at)->toIso8601String() : null,
+            'signatures' => $closure !== null ? $closure->signatures_count : CloseGameSheet::signedCount($game),
+            'required' => SheetClosingSettings::all()['min_signatures'],
+            'notes' => $closure?->notes,
+        ];
     }
 
     /** @return array{name: string, starters: int, bench: int, confirmed: bool} */
