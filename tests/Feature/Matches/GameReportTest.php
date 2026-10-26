@@ -39,6 +39,15 @@ it('inclui placar, escalações e eventos efetivos no relatório final', functio
         ->and($response->getContent())->toContain('Gol');
 });
 
+it('permite visualizar a escalação no navegador sem forçar o download', function () {
+    ['game' => $game] = sheetGame();
+
+    $this->actingAs(panelUser(Role::Viewer))
+        ->get(route('panel.games.reports.lineup', $game).'?visualizar=1')
+        ->assertOk()
+        ->assertHeader('Content-Disposition', 'inline; filename="escalacao-'.$game->id.'.pdf"');
+});
+
 it('oferece o recorte de atividades sem dados de escalação', function () {
     ['game' => $game, 'home' => $home, 'hp' => $hp] = sheetGame();
     app(RecordGameEvent::class)->handle($game, GameEventType::Goal, $home->id, $hp[0], minute: 12);
