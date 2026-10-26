@@ -133,6 +133,22 @@ final class GenerateStageFixtures
     }
 
     /**
+     * Persiste uma tabela de pontos corridos já montada pelo organizador.
+     *
+     * @param  list<array{0: string, 1: string}>  $pairs
+     */
+    public function persistLeague(Stage $stage, array $pairs, int $gamesPerRound): int
+    {
+        return DB::transaction(function () use ($stage, $pairs, $gamesPerRound): int {
+            foreach ($pairs as $index => [$home, $away]) {
+                $this->createGame($stage, null, intdiv($index, max(1, $gamesPerRound)) + 1, $index + 1, $home, $away);
+            }
+
+            return count($pairs);
+        });
+    }
+
+    /**
      * Chaveamento do mata-mata: um jogo (ou ida e volta) por confronto, na ordem das rodadas. Quem folga
      * na 1ª rodada já nasce na 2ª; os demais lados ficam em aberto até o vencedor da rodada anterior ser conhecido.
      *

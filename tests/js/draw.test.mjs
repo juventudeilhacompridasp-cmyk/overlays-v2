@@ -24,6 +24,28 @@ test('grupos nascem vazios e todas as equipes ficam sem grupo', () => {
     assert.deepEqual(d.groupsProblems(board).length > 0, true);
 });
 
+test('pontos corridos monta todas as rodadas e troca equipes por arrasto', () => {
+    let board = d.emptyLeague(ids(4));
+
+    assert.equal(board.rounds.length, 3);
+    assert.equal(d.leagueProblems(board, ids(4), false).length, 0);
+    const first = board.rounds[0].games[0][0];
+    const second = board.rounds[1].games[0][0];
+    board = d.moveLeagueToken(board, 'round-0-0-0', 'round-1-0-0');
+    assert.equal(board.rounds[0].games[0][0], second);
+    assert.equal(board.rounds[1].games[0][0], first);
+    assert.deepEqual(d.leagueProblems(board, ids(4), false), []);
+});
+
+test('pontos corridos em ida e volta duplica os confrontos invertendo o mando', () => {
+    const board = d.emptyLeague(ids(3), true);
+
+    assert.equal(board.rounds.length, 6);
+    assert.equal(board.rounds[3].games[0][0], board.rounds[0].games[0][1]);
+    assert.deepEqual(d.leaguePayload(board).length, 6);
+    assert.deepEqual(d.leagueProblems(board, ids(3), true), []);
+});
+
 test('arrastar move a equipe entre o pool e os grupos sem duplicar', () => {
     let board = d.emptyGroups(ids(4), 2);
     board = d.moveToGroup(board, 't1', 'g0');

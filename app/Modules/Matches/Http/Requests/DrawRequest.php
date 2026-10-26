@@ -21,10 +21,11 @@ class DrawRequest extends FormRequest
         /** @var Stage $stage */
         $stage = $this->route('stage');
 
-        if ($stage->type === StageType::Knockout) {
+        if ($stage->type === StageType::Knockout || $stage->type === StageType::League) {
             return [
-                'legs' => ['required', 'integer', 'in:1,2'],
-                'pairs' => ['required', 'array', 'min:1', 'max:64'],
+                'legs' => [$stage->type === StageType::Knockout ? 'required' : 'nullable', 'integer', 'in:1,2'],
+                'double_round' => [$stage->type === StageType::League ? 'required' : 'nullable', 'boolean'],
+                'pairs' => ['required', 'array', 'min:1', 'max:1024'],
                 'pairs.*' => ['array', 'size:2'],
                 'pairs.*.*' => ['nullable', 'string', 'size:26'],
             ];

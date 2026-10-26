@@ -51,6 +51,50 @@ final class DrawStage
     }
 
     /**
+     * Cria uma tabela de pontos corridos a partir dos confrontos arrastados pelo organizador.
+     * Cada par de equipes precisa aparecer exatamente uma vez (ou duas, no ida e volta).
+     *
+     * @param  list<array{0: ?string, 1: ?string}>  $pairs
+     */
+    public function league(Stage $stage, array $pairs, bool $doubleRound): int
+    {
+        $this->ensureReady($stage, StageType::League);
+
+        $confirmed = Entry::query()->where('division_id', $stage->division_id)->where('status', EntryStatus::Confirmed)->pluck('id')->all();
+        $expected = count($confirmed) * (count($confirmed) - 1) / 2 * ($doubleRound ? 2 : 1);
+
+        if (count($confirmed) < 2 || count($pairs) !== $expected) {
+            throw new InvalidArgumentException('A tabela precisa ter todos os confrontos entre as equipes confirmadas.');
+        }
+
+        $confirmedSet = array_fill_keys($confirmed, true);
+        $pairCounts = [];
+        $appearances = array_fill_keys($confirmed, 0);
+
+        foreach ($pairs as [$home, $away]) {
+            if ($home === null || $away === null || $home === $away || ! isset($confirmedSet[$home]) || ! isset($confirmedSet[$away])) {
+                throw new InvalidArgumentException('Há um confronto inválido ou uma equipe que não está confirmada nesta divisão.');
+            }
+
+            $key = collect([$home, $away])->sort()->implode('|');
+            $pairCounts[$key] = ($pairCounts[$key] ?? 0) + 1;
+            $appearances[$home]++;
+            $appearances[$away]++;
+        }
+
+        if (count($pairCounts) !== count($confirmed) * (count($confirmed) - 1) / 2 || max($pairCounts) !== ($doubleRound ? 2 : 1) || min($pairCounts) !== ($doubleRound ? 2 : 1)) {
+            throw new InvalidArgumentException('Cada par de equipes precisa aparecer uma vez'.($doubleRound ? ' por turno.' : '.'));
+        }
+
+        $expectedAppearances = ($doubleRound ? 2 : 1) * (count($confirmed) - 1);
+        if (in_array($expectedAppearances, $appearances, true) === false) {
+            throw new InvalidArgumentException('Todas as equipes precisam ter o mesmo número de confrontos.');
+        }
+
+        return $this->generate->persistLeague($stage, array_map(fn (array $pair) => [(string) $pair[0], (string) $pair[1]], $pairs), max(1, intdiv(count($confirmed), 2)));
+    }
+
+    /**
      * @param  list<array{0: ?string, 1: ?string}>  $pairs  confrontos da 1ª rodada, na ordem do chaveamento
      * @return int Quantidade de jogos criados.
      */

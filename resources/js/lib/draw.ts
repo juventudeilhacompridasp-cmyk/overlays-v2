@@ -139,6 +139,83 @@ export function groupsPayload(board: GroupsBoard): { name: string; entries: stri
     return board.groups.map((group) => ({ name: group.name.trim(), entries: group.teams }));
 }
 
+/* ---------------------------- Pontos corridos ----------------------------- */
+
+export type LeagueBoard = { rounds: { id: string; games: [string, string][] }[] };
+
+/** Tabela inicial pelo método do círculo; cada equipe aparece uma vez por rodada (quando não está de folga). */
+export function emptyLeague(teamIds: readonly string[], doubleRound = false): LeagueBoard {
+    const slots: (string | null)[] = [...teamIds];
+    if (slots.length % 2 === 1) slots.push(null);
+    const rounds: { id: string; games: [string, string][] }[] = [];
+    const count = slots.length;
+
+    for (let round = 0; round < count - 1; round++) {
+        const games = [] as [string, string][];
+        for (let index = 0; index < count / 2; index++) {
+            const home = slots[index];
+            const away = slots[count - 1 - index];
+            if (home !== null && away !== null) games.push([home, away]);
+        }
+        rounds.push({ id: `round-${round + 1}`, games });
+        const last = slots.pop()!;
+        slots.splice(1, 0, last);
+    }
+
+    if (doubleRound) {
+        rounds.push(...rounds.map((round, index) => ({ id: `round-${rounds.length + index + 1}`, games: round.games.map(([home, away]) => [away, home] as [string, string]) })));
+    }
+
+    return { rounds };
+}
+
+/** Troca duas vagas da tabela; o id da vaga é `round-index-side`. */
+export function moveLeagueToken(board: LeagueBoard, from: string, to: string): LeagueBoard {
+    const parse = (token: string): [number, number, 0 | 1] | null => {
+        const match = /^round-(\d+)-(\d+)-(0|1)$/.exec(token);
+        return match ? [Number(match[1]), Number(match[2]), Number(match[3]) as 0 | 1] : null;
+    };
+    const source = parse(from);
+    const target = parse(to);
+    if (source === null || target === null) return board;
+    const next = board.rounds.map((round) => ({ ...round, games: round.games.map((game) => [...game] as [string, string]) }));
+    const sourceValue = next[source[0]]?.games[source[1]]?.[source[2]];
+    const targetValue = next[target[0]]?.games[target[1]]?.[target[2]];
+    if (sourceValue === undefined || targetValue === undefined) return board;
+    next[source[0]].games[source[1]][source[2]] = targetValue;
+    next[target[0]].games[target[1]][target[2]] = sourceValue;
+    return { rounds: next };
+}
+
+export function leagueProblems(board: LeagueBoard, teamIds: readonly string[], doubleRound: boolean): string[] {
+    const expected = teamIds.length * (teamIds.length - 1) / 2 * (doubleRound ? 2 : 1);
+    const pairs = new Map<string, number>();
+    const valid = new Set(teamIds);
+    const problems: string[] = [];
+    let count = 0;
+
+    for (const round of board.rounds) for (const [home, away] of round.games) {
+        count++;
+        if (!valid.has(home) || !valid.has(away) || home === away) {
+            problems.push(`Confronto inválido na ${round.id}.`);
+            continue;
+        }
+        const key = [home, away].sort().join('|');
+        pairs.set(key, (pairs.get(key) ?? 0) + 1);
+    }
+
+    if (count !== expected) problems.push(`A tabela precisa de ${expected} confrontos.`);
+    const required = doubleRound ? 2 : 1;
+    if ([...pairs.values()].some((value) => value !== required) || pairs.size !== teamIds.length * (teamIds.length - 1) / 2) {
+        problems.push(`Cada par de equipes precisa aparecer ${required} vez${required === 1 ? '' : 'es'}.`);
+    }
+    return [...new Set(problems)];
+}
+
+export function leaguePayload(board: LeagueBoard): [string, string][] {
+    return board.rounds.flatMap((round) => round.games);
+}
+
 /* ------------------------------- Mata-mata ---------------------------------- */
 
 export type KnockoutBoard = { pool: string[]; slots: (string | null)[] };
