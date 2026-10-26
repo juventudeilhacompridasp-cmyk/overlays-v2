@@ -15,13 +15,14 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 5. Relatório PDF para patrocinadores/prefeitura; backup com teste de restauração periódico.
 6. Segurança: CSP completo, varredura de arquivos e teste de intrusão. (E-mail ao ativar/desativar 2FA e reinício por Super Admin: entregues em 26/10.)
 7. Perfis de acesso, parte 4 (escopo por competição/edição); artes, parte 3 (renderização no servidor); portal rico (assistências, mídia, notícias).
-8. Público: palpites/bolão, notícias e galeria, PWA para o público.
+8. Público: palpites/bolão e notícias/galeria (o PWA público já foi entregue).
 
 **Fora do MVP:** cobrança automática. **Decidido não fazer:** interruptor da fila offline (aumentaria o risco no jogo).
 
 ## Entregue
 - **Registro de atividades (auditoria no banco, 26/10):** `activity_log` com toda ação de escrita de usuários logados (inclusive recusadas), mudanças de jogo com antes/depois e lances lançados; tela e CSV em Painel > Registro de atividades; retenção e liga/desliga por `ACTIVITY_LOG_*`. Próximo: perfil só de mesário e visão do Operador da partida.
-- **QR code para partidas (26/10):** a agenda do painel e a página pública geram e permitem baixar um QR que abre diretamente o jogo no celular.
+- **PWA público (26/10):** portal e páginas públicas agora oferecem manifest instalável e convite de instalação no celular, reutilizando o service worker sem armazenar páginas ou dados.
+- **QR code para partidas (26/10):** a agenda do painel, a página pública e o editor de artes geram e permitem baixar um QR que abre diretamente o jogo no celular; o editor também pode incluir o QR no PNG exportado.
 - **Transmissão do jogo no YouTube (26/10):** o organizador pode vincular um vídeo/live do YouTube ao jogo; a página pública mostra o player responsivo somente para links YouTube validados.
 - **Escalações públicas opcionais (26/10):** a página do jogo aceita o interruptor `settings.portal.game_lineup` e exibe titulares/reservas com nome público, camisa e capitão; fotos, nascimento, documentos e demais dados pessoais nunca são publicados.
 - **Agenda dos jogos e sorteio com restrição (26/10):** `panel.stages.schedule` (`ScheduleController`, `Panel/Stages/Schedule`, `lib/schedule.ts`, `GameConflicts` puro): jogos por dia, remarcar arrastando (mesma rota `panel.games.update`), editar horário/estádio e aviso de conflito em todas as fases e divisões. A duração considerada no estádio e o descanso mínimo da equipe agora vêm do regulamento da edição. No sorteio, opção de **separar equipes da mesma cidade, clube ou patrocinador** (`bestOf`, `groupClashes`/`bracketClashes`; só avisa). Os vínculos opcionais pertencem à inscrição da edição e são configurados na divisão.

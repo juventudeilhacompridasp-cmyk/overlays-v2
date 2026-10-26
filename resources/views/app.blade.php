@@ -22,6 +22,11 @@
             <meta name="theme-color" content="#059669">
             <link rel="apple-touch-icon" href="/icons/icon-192.png">
         @endif
+        @if (str_starts_with($page['component'], 'Portal/') || str_starts_with($page['component'], 'Public/'))
+            <link rel="manifest" href="/portal.webmanifest">
+            <meta name="theme-color" content="#059669">
+            <link rel="apple-touch-icon" href="/icons/icon-192.png">
+        @endif
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
