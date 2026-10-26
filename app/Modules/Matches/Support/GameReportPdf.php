@@ -7,6 +7,7 @@ use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Enums\OfficialRole;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Matches\Models\GameDocumentSignature;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Models\GameTactic;
 use App\Modules\Teams\Models\Person;
@@ -14,6 +15,7 @@ use App\Modules\Teams\Models\RosterEntry;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Support\Pdf\PdfDocument;
 use App\Support\Pdf\PdfMetrics;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -42,6 +44,7 @@ final class GameReportPdf
         self::matchCard($pdf, $game, false);
         self::lineupCards($pdf, $game);
         self::signatures($pdf, ['Responsável — '.$game->homeEntry->team->name, 'Responsável — '.$game->awayEntry->team->name, 'Árbitro / mesário']);
+        self::signatureEvidence($pdf, $game, 'lineup');
 
         return $pdf->output();
     }
@@ -74,6 +77,7 @@ final class GameReportPdf
             ['Árbitro', 'Capitão — '.$home->team->name, 'Capitão — '.$away->team->name, 'Mesário'],
             [self::officialName($game, OfficialRole::Referee), self::captain($game, $home), self::captain($game, $away), self::officialName($game, OfficialRole::Scorer)],
         );
+        self::signatureEvidence($pdf, $game, 'sheet');
 
         return $pdf->output();
     }
@@ -93,6 +97,7 @@ final class GameReportPdf
         if ($type === 'lineup') {
             self::lineupCards($pdf, $game);
             self::signatures($pdf, ['Responsável — '.$game->homeEntry->team->name, 'Responsável — '.$game->awayEntry->team->name, 'Árbitro / mesário']);
+            self::signatureEvidence($pdf, $game, 'lineup');
 
             return $pdf->output();
         }
@@ -108,6 +113,7 @@ final class GameReportPdf
         self::timeline($pdf, $events);
         self::notes($pdf);
         self::signatures($pdf, ['Árbitro', 'Capitão — '.$game->homeEntry->team->name, 'Capitão — '.$game->awayEntry->team->name]);
+        self::signatureEvidence($pdf, $game, 'final');
 
         return $pdf->output();
     }
@@ -462,6 +468,30 @@ final class GameReportPdf
             $pdf->line(PdfDocument::MARGIN + 12, $y + $i * 22 + 2, PdfDocument::WIDTH - PdfDocument::MARGIN - 12, $y + $i * 22 + 2, '#d1d5db', 0.6, true);
         }
         $pdf->moveTo($y + 96);
+    }
+
+    private static function signatureEvidence(PdfDocument $pdf, Game $game, string $documentType): void
+    {
+        $signatures = GameDocumentSignature::query()
+            ->where('game_id', $game->getKey())
+            ->where('document_type', $documentType)
+            ->orderBy('created_at')
+            ->get();
+
+        if ($signatures->isEmpty()) {
+            return;
+        }
+
+        self::section($pdf, 'Evidências de assinatura', 'Hash SHA-256 da versão enviada e confirmação registrada');
+        $rows = $signatures->map(fn (GameDocumentSignature $signature): array => [
+            $signature->signer_name,
+            $signature->signer_role,
+            $signature->status === 'signed' ? 'Confirmada' : 'Pendente',
+            $signature->signed_at === null ? '—' : Carbon::parse((string) $signature->signed_at)->format('d/m/Y H:i').' UTC',
+            substr((string) $signature->document_hash, 0, 16).'…',
+        ])->all();
+
+        self::table($pdf, [['Pessoa', 150, 'left'], ['Papel', 105, 'left'], ['Estado', 80, 'left'], ['Data', 105, 'left'], ['Hash', 0, 'left']], $rows, 20);
     }
 
     /**

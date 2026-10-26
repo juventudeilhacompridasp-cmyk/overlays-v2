@@ -22,6 +22,7 @@ Súmulas oficiais e relatórios precisam registrar a aprovação de árbitros, c
 - `DocumentSignature::hash()` gera o SHA-256 determinístico do PDF, sem persistir o conteúdo nem expor dados pessoais.
 - A tabela `game_document_signatures` guarda versão, hash, papel, método, estado e hashes de token/IP/user-agent; tokens e dados de rede nunca são persistidos em claro.
 - O painel de operação pode gerar convite para a versão atual da escalação, súmula ou relatório final; a confirmação ocorre por link único com expiração de 24 horas.
+- O painel da súmula mostra o estado de cada convite, e os PDFs passam a incluir uma tabela interna de evidências com papel, estado, horário e prefixo do hash.
 
 ## Consequências
 

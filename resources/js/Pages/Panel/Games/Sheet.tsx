@@ -93,6 +93,7 @@ interface Props {
     fouls: { home: number; away: number; limit: number; period: number } | null;
     clock: GameClock & { server_time_ms: number; max_period: number };
     public_url: string;
+    signatures: { id: string; document_type: string; signer_name: string; signer_role: string; status: string; signed_at: string | null }[];
 }
 
 export interface SetScore {
@@ -716,7 +717,7 @@ const teamFields = (team: Team) => ({
     timeouts: team.timeouts,
 });
 
-export default function Sheet({ game: serverGame, home: serverHome, away: serverAway, events: serverEvents, limits, clock_offsets, event_types, sport, score_model, quarters, sets, fouls, clock: serverClock, public_url, volleyball_rotation }: Props) {
+export default function Sheet({ game: serverGame, home: serverHome, away: serverAway, events: serverEvents, limits, clock_offsets, event_types, sport, score_model, quarters, sets, fouls, clock: serverClock, public_url, volleyball_rotation, signatures }: Props) {
     // Quem não opera jogos só consulta a súmula: o servidor também recusa as ações, aqui só se escondem os controles.
     const canOperate = useCan('operate-games');
     const canImport = useFeature('sheet_import');
@@ -801,6 +802,21 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
                     </div>
                 }
             />
+
+            {signatures.length > 0 && (
+                <Card className="mb-6">
+                    <h2 className="text-sm font-semibold text-gray-900">Assinaturas digitais</h2>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {signatures.map((signature) => (
+                            <div key={signature.id} className="rounded-md border border-gray-200 p-3 text-sm">
+                                <p className="font-medium text-gray-900">{signature.signer_name}</p>
+                                <p className="text-xs text-gray-500">{signature.signer_role} · {signature.document_type}</p>
+                                <Badge tone={signature.status === 'signed' ? 'green' : 'amber'}>{signature.status === 'signed' ? 'Confirmada' : 'Pendente'}</Badge>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+            )}
 
             {canOperate && (
                 <div className="mb-6">
