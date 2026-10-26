@@ -66,6 +66,13 @@ return [
     */
     'security' => [
         'hsts_seconds' => max(0, (int) env('HSTS_SECONDS', 15552000)),
+        // Content-Security-Policy (App\Support\Security\ContentSecurityPolicy): `off`, `report` (padrão, só relata) ou `enforce`.
+        // `extra_sources`: origens extras (https://, http://, ws://, wss://) somadas às diretivas de recurso.
+        'csp' => [
+            'mode' => env('PLATFORM_CSP_MODE', 'report'),
+            'extra_sources' => env('PLATFORM_CSP_EXTRA_SOURCES', ''),
+            'log_reports' => filter_var(env('PLATFORM_CSP_LOG_REPORTS', true), FILTER_VALIDATE_BOOL),
+        ],
     ],
 
     /*
@@ -104,6 +111,21 @@ return [
     'help_ai' => [
         'user_daily' => (int) env('HELP_AI_USER_DAILY', 10),
         'monthly' => (int) env('HELP_AI_MONTHLY', 300),
+    ],
+
+    // Verificação dos arquivos pessoais enviados (App\Support\Uploads\UploadScanner). ClamAV é opcional (host vazio = desligado).
+    'uploads' => [
+        'scan' => [
+            'enabled' => filter_var(env('UPLOAD_SCAN', true), FILTER_VALIDATE_BOOL),
+            'block_pdf_active' => filter_var(env('UPLOAD_SCAN_PDF_ACTIVE', true), FILTER_VALIDATE_BOOL),
+            'block_image_code' => filter_var(env('UPLOAD_SCAN_IMAGE_CODE', true), FILTER_VALIDATE_BOOL),
+            'clamav' => [
+                'host' => env('CLAMAV_HOST', ''),
+                'port' => (int) env('CLAMAV_PORT', 3310),
+                'timeout' => (int) env('CLAMAV_TIMEOUT', 5),
+                'fail_closed' => filter_var(env('CLAMAV_FAIL_CLOSED', false), FILTER_VALIDATE_BOOL),
+            ],
+        ],
     ],
 
     // Dias que o pedido de aviso (push) de um jogo encerrado é guardado antes de `push:prune` apagá-lo (mínimo 1).

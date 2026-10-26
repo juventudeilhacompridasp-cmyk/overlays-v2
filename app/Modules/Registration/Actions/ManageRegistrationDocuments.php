@@ -8,6 +8,7 @@ use App\Modules\Registration\Models\RegistrationDocument;
 use App\Modules\Registration\Models\RegistrationPerson;
 use App\Modules\Registration\Support\EnsureEditable;
 use App\Support\PlatformLimits;
+use App\Support\Uploads\UploadScanner;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -39,9 +40,12 @@ final class ManageRegistrationDocuments
             throw new InvalidArgumentException('Envie um PDF ou uma imagem (JPG, PNG ou WebP).');
         }
 
+        $content = (string) file_get_contents($file->getRealPath());
+        UploadScanner::check($content, $mime);
+
         $path = "organizations/{$registration->organization_id}/registrations/{$registration->getKey()}/{$person->getKey()}/".bin2hex(random_bytes(8)).'.'.self::EXTENSIONS[$mime];
 
-        Storage::disk(self::DISK)->put($path, (string) file_get_contents($file->getRealPath()), ['ContentType' => $mime]);
+        Storage::disk(self::DISK)->put($path, $content, ['ContentType' => $mime]);
 
         return RegistrationDocument::query()->create([
             'organization_id' => $registration->organization_id,
