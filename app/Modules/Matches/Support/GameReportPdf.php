@@ -82,7 +82,7 @@ final class GameReportPdf
 
     private static function start(Game $game, string $title): PdfDocument
     {
-        $organization = CurrentOrganization::get()?->name ?? config('app.name');
+        $organization = CurrentOrganization::get()->name ?? config('app.name');
         $pdf = new PdfDocument($title.' — '.$game->homeEntry->team->name.' x '.$game->awayEntry->team->name, $organization.' · Documento interno, não divulgar · gerado em '.now()->format('d/m/Y H:i'));
 
         $pdf->rect(0, 0, PdfDocument::WIDTH, 112, self::DARK);
@@ -137,7 +137,7 @@ final class GameReportPdf
 
         $fields = [
             ['Data e hora', $game->scheduled_at === null ? 'Não definida' : $game->scheduled_at->format('d/m/Y').' às '.$game->scheduled_at->format('H:i')],
-            ['Local', $game->venue?->name ?? 'Não definido'],
+            ['Local', $game->venue->name ?? 'Não definido'],
             ['Jogo', '#'.($game->number ?? '—').($game->round !== null ? ' · rodada '.$game->round : '')],
         ];
 
@@ -250,7 +250,7 @@ final class GameReportPdf
                 $detail = (bool) ($event->payload['scored'] ?? false) ? 'convertida' : 'perdida';
             }
             $rows[] = [
-                $event->period !== null ? $event->period.'º' : '—',
+                $event->period.'º',
                 ['text' => $event->type->label(), 'chip' => self::eventColor($event->type)],
                 $event->entry === null ? 'Partida' : $event->entry->team->name,
                 trim(($event->person ? self::person($event->person) : '').($event->secondaryPerson ? ' / '.self::person($event->secondaryPerson) : '')) ?: '—',
