@@ -35,6 +35,40 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 
 - **Modo operador com layout editável** (pedido de 14/10): blocos arrastáveis e redimensionáveis numa grade com encaixe, mostrar/ocultar blocos, modelos prontos e layout salvo por operador (`docs/06-guia-obs.md`).
 
+## Backlog de sugestões alinhadas (26/10)
+Ideias levantadas e combinadas para deixar a plataforma mais completa. Ordem sugerida de início: **calendário com conflitos (feito), documentos com validade, aviso por WhatsApp e segurança**. Marque aqui o que for entregue.
+
+**Operação do campeonato**
+- [x] Calendário/agenda dos jogos com arrastar e soltar e aviso de conflito (mesmo estádio, equipe sem descanso). Entregue em `panel.stages.schedule`; falta tornar a duração do jogo e o descanso mínimo configuráveis por edição.
+- [x] Sorteio e chaves arrastando equipes (grupos e mata-mata, inclusive sorteio externo) e separação de equipes da mesma cidade. Falta: confrontos livres de pontos corridos por arrasto (hoje: importar tabela pronta) e restrições além da cidade (clube, patrocinador).
+- [ ] Mata-mata com confrontos definidos à mão em fases já existentes (hoje o sorteio cobre a criação da chave).
+- [ ] Agenda e escala de árbitros e mesários, com aviso por e-mail ou WhatsApp.
+- [ ] Súmula em PDF oficial, com campos de assinatura de árbitro e capitães, pronta para imprimir ou arquivar.
+
+**Equipes e atletas**
+- [x] Ficha da equipe (dados, campanha, inscrições, elenco, jogos), com botão de edição.
+- [ ] Perfil do atleta com histórico de campeonatos, gols e cartões em todas as edições (exige consentimento e proteção de menores, LGPD).
+- [ ] Transferências e empréstimos entre equipes, com histórico.
+- [ ] Carteirinha digital no celular do atleta, com QR de verificação e validade.
+- [ ] Documentos com validade (por exemplo, atestado médico): aviso antes de vencer e bloqueio de escalação.
+
+**Público e comunicação**
+- [ ] Aviso por WhatsApp (lembrete de jogo, mudança de horário e resultado), além do e-mail e do push atuais.
+- [ ] Palpites e bolão do campeonato.
+- [ ] Notícias e galeria de fotos por competição no portal.
+- [ ] PWA para o público, com instalação e avisos de jogo (hoje só o mesário é instalável).
+
+**Transmissão**
+- [ ] Marcar lances na súmula (minuto) e gerar lista de melhores momentos.
+- [ ] Controle do operador pelo celular ou tablet, com atalhos grandes para uso ao vivo.
+- [ ] Relatório de exibição de patrocinadores (vezes e tempo no ar), útil para vender cotas.
+
+**Plataforma e negócio**
+- [ ] Cobrança e planos (mensalidade por organização, taxa de inscrição das equipes por Pix, conciliação). Hoje fora do MVP.
+- [ ] Segurança que falta: autenticação em dois fatores para administradores, varredura de arquivos enviados, registro de quem leu documentos pessoais, teste de intrusão e CSP completo.
+- [ ] Backup e restauração com teste periódico e aviso de falha.
+- [ ] Relatórios para patrocinadores e prefeitura (público, jogos, participação) em PDF.
+
 ## Pendências conhecidas (por ordem sugerida)
 - **Landing page do produto e status page pública**: mapeadas em `docs/14-landing-page-e-status-page.md` (hosts, seções, modelo de dados, entregas); falta o ADR e o código. Ordem sugerida: status page primeiro.
 - Modo operador: **layout salvo no servidor por usuário e por canal**, com cache local para resposta imediata.
