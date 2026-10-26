@@ -20,9 +20,11 @@ it('baixa a escalação pré-partida em PDF para o operador', function () {
         ->assertHeader('Content-Type', 'application/pdf')
         ->assertHeader('Content-Disposition', 'attachment; filename="escalacao-'.$game->id.'.pdf"');
     expect($response->getContent())->toStartWith('%PDF-1.4')
-        ->and($response->getContent())->toContain('REL')
-        ->and($response->getContent())->toContain('EQUIPE:')
-        ->and($response->getContent())->toContain('Titulares:');
+        ->and($response->getContent())->toContain('Escala')
+        ->and($response->getContent())->toContain('TITULARES \(11\)')
+        ->and($response->getContent())->toContain('BANCO \(3\)')
+        ->and($response->getContent())->toContain('/BaseFont /Helvetica-Bold')
+        ->and($response->getContent())->toContain("P\xE1gina 1 de 1");
 });
 
 it('inclui placar, escalações e eventos efetivos no relatório final', function () {
@@ -33,10 +35,11 @@ it('inclui placar, escalações e eventos efetivos no relatório final', functio
     $response = $this->actingAs($user)->get(route('panel.games.reports.final', $game));
 
     $response->assertOk()->assertHeader('Content-Type', 'application/pdf');
-    expect($response->getContent())->toContain('REL')
-        ->and($response->getContent())->toContain('Placar final:')
-        ->and($response->getContent())->toContain('LINHA DO TEMPO')
-        ->and($response->getContent())->toContain('Gol');
+    expect($response->getContent())->toContain('Relat')
+        ->and($response->getContent())->toContain('Resumo da partida')
+        ->and($response->getContent())->toContain('Linha do tempo')
+        ->and($response->getContent())->toContain('TITULARES \(11\)')
+        ->and($response->getContent())->toContain('(Gol)');
 });
 
 it('permite visualizar a escalação no navegador sem forçar o download', function () {
@@ -55,9 +58,10 @@ it('oferece o recorte de atividades sem dados de escalação', function () {
     $response = $this->actingAs(panelUser(Role::Operator))->get(route('panel.games.reports.final', $game).'?tipo=activities');
 
     $response->assertOk();
-    expect($response->getContent())->toContain('RESUMO DA PARTIDA')
-        ->and($response->getContent())->toContain('LINHA DO TEMPO')
-        ->and($response->getContent())->toContain('ATIVIDADES');
+    expect($response->getContent())->toContain('Resumo da partida')
+        ->and($response->getContent())->toContain('Linha do tempo')
+        ->and($response->getContent())->toContain('atividades')
+        ->and($response->getContent())->not->toContain('TITULARES');
 });
 
 it('permite consultar o relatório a um membro do painel', function () {

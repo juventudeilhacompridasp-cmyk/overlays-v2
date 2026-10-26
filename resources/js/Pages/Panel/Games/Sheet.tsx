@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Field, Input, LinkButton, Logo, PageHeader, Select } from '@/Components/Panel/ui';
+import { ActionMenu, Badge, Button, Card, Field, Input, LinkButton, Logo, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan, useFeature } from '@/lib/can';
 import { GameClock, formatClock, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
@@ -767,24 +767,19 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
                 actions={
                     <div className="flex flex-wrap gap-2">
                         {canReports && (
-                            <>
-                                <LinkButton href={route('panel.games.reports.lineup', game.id)} variant="secondary">
-                                    PDF da escalação
-                                </LinkButton>
-                                <a href={`${route('panel.games.reports.lineup', game.id)}?visualizar=1`} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center rounded-md px-3 py-2 text-sm font-medium text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50 sm:min-h-0">
-                                    Visualizar escalação
-                                </a>
-                                {!game.open && (
-                                    <>
-                                        <LinkButton href={`${route('panel.games.reports.final', game.id)}?tipo=activities`} variant="secondary">
-                                            PDF de atividades
-                                        </LinkButton>
-                                        <LinkButton href={route('panel.games.reports.final', game.id)} variant="secondary">
-                                            PDF completo
-                                        </LinkButton>
-                                    </>
-                                )}
-                            </>
+                            <ActionMenu
+                                label="Relatórios em PDF"
+                                items={[
+                                    { label: 'Escalação (baixar PDF)', href: route('panel.games.reports.lineup', game.id), hint: 'Titulares, banco e comissão das duas equipes' },
+                                    { label: 'Escalação (ver no navegador)', href: `${route('panel.games.reports.lineup', game.id)}?visualizar=1`, newTab: true },
+                                    ...(!game.open
+                                        ? [
+                                              { label: 'Atividades da partida', href: `${route('panel.games.reports.final', game.id)}?tipo=activities`, hint: 'Resumo, placar por período e linha do tempo' },
+                                              { label: 'Relatório completo', href: route('panel.games.reports.final', game.id), hint: 'Placar, escalações, eventos e assinaturas' },
+                                          ]
+                                        : []),
+                                ]}
+                            />
                         )}
                         {canImport && (
                             <LinkButton href={route('panel.games.uploads', game.id)} variant="secondary">

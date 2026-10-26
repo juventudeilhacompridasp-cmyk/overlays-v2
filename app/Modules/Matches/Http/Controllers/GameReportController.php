@@ -5,7 +5,6 @@ namespace App\Modules\Matches\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Support\GameReportPdf;
-use App\Modules\Matches\Support\PdfReport;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -29,10 +28,9 @@ final class GameReportController extends Controller
         return $this->download($game, $label, GameReportPdf::finalReport($game, $type), $request->boolean('visualizar'));
     }
 
-    /** @param list<string> $lines */
-    private function download(Game $game, string $kind, array $lines, bool $inline = false): Response
+    private function download(Game $game, string $kind, string $pdf, bool $inline = false): Response
     {
-        return response(PdfReport::make($lines), 200, [
+        return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => ($inline ? 'inline' : 'attachment').'; filename="'.$kind.'-'.$game->getKey().'.pdf"',
             'Cache-Control' => 'private, no-store',

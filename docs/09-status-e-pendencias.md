@@ -24,6 +24,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 - Painel de overlays com estúdio de pré-visualização: quatro telas organizadas em cards, URL real renderizada em 1920 x 1080,
   fundos de conferência, status operacional e ações para copiar/abrir; só uma prévia ao vivo por canal para preservar recursos.
 - Relatórios PDF de partidas: downloads privados de escalação pré-partida, atividades (resumo, períodos e linha do tempo) ou relatório completo com placar, sets, escalações e eventos efetivos, inspirados no relatório do Overlay Studio anterior.
+- **PDFs refeitos (26/10):** novo motor nativo `PdfDocument` (cores, cartões, tabelas, acentos, rodapé com páginas) e relatórios da partida redesenhados (cabeçalho, cartão do jogo, resumo em cartões, escalações lado a lado, linha do tempo com etiquetas coloridas, observações e assinaturas). Falta aplicar o mesmo padrão a outros PDFs futuros (súmula oficial, patrocinadores/prefeitura).
 - **PDF de escalação revisado:** linhas longas de atletas agora quebram e paginam sem corte; o painel também oferece visualização no navegador (`visualizar=1`) além do download privado.
 
 ## Em andamento

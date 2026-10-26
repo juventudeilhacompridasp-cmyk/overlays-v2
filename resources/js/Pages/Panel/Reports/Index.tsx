@@ -1,5 +1,5 @@
 import DataTable from '@/Components/DataTable';
-import { Card, Empty, LinkButton, PageHeader, Select } from '@/Components/Panel/ui';
+import { Card, Empty, Field, FilterBar, PageHeader, Select, StatCard } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, router } from '@inertiajs/react';
 
@@ -48,45 +48,56 @@ function ReportTable({ report, limit, caption }: { report: Report; limit: number
     );
 }
 
+function CsvLink({ href, label }: { href: string; label: string }) {
+    return (
+        <a href={href} className="inline-flex min-h-11 items-center justify-center rounded-md px-3 py-2 text-sm font-medium text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50 sm:min-h-0">
+            {label}
+        </a>
+    );
+}
+
 export default function Index({ seasons, season_id, limit, pending, rosters }: Props) {
     return (
         <PanelLayout>
             <Head title="Relatórios" />
-            <PageHeader title="Relatórios" subtitle="Elencos das inscrições confirmadas de uma edição. Nenhum relatório traz o CPF." />
+            <PageHeader title="Relatórios" subtitle="Pendências de cadastro e elencos aprovados de uma edição, na tela e em CSV. Nenhum relatório traz o CPF." />
             {seasons.length === 0 || !season_id ? (
                 <Empty title="Nenhuma edição cadastrada." />
             ) : (
                 <div className="space-y-6">
-                    <div className="w-80">
-                        <Select value={season_id} onChange={(e) => router.get(route('panel.reports.index'), { season: e.target.value }, { preserveState: true })}>
-                            {seasons.map((season) => (
-                                <option key={season.id} value={season.id}>
-                                    {season.name}
-                                </option>
-                            ))}
-                        </Select>
+                    <FilterBar label="Edição do relatório">
+                        <Field label="Edição" htmlFor="report-season">
+                            <Select id="report-season" value={season_id} onChange={(e) => router.get(route('panel.reports.index'), { season: e.target.value }, { preserveState: true })}>
+                                {seasons.map((season) => (
+                                    <option key={season.id} value={season.id}>
+                                        {season.name}
+                                    </option>
+                                ))}
+                            </Select>
+                        </Field>
+                    </FilterBar>
+
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                        <StatCard label="Pendências de cadastro" value={pending.total} tone={pending.total > 0 ? 'amber' : 'green'} hint={pending.total > 0 ? 'Sem nascimento, CPF ou foto' : 'Cadastros em dia'} />
+                        <StatCard label="Integrantes em elencos aprovados" value={rosters.total} tone="blue" />
                     </div>
+
                     <Card
                         title={`Pendências de cadastro (${pending.total})`}
-                        actions={
-                            <a href={route('panel.reports.csv', [season_id, 'pendencias'])} className="text-sm text-emerald-700 hover:underline">
-                                Baixar CSV
-                            </a>
-                        }
+                        actions={<CsvLink href={route('panel.reports.csv', [season_id, 'pendencias'])} label="Baixar CSV" />}
                     >
                         <p className="mb-3 text-sm text-gray-600">Integrantes ativos sem data de nascimento, CPF ou foto.</p>
                         <ReportTable report={pending} limit={limit} caption="Pendências de cadastro" />
                     </Card>
                     <Card
                         title={`Elencos aprovados (${rosters.total})`}
-                        actions={
-                            <a href={route('panel.reports.csv', [season_id, 'elencos'])} className="text-sm text-emerald-700 hover:underline">
-                                Baixar CSV
-                            </a>
-                        }
+                        actions={<CsvLink href={route('panel.reports.csv', [season_id, 'elencos'])} label="Baixar CSV" />}
                     >
                         <ReportTable report={rosters} limit={limit} caption="Elencos aprovados" />
                     </Card>
+                    <p className="text-sm text-gray-600">
+                        Relatórios em PDF de cada partida (escalação, atividades e completo) ficam no menu <b>Relatórios em PDF</b> da súmula do jogo.
+                    </p>
                 </div>
             )}
         </PanelLayout>
