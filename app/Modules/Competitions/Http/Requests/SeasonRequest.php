@@ -56,6 +56,8 @@ class SeasonRequest extends FormRequest
             'rules.substitutions.max_windows' => ['required', 'integer', 'between:0,99'],
             'rules.substitutions.allow_reentry' => ['sometimes', 'boolean'],
             'rules.lineup.manager_deadline_minutes' => ['sometimes', 'integer', 'between:0,1440'],
+            'rules.schedule.venue_minutes' => ['sometimes', 'integer', 'between:0,1440'],
+            'rules.schedule.team_rest_minutes' => ['sometimes', 'integer', 'between:0,1440'],
             'rules.fouls.max_player' => ['sometimes', 'nullable', 'integer', 'between:1,20'],
             'rules.fouls.max_disqualifying' => ['sometimes', 'integer', 'between:1,5'],
             'rules.points.walkover_loss' => ['sometimes', 'nullable', 'integer', 'between:0,10'],

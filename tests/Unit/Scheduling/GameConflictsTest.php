@@ -62,3 +62,15 @@ it('handles games out of order and none', function () {
 
     expect(array_keys($found))->toEqualCanonicalizing(['late', 'early']);
 });
+
+it('uses the configured windows instead of the sport defaults', function () {
+    $found = GameConflicts::find([
+        conflictGame('g1', '2026-05-10 16:00', 'v1', ['a']),
+        conflictGame('g2', '2026-05-10 17:00', 'v1', ['b']),
+        conflictGame('g3', '2026-05-10 17:30', 'v2', ['a']),
+    ], null, 45, 90);
+
+    expect($found['g1'][0]['kind'])->toBe('venue')
+        ->and(collect($found['g2'])->pluck('kind')->all())->toBe(['venue', 'team'])
+        ->and($found['g3'][0]['kind'])->toBe('team');
+});
