@@ -32,6 +32,12 @@ export default function Guest({
                 {subtitle && <p className="mt-1 text-sm text-gray-600">{subtitle}</p>}
                 <div className={title ? 'mt-6' : ''}>{children}</div>
             </div>
+            <nav className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm text-gray-600" aria-label="Links públicos">
+                <Link href={route('portal.home')} className="hover:text-emerald-700 hover:underline">Voltar ao portal</Link>
+                <a href={route('marketing.landing')} className="hover:text-emerald-700 hover:underline">Conheça a plataforma</a>
+                <Link href={route('portal.terms')} className="hover:text-emerald-700 hover:underline">Termos</Link>
+                <Link href={route('portal.privacy')} className="hover:text-emerald-700 hover:underline">Privacidade</Link>
+            </nav>
         </div>
     );
 }

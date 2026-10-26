@@ -423,6 +423,7 @@ function ContactForm({ interests, privacy }: { interests: Content['interests']; 
 }
 
 export default function Landing({ content, brand, analytics, links, seo }: Props) {
+    const [menuOpen, setMenuOpen] = useState(false);
     const nav = [
         { href: '#recursos', label: 'Recursos' },
         { href: '#galeria', label: 'Em ação' },
@@ -455,11 +456,23 @@ export default function Landing({ content, brand, analytics, links, seo }: Props
                         <a href={links.login} className="text-white/80 hover:text-white">
                             Entrar
                         </a>
+                        <button type="button" className="rounded-md border border-white/25 px-3 py-1.5 text-white hover:bg-white/10 md:hidden" aria-expanded={menuOpen} aria-controls="landing-mobile-menu" onClick={() => setMenuOpen((open) => !open)}>
+                            {menuOpen ? 'Fechar' : 'Menu'}
+                        </button>
                         <a href="#contato" data-cta="menu" className="rounded-md bg-emerald-500 px-3 py-1.5 text-neutral-950 hover:bg-emerald-400">
                             <span className="hidden sm:inline">Falar com a equipe</span><span className="sm:hidden">Contato</span>
                         </a>
                     </div>
                 </div>
+                {menuOpen && (
+                    <nav id="landing-mobile-menu" className="border-t border-white/10 px-4 py-3 md:hidden" aria-label="Menu da página">
+                        <div className="mx-auto grid max-w-6xl gap-1 text-sm font-medium text-white/85">
+                            {nav.map((item) => <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 hover:bg-white/10">{item.label}</a>)}
+                            <a href={links.status} className="rounded-md px-3 py-2 hover:bg-white/10">Status da plataforma</a>
+                            <a href={links.privacy} className="rounded-md px-3 py-2 hover:bg-white/10">Privacidade</a>
+                        </div>
+                    </nav>
+                )}
             </header>
 
             <main id="conteudo">

@@ -1,7 +1,7 @@
 import ThemeToggle from '@/Components/ThemeToggle';
 import { safeJsonLd } from '@/lib/jsonLd';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useState } from 'react';
 
 export interface Theme {
     name: string;
@@ -45,6 +45,15 @@ export function SeoHead({ seo }: { seo: Seo }) {
 
 export default function PortalLayout({ theme, seo, children }: PropsWithChildren<{ theme: Theme; seo: Seo }>) {
     const { auth } = usePage().props;
+    const [menuOpen, setMenuOpen] = useState(false);
+    const home = route('portal.home');
+    const publicLinks = [
+        { href: home, label: 'Início' },
+        { href: `${home}#ao-vivo`, label: 'Ao vivo' },
+        { href: `${home}#proximos`, label: 'Próximos jogos' },
+        { href: route('portal.search'), label: 'Buscar' },
+        { href: route('portal.feed'), label: 'Resultados (Atom)' },
+    ];
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900" style={{ ['--brand' as string]: theme.primary }}>
@@ -55,10 +64,10 @@ export default function PortalLayout({ theme, seo, children }: PropsWithChildren
                         {theme.logo_url && <img src={theme.logo_url} alt="" className="h-9 w-9 rounded bg-[#ffffff] object-contain p-0.5" />}
                         {theme.name}
                     </Link>
-                    <nav className="flex items-center gap-4 text-sm font-medium">
-                        <Link href={route('portal.home')} className="hover:underline">
-                            Competições
-                        </Link>
+                    <nav className="hidden items-center gap-4 text-sm font-medium md:flex" aria-label="Navegação pública">
+                        <Link href={home} className="hover:underline">Competições</Link>
+                        <Link href={route('portal.search')} className="hover:underline">Buscar</Link>
+                        <a href={route('marketing.landing')} className="hover:underline">Conheça a plataforma</a>
                         <form method="get" action={route('portal.search')} role="search" className="hidden sm:block">
                             <input type="search" name="q" maxLength={60} placeholder="Buscar" aria-label="Buscar competição ou equipe" className="w-32 rounded bg-white/20 px-2 py-1 text-sm text-white placeholder-white/70 focus:bg-white/30 focus:outline-none" />
                         </form>
@@ -73,7 +82,24 @@ export default function PortalLayout({ theme, seo, children }: PropsWithChildren
                             </Link>
                         )}
                     </nav>
+                    <button type="button" className="rounded-md bg-white/20 px-3 py-2 text-sm font-semibold md:hidden" aria-expanded={menuOpen} aria-controls="portal-public-menu" onClick={() => setMenuOpen((open) => !open)}>
+                        {menuOpen ? 'Fechar' : 'Menu'}
+                    </button>
                 </div>
+                {menuOpen && (
+                    <nav id="portal-public-menu" className="border-t border-white/20 px-4 py-3 md:hidden" aria-label="Menu público">
+                        <div className="mx-auto grid max-w-5xl gap-1 text-sm font-medium">
+                            {publicLinks.map((item) => <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 hover:bg-white/15">{item.label}</a>)}
+                            <a href={route('marketing.landing')} className="rounded-md px-3 py-2 hover:bg-white/15">Conheça a plataforma</a>
+                            {auth.user ? <Link href={route('panel.dashboard')} onClick={() => setMenuOpen(false)} className="rounded-md bg-white/20 px-3 py-2">Abrir painel</Link> : <Link href={route('login')} onClick={() => setMenuOpen(false)} className="rounded-md bg-white/20 px-3 py-2">Entrar no painel</Link>}
+                            <div className="flex items-center gap-2 px-3 py-2"><ThemeToggle onDark /> <span>Alternar tema</span></div>
+                            <form method="get" action={route('portal.search')} role="search" className="mt-2 flex gap-2">
+                                <input type="search" name="q" maxLength={60} placeholder="Buscar competição ou equipe" aria-label="Buscar competição ou equipe" className="min-w-0 flex-1 rounded bg-white px-3 py-2 text-gray-900" />
+                                <button type="submit" className="rounded bg-white/20 px-3 py-2">Buscar</button>
+                            </form>
+                        </div>
+                    </nav>
+                )}
                 {theme.tagline && <div className="mx-auto max-w-5xl px-4 pb-4 text-sm text-white/90">{theme.tagline}</div>}
             </header>
             <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
