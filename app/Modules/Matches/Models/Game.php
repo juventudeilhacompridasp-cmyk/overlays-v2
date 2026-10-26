@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property GameStatus $status
  * @property Carbon|null $scheduled_at
+ * @property string|null $youtube_live_url
  * @property Carbon|null $started_at
  * @property Carbon|null $finished_at
  * @property list<array{home: int, away: int, winner: string|null, finished: bool}>|null $sets

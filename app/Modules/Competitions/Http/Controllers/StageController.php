@@ -97,6 +97,7 @@ class StageController extends Controller
                 'home_penalties' => $game->home_penalties,
                 'away_penalties' => $game->away_penalties,
                 'scheduled_at' => $game->scheduled_at?->format('Y-m-d\TH:i'),
+                'youtube_live_url' => $game->youtube_live_url,
                 'venue' => $game->venue?->only(['id', 'name']),
             ])->values(),
             'venues' => Venue::query()->orderBy('name')->get(['id', 'name']),

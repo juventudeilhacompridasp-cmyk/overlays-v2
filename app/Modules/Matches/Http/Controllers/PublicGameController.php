@@ -5,6 +5,7 @@ namespace App\Modules\Matches\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Support\PublicGameSnapshot;
+use App\Modules\Matches\Support\YouTubeLiveUrl;
 use App\Modules\Portal\Push\PushConfig;
 use App\Modules\Portal\Support\GameInsights;
 use App\Modules\Portal\Support\GameShareImage;
@@ -29,6 +30,7 @@ class PublicGameController extends Controller
             'insights' => fn () => $insights->for($game),
             'json_ld' => JsonLd::game($game),
             'share_image' => route('public.games.image', $game->getKey()),
+            'youtube_embed_url' => YouTubeLiveUrl::embed($game->youtube_live_url),
             'push_key' => PushConfig::publicKeyFor(),
             'realtime' => [
                 'key' => $realtime['key'],

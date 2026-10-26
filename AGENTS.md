@@ -5,6 +5,7 @@ Regra adicional: os avisos de conflito da agenda usam `RuleSet::venueConflictMin
 Regra adicional: páginas públicas e telas de autenticação devem oferecer navegação acessível para visitantes, com busca, portal, plataforma e documentos legais; o menu mobile não pode depender de hover.
 Regra adicional: restrições de sorteio por cidade, clube e patrocinador são avisos heurísticos; os vínculos de clube/patrocinador pertencem à inscrição na edição e nunca vão para o estado público.
 Regra adicional: escalações na página pública do jogo só aparecem quando `settings.portal.game_lineup` está ligado; exibem apenas nome público, camisa e capitão, nunca foto, nascimento, documento ou outros dados pessoais.
+Regra adicional: transmissões vinculadas a jogos aceitam somente links do YouTube; o portal deve gerar o `youtube.com/embed` a partir do ID validado, nunca incorporar uma URL arbitrária.
 
 ## Contexto
 **Status e pendências atuais: `docs/09-status-e-pendencias.md` (leia primeiro e atualize a cada PR).**
