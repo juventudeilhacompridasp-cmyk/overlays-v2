@@ -37,6 +37,6 @@ Busca textual primeiro; resposta com IA (RAG) depois, opcional. Conteúdo versio
 2. Perfis e permissões, partes 1 e 2 (catálogo, perfis e tela de perfis; feitas) — **base para ajuda, API e leitura de súmulas por perfil**.
 3. Leitura de súmulas, parte 2 (leitor estruturado + visão + configuração) e parte 3 (conferência).
 4. Portal rico: dados novos (assistências, mídia, notícias) e as telas, uma tela por PR.
-5. Central de ajuda: busca e artigos (feita); ajuda contextual, "isso ajudou?" e notas da organização (a fazer).
-6. Documentação interna das APIs: gerador, tela e API pública (feitos); rotas internas em volume (a fazer).
-7. Perfis, partes 2–3 (tela de perfis e exceções por usuário).
+5. (feito) Central de ajuda: busca, artigos, ajuda contextual, "isso ajudou?", notas da organização e resposta com IA.
+6. (feito) Documentação interna das APIs: gerador, tela, API pública, rotas internas, plataforma e site, Postman e changelog.
+7. (feito) Perfis, partes 2–3 (tela de perfis e exceções por usuário). Falta a parte 4 (escopo por competição/edição).
