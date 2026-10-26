@@ -9,6 +9,7 @@ use App\Modules\Competitions\Models\Group;
 use App\Modules\Competitions\Models\Stage;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Scheduling\KnockoutBracket;
+use App\Modules\Matches\Scheduling\KnockoutTie;
 use App\Modules\Matches\Scheduling\RoundRobin;
 use App\Modules\Matches\Scheduling\SnakeDistributor;
 use Illuminate\Support\Facades\DB;
@@ -84,15 +85,31 @@ final class GenerateStageFixtures
             throw new InvalidArgumentException('Cada grupo precisa de pelo menos duas equipes confirmadas.');
         }
 
-        return DB::transaction(function () use ($stage, $entryIds, $doubleRound, $groups): int {
+        $named = [];
+        foreach (SnakeDistributor::distribute($entryIds, $groups) as $index => $members) {
+            $named[] = ['name' => 'Grupo '.$this->groupLabel($index), 'entries' => $members];
+        }
+
+        return $this->persistGroups($stage, $named, $doubleRound);
+    }
+
+    /**
+     * Cria os grupos informados (nome + equipes) e a tabela todos contra todos de cada um, numerada rodada a rodada, grupo
+     * a grupo. Também é o caminho do sorteio montado à mão (`DrawStage`).
+     *
+     * @param  list<array{name: string, entries: list<string>}>  $groups
+     */
+    public function persistGroups(Stage $stage, array $groups, bool $doubleRound): int
+    {
+        return DB::transaction(function () use ($stage, $groups, $doubleRound): int {
             $number = 1;
             $roundsByGroup = [];
 
-            foreach (SnakeDistributor::distribute($entryIds, $groups) as $index => $members) {
+            foreach ($groups as $index => ['name' => $name, 'entries' => $members]) {
                 $group = Group::query()->create([
                     'organization_id' => $stage->organization_id,
                     'stage_id' => $stage->getKey(),
-                    'name' => 'Grupo '.$this->groupLabel($index),
+                    'name' => $name,
                     'sequence' => $index + 1,
                 ]);
                 $group->entries()->attach($members);
@@ -131,7 +148,20 @@ final class GenerateStageFixtures
             throw new InvalidArgumentException('Confirme pelo menos duas equipes na divisão para gerar o mata-mata.');
         }
 
-        $ties = KnockoutBracket::build($entryIds);
+        return $this->persistKnockout($stage, KnockoutBracket::build($entryIds), $legs);
+    }
+
+    /**
+     * Cria os jogos de um chaveamento já montado (`KnockoutBracket::build` ou `fromPairs`): um jogo (ou ida e volta) por
+     * confronto, encadeados pelo `tie_id` até a final.
+     *
+     * @param  list<KnockoutTie>  $ties
+     */
+    public function persistKnockout(Stage $stage, array $ties, int $legs): int
+    {
+        if (! in_array($legs, [1, 2], true)) {
+            throw new InvalidArgumentException('O confronto pode ter um jogo ou ida e volta.');
+        }
 
         return DB::transaction(function () use ($stage, $ties, $legs): int {
             $tieIds = [];

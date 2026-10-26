@@ -44,7 +44,7 @@ export default function Index({ teams, filters, city_options }: { teams: Paginat
                         cell: (team) => (
                             <div className="flex items-center gap-3">
                                 <Logo src={team.logo_url} name={team.name} color={team.primary_color} />
-                                <Link href={route('panel.teams.edit', team.id)} className="font-medium text-gray-900 hover:text-emerald-700">
+                                <Link href={route('panel.teams.show', team.id)} className="font-medium text-gray-900 hover:text-emerald-700">
                                     {team.name}
                                 </Link>
                                 {team.short_name && <Badge>{team.short_name}</Badge>}
@@ -73,15 +73,21 @@ export default function Index({ teams, filters, city_options }: { teams: Paginat
                         header: 'Ações',
                         align: 'right',
                         mobileLabel: false,
-                        cell: (team) =>
-                            canManage ? (
-                                <div className="flex flex-wrap justify-end gap-2">
-                                    <LinkButton href={route('panel.teams.edit', team.id)} variant="secondary" small>
-                                        Editar
-                                    </LinkButton>
-                                    <DeleteButton href={route('panel.teams.destroy', team.id)} message={`Excluir a equipe "${team.name}"?`} />
-                                </div>
-                            ) : null,
+                        cell: (team) => (
+                            <div className="flex flex-wrap justify-end gap-2">
+                                <LinkButton href={route('panel.teams.show', team.id)} variant="secondary" small>
+                                    Abrir
+                                </LinkButton>
+                                {canManage && (
+                                    <>
+                                        <LinkButton href={route('panel.teams.edit', team.id)} variant="secondary" small>
+                                            Editar
+                                        </LinkButton>
+                                        <DeleteButton href={route('panel.teams.destroy', team.id)} message={`Excluir a equipe "${team.name}"?`} />
+                                    </>
+                                )}
+                            </div>
+                        ),
                     },
                 ]}
             />

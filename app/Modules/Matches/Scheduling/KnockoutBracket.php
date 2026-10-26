@@ -32,26 +32,54 @@ final class KnockoutBracket
         $order = self::seedOrder($size);
         $seed = fn (int $number): ?string => $number <= $count ? $entries[$number - 1] : null;
 
-        $rounds = (int) log($size, 2);
+        $pairs = [];
+        for ($position = 0; $position < $size / 2; $position++) {
+            $pairs[] = [$seed($order[$position * 2]), $seed($order[$position * 2 + 1])];
+        }
+
+        return self::fromPairs($pairs);
+    }
+
+    /**
+     * Chaveamento a partir dos confrontos da 1ª rodada já definidos (sorteio externo ou montado à mão). Cada item é um
+     * par [lado a, lado b]; um lado vazio é folga (bye) e a equipe do outro lado já aparece na 2ª rodada. O número de
+     * confrontos precisa ser potência de 2 e nenhum confronto pode ficar sem equipe.
+     *
+     * @param  list<array{0: ?string, 1: ?string}>  $pairs
+     * @return list<KnockoutTie> ordenados por rodada e posição
+     */
+    public static function fromPairs(array $pairs): array
+    {
+        $count = count($pairs);
+
+        if ($count < 1 || ($count & ($count - 1)) !== 0) {
+            throw new InvalidArgumentException('O número de confrontos da 1ª rodada precisa ser 1, 2, 4, 8...');
+        }
+
+        $rounds = (int) log($count * 2, 2);
         /** @var array<int, array<int, array{a: ?string, b: ?string, bye: bool}>> $slots */
         $slots = [];
 
-        for ($position = 0; $position < $size / 2; $position++) {
-            $a = $seed($order[$position * 2]);
-            $b = $seed($order[$position * 2 + 1]);
+        foreach ($pairs as $position => [$a, $b]) {
+            if ($a === null && $b === null) {
+                throw new InvalidArgumentException('Há um confronto sem nenhuma equipe.');
+            }
+
             $slots[1][$position] = ['a' => $a, 'b' => $b, 'bye' => $a === null || $b === null];
         }
 
         for ($round = 2; $round <= $rounds; $round++) {
-            for ($position = 0; $position < $size / (2 ** $round); $position++) {
+            for ($position = 0; $position < $count / (2 ** ($round - 1)); $position++) {
                 $slots[$round][$position] = ['a' => null, 'b' => null, 'bye' => false];
             }
         }
 
         // Quem folgou na 1ª rodada já ocupa seu lugar na 2ª.
-        foreach ($slots[1] as $position => $tie) {
-            if ($tie['bye']) {
-                $slots[2][intdiv($position, 2)][$position % 2 === 0 ? 'a' : 'b'] = $tie['a'] ?? $tie['b'];
+        if ($rounds >= 2) {
+            foreach ($slots[1] as $position => $tie) {
+                if ($tie['bye']) {
+                    $slots[2][intdiv($position, 2)][$position % 2 === 0 ? 'a' : 'b'] = $tie['a'] ?? $tie['b'];
+                }
             }
         }
 

@@ -1,6 +1,6 @@
 import DataTable from '@/Components/DataTable';
 import Modal from '@/Components/Modal';
-import { Badge, Button, Card, Empty, Field, Input, Logo, PageHeader, Select } from '@/Components/Panel/ui';
+import { Badge, Button, Card, Empty, Field, Input, LinkButton, Logo, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Option } from '@/types/panel';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
@@ -113,9 +113,16 @@ function GenerateCard({ stage, confirmedEntries }: { stage: Props['stage']; conf
                     </Field>
                     )}
                 </div>
-                <Button type="submit" disabled={processing || confirmedEntries < 2}>
-                    {stage.type === 'knockout' ? 'Gerar chaveamento' : 'Gerar tabela'}
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                    <Button type="submit" disabled={processing || confirmedEntries < 2}>
+                        {stage.type === 'knockout' ? 'Gerar chaveamento' : 'Gerar tabela'}
+                    </Button>
+                    {stage.type !== 'league' && (
+                        <LinkButton href={route('panel.stages.draw', stage.id)} variant="secondary">
+                            {stage.type === 'knockout' ? 'Sortear / montar a chave arrastando' : 'Sortear / montar os grupos arrastando'}
+                        </LinkButton>
+                    )}
+                </div>
                 {confirmedEntries < 2 && <p className="text-sm text-amber-700">Confirme pelo menos duas equipes na divisão para gerar a tabela.</p>}
             </form>
         </Card>

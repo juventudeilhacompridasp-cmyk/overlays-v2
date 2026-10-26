@@ -127,3 +127,53 @@ export function groupOpen(group: NavGroup, saved: Partial<Record<NavGroupId, boo
 export function activeGroupOf(menu: NavMenu, isActive: (match: string) => boolean): NavGroupId | null {
     return menu.groups.find((group) => group.items.some((entry) => isActive(entry.match)))?.id ?? null;
 }
+
+/** Frase curta de cada destino, para os cartões de acesso rápido do início (o que dá para fazer ali). */
+export const QUICK_HINTS: Record<string, string> = {
+    'panel.mesario': 'Jogos de hoje e súmula, no celular',
+    'panel.competitions.index': 'Campeonatos, edições, divisões e tabelas',
+    'panel.registrations.index': 'Pedidos de inscrição das equipes',
+    'panel.teams.index': 'Clubes, escudos e elencos',
+    'panel.people.index': 'Jogadores e comissão técnica',
+    'panel.venues.index': 'Locais dos jogos',
+    'panel.reports.index': 'Pendências e elencos por edição',
+    'panel.market.index': 'Moderar jogadores livres',
+    'panel.broadcast.index': 'Overlays do OBS ao vivo',
+    'panel.arts.index': 'Artes dos jogos para redes sociais',
+    'panel.widgets.index': 'Placar e tabela para outros sites',
+    'panel.users.index': 'Quem acessa e com qual papel',
+    'panel.profiles.index': 'Permissões por perfil',
+    'panel.access-audit.index': 'Histórico de mudanças de acesso',
+    'panel.organization.edit': 'Cores, logotipo e seções do portal',
+    'panel.communications.edit': 'E-mails e avisos enviados',
+    'panel.help-notes.index': 'Procedimentos da sua organização',
+    'panel.parameters.edit': 'Limites e recursos da organização',
+    'panel.legal.edit': 'Termos de uso e privacidade',
+    'platform.organizations.index': 'Organizações, pacotes e domínios',
+    'platform.status.index': 'Incidentes e manutenções',
+    'platform.leads.index': 'Mensagens da página do produto',
+    'platform.metrics.index': 'Visitas da página do produto',
+    'platform.api-docs.index': 'Rotas e coleção do Postman',
+    'panel.help.index': 'Guias passo a passo',
+};
+
+export type QuickSection = { id: string; title: string | null; area: 'main' | 'admin' | 'platform'; items: (NavItem & { hint: string })[] };
+
+/**
+ * Cartões do início: os mesmos destinos do menu, na mesma regra de papel/pacote, agrupados. O próprio início fica de fora
+ * e a Ajuda vai por último. Gestor e atleta usam o menu simples e só têm uma seção.
+ */
+export function quickSections(menu: NavMenu): QuickSection[] {
+    const withHint = (entries: NavItem[]) => entries.filter((entry) => !['panel.dashboard', 'manager.dashboard', 'athlete.dashboard'].includes(entry.route)).map((entry) => ({ ...entry, hint: QUICK_HINTS[entry.route] ?? '' }));
+    const sections: QuickSection[] = [];
+    const top = withHint(menu.top);
+
+    if (top.length > 0) sections.push({ id: 'top', title: null, area: 'main', items: top });
+
+    for (const group of menu.groups) sections.push({ id: group.id, title: group.label, area: group.area, items: withHint(group.items) });
+
+    const bottom = withHint(menu.bottom);
+    if (bottom.length > 0) sections.push({ id: 'help', title: null, area: 'main', items: bottom });
+
+    return sections.filter((section) => section.items.length > 0);
+}

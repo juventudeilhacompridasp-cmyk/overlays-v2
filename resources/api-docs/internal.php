@@ -69,6 +69,7 @@ return [
 
     // ───────────── Painel: cadastros ─────────────
     'panel.teams.index' => $page('Lista as equipes'),
+    'panel.teams.show' => $page('Ficha da equipe: dados, inscrições, elenco e jogos', 'Consultar vale para qualquer papel; o botão de editar exige o cadastro.'),
     'panel.teams.create' => $page('Formulário de nova equipe'),
     'panel.teams.store' => $action('Cria uma equipe'),
     'panel.teams.edit' => $page('Formulário de edição da equipe, com gestores convidados'),
@@ -128,6 +129,8 @@ return [
     'panel.entries.update' => $action('Atualiza a inscrição (situação, cabeça de chave, grupo)'),
     'panel.entries.destroy' => $action('Remove a inscrição'),
     'panel.stages.fixtures.store' => $action('Gera os jogos da fase', 'Todos contra todos, grupos ou chaveamento do mata-mata (1 jogo ou ida e volta).'),
+    'panel.stages.draw' => $page('Sorteio e chaves da fase: montar grupos ou a chave arrastando as equipes'),
+    'panel.stages.draw.store' => $action('Salva o sorteio já definido e gera os jogos da fase', 'Grupos (nome + equipes) ou confrontos da 1ª rodada; todas as equipes confirmadas entram uma única vez; tudo ou nada.'),
     'panel.stages.fixtures.import' => $action('Importa uma tabela de jogos já definida (sem sorteio)', 'Texto colado com rodada, mandante, visitante, data, hora, local e grupo; tudo ou nada, só pontos corridos e grupos.'),
     'panel.stages.fixtures.destroy' => $action('Apaga os jogos da fase (recusa se algum já começou)'),
 
