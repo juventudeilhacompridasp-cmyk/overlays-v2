@@ -124,8 +124,8 @@ class TeamController extends Controller
             'roster' => $roster,
             'record' => $record,
             'upcoming' => $games->filter(fn (Game $game) => ! $game->status->isDecided() && $game->status !== GameStatus::Cancelled)
-                ->sortBy(fn (Game $game) => $game->scheduled_at?->timestamp ?? PHP_INT_MAX)->take(5)->map($row)->values(),
-            'recent' => $decided->sortByDesc(fn (Game $game) => $game->finished_at?->timestamp ?? $game->scheduled_at?->timestamp ?? 0)->take(5)->map($row)->values(),
+                ->sortBy(fn (Game $game) => $game->scheduled_at->timestamp ?? PHP_INT_MAX)->take(5)->map($row)->values(),
+            'recent' => $decided->sortByDesc(fn (Game $game) => $game->finished_at->timestamp ?? $game->scheduled_at->timestamp ?? 0)->take(5)->map($row)->values(),
         ]);
     }
 
