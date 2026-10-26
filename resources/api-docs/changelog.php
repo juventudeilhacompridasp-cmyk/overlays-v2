@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.6.0',
+        'date' => '2026-10-26',
+        'changes' => ['Nova rota interna panel.stages.schedule: agenda da fase por dia, com aviso de conflito de estádio e de descanso das equipes.'],
+    ],
+    [
         'version' => '1.5.0',
         'date' => '2026-10-26',
         'changes' => ['Novas rotas internas panel.stages.draw e panel.stages.draw.store: sorteio e chaves da fase arrastando equipes (grupos e mata-mata).'],

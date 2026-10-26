@@ -158,3 +158,37 @@ test('nomes das rodadas', () => {
     assert.deepEqual(d.roundNames(8), ['16 avos de final', 'Oitavas de final', 'Quartas de final', 'Semifinal', 'Final'].slice(1));
     assert.deepEqual(d.roundNames(4), ['Quartas de final', 'Semifinal', 'Final']);
 });
+
+test('equipes da mesma cidade no mesmo grupo ou no mesmo confronto são detectadas', () => {
+    const cities = { t1: 'registro', t2: 'registro', t3: 'iguape', t4: '' , t5: '', t6: 'iguape' };
+    const cityOf = (id) => cities[id] ?? '';
+    let board = d.emptyGroups(ids(6), 2);
+    for (const [id, target] of [['t1', 'g0'], ['t2', 'g0'], ['t3', 'g1'], ['t4', 'g1'], ['t5', 'g1'], ['t6', 'g0']]) board = d.moveToGroup(board, id, target);
+
+    const clashes = d.groupClashes(board, cityOf);
+    assert.deepEqual(clashes.map((c) => [c.where, c.city, c.teams]), [['g0', 'registro', ['t1', 't2']]]);
+    assert.equal(d.groupClashes(d.emptyGroups(ids(4), 2), cityOf).length, 0);
+
+    const bracket = d.seededBracket(ids(4));
+    assert.deepEqual(d.bracketClashes(bracket, (id) => ({ t1: 'x', t4: 'x' })[id] ?? '').map((c) => c.teams), [['t1', 't4']]);
+    assert.equal(d.normalizeCity('  Registro '), 'registro');
+    assert.equal(d.normalizeCity(null), '');
+});
+
+test('o sorteio com restrição acha uma distribuição sem conflito quando existe', () => {
+    // 4 cidades com 2 equipes cada, 2 grupos de 4: sempre dá para separar.
+    const cities = Object.fromEntries(ids(8).map((id, i) => [id, `cidade${Math.floor(i / 2)}`]));
+    const cityOf = (id) => cities[id];
+    const rng = seeded(11);
+
+    const board = d.bestOf(300, () => d.randomGroups(d.emptyGroups(ids(8), 2), ids(8), rng), (b) => d.groupClashes(b, cityOf).length);
+    assert.equal(d.groupClashes(board, cityOf).length, 0);
+    assert.deepEqual(allTeams(board), sorted(ids(8)));
+
+    const bracket = d.bestOf(300, () => d.randomBracket(ids(8), rng), (b) => d.bracketClashes(b, cityOf).length);
+    assert.equal(d.bracketClashes(bracket, cityOf).length, 0);
+
+    // Sem solução possível devolve o melhor que achou, sem travar.
+    const same = d.bestOf(5, () => d.randomGroups(d.emptyGroups(ids(4), 2), ids(4), rng), (b) => d.groupClashes(b, () => 'x').length);
+    assert.equal(d.groupClashes(same, () => 'x').length, 2);
+});

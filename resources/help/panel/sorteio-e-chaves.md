@@ -24,6 +24,9 @@ Em uma fase de **grupos** ou de **mata-mata**, o botão **Sortear / montar arras
 4. Use **Sortear** (ao acaso) ou **Por cabeças de chave** (1º x último, 2º x penúltimo...) como ponto de partida e ajuste arrastando.
 5. **Salvar sorteio e gerar jogos** cria a chave inteira; o vencedor de cada confronto avança sozinho.
 
+## Equipes da mesma cidade
+Se há equipes da mesma cidade na divisão, aparece a opção **Evitar equipes da mesma cidade juntas nos sorteios** (ligada). Os sorteios tentam várias distribuições e ficam com a que separa melhor; o que não der para separar aparece como aviso (você pode salvar assim ou arrastar para ajustar).
+
 ## Sorteio feito fora da plataforma
 Monte exatamente como foi sorteado, arrastando cada equipe para o lugar certo, e salve. Para confrontos de pontos corridos já definidos, use **Importar tabela pronta** na fase.
 
