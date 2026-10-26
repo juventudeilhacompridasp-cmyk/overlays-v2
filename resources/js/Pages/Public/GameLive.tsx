@@ -1,6 +1,7 @@
 import { ConnectionState, Realtime, subscribeToGame } from '@/lib/echo';
 import { safeJsonLd } from '@/lib/jsonLd';
 import { GameClock, formatClock, isInterval, periodLabel, shownSeconds, useGameClock } from '@/lib/clock';
+import GameQrCode from '@/Components/Portal/GameQrCode';
 import PushButton from '@/Components/Portal/PushButton';
 import ShareButtons from '@/Components/Portal/ShareButtons';
 import { Head, Link, router } from '@inertiajs/react';
@@ -377,6 +378,11 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
                     {!snapshot.finished && <PushButton kind="game" id={snapshot.id} publicKey={push_key} label="Avisar gols deste jogo" />}
                     <ShareButtons text={`${home} ${snapshot.home_score} x ${snapshot.away_score} ${away}`} url={route('public.games.show', snapshot.id)} />
                 </div>
+                <section className="mt-8 flex flex-col items-center gap-3 rounded-lg bg-black/30 p-4 text-center" data-testid="game-qr">
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Abrir no celular</h2>
+                    <GameQrCode url={route('public.games.show', snapshot.id)} label={`QR code de ${home} x ${away}`} />
+                    <p className="max-w-xs text-xs text-gray-500">Compartilhe este código na arquibancada ou na transmissão para abrir o placar e os lances.</p>
+                </section>
                 <p className="mt-6 text-center text-xs text-gray-600" data-testid="live-connection">
                     {connection === 'connected' ? '● ao vivo' : connection === 'connecting' ? '○ conectando…' : '○ atualizando a cada poucos segundos'}
                 </p>
