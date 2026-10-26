@@ -23,6 +23,7 @@ class ScheduleController extends Controller
     public function show(Stage $stage): Response
     {
         $stage->load('division.season.competition');
+        $rules = $stage->division->ruleSet();
 
         $games = Game::query()
             ->where('stage_id', $stage->getKey())
@@ -52,8 +53,8 @@ class ScheduleController extends Controller
                     'label' => ($game->homeEntry?->team->name ?? 'A definir').' x '.($game->awayEntry?->team->name ?? 'A definir').' ('.$game->scheduled_at->format('d/m H:i').')',
                 ])->all(),
                 $games->pluck('id')->all(),
-                GameConflicts::VENUE_MINUTES,
-                GameConflicts::TEAM_REST_MINUTES,
+                $rules->venueConflictMinutes,
+                $rules->teamRestMinutes,
             );
         }
 
@@ -78,7 +79,7 @@ class ScheduleController extends Controller
                 'conflicts' => $conflicts[$game->getKey()] ?? [],
             ])->values(),
             'venues' => Venue::query()->orderBy('name')->get(['id', 'name']),
-            'rules' => ['venue_minutes' => GameConflicts::VENUE_MINUTES, 'team_rest_minutes' => GameConflicts::TEAM_REST_MINUTES],
+            'rules' => ['venue_minutes' => $rules->venueConflictMinutes, 'team_rest_minutes' => $rules->teamRestMinutes],
         ]);
     }
 }
