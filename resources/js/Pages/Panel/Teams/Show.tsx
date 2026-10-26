@@ -1,5 +1,5 @@
 import DataTable from '@/Components/DataTable';
-import { Badge, Card, Empty, LinkButton, Logo, PageHeader } from '@/Components/Panel/ui';
+import { Badge, Card, Empty, LinkButton, Logo, PageHeader, StatCard } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
 import { Head, Link } from '@inertiajs/react';
@@ -121,10 +121,7 @@ export default function Show({ team, entries, roster, record, upcoming, recent }
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" data-testid="team-record">
                             {stats.map((stat) => (
-                                <Card key={stat.label}>
-                                    <p className="text-2xl font-semibold tabular-nums text-gray-900">{stat.value}</p>
-                                    <p className="text-sm text-gray-500">{stat.label}</p>
-                                </Card>
+                                <StatCard key={stat.label} label={stat.label} value={stat.value} />
                             ))}
                         </div>
                         <div className="grid gap-4 md:grid-cols-2">

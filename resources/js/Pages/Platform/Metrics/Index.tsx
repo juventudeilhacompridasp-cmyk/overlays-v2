@@ -1,5 +1,5 @@
 import DataTable from '@/Components/DataTable';
-import { Card, Empty, PageHeader } from '@/Components/Panel/ui';
+import { Card, Empty, PageHeader, StatCard } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
@@ -42,17 +42,6 @@ function niceMax(value: number): number {
     const step = [1, 2, 5, 10].find((candidate) => candidate * magnitude >= value) ?? 10;
 
     return step * magnitude;
-}
-
-/** Stat tile: rótulo, valor e uma linha de apoio. */
-function Tile({ label, value, hint }: { label: string; value: string; hint?: string }) {
-    return (
-        <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-200">
-            <p className="text-sm text-gray-500">{label}</p>
-            <p className="mt-1 text-3xl font-semibold text-gray-900">{value}</p>
-            {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
-        </div>
-    );
 }
 
 /** Visitas por dia: série única, colunas finas (ponta de 4 px), grade de 1 px, rótulo só no pico e dica por coluna (hover e foco). */
@@ -160,9 +149,9 @@ export default function MetricsIndex({ enabled, periods, summary }: Props) {
             </div>
 
             <div className="mb-6 grid gap-4 sm:grid-cols-3">
-                <Tile label="Visitas medidas" value={number(totals.visits)} hint={`${shortDate(summary.from)} a ${shortDate(summary.to)}`} />
-                <Tile label="Contatos enviados" value={number(totals.leads)} hint="Todos os envios do formulário no período" />
-                <Tile label="Contatos por visita" value={percent(totals.conversion)} hint="Aproximado: o formulário conta quem não permitiu a medição" />
+                <StatCard label="Visitas medidas" value={number(totals.visits)} hint={`${shortDate(summary.from)} a ${shortDate(summary.to)}`} />
+                <StatCard label="Contatos enviados" value={number(totals.leads)} hint="Todos os envios do formulário no período" />
+                <StatCard label="Contatos por visita" value={percent(totals.conversion)} hint="Aproximado: o formulário conta quem não permitiu a medição" />
             </div>
 
             <Card title="Visitas por dia" className="mb-6">
