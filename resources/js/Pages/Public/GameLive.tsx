@@ -176,7 +176,7 @@ function LineupSideView({ side }: { side: LineupSide }) {
     );
 }
 
-export default function GameLive({ snapshot: initial, realtime, push_key, insights, json_ld, share_image, youtube_embed_url }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null; insights?: Insights; json_ld?: Record<string, unknown> | null; share_image?: string | null; youtube_embed_url?: string | null }) {
+export default function GameLive({ snapshot: initial, realtime, push_key, insights, json_ld, share_image, youtube_embed_url, media = [] }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null; insights?: Insights; json_ld?: Record<string, unknown> | null; share_image?: string | null; youtube_embed_url?: string | null; media?: { title: string | null; provider: string; embed_url: string | null; url: string }[] }) {
     const [snapshot, setSnapshot] = useState(initial);
     const [connection, setConnection] = useState<ConnectionState>('connecting');
     // Diferença entre o relógio do navegador e o do servidor, medida na carga da página (não nos deltas, que podem atrasar na fila).
@@ -371,6 +371,11 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
                         <div className="aspect-video overflow-hidden rounded-lg bg-black">
                             <iframe src={youtube_embed_url} title={`Transmissão ao vivo: ${home} x ${away}`} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
                         </div>
+                    </Section>
+                )}
+                {media.length > 0 && (
+                    <Section title="Vídeos e replays" testid="game-media">
+                        <div className="grid gap-4 sm:grid-cols-2">{media.map((item) => <a key={item.url} href={item.url} target="_blank" rel="noreferrer" className="rounded-lg bg-black/40 p-3 text-sm text-gray-200 hover:bg-black/60"><span className="font-semibold">{item.title ?? `Vídeo · ${item.provider}`}</span><span className="mt-1 block text-xs text-gray-500">Abrir no {item.provider}</span></a>)}</div>
                     </Section>
                 )}
                 {snapshot.venue && <p className="mt-8 text-center text-sm text-gray-500">{snapshot.venue}</p>}

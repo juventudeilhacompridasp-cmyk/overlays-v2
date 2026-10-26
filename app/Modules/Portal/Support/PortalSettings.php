@@ -23,6 +23,7 @@ final class PortalSettings
         'game_form' => ['group' => 'Página do jogo', 'default' => true, 'label' => 'Forma recente', 'hint' => 'Resultado dos últimos 5 jogos de cada equipe.'],
         'game_head_to_head' => ['group' => 'Página do jogo', 'default' => true, 'label' => 'Confronto direto', 'hint' => 'Histórico de jogos entre as duas equipes na organização.'],
         'game_lineup' => ['group' => 'Página do jogo', 'default' => false, 'label' => 'Escalações públicas', 'hint' => 'Titulares, reservas e comissão com nome público e camisa; desligado por padrão e sem foto, nascimento ou documento.'],
+        'game_media' => ['group' => 'Página do jogo', 'default' => false, 'label' => 'Vídeos e replays', 'hint' => 'Links de vídeos publicados para esta partida; desligado por padrão.'],
         'team_history' => ['group' => 'Página da equipe', 'default' => true, 'label' => 'Campanha por edição', 'hint' => 'Jogos, vitórias, empates, derrotas, gols e colocação em cada edição publicada.'],
         'team_form' => ['group' => 'Página da equipe', 'default' => true, 'label' => 'Forma recente', 'hint' => 'Resultado dos últimos 5 jogos da equipe.'],
         'team_scorers' => ['group' => 'Página da equipe', 'default' => true, 'label' => 'Artilheiros da equipe', 'hint' => 'Os 5 maiores goleadores, pelo nome público (já é público na artilharia da edição).'],

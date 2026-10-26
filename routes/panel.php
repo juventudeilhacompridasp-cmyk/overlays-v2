@@ -24,6 +24,7 @@ use App\Modules\Market\Http\Controllers\Panel\AdminController as MarketAdminCont
 use App\Modules\Matches\Http\Controllers\DrawController;
 use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
+use App\Modules\Matches\Http\Controllers\GameMediaController;
 use App\Modules\Matches\Http\Controllers\GameReportController;
 use App\Modules\Matches\Http\Controllers\MesarioController;
 use App\Modules\Matches\Http\Controllers\OfficialAssignmentController;
@@ -101,6 +102,10 @@ Route::middleware(['auth', 'verified', 'panel.member', 'two-factor.admins', 'leg
         Route::delete('stages/{stage}/fixtures', [FixtureController::class, 'destroy'])->name('stages.fixtures.destroy');
 
         Route::patch('games/{game}', [GameController::class, 'update'])->name('games.update');
+        Route::get('games/{game}/media', [GameMediaController::class, 'index'])->name('games.media');
+        Route::post('games/{game}/media', [GameMediaController::class, 'store'])->name('games.media.store');
+        Route::patch('game-media/{media}/publicar', [GameMediaController::class, 'toggle'])->name('games.media.toggle');
+        Route::delete('game-media/{media}', [GameMediaController::class, 'destroy'])->name('games.media.destroy');
         Route::post('games/{game}/result', [GameController::class, 'result'])->name('games.result');
         Route::post('games/{game}/walkover', [GameController::class, 'walkover'])->name('games.walkover');
         Route::post('games/{game}/reopen', [GameController::class, 'reopen'])->name('games.reopen');
