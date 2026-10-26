@@ -9,6 +9,7 @@ use App\Modules\Market\Http\Controllers\SignupController;
 use App\Modules\Marketing\Http\Controllers\LandingController;
 use App\Modules\Marketing\Http\Controllers\LandingMetricsController;
 use App\Modules\Marketing\Support\LandingHosts;
+use App\Modules\Matches\Http\Controllers\GameSignatureController;
 use App\Modules\Matches\Http\Controllers\PublicGameController;
 use App\Modules\Portal\Http\Controllers\CardVerifyController;
 use App\Modules\Portal\Http\Controllers\EmbedController;
@@ -75,6 +76,10 @@ Route::middleware([PlatformLimits::throttle('embed'), 'feature:embeds'])->prefix
 Route::get('/carteirinha/{code}', CardVerifyController::class)->name('portal.card')->middleware([PlatformLimits::throttle('card'), 'feature:athlete_cards', PrivateNoIndex::class]);
 Route::get('/termos', [LegalPageController::class, 'terms'])->name('portal.terms');
 Route::get('/privacidade', [LegalPageController::class, 'privacy'])->name('portal.privacy');
+Route::middleware('throttle:10,1')->prefix('assinaturas')->name('game-signatures.')->group(function () {
+    Route::get('/{token}', [GameSignatureController::class, 'show'])->where('token', '[A-Za-z0-9]{64}')->name('confirm');
+    Route::post('/{token}', [GameSignatureController::class, 'confirm'])->where('token', '[A-Za-z0-9]{64}')->name('confirm.submit');
+});
 Route::get('/sitemap.xml', [PortalController::class, 'sitemap'])->name('portal.sitemap');
 Route::get('/robots.txt', [PortalController::class, 'robots'])->name('portal.robots');
 
