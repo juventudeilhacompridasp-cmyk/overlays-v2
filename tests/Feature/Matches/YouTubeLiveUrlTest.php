@@ -3,11 +3,11 @@
 use App\Modules\Matches\Support\YouTubeLiveUrl;
 
 it('normaliza links suportados do YouTube para o player incorporado', function (string $url, string $id) {
-    expect(YouTubeLiveUrl::embed($url))->toBe("https://www.youtube.com/embed/{$id}?rel=0");
+    expect(YouTubeLiveUrl::embed($url))->toBe("https://www.youtube-nocookie.com/embed/{$id}");
 })->with([
-    ['https://www.youtube.com/watch?v=abc123_XYz', 'abc123_XYz'],
-    ['https://youtu.be/abc123_XYz', 'abc123_XYz'],
-    ['https://www.youtube.com/live/abc123_XYz', 'abc123_XYz'],
+    ['https://www.youtube.com/watch?v=abc123_XYz1', 'abc123_XYz1'],
+    ['https://youtu.be/abc123_XYz1', 'abc123_XYz1'],
+    ['https://www.youtube.com/live/abc123_XYz1', 'abc123_XYz1'],
 ]);
 
 it('rejeita URLs de outros sites e IDs inválidos', function () {
