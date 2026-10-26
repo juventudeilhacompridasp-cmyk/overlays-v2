@@ -5,6 +5,7 @@ Atualize este arquivo em todo PR que entregar ou descobrir algo. O detalhe técn
 CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição em português.
 
 ## Entregue
+- **Revisão mobile-first transversal (pedido de 26/10):** componentes compartilhados de cabeçalho, cards, botões, busca, modais e layout da plataforma agora quebram ações em telas estreitas, usam alvos de toque de 44 px, limitam modais à viewport com rolagem interna e evitam overflow nos cabeçalhos. O menu lateral mobile já é uma gaveta acessível. **Falta:** validação visual em aparelhos reais (a CI cobre tipos/build e os fluxos automatizados, não todos os tamanhos físicos).
 - **Menu no celular (pedido de 21/10):** `PanelLayout` agora usa uma gaveta lateral com fundo escurecido, Esc/toque fora para fechar, foco gerenciado e rolagem da página travada; o bloco do usuário (tema, Perfil, Sair) passou a existir no celular; itens do menu com 44 px. **Falta:** conferir no aparelho real (a CI não renderiza a interface).
 - **Importar tabela pronta (sem sorteio):** na fase (pontos corridos ou grupos) o organizador cola `rodada; mandante; visitante; data; hora; local; grupo` (`ImportStageFixtures`, `FixtureSheet`, rota `panel.stages.fixtures.import`); tudo ou nada, equipes confirmadas na divisão, estádios cadastrados. Mata-mata continua só pelo chaveamento gerado.
 - Fases 1–6: competições, súmula, regras, mata-mata, portal público, overlays do OBS, inscrição online, carteirinhas e

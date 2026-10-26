@@ -15,13 +15,13 @@ export default function PlatformLayout({ children }: PropsWithChildren) {
                     <Link href={route('platform.organizations.index')} className="font-bold text-emerald-700">
                         Plataforma · administração
                     </Link>
-                    <nav className="flex items-center gap-4 text-sm text-gray-600">
-                        <Link href={route('panel.dashboard')} className="hover:text-emerald-700">
+                    <nav className="flex w-full flex-wrap items-center gap-1 text-sm text-gray-600 sm:w-auto sm:gap-4">
+                        <Link href={route('panel.dashboard')} className="inline-flex min-h-11 items-center rounded px-2 hover:text-emerald-700 sm:min-h-0">
                             Ir para o painel
                         </Link>
                         <ThemeToggle />
                         <span>{auth.user.name}</span>
-                        <Link href={route('logout')} method="post" as="button" className="hover:text-emerald-700">
+                        <Link href={route('logout')} method="post" as="button" className="inline-flex min-h-11 items-center rounded px-2 hover:text-emerald-700 sm:min-h-0">
                             Sair
                         </Link>
                     </nav>
