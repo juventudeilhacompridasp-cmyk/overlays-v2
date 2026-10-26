@@ -215,6 +215,7 @@ function ScheduleModal({ game, venues, statuses, onClose }: { game: Game; venues
                 <Field label="Transmissão ao vivo no YouTube" htmlFor="youtube_live_url" error={errors.youtube_live_url} hint="Cole o link do vídeo ou da live. O portal incorporará apenas o player do YouTube.">
                     <Input id="youtube_live_url" type="url" value={data.youtube_live_url} onChange={(e) => setData('youtube_live_url', e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
                 </Field>
+                <LinkButton href={route('panel.games.media', game.id)} variant="secondary">Gerenciar vídeos e replays</LinkButton>
                 <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-3">
                     <GameQrCode url={route('public.games.show', game.id)} />
                     <p className="text-xs text-gray-600">Aponte a câmera do celular para abrir diretamente a página pública desta partida.</p>

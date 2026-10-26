@@ -4,12 +4,14 @@ namespace App\Modules\Matches\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Matches\Models\GameMedia;
 use App\Modules\Matches\Support\PublicGameSnapshot;
 use App\Modules\Matches\Support\YouTubeLiveUrl;
 use App\Modules\Portal\Push\PushConfig;
 use App\Modules\Portal\Support\GameInsights;
 use App\Modules\Portal\Support\GameShareImage;
 use App\Modules\Portal\Support\JsonLd;
+use App\Modules\Portal\Support\PortalSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
@@ -31,6 +33,7 @@ class PublicGameController extends Controller
             'json_ld' => JsonLd::game($game),
             'share_image' => route('public.games.image', $game->getKey()),
             'youtube_embed_url' => YouTubeLiveUrl::embed($game->youtube_live_url),
+            'media' => PortalSettings::enabled('game_media') ? GameMedia::query()->where('game_id', $game->getKey())->where('published', true)->orderBy('sort')->get()->map(fn (GameMedia $item) => ['title' => $item->title, 'type' => $item->type, 'provider' => $item->provider, 'embed_url' => $item->embedUrl(), 'image_url' => $item->imageUrl(), 'url' => $item->url]) : [],
             'push_key' => PushConfig::publicKeyFor(),
             'realtime' => [
                 'key' => $realtime['key'],

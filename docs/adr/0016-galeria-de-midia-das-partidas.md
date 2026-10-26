@@ -19,6 +19,6 @@ Organizadores querem divulgar fotos, vídeos e replays associados a uma partida.
 
 ## Consequências
 
-- A primeira entrega deve separar upload, moderação e visualização pública em PRs pequenos.
+- A primeira entrega deve separar upload, moderação e visualização pública em PRs pequenos. Vídeos externos e upload de fotos já estão entregues; ordenação avançada e automações ficam para as próximas partes.
 - A página pública pode exibir miniaturas responsivas e links de vídeo sem aumentar o payload do placar ao vivo.
 - A remoção deve apagar a variante pública do armazenamento e invalidar o cache da galeria.
