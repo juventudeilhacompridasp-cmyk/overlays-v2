@@ -29,7 +29,7 @@ test('organizador ganha inscrições, relatórios e widgets; operador ganha o me
 
     assert.deepEqual(menu.top.map((i) => i.label), ['Painel', 'Mesário']);
     assert.deepEqual(labels(menu, 'competition'), ['Competições', 'Inscrições', 'Equipes', 'Atletas e comissão', 'Estádios', 'Documentos a vencer', 'Árbitros e mesários', 'Relatórios']);
-    assert.deepEqual(labels(menu, 'broadcast'), ['Transmissão', 'Artes', 'Widgets']);
+    assert.deepEqual(labels(menu, 'broadcast'), ['Transmissão', 'Controle remoto', 'Artes', 'Widgets']);
 });
 
 test('a administração é um grupo separado só de quem gerencia usuários', () => {

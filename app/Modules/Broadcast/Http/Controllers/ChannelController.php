@@ -10,20 +10,15 @@ use App\Modules\Broadcast\Models\OverlayFont;
 use App\Modules\Broadcast\Models\OverlayScene;
 use App\Modules\Broadcast\Models\OverlaySponsor;
 use App\Modules\Broadcast\Models\OverlayStyleModel;
+use App\Modules\Broadcast\Support\ChannelPayload;
 use App\Modules\Broadcast\Support\OverlayAppearance;
 use App\Modules\Broadcast\Support\OverlayControlRules;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
-use App\Modules\Broadcast\Support\OverlayLineupTimeline;
 use App\Modules\Broadcast\Support\OverlayLowerThirdSettings;
-use App\Modules\Broadcast\Support\OverlayScreenSettings;
 use App\Modules\Broadcast\Support\OverlaySponsorSettings;
-use App\Modules\Broadcast\Support\OverlayState;
 use App\Modules\Broadcast\Support\OverlayStatsSettings;
 use App\Modules\Competitions\Models\Season;
-use App\Modules\Matches\Enums\GameStatus;
-use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Models\Game;
-use App\Modules\Matches\Models\GameLineup;
 use App\Modules\Tenancy\CurrentOrganization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,65 +39,11 @@ class ChannelController extends Controller
 
         $customItems = OverlayCustomItem::query()->orderBy('name')->get();
 
-        $label = fn (Game $game) => ($game->homeEntry?->team->name ?? 'A definir').' x '.($game->awayEntry?->team->name ?? 'A definir')
-            .($game->scheduled_at ? ' · '.$game->scheduled_at->format('d/m H:i') : '');
-
-        $candidates = Game::query()
-            ->with('homeEntry.team', 'awayEntry.team')
-            ->whereNotNull('home_entry_id')->whereNotNull('away_entry_id')
-            ->whereIn('status', [GameStatus::Scheduled, GameStatus::InProgress])
-            ->orderByRaw('scheduled_at is null')->orderBy('scheduled_at')->orderBy('number')
-            ->limit(60)->get();
+        $label = ChannelPayload::gameLabel(...);
+        $candidates = ChannelPayload::candidateGames();
 
         return Inertia::render('Panel/Broadcast/Index', [
-            'channels' => $channels->map(function (OverlayChannel $channel) use ($label, $customItems): array {
-                $game = $channel->game;
-                $people = $game?->lineups
-                    ->whereIn('slot', [LineupSlot::Starter, LineupSlot::Bench])
-                    ->map(function (GameLineup $lineup) use ($game): array {
-                        $person = $lineup->person;
-                        $team = $lineup->entry_id === $game?->home_entry_id ? $game->homeEntry?->team : $game?->awayEntry?->team;
-
-                        return [
-                            'id' => $person->id,
-                            'name' => $person->nickname ?: $person->name,
-                            'shirt' => $lineup->shirt_number,
-                            'team' => $team->name,
-                            'has_photo' => $person->photo_path !== null,
-                            'photo_url' => $person->photoUrl(96),
-                        ];
-                    })
-                    ->sortBy(fn (array $person) => ($person['team'].'|'.str_pad((string) ($person['shirt'] ?? 999), 3, '0', STR_PAD_LEFT)))
-                    ->values() ?? collect();
-
-                $plan = OverlayState::lineupPlan($channel);
-
-                return [
-                    'id' => $channel->id,
-                    'name' => $channel->name,
-                    'game_id' => $channel->game_id,
-                    'game_label' => $game ? $label($game) : null,
-                    'layers' => $channel->layerStates(),
-                    'championship_live' => $channel->championshipLive(),
-                    'screens_live' => $channel->screensLive(),
-                    'custom_overlays' => $customItems->map(fn (OverlayCustomItem $item) => ['id' => $item->getKey(), 'name' => $item->name, 'url' => $channel->customUrl((string) $item->getKey()), 'live' => ($channel->customLive()[$item->getKey()] ?? false) === true])->values(),
-                    'screen_settings' => OverlayScreenSettings::normalize($channel->screen_settings),
-                    'stats_settings' => OverlayStatsSettings::normalize($channel->stats_settings),
-                    'appearance' => OverlayAppearance::normalize($channel->appearance),
-                    'lineup_settings' => OverlayLineupSettings::normalize($channel->lineup_settings),
-                    'sponsor_settings' => OverlaySponsorSettings::normalize($channel->sponsor_settings),
-                    'lower_third_settings' => OverlayLowerThirdSettings::normalize($channel->lower_third_settings),
-                    'lineup_people' => $people,
-                    'lineup_steps' => OverlayLineupTimeline::steps(OverlayLineupSettings::normalize($channel->lineup_settings), $plan['individuals'], $plan['formation']),
-                    'championship_base' => substr(route('overlay.championship', ['channel' => $channel->token, 'view' => 'standings']), 0, -strlen('/standings')),
-                    'pgm_url' => $channel->overlayUrl('pgm'),
-                    'has_control_token' => $channel->control_token_hash !== null,
-                    'control_url' => route('api.v1.overlay-channels.state.update', ['channel' => $channel]),
-                    'overlays' => collect(OverlayChannel::OVERLAYS)->map(fn (string $title, string $slug) => [
-                        'slug' => $slug, 'title' => $title, 'url' => $channel->overlayUrl($slug),
-                    ])->values(),
-                ];
-            })->values(),
+            'channels' => $channels->map(fn (OverlayChannel $channel): array => ChannelPayload::for($channel, $customItems, $label))->values(),
             'sponsors' => OverlaySponsor::query()->orderBy('sort')->orderBy('created_at')->get()->map(fn (OverlaySponsor $sponsor) => [
                 'id' => $sponsor->id, 'name' => $sponsor->name, 'active' => $sponsor->active, 'logo_url' => $sponsor->logoUrl(128), 'banner_url' => $sponsor->bannerUrl(),
             ])->values(),

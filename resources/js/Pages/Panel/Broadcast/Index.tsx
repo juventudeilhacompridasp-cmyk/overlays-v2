@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Empty, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
+import { Badge, Button, Card, Empty, Field, Input, LinkButton, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
 import { Head, router, useForm } from '@inertiajs/react';
@@ -1079,7 +1079,7 @@ export default function Index({ channels, games, issued_control, sponsors, spons
     return (
         <PanelLayout>
             <Head title="Transmissão" />
-            <PageHeader title="Transmissão" subtitle="Overlays para o OBS com fundo transparente. Cada canal tem URLs fixas; durante a transmissão você só escolhe o jogo no ar e liga as camadas." actions={channels.length > 0 ? <Button onClick={() => setView('operator')} data-testid="open-operator">Modo operador</Button> : undefined} />
+            <PageHeader title="Transmissão" subtitle="Overlays para o OBS com fundo transparente. Cada canal tem URLs fixas; durante a transmissão você só escolhe o jogo no ar e liga as camadas." actions={channels.length > 0 ? <><Button onClick={() => setView('operator')} data-testid="open-operator">Modo operador</Button><LinkButton href={route('panel.broadcast.remote')} variant="secondary">Controle no celular</LinkButton></> : undefined} />
             {view === 'operator' && channels.length > 0 && <OperatorConsole channels={channels} games={games} scenes={scenes} canOperate={canOperate} operatorLayouts={operator_layouts} onExit={() => setView('board')} />}
 
             <div className="space-y-6">
