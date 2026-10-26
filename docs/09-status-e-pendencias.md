@@ -44,7 +44,7 @@ Ideias levantadas e combinadas para deixar a plataforma mais completa. Ordem sug
 - [x] Calendário/agenda dos jogos com arrastar e soltar e aviso de conflito (mesmo estádio, equipe sem descanso). Entregue em `panel.stages.schedule`; falta tornar a duração do jogo e o descanso mínimo configuráveis por edição.
 - [x] Sorteio e chaves arrastando equipes (grupos e mata-mata, inclusive sorteio externo) e separação de equipes da mesma cidade. Falta: confrontos livres de pontos corridos por arrasto (hoje: importar tabela pronta) e restrições além da cidade (clube, patrocinador).
 - [x] Mata-mata com confrontos definidos à mão só com parte das equipes (ex.: classificados dos grupos): campo "Equipes na chave" no sorteio, `DrawStage::knockout(..., partial: true)`.
-- [ ] Agenda e escala de árbitros e mesários, com aviso por e-mail ou WhatsApp.
+- [x] Escala de árbitros e mesários (cadastro, escala por fase com aviso de conflito e e-mail a quem entra). Falta: aviso por WhatsApp, escala em lote/rodízio automático e visão "meus jogos" para o árbitro.
 - [ ] Súmula em PDF oficial, com campos de assinatura de árbitro e capitães, pronta para imprimir ou arquivar.
 
 **Equipes e atletas**

@@ -4,6 +4,7 @@ namespace App\Modules\Matches\Support;
 
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\LineupSlot;
+use App\Modules\Matches\Enums\OfficialRole;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Models\GameTactic;
@@ -139,6 +140,7 @@ final class GameReportPdf
             ['Data e hora', $game->scheduled_at === null ? 'Não definida' : $game->scheduled_at->format('d/m/Y').' às '.$game->scheduled_at->format('H:i')],
             ['Local', $game->venue->name ?? 'Não definido'],
             ['Jogo', '#'.($game->number ?? '—').($game->round !== null ? ' · rodada '.$game->round : '')],
+            ['Árbitro', $game->officials->firstWhere('role', OfficialRole::Referee)?->official->name ?? 'Não escalado'],
         ];
 
         $fieldWidth = $w / count($fields);
@@ -447,7 +449,7 @@ final class GameReportPdf
 
     private static function load(Game $game): void
     {
-        $game->load(['homeEntry.team', 'awayEntry.team', 'division.season.competition', 'stage', 'venue', 'lineups.person', 'tactics']);
+        $game->load(['homeEntry.team', 'awayEntry.team', 'division.season.competition', 'stage', 'venue', 'lineups.person', 'tactics', 'officials.official']);
     }
 
     private static function person(?Person $person): string

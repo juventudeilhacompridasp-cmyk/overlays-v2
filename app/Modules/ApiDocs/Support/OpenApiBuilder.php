@@ -40,6 +40,7 @@ final class OpenApiBuilder
         'registration' => 'ID (ULID) do pedido de inscrição online.',
         'document' => 'ID (ULID) do documento enviado.',
         'venue' => 'ID (ULID) do estádio.',
+        'official' => 'ID (ULID) do árbitro ou mesário.',
         'type' => 'Tipo do relatório (ex.: pendências ou elencos).',
         'event' => 'ID (ULID) do evento de jogo.',
         'scene' => 'ID (ULID) da cena do canal.',
