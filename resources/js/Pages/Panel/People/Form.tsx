@@ -1,5 +1,5 @@
 import { maskCpf } from '@/Components/Panel/cpf';
-import { Button, Card, Field, ImageUpload, Input, LinkButton, PageHeader } from '@/Components/Panel/ui';
+import { Badge, Button, Card, DeleteButton, Field, ImageUpload, Input, LinkButton, PageHeader, Select } from '@/Components/Panel/ui';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
@@ -13,7 +13,88 @@ interface Person {
     photo_url: string | null;
 }
 
-export default function Form({ person }: { person: Person | null }) {
+interface PersonDocument {
+    id: string;
+    type_label: string;
+    original_name: string;
+    expires_on: string;
+    days_left: number;
+    status: 'valid' | 'expiring' | 'expired';
+    status_label: string;
+}
+
+interface DocumentType {
+    value: string;
+    label: string;
+}
+
+const tone = { valid: 'green', expiring: 'amber', expired: 'red' } as const;
+const brDate = (iso: string) => iso.split('-').reverse().join('/');
+
+function Documents({ person, documents, types }: { person: Person; documents: PersonDocument[]; types: DocumentType[] }) {
+    const { data, setData, post, processing, errors, reset } = useForm<{ type: string; expires_on: string; file: File | null }>({ type: types[0]?.value ?? '', expires_on: '', file: null });
+
+    const submit = (event: FormEvent) => {
+        event.preventDefault();
+        post(route('panel.people.documents.store', person.id), { forceFormData: true, preserveScroll: true, onSuccess: () => reset('file', 'expires_on') });
+    };
+
+    return (
+        <Card title="Documentos com validade" className="mb-6 max-w-2xl">
+            <p className="mb-3 text-sm text-gray-600">Atestado médico, seguro e outros documentos. O arquivo fica em armazenamento privado (LGPD) e só abre por link temporário. O gestor da equipe é avisado antes de vencer e, se a edição exigir, atleta sem atestado válido não pode ser escalado.</p>
+            {documents.length === 0 ? (
+                <p className="mb-4 rounded-md border border-dashed border-gray-300 px-3 py-4 text-center text-sm text-gray-500">Nenhum documento cadastrado.</p>
+            ) : (
+                <ul className="mb-4 divide-y divide-gray-100 rounded-md ring-1 ring-gray-200" data-testid="person-documents">
+                    {documents.map((document) => (
+                        <li key={document.id} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="font-medium text-gray-900">{document.type_label}</span>
+                                    <Badge tone={tone[document.status]}>{document.status_label}</Badge>
+                                </div>
+                                <div className="truncate text-sm text-gray-500">
+                                    {document.original_name} · validade {brDate(document.expires_on)}
+                                    {document.days_left >= 0 ? ` (${document.days_left === 0 ? 'vence hoje' : `faltam ${document.days_left} dia(s)`})` : ` (venceu há ${-document.days_left} dia(s))`}
+                                </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <a href={route('panel.people.documents.show', document.id)} className="inline-flex min-h-11 items-center justify-center rounded-md px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50 sm:min-h-0">
+                                    Abrir
+                                </a>
+                                <DeleteButton href={route('panel.people.documents.destroy', document.id)} message="Excluir este documento? O arquivo é apagado." />
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
+            <form onSubmit={submit} className="space-y-3" aria-label="Novo documento">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <Field label="Tipo" htmlFor="doc-type" error={errors.type}>
+                        <Select id="doc-type" value={data.type} onChange={(e) => setData('type', e.target.value)}>
+                            {types.map((type) => (
+                                <option key={type.value} value={type.value}>
+                                    {type.label}
+                                </option>
+                            ))}
+                        </Select>
+                    </Field>
+                    <Field label="Validade" htmlFor="doc-expires" error={errors.expires_on}>
+                        <Input id="doc-expires" type="date" value={data.expires_on} onChange={(e) => setData('expires_on', e.target.value)} required />
+                    </Field>
+                </div>
+                <Field label="Arquivo (PDF ou imagem, até 5 MB)" htmlFor="doc-file" error={errors.file}>
+                    <Input id="doc-file" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(e) => setData('file', e.target.files?.[0] ?? null)} required />
+                </Field>
+                <Button type="submit" disabled={processing}>
+                    Guardar documento
+                </Button>
+            </form>
+        </Card>
+    );
+}
+
+export default function Form({ person, documents, document_types }: { person: Person | null; documents: PersonDocument[]; document_types: DocumentType[] }) {
     const { data, setData, post, put, processing, errors } = useForm({
         name: person?.name ?? '',
         nickname: person?.nickname ?? '',
@@ -52,8 +133,9 @@ export default function Form({ person }: { person: Person | null }) {
                     />
                 </Card>
             ) : (
-                <p className="mb-4 max-w-2xl text-sm text-gray-500">Salve o cadastro para poder enviar a foto.</p>
+                <p className="mb-4 max-w-2xl text-sm text-gray-500">Salve o cadastro para poder enviar a foto e os documentos.</p>
             )}
+            {person && <Documents person={person} documents={documents} types={document_types} />}
 
             <Card className="max-w-2xl">
                 <form onSubmit={submit} className="space-y-4">

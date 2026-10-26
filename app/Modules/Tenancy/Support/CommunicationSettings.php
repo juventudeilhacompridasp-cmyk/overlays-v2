@@ -22,6 +22,7 @@ final class CommunicationSettings
         'manager_lineup_reminder' => true,
         'manager_game_changed' => true,
         'manager_suspensions' => true,
+        'manager_documents' => true,
         'push_started' => true,
         'push_score' => true,
         'push_finished' => true,

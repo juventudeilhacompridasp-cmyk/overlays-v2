@@ -74,6 +74,7 @@ export function buildNav(ctx: NavContext): NavMenu {
 
     competition.push(item('Equipes', 'panel.teams.index', 'panel.teams.*', ICONS.team), item('Atletas e comissão', 'panel.people.index', 'panel.people.*', ICONS.person), item('Estádios', 'panel.venues.index', 'panel.venues.*', ICONS.pin));
 
+    if (ctx.can.competitions) competition.push(item('Documentos a vencer', 'panel.documents.index', 'panel.documents.*', ICONS.doc));
     if (ctx.can.competitions) competition.push(item('Árbitros e mesários', 'panel.officials.index', 'panel.officials.*', ICONS.person));
     if (ctx.can.competitions) competition.push(item('Relatórios', 'panel.reports.index', 'panel.reports.*', ICONS.chart, 'reports'));
     if (ctx.can.market) competition.push(item('Mercado de jogadores', 'panel.market.index', 'panel.market.*', ICONS.team, 'market'));
@@ -138,6 +139,7 @@ export const QUICK_HINTS: Record<string, string> = {
     'panel.people.index': 'Jogadores e comissão técnica',
     'panel.venues.index': 'Locais dos jogos',
     'panel.officials.index': 'Quem apita e anota os jogos',
+    'panel.documents.index': 'Atestados e documentos vencendo',
     'panel.reports.index': 'Pendências e elencos por edição',
     'panel.market.index': 'Moderar jogadores livres',
     'panel.broadcast.index': 'Overlays do OBS ao vivo',

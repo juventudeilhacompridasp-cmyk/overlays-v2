@@ -64,6 +64,10 @@ final readonly class RuleSet
         public ?array $timeoutLimits = null,
         /** O resultado rápido (placar final sem súmula detalhada) é permitido nesta edição? */
         public bool $allowQuickResult = true,
+        /** Só escala atleta com atestado médico válido na data do jogo? (a comissão não é afetada). */
+        public bool $requireMedicalCertificate = false,
+        /** Dias antes do vencimento de um documento em que o gestor da equipe é avisado. */
+        public int $documentWarnDays = 15,
     ) {
         foreach (['setsToWin' => $setsToWin, 'setPoints' => $setPoints, 'decidingSetPoints' => $decidingSetPoints, 'setMinLead' => $setMinLead] as $name => $value) {
             if ($value < 1) {
@@ -84,7 +88,8 @@ final readonly class RuleSet
             'pointsWalkoverLoss' => $pointsWalkoverLoss ?? 0, 'maxPlayerFouls' => $maxPlayerFouls ?? 0,
             'managerLineupDeadlineMinutes' => $managerLineupDeadlineMinutes,
             'venueConflictMinutes' => $venueConflictMinutes,
-            'teamRestMinutes' => $teamRestMinutes] as $name => $value) {
+            'teamRestMinutes' => $teamRestMinutes,
+            'documentWarnDays' => $documentWarnDays] as $name => $value) {
             if ($value < 0) {
                 throw new InvalidArgumentException("O valor de {$name} não pode ser negativo.");
             }
@@ -178,6 +183,8 @@ final readonly class RuleSet
             periodMinutes: isset($merged['periods']['minutes']) && is_array($merged['periods']['minutes']) ? array_values(array_map('intval', $merged['periods']['minutes'])) : null,
             teamFoulLimit: isset($merged['fouls']['team_limit']) ? (int) $merged['fouls']['team_limit'] : null,
             allowQuickResult: (bool) ($merged['results']['quick_allowed'] ?? true),
+            requireMedicalCertificate: (bool) ($merged['documents']['medical_required'] ?? false),
+            documentWarnDays: (int) ($merged['documents']['warn_days'] ?? 15),
             timeoutLimits: isset($merged['timeouts']['limits']) && is_array($merged['timeouts']['limits']) ? array_map('intval', array_combine(array_map('intval', array_keys($merged['timeouts']['limits'])), $merged['timeouts']['limits'])) : null,
         );
     }
@@ -193,6 +200,7 @@ final readonly class RuleSet
             'periods' => ['minutes' => $this->periodMinutes],
             'timeouts' => ['limits' => $this->timeoutLimits],
             'results' => ['quick_allowed' => $this->allowQuickResult],
+            'documents' => ['medical_required' => $this->requireMedicalCertificate, 'warn_days' => $this->documentWarnDays],
             'tiebreakers' => array_map(fn (Tiebreaker $t) => $t->value, $this->tiebreakers),
             'cards' => [
                 'yellow_for_suspension' => $this->yellowCardsForSuspension,

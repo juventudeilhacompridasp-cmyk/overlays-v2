@@ -29,6 +29,7 @@ final class ManagerNotifier
             'lineup_24h', 'lineup_2h' => 'manager_lineup_reminder',
             'game_changed' => 'manager_game_changed',
             'suspensions' => 'manager_suspensions',
+            'documents' => 'manager_documents',
             default => null,
         };
 

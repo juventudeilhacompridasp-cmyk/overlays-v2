@@ -37,6 +37,7 @@ use App\Modules\Registration\Http\Controllers\ReviewController;
 use App\Modules\Registration\Http\Controllers\SeasonSettingsController;
 use App\Modules\Teams\Http\Controllers\CardController;
 use App\Modules\Teams\Http\Controllers\PersonController;
+use App\Modules\Teams\Http\Controllers\PersonDocumentController;
 use App\Modules\Teams\Http\Controllers\PersonPhotoController;
 use App\Modules\Teams\Http\Controllers\RosterController;
 use App\Modules\Teams\Http\Controllers\TeamController;
@@ -72,6 +73,8 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         });
         Route::resource('venues', VenueController::class)->except('show');
         Route::resource('people', PersonController::class)->except('show');
+        Route::post('people/{person}/documents', [PersonDocumentController::class, 'store'])->name('people.documents.store');
+        Route::delete('person-documents/{document}', [PersonDocumentController::class, 'destroy'])->name('people.documents.destroy');
         Route::post('people/{person}/photo', [PersonPhotoController::class, 'store'])->name('people.photo.store');
         Route::delete('people/{person}/photo', [PersonPhotoController::class, 'destroy'])->name('people.photo.destroy');
         Route::post('entries/{entry}/roster', [RosterController::class, 'store'])->name('entries.roster.store');
@@ -98,6 +101,12 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::post('games/{game}/result', [GameController::class, 'result'])->name('games.result');
         Route::post('games/{game}/walkover', [GameController::class, 'walkover'])->name('games.walkover');
         Route::post('games/{game}/reopen', [GameController::class, 'reopen'])->name('games.reopen');
+    });
+
+    // Documentos pessoais com validade: abrir o arquivo e a lista de vencimentos exigem `manage-registry` até para consultar.
+    Route::middleware('can:manage-registry')->group(function () {
+        Route::get('documentos', [PersonDocumentController::class, 'index'])->name('documents.index');
+        Route::get('person-documents/{document}', [PersonDocumentController::class, 'show'])->name('people.documents.show');
     });
 
     // Árbitros e mesários (cadastro com e-mail/telefone) e escala dos jogos: só quem gerencia competições, até para consultar.

@@ -36,6 +36,14 @@ class Person extends Model
     }
 
     /**
+     * @return HasMany<PersonDocument, $this>
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(PersonDocument::class);
+    }
+
+    /**
      * @return HasMany<RosterEntry, $this>
      */
     public function rosterEntries(): HasMany
