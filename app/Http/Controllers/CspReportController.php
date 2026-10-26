@@ -21,7 +21,7 @@ final class CspReportController
             $report = is_array($data) ? ($data['csp-report'] ?? $data[0]['body'] ?? $data) : [];
 
             if (is_array($report)) {
-                Log::channel(config('logging.default'))->notice('csp.violation', [
+                Log::notice('csp.violation', [
                     'directive' => $this->clean($report['effective-directive'] ?? $report['violated-directive'] ?? $report['effectiveDirective'] ?? ''),
                     'blocked' => $this->clean($report['blocked-uri'] ?? $report['blockedURL'] ?? ''),
                     'page' => $this->clean($report['document-uri'] ?? $report['documentURL'] ?? ''),

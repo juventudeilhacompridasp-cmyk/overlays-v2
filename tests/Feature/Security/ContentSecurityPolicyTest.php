@@ -53,7 +53,7 @@ it('puts a fresh nonce on the inline theme script', function () {
 
     preg_match("/'nonce-([^']+)'/", (string) $this->get('/produto')->headers->get('Content-Security-Policy-Report-Only'), $header);
 
-    expect($html)->toMatch('/<script nonce="[^"]+">/')->and($header[1] ?? '')->not->toBe('');
+    expect($html)->toMatch('/<script[^>]*nonce="[^"]+"/')->and($header[1] ?? '')->not->toBe('');
 });
 
 it('receives violation reports without login, csrf or storing anything', function () {
@@ -63,7 +63,7 @@ it('receives violation reports without login, csrf or storing anything', functio
         'csp-report' => ['violated-directive' => 'script-src', 'blocked-uri' => 'https://evil.test/a.js?token=segredo', 'document-uri' => 'https://x.test/p?q=1'],
     ]))->assertNoContent();
 
-    Log::shouldHaveReceived('channel')->once();
+    Log::shouldHaveReceived('notice')->once();
 });
 
 it('ignores reports when logging is off', function () {
@@ -72,5 +72,5 @@ it('ignores reports when logging is off', function () {
 
     $this->postJson('/csp-report', ['csp-report' => []])->assertNoContent();
 
-    Log::shouldNotHaveReceived('channel');
+    Log::shouldNotHaveReceived('notice');
 });
