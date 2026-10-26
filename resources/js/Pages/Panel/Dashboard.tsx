@@ -1,5 +1,5 @@
 import DataTable from '@/Components/DataTable';
-import { Card, LinkButton, PageHeader } from '@/Components/Panel/ui';
+import { Button, Card, Field, FilterBar, LinkButton, PageHeader, Select, StatCard } from '@/Components/Panel/ui';
 import QuickCards from '@/Components/Panel/QuickCards';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { useCan } from '@/lib/can';
@@ -45,37 +45,33 @@ export default function Dashboard({ counts, games_by_month, status_breakdown, up
 
             <QuickCards />
 
-            <div className="mb-4 flex flex-wrap items-end gap-3 rounded-lg bg-white p-3 shadow-sm ring-1 ring-gray-200" role="group" aria-label="Filtros dos jogos" data-testid="dashboard-filters">
-                <label className="text-xs font-semibold text-gray-500">
-                    Competição
-                    <select value={filters.competition ?? ''} onChange={(event) => filter({ competition: event.target.value, season: '' })} className="mt-1 block h-9 rounded-md border border-gray-300 bg-white py-0 pl-2 pr-8 text-sm font-normal text-gray-900">
+            <FilterBar
+                label="Filtros dos jogos"
+                actions={filtered ? <Button variant="secondary" onClick={() => filter({ competition: '', season: '' })}>Limpar filtros</Button> : undefined}
+            >
+                <Field label="Competição" htmlFor="filter-competition">
+                    <Select id="filter-competition" value={filters.competition ?? ''} onChange={(event) => filter({ competition: event.target.value, season: '' })}>
                         <option value="">Todas</option>
                         {competitions.map((competition) => <option key={competition.id} value={competition.id}>{competition.name}</option>)}
-                    </select>
-                </label>
-                <label className="text-xs font-semibold text-gray-500">
-                    Edição
-                    <select value={filters.season ?? ''} onChange={(event) => filter({ season: event.target.value })} className="mt-1 block h-9 rounded-md border border-gray-300 bg-white py-0 pl-2 pr-8 text-sm font-normal text-gray-900">
+                    </Select>
+                </Field>
+                <Field label="Edição" htmlFor="filter-season">
+                    <Select id="filter-season" value={filters.season ?? ''} onChange={(event) => filter({ season: event.target.value })}>
                         <option value="">Todas</option>
                         {seasons.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}
-                    </select>
-                </label>
-                <label className="text-xs font-semibold text-gray-500">
-                    Período do gráfico
-                    <select value={filters.months} onChange={(event) => filter({ months: Number(event.target.value) })} className="mt-1 block h-9 rounded-md border border-gray-300 bg-white py-0 pl-2 pr-8 text-sm font-normal text-gray-900">
+                    </Select>
+                </Field>
+                <Field label="Período do gráfico" htmlFor="filter-months">
+                    <Select id="filter-months" value={String(filters.months)} onChange={(event) => filter({ months: Number(event.target.value) })}>
                         {month_options.map((months) => <option key={months} value={months}>Últimos {months} meses</option>)}
-                    </select>
-                </label>
-                {filtered && <button type="button" onClick={() => filter({ competition: '', season: '' })} className="h-9 rounded-md border border-gray-300 px-3 text-sm font-medium text-gray-700 hover:bg-gray-50">Limpar filtros</button>}
-                <p className="basis-full text-xs text-gray-500">Os filtros valem para os jogos (gráfico, situação e próximos jogos); os totais acima são da organização inteira.</p>
-            </div>
+                    </Select>
+                </Field>
+            </FilterBar>
+            <p className="-mt-2 mb-4 text-xs text-gray-500">Os filtros valem para os jogos (gráfico, situação e próximos jogos); os totais abaixo são da organização inteira.</p>
 
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 {stats.map((stat) => (
-                    <div key={stat.label} className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200">
-                        <div className="text-3xl font-bold text-gray-900">{stat.value}</div>
-                        <div className="mt-1 text-sm text-gray-500">{stat.label}</div>
-                    </div>
+                    <StatCard key={stat.label} label={stat.label} value={stat.value} />
                 ))}
             </div>
 

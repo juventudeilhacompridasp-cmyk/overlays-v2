@@ -24,4 +24,10 @@ Use **Anular** no lançamento. Ele cria um evento compensatório: o histórico �
 - **Mata-mata empatado**: o jogo decisivo não encerra empatado sem a disputa de pênaltis.
 - **Disputa de pênaltis cobrança a cobrança**: no cartão *Disputa de pênaltis* lance cada cobrança na ordem em que acontece (**converteu** ou **perdeu**). A primeira cobrança pode ser de qualquer equipe; depois as equipes se alternam e o botão da equipe que não cobra fica desativado. A disputa fecha sozinha quando há vencedor (nas cinco primeiras cobranças de cada lado, quando o outro lado não alcança mais; depois, na morte súbita, ao fim de cada rodada). **Desfazer a última cobrança** corrige um lançamento errado. O cobrador não é registrado. Se preferir, ainda dá para lançar só o total de convertidos; o total e a disputa cobrança a cobrança não se misturam (salve o total em branco para limpar). As bolinhas aparecem no placar do OBS e na tela *Disputa de pênaltis*.
 
+## Relatórios em PDF
+No topo da súmula, o menu **Relatórios em PDF** gera (para quem tem o recurso Relatórios):
+- **Escalação**: titulares, banco e comissão das duas equipes, com esquema tático e linhas de assinatura (baixar ou ver no navegador).
+- **Atividades da partida** e **Relatório completo** (depois que o jogo é encerrado): placar, resumo em cartões (gols, cartões, substituições, faltas), placar por período, linha do tempo com cada lance, observações e assinaturas.
+Os PDFs são de uso interno e nunca aparecem no portal público.
+
 > Sem internet? Veja [a súmula offline](help:sumula-offline).

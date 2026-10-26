@@ -7,6 +7,7 @@ import {
     SelectHTMLAttributes,
     TextareaHTMLAttributes,
     forwardRef,
+    useEffect,
     useRef,
     useState,
 } from 'react';
@@ -183,6 +184,115 @@ export function Badge({
 
     return (
         <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>
+    );
+}
+
+/** Número grande com rótulo, no padrão dos indicadores do painel (cartão com anel cinza). `tone` colore só o número. */
+export function StatCard({
+    label,
+    value,
+    hint,
+    tone = 'gray',
+    href,
+}: {
+    label: string;
+    value: ReactNode;
+    hint?: string;
+    tone?: 'gray' | 'green' | 'amber' | 'red' | 'blue';
+    href?: string;
+}) {
+    const tones = { gray: 'text-gray-900', green: 'text-emerald-700', amber: 'text-amber-700', red: 'text-red-700', blue: 'text-blue-700' };
+    const body = (
+        <>
+            <div className={`text-2xl font-bold tabular-nums sm:text-3xl ${tones[tone]}`}>{value}</div>
+            <div className="mt-1 text-sm font-medium text-gray-700">{label}</div>
+            {hint && <div className="mt-0.5 text-xs text-gray-500">{hint}</div>}
+        </>
+    );
+    const base = 'block min-w-0 rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-200 sm:p-5';
+
+    return href ? (
+        <Link href={href} className={`${base} transition hover:ring-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500`}>
+            {body}
+        </Link>
+    ) : (
+        <div className={base}>{body}</div>
+    );
+}
+
+/**
+ * Faixa de filtros num cartão: campos empilhados no celular e lado a lado a partir de `sm`. Use com `Field` + `Select`;
+ * os botões (limpar, aplicar) vão em `actions`.
+ */
+export function FilterBar({ children, actions, label }: PropsWithChildren<{ actions?: ReactNode; label: string }>) {
+    return (
+        <div className="mb-4 rounded-lg bg-white p-3 shadow-sm ring-1 ring-gray-200 sm:p-4" role="group" aria-label={label}>
+            <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {children}
+                {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Menu de ações do cabeçalho: agrupa links secundários (ex.: PDFs) num botão só, para o título não ficar com uma fila de botões
+ * no celular. Fecha com Esc, clique fora ou ao escolher uma opção.
+ */
+export function ActionMenu({
+    label,
+    items,
+}: {
+    label: string;
+    items: { label: string; href: string; hint?: string; newTab?: boolean }[];
+}) {
+    const [open, setOpen] = useState(false);
+    const box = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!open) return;
+
+        const onKey = (event: KeyboardEvent) => event.key === 'Escape' && setOpen(false);
+        const onClick = (event: MouseEvent) => box.current && !box.current.contains(event.target as Node) && setOpen(false);
+        document.addEventListener('keydown', onKey);
+        document.addEventListener('mousedown', onClick);
+
+        return () => {
+            document.removeEventListener('keydown', onKey);
+            document.removeEventListener('mousedown', onClick);
+        };
+    }, [open]);
+
+    if (items.length === 0) return null;
+
+    return (
+        <div ref={box} className="relative w-full sm:w-auto">
+            <Button variant="secondary" className="w-full sm:w-auto" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
+                {label}
+                <span aria-hidden="true" className="ml-2 text-gray-400">
+                    ▾
+                </span>
+            </Button>
+            {open && (
+                <ul role="menu" className="absolute left-0 right-0 z-30 mt-1 rounded-lg bg-white p-1 shadow-lg ring-1 ring-gray-200 sm:left-auto sm:w-72 sm:max-w-[calc(100vw-2rem)]">
+                    {items.map((item) => (
+                        <li key={item.href} role="none">
+                            <a
+                                role="menuitem"
+                                href={item.href}
+                                target={item.newTab ? '_blank' : undefined}
+                                rel={item.newTab ? 'noreferrer' : undefined}
+                                onClick={() => setOpen(false)}
+                                className="block min-h-11 rounded-md px-3 py-2 text-sm text-gray-800 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none sm:min-h-0"
+                            >
+                                <span className="font-medium">{item.label}</span>
+                                {item.hint && <span className="block text-xs text-gray-500">{item.hint}</span>}
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
     );
 }
 
