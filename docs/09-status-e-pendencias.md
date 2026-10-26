@@ -20,6 +20,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 **Fora do MVP:** cobrança automática. **Decidido não fazer:** interruptor da fila offline (aumentaria o risco no jogo).
 
 ## Entregue
+- **ADR 0016 — galeria de mídia das partidas (26/10):** escopo de fotos e vídeos externos definido; implementação seguirá em partes (modelo/upload, moderação e galeria pública).
 - **PWA público (26/10):** portal e páginas públicas agora oferecem manifest instalável e convite de instalação no celular, reutilizando o service worker sem armazenar páginas ou dados.
 - **QR code para partidas (26/10):** a agenda do painel, a página pública e o editor de artes geram e permitem baixar um QR que abre diretamente o jogo no celular; o editor também pode incluir o QR no PNG exportado.
 - **Transmissão do jogo no YouTube (26/10):** o organizador pode vincular um vídeo/live do YouTube ao jogo; a página pública mostra o player responsivo somente para links YouTube validados.
