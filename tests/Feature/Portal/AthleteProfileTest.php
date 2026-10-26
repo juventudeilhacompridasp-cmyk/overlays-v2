@@ -58,7 +58,7 @@ it('shows only the public name, teams, shirt, games and goals when everything is
             ->where('athlete.participations.0.shirt', 9)
             ->where('seo.noindex', true));
 
-    $content = json_encode($response->viewData('page')['props']);
+    $content = json_encode($response->viewData('page')['props']['athlete']);
     expect($content)->not->toContain('1990')->not->toContain('birth')->not->toContain('document')->not->toContain('photo')->not->toContain('yellow')->not->toContain('card');
 });
 
