@@ -64,6 +64,11 @@ return [
         'description' => 'Aceita apenas métricas de uma lista fechada; sem IP, cookie de rastreio ou URL. 404 com a medição desligada.',
         'responses' => ['204' => ['description' => 'Contagens registradas.'], '404' => ['description' => 'Medição desligada.'], '429' => ['description' => 'Limite de requisições por minuto excedido.']],
     ],
+    'csp.report' => [
+        'summary' => 'Recebe relatórios de violação da Content-Security-Policy (enviados pelo navegador)',
+        'description' => 'Sem login e sem CSRF. Corpo limitado a 8 KB; só diretiva, origem bloqueada e página (sem query string) vão ao log. Nada é devolvido.',
+        'responses' => ['204' => ['description' => 'Relatório recebido (ou ignorado).'], '429' => ['description' => 'Limite de requisições por minuto excedido.']],
+    ],
     'status.index' => $page('Status page da plataforma (atualiza sozinha a cada 30 s)'),
     'status.json' => [
         'summary' => 'Situação da plataforma em JSON (componentes, incidentes e manutenções)',

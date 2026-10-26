@@ -6,6 +6,7 @@ use App\Modules\Matches\Enums\SheetUploadStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameSheetUpload;
 use App\Support\PlatformLimits;
+use App\Support\Uploads\UploadScanner;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -50,6 +51,8 @@ final class StoreGameSheetUpload
         }
 
         $content = (string) file_get_contents($file->getRealPath());
+        UploadScanner::check($content, $mime);
+
         $hash = hash('sha256', $content);
 
         if (GameSheetUpload::query()->where('game_id', $game->getKey())->where('sha256', $hash)->exists()) {

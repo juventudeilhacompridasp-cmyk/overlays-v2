@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.16.0',
+        'date' => '2026-10-26',
+        'changes' => ['Nova rota csp.report: recebe os relatórios de violação da Content-Security-Policy. O envio de documentos pessoais passa por verificação de conteúdo.'],
+    ],
+    [
         'version' => '1.15.0',
         'date' => '2026-10-26',
         'changes' => ['Novas rotas internas panel.mesario.games (jogos do campeonato) e panel.games.operator (painel do operador da partida).'],

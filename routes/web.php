@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CspReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TwoFactorSettingsController;
 use App\Http\Middleware\PrivateNoIndex;
@@ -21,6 +22,7 @@ use App\Modules\Status\Http\Controllers\StatusPageController;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Http\Controllers\LegalAcceptController;
 use App\Support\PlatformLimits;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 // Landing page do produto (docs/14): sempre em /produto; a raiz só nos hosts da landing quando `platform.landing.root` está ligado.
@@ -30,6 +32,9 @@ foreach (LandingHosts::all() as $landingHost) {
 Route::get('/produto', [LandingController::class, 'show'])->middleware(PlatformLimits::throttle('public'))->name('marketing.landing');
 Route::post('/produto/contato', [LandingController::class, 'contact'])->middleware('throttle:5,1')->name('marketing.contact');
 Route::post('/produto/medicao', [LandingMetricsController::class, 'store'])->middleware('throttle:30,1')->name('marketing.metrics');
+
+// Relatórios de violação da CSP (docs/17 §5): o navegador envia sozinho; sem login, sem CSRF, limitado por IP.
+Route::post('/csp-report', CspReportController::class)->middleware(PlatformLimits::throttle('public'))->withoutMiddleware(ValidateCsrfToken::class)->name('csp.report');
 
 // Status da plataforma (docs/14): sem login e sem dado de organização; também é a página inicial de status.{domínio-base}.
 if (is_string($statusBase = config('platform.base_domain')) && $statusBase !== '') {

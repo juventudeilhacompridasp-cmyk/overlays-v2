@@ -6,6 +6,7 @@ use App\Modules\Teams\Enums\PersonDocumentType;
 use App\Modules\Teams\Models\Person;
 use App\Modules\Teams\Models\PersonDocument;
 use App\Support\PlatformLimits;
+use App\Support\Uploads\UploadScanner;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -35,9 +36,12 @@ final class ManagePersonDocuments
             throw new InvalidArgumentException('Envie um PDF ou uma imagem (JPG, PNG ou WebP).');
         }
 
+        $content = (string) file_get_contents($file->getRealPath());
+        UploadScanner::check($content, $mime);
+
         $path = "organizations/{$person->organization_id}/people/{$person->getKey()}/documents/".bin2hex(random_bytes(8)).'.'.self::EXTENSIONS[$mime];
 
-        Storage::disk(self::DISK)->put($path, (string) file_get_contents($file->getRealPath()), ['ContentType' => $mime]);
+        Storage::disk(self::DISK)->put($path, $content, ['ContentType' => $mime]);
 
         return PersonDocument::query()->create([
             'organization_id' => $person->organization_id,

@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <!-- Tema claro/escuro: aplicado antes da pintura para não piscar. Telas de vídeo/OBS (Overlay, Public) ficam sempre no visual próprio. -->
-        <script>
+        <script @if (Vite::cspNonce()) nonce="{{ Vite::cspNonce() }}" @endif>
             (function () {
                 try {
                     if (/^(Overlay|Public|Embed)\//.test(@json($page['component']))) return;
