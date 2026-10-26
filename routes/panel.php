@@ -147,6 +147,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'two-factor.admins', 'leg
     Route::middleware(['can:manage-competitions', 'feature:reports'])->group(function () {
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('reports/{season}/{type}.csv', [ReportController::class, 'csv'])->name('reports.csv');
+        Route::get('reports/{season}/institucional.pdf', [ReportController::class, 'sponsorPdf'])->name('reports.sponsor-pdf');
     });
 
     Route::middleware(['can:manage-competitions', 'feature:online_registration'])->group(function () {

@@ -5,9 +5,11 @@ namespace App\Modules\Competitions\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Competitions\Models\Season;
 use App\Modules\Competitions\Support\SeasonReports;
+use App\Modules\Competitions\Support\SponsorReportPdf;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /** Painel: relatórios por edição (pendências de cadastro e elencos aprovados), na tela e em CSV. */
@@ -54,5 +56,14 @@ class ReportController extends Controller
 
             fclose($out);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function sponsorPdf(Season $season): HttpResponse
+    {
+        return response(SponsorReportPdf::for($season), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="relatorio-institucional-'.$season->year.'.pdf"',
+            'Cache-Control' => 'private, no-store',
+        ]);
     }
 }

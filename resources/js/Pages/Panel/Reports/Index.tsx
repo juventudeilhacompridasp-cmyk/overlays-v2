@@ -95,9 +95,10 @@ export default function Index({ seasons, season_id, limit, pending, rosters }: P
                     >
                         <ReportTable report={rosters} limit={limit} caption="Elencos aprovados" />
                     </Card>
-                    <p className="text-sm text-gray-600">
-                        Relatórios em PDF de cada partida (escalação, atividades e completo) ficam no menu <b>Relatórios em PDF</b> da súmula do jogo.
-                    </p>
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-950">
+                        <p>Relatórios em PDF de cada partida ficam no menu <b>Relatórios em PDF</b> da súmula do jogo.</p>
+                        <a href={route('panel.reports.sponsor-pdf', season_id)} className="inline-flex min-h-11 items-center rounded-md bg-emerald-700 px-4 py-2 font-semibold text-white hover:bg-emerald-800">Baixar relatório institucional</a>
+                    </div>
                 </div>
             )}
         </PanelLayout>
