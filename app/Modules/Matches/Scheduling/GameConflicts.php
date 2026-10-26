@@ -19,12 +19,12 @@ final class GameConflicts
      * @param  list<string>|null  $focus  ids para os quais devolver os conflitos (padrão: todos)
      * @return array<string, list<array{kind: 'venue'|'team', with: string, label: string}>>
      */
-    public static function find(array $games, ?array $focus = null, int $venueMinutes = self::VENUE_MINUTES, int $teamRestMinutes = self::TEAM_REST_MINUTES): array
+    public static function find(array $games, ?array $focus = null): array
     {
         usort($games, fn (array $a, array $b) => $a['at'] <=> $b['at']);
 
         $found = [];
-        $window = max($venueMinutes, $teamRestMinutes) * 60;
+        $window = max(self::VENUE_MINUTES, self::TEAM_REST_MINUTES) * 60;
         $closerThan = fn (int $seconds, int $minutes): bool => $seconds < $minutes * 60;
 
         foreach ($games as $index => $game) {
@@ -37,12 +37,12 @@ final class GameConflicts
 
                 $gap = $other['at'] - $game['at'];
 
-                if ($game['venue'] !== null && $game['venue'] === $other['venue'] && $closerThan($gap, $venueMinutes)) {
+                if ($game['venue'] !== null && $game['venue'] === $other['venue'] && $closerThan($gap, self::VENUE_MINUTES)) {
                     $found[$game['id']][] = ['kind' => 'venue', 'with' => $other['id'], 'label' => $other['label']];
                     $found[$other['id']][] = ['kind' => 'venue', 'with' => $game['id'], 'label' => $game['label']];
                 }
 
-                if (array_intersect($game['teams'], $other['teams']) !== [] && $closerThan($gap, $teamRestMinutes)) {
+                if (array_intersect($game['teams'], $other['teams']) !== [] && $closerThan($gap, self::TEAM_REST_MINUTES)) {
                     $found[$game['id']][] = ['kind' => 'team', 'with' => $other['id'], 'label' => $other['label']];
                     $found[$other['id']][] = ['kind' => 'team', 'with' => $game['id'], 'label' => $game['label']];
                 }

@@ -62,4 +62,3 @@ it('handles games out of order and none', function () {
 
     expect(array_keys($found))->toEqualCanonicalizing(['late', 'early']);
 });
-

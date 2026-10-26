@@ -23,6 +23,7 @@ class ScheduleController extends Controller
     public function show(Stage $stage): Response
     {
         $stage->load('division.season.competition');
+
         $games = Game::query()
             ->where('stage_id', $stage->getKey())
             ->with(['homeEntry.team', 'awayEntry.team', 'venue', 'group'])
@@ -51,8 +52,6 @@ class ScheduleController extends Controller
                     'label' => ($game->homeEntry?->team->name ?? 'A definir').' x '.($game->awayEntry?->team->name ?? 'A definir').' ('.$game->scheduled_at->format('d/m H:i').')',
                 ])->all(),
                 $games->pluck('id')->all(),
-                GameConflicts::VENUE_MINUTES,
-                GameConflicts::TEAM_REST_MINUTES,
             );
         }
 
