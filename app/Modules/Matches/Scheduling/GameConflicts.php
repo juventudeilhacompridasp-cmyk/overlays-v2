@@ -25,6 +25,7 @@ final class GameConflicts
 
         $found = [];
         $window = max(self::VENUE_MINUTES, self::TEAM_REST_MINUTES) * 60;
+        $closerThan = fn (int $seconds, int $minutes): bool => $seconds < $minutes * 60;
 
         foreach ($games as $index => $game) {
             for ($next = $index + 1; $next < count($games); $next++) {
@@ -36,12 +37,12 @@ final class GameConflicts
 
                 $gap = $other['at'] - $game['at'];
 
-                if ($game['venue'] !== null && $game['venue'] === $other['venue'] && $gap < self::VENUE_MINUTES * 60) {
+                if ($game['venue'] !== null && $game['venue'] === $other['venue'] && $closerThan($gap, self::VENUE_MINUTES)) {
                     $found[$game['id']][] = ['kind' => 'venue', 'with' => $other['id'], 'label' => $other['label']];
                     $found[$other['id']][] = ['kind' => 'venue', 'with' => $game['id'], 'label' => $game['label']];
                 }
 
-                if (array_intersect($game['teams'], $other['teams']) !== [] && $gap < self::TEAM_REST_MINUTES * 60) {
+                if (array_intersect($game['teams'], $other['teams']) !== [] && $closerThan($gap, self::TEAM_REST_MINUTES)) {
                     $found[$game['id']][] = ['kind' => 'team', 'with' => $other['id'], 'label' => $other['label']];
                     $found[$other['id']][] = ['kind' => 'team', 'with' => $game['id'], 'label' => $game['label']];
                 }
