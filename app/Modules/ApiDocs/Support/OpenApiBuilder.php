@@ -31,6 +31,7 @@ final class OpenApiBuilder
         'token' => 'Token pessoal da inscrição (enviado por e-mail).',
         'upload' => 'ID (ULID) da súmula enviada.',
         'organization' => 'ID (ULID) da organização.',
+        'media' => 'ID (ULID) da mídia da galeria da partida.',
         'user' => 'ID numérico da conta de usuário (só Super Admin).',
         'membership' => 'ID (ULID) da participação do usuário na organização.',
         'profile' => 'ID (ULID) do perfil de acesso.',
