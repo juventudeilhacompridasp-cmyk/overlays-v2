@@ -25,6 +25,7 @@ Quase tudo é **parametrizável** (por regulamento, por organização ou por var
 - OBS e overlays: [`docs/06-guia-obs.md`](docs/06-guia-obs.md) · API pública: [`docs/07-api-publica.md`](docs/07-api-publica.md) · tempo real e push: [`docs/08-validacao-tempo-real.md`](docs/08-validacao-tempo-real.md)
 - Landing e status page: [`docs/14-landing-page-e-status-page.md`](docs/14-landing-page-e-status-page.md) · performance: [`docs/15-otimizacoes-e-performance.md`](docs/15-otimizacoes-e-performance.md)
 - Produção: [`docs/16-deploy-producao.md`](docs/16-deploy-producao.md) · segurança: [`docs/17-seguranca.md`](docs/17-seguranca.md)
+- Ambiente publicado nesta máquina (Docker Swarm local + Cloudflare Tunnel, `.\swarm.ps1 update`): [`docs/18-ambiente-local-swarm-tunnel.md`](docs/18-ambiente-local-swarm-tunnel.md)
 
 ## Rodar localmente
 

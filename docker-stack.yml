@@ -1,0 +1,300 @@
+# Stack LOCAL em Docker Swarm (nó único, Docker Desktop). Uso: `.\swarm.ps1 update` (primeira vez e a cada `git pull`).
+# O CÓDIGO é montado por volume (pasta do projeto) e as dependências ficam em volumes do Docker: não há rebuild de imagem a cada
+# alteração. A imagem overlays-app:runtime (docker/local/Dockerfile) só é refeita se o PHP/extensões mudarem.
+# Portas publicadas no host: nginx 8080 (app) e reverb 8081 (WebSocket) — as que o Cloudflare Tunnel (cloudflared no Windows) usa.
+#
+# LIMITES (VM do Docker Desktop: ~7,7 GiB e 6 vCPUs; uso em repouso medido: app 46M, horizon 160M, reverb 43M, postgres 24M):
+#   limits = teto (acima disso o container é limitado/OOM-killed); reservations = o que o Swarm garante ao agendar.
+#   Soma dos tetos de memória em regime ≈ 4,2 GiB, deixando folga para Windows, Grafana/Prometheus e picos.
+#   Soma das reservas ≈ 1,1 vCPU / 1,2 GiB. Ajuste aqui conforme medir (`.\swarm.ps1 stats`).
+
+x-env: &env
+  APP_NAME: ${APP_NAME:-Plataforma}
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_KEY: ${APP_KEY:?}
+  APP_URL: ${APP_URL:?}
+  LOG_CHANNEL: stderr
+  DB_CONNECTION: pgsql
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_DATABASE: ${DB_DATABASE:-overlays}
+  DB_USERNAME: ${DB_USERNAME:-overlays}
+  DB_PASSWORD: ${DB_PASSWORD:?}
+  REDIS_CLIENT: phpredis
+  REDIS_HOST: redis
+  CACHE_STORE: redis
+  SESSION_DRIVER: redis
+  SESSION_SECURE_COOKIE: "true"
+  QUEUE_CONNECTION: redis
+  BROADCAST_CONNECTION: reverb
+  REVERB_APP_ID: ${REVERB_APP_ID:?}
+  REVERB_APP_KEY: ${REVERB_APP_KEY:?}
+  REVERB_APP_SECRET: ${REVERB_APP_SECRET:?}
+  REVERB_HOST: reverb
+  REVERB_PORT: "8080"
+  REVERB_SCHEME: http
+  REVERB_PUBLIC_HOST: ${REVERB_PUBLIC_HOST:?}
+  REVERB_PUBLIC_PORT: ${REVERB_PUBLIC_PORT:-443}
+  REVERB_PUBLIC_SCHEME: ${REVERB_PUBLIC_SCHEME:-https}
+  REVERB_SCALING_ENABLED: "true"
+  STATUS_NOTIFY: ${STATUS_NOTIFY:-true}
+  PLATFORM_BASE_DOMAIN: ${PLATFORM_BASE_DOMAIN:-}
+  DEFAULT_ORGANIZATION_SLUG: ${DEFAULT_ORGANIZATION_SLUG:-default}
+  DOCUMENT_HASH_KEY: ${DOCUMENT_HASH_KEY:-}
+  OPEN_REGISTRATION: ${OPEN_REGISTRATION:-false}
+  ALLOW_FIRST_USER_SETUP: ${ALLOW_FIRST_USER_SETUP:-false}
+  TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
+  HSTS_SECONDS: ${HSTS_SECONDS:-15552000}
+  FILESYSTEM_DISK: local
+  STORAGE_DRIVER: local
+  MAIL_MAILER: ${MAIL_MAILER:-log}
+  MAIL_HOST: ${MAIL_HOST:-}
+  MAIL_PORT: ${MAIL_PORT:-587}
+  MAIL_USERNAME: ${MAIL_USERNAME:-}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@example.com}
+  VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+  VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+  VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:contato@example.com}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  INERTIA_SSR_ENABLED: "true"
+  INERTIA_SSR_URL: http://ssr:13714
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+# Código do projeto (PROJECT_DIR, definido pelo swarm.ps1) + vendor e storage em volumes do Docker.
+x-code-volumes: &code-volumes
+  - type: bind
+    source: ${PROJECT_DIR:?}
+    target: /var/www/html
+  - vendor:/var/www/html/vendor
+  - storage:/var/www/html/storage
+
+x-app: &app
+  image: overlays-app:runtime
+  environment: *env
+  volumes: *code-volumes
+  networks: [internal]
+  logging: *logging
+
+services:
+  nginx:
+    hostname: "{{.Service.Name}}"
+    labels:
+      com.docker.compose.project: overlays
+      com.docker.compose.service: nginx
+    image: nginx:1.27-alpine
+    networks: [internal]
+    ports:
+      - { target: 80, published: 8080, protocol: tcp, mode: ingress }
+    volumes:
+      - type: bind
+        source: ${PROJECT_DIR:?}/docker/nginx/default.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+      - type: bind
+        source: ${PROJECT_DIR:?}
+        target: /var/www/html
+        read_only: true
+      - type: volume
+        source: storage
+        target: /var/www/html/storage
+        read_only: true
+    logging: *logging
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/up || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "0.50", memory: 128M }
+        reservations: { cpus: "0.05", memory: 32M }
+      restart_policy: { condition: any, delay: 5s }
+      update_config: { order: start-first, failure_action: rollback }
+
+  app:
+    <<: *app
+    hostname: "{{.Service.Name}}"
+    labels:
+      com.docker.compose.project: overlays
+      com.docker.compose.service: app
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm -t >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "2.00", memory: 1024M }
+        reservations: { cpus: "0.25", memory: 256M }
+      restart_policy: { condition: any, delay: 5s }
+      update_config: { order: start-first, failure_action: rollback }
+
+  horizon:
+    <<: *app
+    hostname: "{{.Service.Name}}"
+    labels:
+      com.docker.compose.project: overlays
+      com.docker.compose.service: horizon
+    command: php artisan horizon
+    stop_grace_period: 60s
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "1.00", memory: 768M }
+        reservations: { cpus: "0.25", memory: 192M }
+      restart_policy: { condition: any, delay: 5s }
+
+  scheduler:
+    <<: *app
+    hostname: "{{.Service.Name}}"
+    labels:
+      com.docker.compose.project: overlays
+      com.docker.compose.service: scheduler
+    command: php artisan schedule:work
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "0.25", memory: 192M }
+        reservations: { cpus: "0.05", memory: 64M }
+      restart_policy: { condition: any, delay: 5s }
+
+  reverb:
+    <<: *app
+    hostname: "{{.Service.Name}}"
+    labels:
+      com.docker.compose.project: overlays
+      com.docker.compose.service: reverb
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    ports:
+      - { target: 8080, published: 8081, protocol: tcp, mode: ingress }
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "0.75", memory: 256M }
+        reservations: { cpus: "0.10", memory: 64M }
+      restart_policy: { condition: any, delay: 5s }
+
+  ssr:
+    <<: *app
+    hostname: "{{.Service.Name}}"
+    labels:
+      com.docker.compose.project: overlays
+      com.docker.compose.service: ssr
+    command: node bootstrap/ssr/ssr.js
+    environment:
+      <<: *env
+      PORT: "13714"
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "1.00", memory: 384M }
+        reservations: { cpus: "0.10", memory: 128M }
+      restart_policy: { condition: any, delay: 5s }
+
+  postgres:
+    hostname: "{{.Service.Name}}"
+    labels:
+      com.docker.compose.project: overlays
+      com.docker.compose.service: postgres
+    image: postgres:17-alpine
+    # Ajustado ao teto de 1 GiB: shared_buffers 256M, cache efetivo 512M, 60 conexões (fpm + horizon + reverb).
+    command: >
+      postgres -c shared_buffers=256MB -c effective_cache_size=512MB -c work_mem=8MB
+      -c maintenance_work_mem=96MB -c max_connections=60
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-overlays}
+      POSTGRES_USER: ${DB_USERNAME:-overlays}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs: { size: 268435456 }
+    networks: [internal]
+    stop_grace_period: 60s
+    logging: *logging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-overlays} -d ${DB_DATABASE:-overlays}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "2.00", memory: 1024M }
+        reservations: { cpus: "0.25", memory: 384M }
+      restart_policy: { condition: any, delay: 5s }
+
+  redis:
+    hostname: "{{.Service.Name}}"
+    labels:
+      com.docker.compose.project: overlays
+      com.docker.compose.service: redis
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redisdata:/data
+    networks: [internal]
+    logging: *logging
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "0.50", memory: 384M }
+        reservations: { cpus: "0.10", memory: 64M }
+      restart_policy: { condition: any, delay: 5s }
+
+  backup:
+    hostname: "{{.Service.Name}}"
+    labels:
+      com.docker.compose.project: overlays
+      com.docker.compose.service: backup
+    image: overlays-backup:local
+    environment:
+      PGHOST: postgres
+      PGUSER: ${DB_USERNAME:-overlays}
+      PGPASSWORD: ${DB_PASSWORD:?}
+      PGDATABASE: ${DB_DATABASE:-overlays}
+      BACKUP_REMOTE: ${BACKUP_REMOTE:-/backups/pg}
+      BACKUP_FILES_REMOTE: ${BACKUP_FILES_REMOTE:-/backups/files}
+      BACKUP_FILES_SOURCE: /data/storage/app/uploads
+      BACKUP_HOUR: ${BACKUP_HOUR:-3}
+      RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - storage:/data/storage:ro
+      - backups:/backups
+    networks: [internal]
+    logging: *logging
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "0.25", memory: 192M }
+        reservations: { cpus: "0.05", memory: 64M }
+      restart_policy: { condition: any, delay: 30s }
+
+networks:
+  internal:
+    driver: overlay
+
+volumes:
+  # Reaproveita o banco do ambiente anterior — nada é recriado nem perdido.
+  pgdata:
+    external: true
+    name: overlays-v2_pgdata
+  storage:
+  vendor:
+  redisdata:
+  backups:
