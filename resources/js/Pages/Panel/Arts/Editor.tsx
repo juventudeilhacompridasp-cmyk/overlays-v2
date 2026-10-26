@@ -1,4 +1,5 @@
 import { Badge, Button, Card, Field, Input, PageHeader, Select } from '@/Components/Panel/ui';
+import GameQrCode from '@/Components/Portal/GameQrCode';
 import PanelLayout from '@/Layouts/PanelLayout';
 import { ensureFonts } from '@/lib/artFonts';
 import { ArtData, ArtStyle, buildArt } from '@/lib/arts';
@@ -294,6 +295,11 @@ export default function Editor({ game, kind, kinds, data, initial, templates, pr
                         ) : (
                             <p className="text-xs text-gray-500">Você pode gerar e baixar a arte. Salvar modelos é com quem gerencia competições.</p>
                         )}
+                    </Section>
+
+                    <Section title="Compartilhar a partida">
+                        <p className="mb-3 text-sm text-gray-600">Inclua este QR na divulgação impressa ou baixe-o para combinar com a arte.</p>
+                        <GameQrCode url={route('public.games.show', game.id)} label={`QR code de ${game.home} x ${game.away}`} />
                     </Section>
 
                     <Section title="Formato">
