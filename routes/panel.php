@@ -25,6 +25,7 @@ use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
 use App\Modules\Matches\Http\Controllers\GameReportController;
 use App\Modules\Matches\Http\Controllers\MesarioController;
+use App\Modules\Matches\Http\Controllers\ScheduleController;
 use App\Modules\Matches\Http\Controllers\SheetController;
 use App\Modules\Matches\Http\Controllers\SheetReviewController;
 use App\Modules\Matches\Http\Controllers\SheetUploadController;
@@ -85,6 +86,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::resource('divisions.entries', EntryController::class)->shallow()->only(['store', 'show', 'update', 'destroy']);
 
         Route::post('stages/{stage}/fixtures', [FixtureController::class, 'store'])->name('stages.fixtures.store');
+        Route::get('stages/{stage}/schedule', [ScheduleController::class, 'show'])->name('stages.schedule');
         Route::get('stages/{stage}/draw', [DrawController::class, 'show'])->name('stages.draw');
         Route::post('stages/{stage}/draw', [DrawController::class, 'store'])->name('stages.draw.store');
         Route::post('stages/{stage}/fixtures/import', [FixtureController::class, 'import'])->name('stages.fixtures.import');

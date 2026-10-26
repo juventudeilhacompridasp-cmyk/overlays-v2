@@ -255,3 +255,61 @@ export function roundNames(pairs: number): string[] {
         return left === 0 ? 'Final' : left === 1 ? 'Semifinal' : left === 2 ? 'Quartas de final' : left === 3 ? 'Oitavas de final' : `${2 ** left} avos de final`;
     });
 }
+
+/* ------------------------- Restrição: mesma cidade --------------------------- */
+
+/** Cidade de cada equipe, já normalizada (minúsculas, sem espaços nas pontas); vazia = sem restrição. */
+export type CityOf = (teamId: string) => string;
+
+export const normalizeCity = (city: string | null | undefined): string => (city ?? '').trim().toLowerCase();
+
+export type Clash = { where: string; city: string; teams: string[] };
+
+/** Equipes da mesma cidade no mesmo grupo. */
+export function groupClashes(board: GroupsBoard, cityOf: CityOf): Clash[] {
+    const clashes: Clash[] = [];
+
+    for (const group of board.groups) {
+        const byCity = new Map<string, string[]>();
+
+        for (const id of group.teams) {
+            const city = cityOf(id);
+            if (city !== '') byCity.set(city, [...(byCity.get(city) ?? []), id]);
+        }
+
+        for (const [city, teams] of byCity) if (teams.length > 1) clashes.push({ where: group.id, city, teams });
+    }
+
+    return clashes;
+}
+
+/** Equipes da mesma cidade no mesmo confronto da 1ª rodada. */
+export function bracketClashes(board: KnockoutBoard, cityOf: CityOf): Clash[] {
+    const clashes: Clash[] = [];
+
+    for (let pair = 0; pair < board.slots.length / 2; pair++) {
+        const a = board.slots[pair * 2];
+        const b = board.slots[pair * 2 + 1];
+        if (a && b && cityOf(a) !== '' && cityOf(a) === cityOf(b)) clashes.push({ where: String(pair), city: cityOf(a), teams: [a, b] });
+    }
+
+    return clashes;
+}
+
+/** Tenta o sorteio várias vezes e fica com o que tem menos conflitos (para ao achar um sem nenhum). */
+export function bestOf<T>(attempts: number, make: () => T, conflicts: (candidate: T) => number): T {
+    let best = make();
+    let bestScore = conflicts(best);
+
+    for (let i = 1; i < attempts && bestScore > 0; i++) {
+        const candidate = make();
+        const score = conflicts(candidate);
+
+        if (score < bestScore) {
+            best = candidate;
+            bestScore = score;
+        }
+    }
+
+    return best;
+}

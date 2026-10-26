@@ -4,17 +4,21 @@ import {
     GroupsBoard,
     KnockoutBoard,
     POOL,
+    bestOf,
+    bracketClashes,
     bracketProblems,
     clearBracket,
     clearGroups,
     emptyBracket,
     emptyGroups,
+    groupClashes,
     groupsPayload,
     groupsProblems,
     locationOf,
     moveToBracketPool,
     moveToGroup,
     moveToSlot,
+    normalizeCity,
     pairsPayload,
     potGroups,
     randomBracket,
@@ -37,6 +41,7 @@ interface TeamInfo {
     logo_url: string | null;
     color: string | null;
     seed: number | null;
+    city: string | null;
 }
 
 interface Props {
@@ -97,6 +102,24 @@ export default function Draw({ competition, season, division, stage, entries, bl
     const [legs, setLegs] = useState(1);
     const [active, setActive] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
+    const cities = useMemo(() => new Map(entries.map((team) => [team.id, normalizeCity(team.city)])), [entries]);
+    const cityOf = (id: string) => cities.get(id) ?? '';
+    const hasSharedCities = useMemo(() => {
+        const seen = new Set<string>();
+        return entries.some((team) => {
+            const city = normalizeCity(team.city);
+            if (city === '') return false;
+            if (seen.has(city)) return true;
+            seen.add(city);
+            return false;
+        });
+    }, [entries]);
+    const [separateCities, setSeparateCities] = useState(true);
+
+    /** Roda o sorteio; com a opção ligada tenta várias vezes e fica com o que tem menos equipes da mesma cidade juntas. */
+    const draw = <T,>(make: () => T, conflicts: (candidate: T) => number): T => (separateCities && hasSharedCities ? bestOf(300, make, conflicts) : make());
+    const clashes = isKnockout ? bracketClashes(bracket, cityOf) : groupClashes(groups, cityOf);
+    const nameOf = (id: string) => byId.get(id)?.name ?? id;
 
     const sensors = useSensors(
         useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -196,10 +219,25 @@ export default function Draw({ competition, season, division, stage, entries, bl
                     ))}
                 </ul>
             )}
+            {clashes.length > 0 && (
+                <ul className="mb-2 list-disc space-y-0.5 pl-5 text-xs text-amber-700" data-testid="draw-clashes">
+                    {clashes.map((clash) => (
+                        <li key={`${clash.where}-${clash.city}`}>
+                            Mesma cidade ({clash.city}) juntas {isKnockout ? `no confronto ${Number(clash.where) + 1}` : `no ${groups.groups.find((group) => group.id === clash.where)?.name ?? 'grupo'}`}: {clash.teams.map(nameOf).join(' e ')}. Pode salvar assim, é só um aviso.
+                        </li>
+                    ))}
+                </ul>
+            )}
+            {hasSharedCities && (
+                <label className="mb-2 flex min-h-11 items-center gap-2 text-sm text-gray-700 sm:min-h-0">
+                    <input type="checkbox" checked={separateCities} onChange={(event) => setSeparateCities(event.target.checked)} />
+                    Evitar equipes da mesma cidade juntas nos sorteios
+                </label>
+            )}
             <div className="flex flex-wrap items-center gap-2">
                 {isKnockout ? (
                     <>
-                        <Button variant="secondary" onClick={() => setBracket(randomBracket(ids))}>
+                        <Button variant="secondary" onClick={() => setBracket(draw(() => randomBracket(ids), (candidate) => bracketClashes(candidate, cityOf).length))}>
                             Sortear
                         </Button>
                         <Button variant="secondary" onClick={() => setBracket(seededBracket(ids))}>
@@ -211,10 +249,10 @@ export default function Draw({ competition, season, division, stage, entries, bl
                     </>
                 ) : (
                     <>
-                        <Button variant="secondary" onClick={() => setGroups(randomGroups(groups, ids))}>
+                        <Button variant="secondary" onClick={() => setGroups(draw(() => randomGroups(groups, ids), (candidate) => groupClashes(candidate, cityOf).length))}>
                             Sortear
                         </Button>
-                        <Button variant="secondary" onClick={() => setGroups(potGroups(groups, ids))}>
+                        <Button variant="secondary" onClick={() => setGroups(draw(() => potGroups(groups, ids), (candidate) => groupClashes(candidate, cityOf).length))}>
                             Sorteio por potes
                         </Button>
                         <Button variant="secondary" onClick={() => setGroups(snakeGroups(groups, ids))}>

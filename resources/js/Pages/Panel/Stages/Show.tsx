@@ -386,18 +386,25 @@ export default function Show({ competition, season, division, stage, tables, gam
                     { label: stage.name },
                 ]}
                 actions={
-                    generation.can_clear && (
-                        <Button
-                            variant="danger"
-                            onClick={() => {
-                                if (window.confirm('Limpar a tabela de jogos desta fase? Os jogos (e os grupos gerados) serão apagados e você poderá gerar de novo.')) {
-                                    router.delete(route('panel.stages.fixtures.destroy', stage.id), { preserveScroll: true });
-                                }
-                            }}
-                        >
-                            Limpar tabela
-                        </Button>
-                    )
+                    <>
+                        {games.length > 0 && (
+                            <LinkButton href={route('panel.stages.schedule', stage.id)} variant="secondary">
+                                Agenda dos jogos
+                            </LinkButton>
+                        )}
+                        {generation.can_clear && (
+                            <Button
+                                variant="danger"
+                                onClick={() => {
+                                    if (window.confirm('Limpar a tabela de jogos desta fase? Os jogos (e os grupos gerados) serão apagados e você poderá gerar de novo.')) {
+                                        router.delete(route('panel.stages.fixtures.destroy', stage.id), { preserveScroll: true });
+                                    }
+                                }}
+                            >
+                                Limpar tabela
+                            </Button>
+                        )}
+                    </>
                 }
             />
 

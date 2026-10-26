@@ -129,6 +129,7 @@ return [
     'panel.entries.update' => $action('Atualiza a inscrição (situação, cabeça de chave, grupo)'),
     'panel.entries.destroy' => $action('Remove a inscrição'),
     'panel.stages.fixtures.store' => $action('Gera os jogos da fase', 'Todos contra todos, grupos ou chaveamento do mata-mata (1 jogo ou ida e volta).'),
+    'panel.stages.schedule' => $page('Agenda da fase: jogos por dia para remarcar arrastando, com aviso de conflito', 'Conflito = mesmo estádio com menos de 2 h entre jogos ou mesma equipe com menos de 3 h de descanso, contando todas as fases e divisões. Salvar é a rota de atualização do jogo.'),
     'panel.stages.draw' => $page('Sorteio e chaves da fase: montar grupos ou a chave arrastando as equipes'),
     'panel.stages.draw.store' => $action('Salva o sorteio já definido e gera os jogos da fase', 'Grupos (nome + equipes) ou confrontos da 1ª rodada; todas as equipes confirmadas entram uma única vez; tudo ou nada.'),
     'panel.stages.fixtures.import' => $action('Importa uma tabela de jogos já definida (sem sorteio)', 'Texto colado com rodada, mandante, visitante, data, hora, local e grupo; tudo ou nada, só pontos corridos e grupos.'),

@@ -180,3 +180,49 @@ it('imports a ready-made table through the panel route', function () {
 
     expect(Game::query()->where('stage_id', $stage->id)->count())->toBe(1);
 });
+
+it('shows the stage schedule with conflicts across stages of the organization', function () {
+    ['stage' => $stage] = fixtureDivision(4);
+    app(GenerateStageFixtures::class)->handle($stage);
+    $venue = Venue::factory()->create();
+    $games = Game::query()->where('stage_id', $stage->id)->orderBy('number')->get();
+
+    // Dois jogos no mesmo estádio com 1 h de diferença: conflito nos dois.
+    $games[0]->update(['scheduled_at' => '2026-05-10 16:00:00', 'venue_id' => $venue->id]);
+    $games[1]->update(['scheduled_at' => '2026-05-10 17:00:00', 'venue_id' => $venue->id]);
+
+    // Jogo de OUTRA divisão no mesmo estádio e horário também conta.
+    $other = Game::factory()->create(['scheduled_at' => '2026-05-10 16:30:00', 'venue_id' => $venue->id]);
+
+    $this->get("/painel/stages/{$stage->id}/schedule")->assertOk()->assertInertia(fn ($page) => $page
+        ->component('Panel/Stages/Schedule')
+        ->has('games', 6)
+        ->where('games.0.movable', true)
+        ->where('games.0.scheduled_at', '2026-05-10T16:00')
+        ->has('games.0.conflicts', 2)
+        ->has('games.1.conflicts', 2)
+        ->where('games.2.conflicts', [])
+        ->where('rules.venue_minutes', 120));
+
+    expect($other->fresh()->venue_id)->toBe($venue->id);
+});
+
+it('locks finished games in the schedule and reschedules through the game update route', function () {
+    ['stage' => $stage] = fixtureDivision(4);
+    app(GenerateStageFixtures::class)->handle($stage);
+    $games = Game::query()->where('stage_id', $stage->id)->orderBy('number')->get();
+    $games[0]->update(['status' => GameStatus::Finished]);
+
+    $this->get("/painel/stages/{$stage->id}/schedule")->assertInertia(fn ($page) => $page->where('games.0.movable', false)->where('games.1.movable', true));
+
+    $this->patch("/painel/games/{$games[1]->id}", ['scheduled_at' => '2026-06-01T10:00', 'venue_id' => null, 'status' => 'scheduled'])->assertSessionHas('success');
+    expect($games[1]->fresh()->scheduled_at->format('Y-m-d H:i'))->toBe('2026-06-01 10:00');
+});
+
+it('opens the schedule of a stage without games and refuses another organization', function () {
+    ['stage' => $stage] = fixtureDivision(2);
+    $this->get("/painel/stages/{$stage->id}/schedule")->assertOk()->assertInertia(fn ($page) => $page->has('games', 0));
+
+    $foreign = Stage::factory()->create(['organization_id' => Organization::factory()->create()->id]);
+    $this->get("/painel/stages/{$foreign->id}/schedule")->assertNotFound();
+});
