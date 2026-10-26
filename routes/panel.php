@@ -31,6 +31,7 @@ use App\Modules\Matches\Http\Controllers\MesarioController;
 use App\Modules\Matches\Http\Controllers\OfficialAssignmentController;
 use App\Modules\Matches\Http\Controllers\OfficialController;
 use App\Modules\Matches\Http\Controllers\ScheduleController;
+use App\Modules\Matches\Http\Controllers\SheetClosingController;
 use App\Modules\Matches\Http\Controllers\SheetController;
 use App\Modules\Matches\Http\Controllers\SheetReviewController;
 use App\Modules\Matches\Http\Controllers\SheetUploadController;
@@ -175,6 +176,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'two-factor.admins', 'leg
         });
         Route::put('games/{game}/lineups/{entry}', [SheetController::class, 'lineup'])->name('games.lineup');
         Route::post('games/{game}/sync', [SheetController::class, 'sync'])->name('games.sync');
+        Route::post('games/{game}/fechar-sumula', [SheetClosingController::class, 'store'])->name('games.sheet.close');
         Route::post('games/{game}/events', [SheetController::class, 'storeEvent'])->name('games.events.store');
         Route::post('games/{game}/points', [SheetController::class, 'point'])->name('games.points.store');
         Route::patch('games/{game}/volleyball-rotation', [SheetController::class, 'volleyballRotation'])->name('games.volleyball-rotation');

@@ -32,3 +32,6 @@ Por padrão a API de consulta (`/api/v1`: competições, edições, estatística
 
 ## Lançamento de resultados
 **Permitir o resultado rápido** liga ou desliga o lançamento do placar final sem súmula detalhada (tela da fase e [Mesário](route:panel.mesario)). Desligado, o placar só entra pela súmula, com eventos; o W.O. continua disponível. Padrão: permitido.
+
+## Fechamento da súmula
+**Assinaturas mínimas** define quantas assinaturas confirmadas da súmula (veja [Painel do operador](help:fechar-a-sumula)) são exigidas para fechá-la (0 a 10; padrão 0, nenhuma). **Exigir motivo para reabrir** (padrão ligado) pede uma justificativa quando alguém reabre um jogo cuja súmula já foi fechada.

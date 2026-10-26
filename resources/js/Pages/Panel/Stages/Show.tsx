@@ -25,6 +25,7 @@ interface Game {
     status: string;
     status_label: string;
     decided: boolean;
+    sheet_closed?: boolean;
     round_label: string | null;
     leg: number | null;
     legs: number;
@@ -348,7 +349,12 @@ function GameRow({ game, onSchedule, onResult }: { game: Game; onSchedule: () =>
                         small
                         variant="secondary"
                         onClick={() => {
-                            if (window.confirm('Reabrir este jogo? Ele sai da classificação até o resultado ser lançado de novo.')) {
+                            if (game.sheet_closed) {
+                                const reason = window.prompt('A súmula deste jogo está fechada. Qual o motivo da reabertura?');
+                                if (reason !== null) {
+                                    router.post(route('panel.games.reopen', game.id), { reason }, { preserveScroll: true });
+                                }
+                            } else if (window.confirm('Reabrir este jogo? Ele sai da classificação até o resultado ser lançado de novo.')) {
                                 router.post(route('panel.games.reopen', game.id), {}, { preserveScroll: true });
                             }
                         }}

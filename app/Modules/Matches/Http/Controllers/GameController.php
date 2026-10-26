@@ -63,10 +63,12 @@ class GameController extends Controller
         return back()->with('success', 'W.O. registrado.');
     }
 
-    public function reopen(Game $game, ReopenGame $reopen): RedirectResponse
+    public function reopen(Request $request, Game $game, ReopenGame $reopen): RedirectResponse
     {
+        $data = $request->validate(['reason' => ['nullable', 'string', 'max:500']]);
+
         try {
-            $reopen->handle($game);
+            $reopen->handle($game, $data['reason'] ?? null, $request->user()?->name);
         } catch (InvalidArgumentException $exception) {
             return back()->with('error', $exception->getMessage());
         }

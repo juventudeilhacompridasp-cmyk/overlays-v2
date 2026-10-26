@@ -9,11 +9,12 @@ type Props = {
     portal: { home: number; widgets: number; scorers: number; stats_top: number; stats_form: number };
     public_api: boolean;
     quick_result: boolean;
+    sheet_closing: { min_signatures: number; reopen_reason: boolean };
     help_ai: { released: boolean; enabled: boolean; configured: boolean };
 };
 
-export default function Edit({ features, mesario, portal, public_api, quick_result, help_ai }: Props) {
-    const { data, setData, patch, processing, errors } = useForm({ disabled: features.filter((feature) => feature.off).map((feature) => feature.key), mesario, portal, public_api, quick_result, help_ai: help_ai.enabled });
+export default function Edit({ features, mesario, portal, public_api, quick_result, sheet_closing, help_ai }: Props) {
+    const { data, setData, patch, processing, errors } = useForm({ disabled: features.filter((feature) => feature.off).map((feature) => feature.key), mesario, portal, public_api, quick_result, sheet_closing, help_ai: help_ai.enabled });
 
     const toggle = (key: string, on: boolean) => setData('disabled', on ? data.disabled.filter((item) => item !== key) : [...data.disabled, key]);
     const submit = (event: FormEvent) => {
@@ -68,6 +69,21 @@ export default function Edit({ features, mesario, portal, public_api, quick_resu
                         <input type="checkbox" className="mt-0.5 rounded border-gray-300 text-emerald-600" checked={data.quick_result} onChange={(event) => setData('quick_result', event.target.checked)} />
                         <span>Permitir o <strong>resultado rápido</strong> (placar final sem súmula detalhada) na tela da fase e no app do mesário. Desligado, só a súmula (eventos) lança o placar; W.O. continua disponível.</span>
                     </label>
+                </Card>
+
+                <Card title="Fechamento da súmula" className="max-w-3xl">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <label className="block text-sm text-gray-700">
+                            <span className="font-medium">Assinaturas mínimas</span>
+                            <input type="number" min={0} max={10} className="mt-1 block w-full rounded-md border-gray-300 text-sm" value={data.sheet_closing.min_signatures} onChange={(event) => setData('sheet_closing', { ...data.sheet_closing, min_signatures: Number(event.target.value) })} />
+                            <span className="mt-1 block text-xs text-gray-500">Assinaturas confirmadas da súmula para poder fechá-la (0 = nenhuma).</span>
+                            {errors['sheet_closing.min_signatures' as keyof typeof errors] && <span className="text-xs text-red-600">{errors['sheet_closing.min_signatures' as keyof typeof errors]}</span>}
+                        </label>
+                        <label className="flex items-start gap-2 text-sm text-gray-700">
+                            <input type="checkbox" className="mt-0.5 rounded border-gray-300 text-emerald-600" checked={data.sheet_closing.reopen_reason} onChange={(event) => setData('sheet_closing', { ...data.sheet_closing, reopen_reason: event.target.checked })} />
+                            <span>Exigir um <strong>motivo</strong> para reabrir um jogo com a súmula fechada.</span>
+                        </label>
+                    </div>
                 </Card>
 
                 {help_ai.released && (
