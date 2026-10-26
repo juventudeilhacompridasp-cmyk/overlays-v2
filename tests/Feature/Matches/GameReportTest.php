@@ -21,8 +21,8 @@ it('baixa a escalação pré-partida em PDF para o operador', function () {
         ->assertHeader('Content-Disposition', 'attachment; filename="escalacao-'.$game->id.'.pdf"');
     expect($response->getContent())->toStartWith('%PDF-1.4')
         ->and($response->getContent())->toContain('Escala')
-        ->and($response->getContent())->toContain('TITULARES (11)')
-        ->and($response->getContent())->toContain('BANCO (3)')
+        ->and($response->getContent())->toContain('TITULARES \(11\)')
+        ->and($response->getContent())->toContain('BANCO \(3\)')
         ->and($response->getContent())->toContain('/BaseFont /Helvetica-Bold')
         ->and($response->getContent())->toContain("P\xE1gina 1 de 1");
 });
@@ -38,7 +38,7 @@ it('inclui placar, escalações e eventos efetivos no relatório final', functio
     expect($response->getContent())->toContain('Relat')
         ->and($response->getContent())->toContain('Resumo da partida')
         ->and($response->getContent())->toContain('Linha do tempo')
-        ->and($response->getContent())->toContain('TITULARES (11)')
+        ->and($response->getContent())->toContain('TITULARES \(11\)')
         ->and($response->getContent())->toContain('(Gol)');
 });
 
