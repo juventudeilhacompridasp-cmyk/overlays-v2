@@ -65,8 +65,8 @@ it('handles games out of order and none', function () {
 
 it('uses the configured windows instead of the sport defaults', function () {
     $found = GameConflicts::find([
-        conflictGame('g1', '2026-05-10 16:00', 'v1', ['a']),
-        conflictGame('g2', '2026-05-10 17:00', 'v1', ['b']),
+        conflictGame('g1', '2026-05-10 16:00', 'v1', ['b']),
+        conflictGame('g2', '2026-05-10 16:30', 'v1', ['a']),
         conflictGame('g3', '2026-05-10 17:30', 'v2', ['a']),
     ], null, 45, 90);
 
