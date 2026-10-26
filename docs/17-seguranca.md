@@ -61,6 +61,9 @@ Teste de força bruta: 6 logins errados seguidos com o mesmo e-mail devem bloque
 4. Se dados pessoais foram expostos: a LGPD exige comunicar a ANPD e os titulares em prazo razoável; registre o que, quando e quantos. Menores pedem atenção redobrada.
 5. Restaure de backup conhecido se houve alteração de dados (`docs/16`, seção 6).
 
+## 4b. Registro de atividades (auditoria)
+Tabela `activity_log` (por organização, somente de acréscimo): quem (nome e papel em texto), o quê (rota e resumo), em quê (jogo, equipe, pessoa), resultado (feito, recusado, erro), nomes dos campos enviados e, para jogos e lances, antes/depois. **Nunca** IP, CPF, senhas nem valores digitados. Leitura só para quem gerencia usuários; retenção por `ACTIVITY_LOG_RETENTION_DAYS` (365). Complementa `access_audit` (mudanças de acesso) e `document_access_log` (abertura de documentos).
+
 ## 5. O que ainda NÃO existe (próximos passos, por prioridade)
 1. (feito) **Autenticação em dois fatores (TOTP)**, opcional por pessoa e exigível para administradores por `PLATFORM_2FA_REQUIRED_FOR_ADMINS`. E-mail ao ativar/desativar/reiniciar e reinício pelo Super Admin (`/plataforma/contas`) também entregues.
 2. **CSP completo** (`Content-Security-Policy` com nonce): hoje só `frame-ancestors`. Exige mapear scripts inline do Inertia/SSR, Reverb (`wss:`), players de vídeo (YouTube/Vimeo/Instagram) e fontes; começar em `Report-Only`.

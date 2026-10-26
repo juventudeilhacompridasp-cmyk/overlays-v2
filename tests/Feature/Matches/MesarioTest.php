@@ -82,8 +82,9 @@ it('never caches panel pages or API responses in the service worker', function (
 it('links the manifest only in panel pages', function () {
     $this->actingAs(panelUser(Role::Operator));
 
-    $this->get('/painel/mesario')->assertSee('rel="manifest"', false);
-    $this->get('/')->assertDontSee('rel="manifest"', false);
+    $this->get('/painel/mesario')->assertSee('mesario.webmanifest', false);
+    // O portal público tem o próprio manifesto (PWA público); o do mesário fica só nas páginas do painel.
+    $this->get('/')->assertDontSee('mesario.webmanifest', false);
 });
 
 it('hides the quick result for games of an edition that does not allow it', function () {

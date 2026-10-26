@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 | Painel do gestor de equipe (ADR 0003). Entra quem está autenticado, verificado e tem o papel `manager`; cada rota
 | ainda confere, no controlador, se o registro é de uma equipe vinculada ao usuário (`ManagedTeams`, 404 fora disso).
 */
-Route::middleware(['auth', 'verified', 'manager.member', 'legal.accepted', 'feature:team_portal'])->prefix('gestor')->name('manager.')->group(function () {
+Route::middleware(['auth', 'verified', 'manager.member', 'legal.accepted', 'feature:team_portal', 'activity.log'])->prefix('gestor')->name('manager.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::patch('avisos', [NoticeController::class, 'update'])->name('notices.update');
     Route::get('inscricoes/{entry}', [EntryController::class, 'show'])->name('entries.show');
