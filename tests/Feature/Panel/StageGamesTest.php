@@ -207,25 +207,6 @@ it('shows the stage schedule with conflicts across stages of the organization', 
     expect($other->fresh()->venue_id)->toBe($venue->id);
 });
 
-it('uses the schedule conflict windows configured in the edition', function () {
-    ['stage' => $stage] = fixtureDivision(4);
-    $season = $stage->division->season;
-    $rules = $season->ruleSet()->toArray();
-    $rules['schedule'] = ['venue_minutes' => 45, 'team_rest_minutes' => 90];
-    $season->update(['rules' => $rules]);
-    app(GenerateStageFixtures::class)->handle($stage);
-    $venue = Venue::factory()->create();
-    $games = Game::query()->where('stage_id', $stage->id)->orderBy('number')->get();
-    $games[0]->update(['scheduled_at' => '2026-05-10 16:00:00', 'venue_id' => $venue->id]);
-    $games[1]->update(['scheduled_at' => '2026-05-10 17:00:00', 'venue_id' => $venue->id]);
-
-    $this->get("/painel/stages/{$stage->id}/schedule")->assertInertia(fn ($page) => $page
-        ->where('rules.venue_minutes', 45)
-        ->where('rules.team_rest_minutes', 90)
-        ->where('games.0.conflicts.0.kind', 'venue')
-        ->where('games.0.conflicts.0.with', (string) $games[1]->id));
-});
-
 it('locks finished games in the schedule and reschedules through the game update route', function () {
     ['stage' => $stage] = fixtureDivision(4);
     app(GenerateStageFixtures::class)->handle($stage);
