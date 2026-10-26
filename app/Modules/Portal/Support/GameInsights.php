@@ -7,6 +7,7 @@ use App\Modules\Competitions\Data\StandingEntry;
 use App\Modules\Competitions\Enums\StageType;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\GameStatus;
+use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,7 +22,7 @@ final class GameInsights
     public function __construct(private readonly CalculateStandings $standings = new CalculateStandings) {}
 
     /**
-     * @return array{timeline: list<array<string, mixed>>|null, standings: array<string, mixed>|null, form: array<string, mixed>|null, head_to_head: array<string, mixed>|null}
+     * @return array{timeline: list<array<string, mixed>>|null, standings: array<string, mixed>|null, form: array<string, mixed>|null, head_to_head: array<string, mixed>|null, lineup: array<string, mixed>|null}
      */
     public function for(Game $game): array
     {
@@ -32,7 +33,31 @@ final class GameInsights
             'standings' => PortalSettings::enabled('game_standings') ? $this->standing($game) : null,
             'form' => PortalSettings::enabled('game_form') ? $this->form($game) : null,
             'head_to_head' => PortalSettings::enabled('game_head_to_head') ? $this->headToHead($game) : null,
+            'lineup' => PortalSettings::enabled('game_lineup') ? $this->lineup($game) : null,
         ];
+    }
+
+    /** @return array{home: array<string, list<array<string, mixed>>>, away: array<string, list<array<string, mixed>>>} */
+    private function lineup(Game $game): array
+    {
+        $game->loadMissing(['lineups.person']);
+        $teams = ['home' => ['starter' => [], 'bench' => []], 'away' => ['starter' => [], 'bench' => []]];
+
+        foreach ($game->lineups as $row) {
+            $team = $row->entry_id === $game->home_entry_id ? 'home' : ($row->entry_id === $game->away_entry_id ? 'away' : null);
+
+            if ($team === null || $row->person === null || $row->slot === LineupSlot::Staff) {
+                continue;
+            }
+
+            $teams[$team][$row->slot->value][] = [
+                'name' => PublicName::of($row->person),
+                'shirt' => $row->shirt_number === null ? null : (int) $row->shirt_number,
+                'captain' => (bool) $row->is_captain,
+            ];
+        }
+
+        return $teams;
     }
 
     /**

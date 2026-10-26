@@ -52,6 +52,18 @@ export interface Insights {
     standings: { title: string; home: StandingSide | null; away: StandingSide | null } | null;
     form: { home: FormItem[]; away: FormItem[] } | null;
     head_to_head: { summary: { home_wins: number; draws: number; away_wins: number }; games: { home: string | null; away: string | null; home_score: number; away_score: number; scheduled_at: string | null; competition: string; url: string }[] } | null;
+    lineup: { home: LineupSide; away: LineupSide } | null;
+}
+
+interface LineupSide {
+    starter?: LineupPlayer[];
+    bench?: LineupPlayer[];
+}
+
+interface LineupPlayer {
+    name: string;
+    shirt: number | null;
+    captain: boolean;
 }
 
 interface StandingSide {
@@ -139,6 +151,24 @@ function GoalList({ goals, side }: { goals: Goal[]; side: 'home' | 'away' }) {
                     ⚽ {goal.player ?? 'Gol'}
                     {goal.own_goal && ' (contra)'}
                     {goal.minute !== null && <span className="ml-1 text-gray-500">{goal.minute}'</span>}
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+function LineupSideView({ side }: { side: LineupSide }) {
+    const starters = side.starter ?? [];
+    const rows = [...starters, ...(side.bench ?? [])];
+
+    return (
+        <ul className="space-y-1 text-sm text-gray-300">
+            {rows.length === 0 && <li className="text-gray-500">Escalação não informada</li>}
+            {rows.map((player, index) => (
+                <li key={`${player.name}-${index}`} className="flex items-center gap-2">
+                    <span className="w-7 text-right tabular-nums text-gray-500">{player.shirt ?? '—'}</span>
+                    <span>{player.name}{player.captain ? ' (C)' : ''}</span>
+                    {index < starters.length && <span className="ml-auto text-[10px] uppercase text-emerald-400">titular</span>}
                 </li>
             ))}
         </ul>
@@ -325,6 +355,14 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
                                 </li>
                             ))}
                         </ul>
+                    </Section>
+                )}
+                {insights?.lineup && (
+                    <Section title="Escalações" testid="game-lineup">
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <div><h3 className="mb-2 text-center font-semibold">{home}</h3><LineupSideView side={insights.lineup.home} /></div>
+                            <div><h3 className="mb-2 text-center font-semibold">{away}</h3><LineupSideView side={insights.lineup.away} /></div>
+                        </div>
                     </Section>
                 )}
                 {snapshot.venue && <p className="mt-8 text-center text-sm text-gray-500">{snapshot.venue}</p>}

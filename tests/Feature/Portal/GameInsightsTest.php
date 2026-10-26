@@ -7,6 +7,8 @@ use App\Modules\Competitions\Models\Entry;
 use App\Modules\Competitions\Models\Stage;
 use App\Modules\Matches\Enums\GameEventType;
 use App\Modules\Matches\Enums\GameStatus;
+use App\Modules\Matches\Enums\LineupSlot;
+use App\Modules\Matches\Models\GameLineup;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Teams\Models\Person;
@@ -88,6 +90,27 @@ describe('the timeline', function () {
         Competition::query()->whereKey($game->division->season->competition_id)->update(['sport' => 'volleyball']);
 
         insightsPage($game)->assertInertia(fn ($page) => $page->where('insights.timeline', null));
+    });
+});
+
+describe('public lineups', function () {
+    it('keeps lineups hidden by default and exposes only safe fields when enabled', function () {
+        ['game' => $game, 'a' => $a, 'b' => $b] = insightsGame();
+        $starter = Person::factory()->create(['name' => 'João Silva', 'nickname' => 'Joãozinho', 'birth_date' => '1990-01-01', 'photo_path' => 'private/photo.webp']);
+        $bench = Person::factory()->create(['name' => 'Pedro Santos', 'nickname' => null, 'birth_date' => '1988-01-01']);
+        GameLineup::factory()->create(['game_id' => $game->id, 'entry_id' => $a->id, 'person_id' => $starter->id, 'slot' => LineupSlot::Starter, 'shirt_number' => 10, 'is_captain' => true, 'position' => 'meia']);
+        GameLineup::factory()->create(['game_id' => $game->id, 'entry_id' => $b->id, 'person_id' => $bench->id, 'slot' => LineupSlot::Bench, 'shirt_number' => 12]);
+
+        insightsPage($game)->assertInertia(fn ($page) => $page->where('insights.lineup', null));
+
+        insightsSettings(['game_lineup' => true]);
+        insightsPage($game)->assertInertia(function ($page) {
+            $lineup = $page->toArray()['props']['insights']['lineup'];
+
+            expect($lineup['home']['starter'][0])->toBe(['name' => 'Joãozinho', 'shirt' => 10, 'captain' => true])
+                ->and($lineup['away']['bench'][0]['name'])->toBe('Pedro S.')
+                ->and(json_encode($lineup))->not->toContain('photo');
+        });
     });
 });
 
@@ -189,7 +212,7 @@ describe('the organization settings', function () {
     });
 
     it('is saved by the administrator on the portal screen, and by nobody else', function () {
-        $payload = ['home_live' => true, 'home_upcoming' => false, 'home_recent' => true, 'home_competitions' => true, 'game_timeline' => true, 'game_cards' => true, 'game_standings' => false, 'game_form' => true, 'game_head_to_head' => false, 'team_history' => true, 'team_form' => true, 'team_scorers' => false, 'team_calendar' => true, 'team_roster' => true, 'season_bracket' => false, 'season_stats' => true, 'season_rules' => true, 'share_buttons' => false, 'competition_page' => true, 'competition_champions' => false, 'competition_records' => true];
+        $payload = ['home_live' => true, 'home_upcoming' => false, 'home_recent' => true, 'home_competitions' => true, 'game_timeline' => true, 'game_cards' => true, 'game_standings' => false, 'game_form' => true, 'game_head_to_head' => false, 'game_lineup' => true, 'team_history' => true, 'team_form' => true, 'team_scorers' => false, 'team_calendar' => true, 'team_roster' => true, 'season_bracket' => false, 'season_stats' => true, 'season_rules' => true, 'share_buttons' => false, 'competition_page' => true, 'competition_champions' => false, 'competition_records' => true];
 
         $this->actingAs(panelUser(Role::Organizer))->patch(route('panel.organization.portal'), $payload);
         expect(CurrentOrganization::get()->fresh()->settings['portal'] ?? null)->toBeNull();
@@ -202,6 +225,6 @@ describe('the organization settings', function () {
         $this->actingAs(panelUser(Role::Admin))->get(route('panel.organization.edit'))->assertInertia(fn ($page) => $page
             ->where('portal_settings.game_cards', true)
             ->where('portal_settings.game_standings', false)
-            ->has('portal_switches', 21));
+            ->has('portal_switches', 22));
     });
 });
