@@ -32,7 +32,14 @@ jobs:
       - name: Pest
         # A geração da imagem Open Graph usa GD e pode ultrapassar o limite padrão de 128 MB
         # quando a suíte completa roda no mesmo processo.
-        run: php -d memory_limit=256M artisan test
+        run: |
+          set -o pipefail
+          php -d memory_limit=256M artisan test 2>&1 | tee /tmp/pest-output
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            tail -80 /tmp/pest-output | while IFS= read -r line; do echo "::error::$line"; done
+          fi
+          exit "$status"
 
   frontend:
     name: Front (tipos e build)
