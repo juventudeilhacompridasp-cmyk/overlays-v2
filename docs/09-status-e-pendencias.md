@@ -20,6 +20,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 **Fora do MVP:** cobrança automática. **Decidido não fazer:** interruptor da fila offline (aumentaria o risco no jogo).
 
 ## Entregue
+- **Registro de atividades (auditoria no banco, 26/10):** `activity_log` com toda ação de escrita de usuários logados (inclusive recusadas), mudanças de jogo com antes/depois e lances lançados; tela e CSV em Painel > Registro de atividades; retenção e liga/desliga por `ACTIVITY_LOG_*`. Próximo: perfil só de mesário e visão do Operador da partida.
 - **QR code para partidas (26/10):** a agenda do painel e a página pública geram e permitem baixar um QR que abre diretamente o jogo no celular.
 - **Transmissão do jogo no YouTube (26/10):** o organizador pode vincular um vídeo/live do YouTube ao jogo; a página pública mostra o player responsivo somente para links YouTube validados.
 - **Escalações públicas opcionais (26/10):** a página do jogo aceita o interruptor `settings.portal.game_lineup` e exibe titulares/reservas com nome público, camisa e capitão; fotos, nascimento, documentos e demais dados pessoais nunca são publicados.

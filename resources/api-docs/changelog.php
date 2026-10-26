@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.14.0',
+        'date' => '2026-10-26',
+        'changes' => ['Novas rotas internas panel.activity-log.index e panel.activity-log.export: registro de atividades (auditoria) de tudo o que os usuários fazem.'],
+    ],
+    [
         'version' => '1.13.0',
         'date' => '2026-10-26',
         'changes' => ['Novas rotas internas platform.accounts.index e platform.accounts.reset: o Super Admin reinicia os dois fatores de uma conta. A ativação e a desativação dos dois fatores passam a avisar a pessoa por e-mail.'],

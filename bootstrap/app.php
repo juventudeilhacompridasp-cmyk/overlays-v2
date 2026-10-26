@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureTwoFactorForAdmins;
 use App\Http\Middleware\FrameOptions;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\LogActivity;
 use App\Http\Middleware\SecurityHeaders;
 use App\Modules\Market\Http\Middleware\EnsureAthlete;
 use App\Modules\Tenancy\Http\Middleware\EnsureFeature;
@@ -61,6 +62,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'legal.accepted' => EnsureLegalAccepted::class,
             'platform.admin' => EnsurePlatformAdmin::class,
             'two-factor.admins' => EnsureTwoFactorForAdmins::class,
+            'activity.log' => LogActivity::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

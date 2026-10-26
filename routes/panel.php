@@ -45,6 +45,7 @@ use App\Modules\Teams\Http\Controllers\TeamController;
 use App\Modules\Teams\Http\Controllers\TeamLogoController;
 use App\Modules\Teams\Http\Controllers\TeamManagerController;
 use App\Modules\Tenancy\Http\Controllers\AccessAuditController;
+use App\Modules\Tenancy\Http\Controllers\ActivityLogController;
 use App\Modules\Tenancy\Http\Controllers\AccessProfileController;
 use App\Modules\Tenancy\Http\Controllers\CommunicationsController;
 use App\Modules\Tenancy\Http\Controllers\DocumentAccessController;
@@ -59,7 +60,7 @@ use Illuminate\Support\Facades\Route;
 | Painel do organizador. Entra quem está autenticado, verificado e tem papel na organização (`panel.member`).
 | Consultar vale para qualquer papel; escrever exige a permissão da área (`panel.can:{ability}`, ver `Role`).
 */
-Route::middleware(['auth', 'verified', 'panel.member', 'two-factor.admins', 'legal.accepted'])->prefix('painel')->name('panel.')->group(function () {
+Route::middleware(['auth', 'verified', 'panel.member', 'two-factor.admins', 'legal.accepted', 'activity.log'])->prefix('painel')->name('panel.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('resumo.csv', [DashboardController::class, 'export'])->name('dashboard.export');
 
@@ -283,6 +284,8 @@ Route::middleware(['auth', 'verified', 'panel.member', 'two-factor.admins', 'leg
         Route::put('users/{membership}/overrides', [MemberController::class, 'overrides'])->name('users.overrides');
         Route::delete('users/{membership}', [MemberController::class, 'destroy'])->name('users.destroy');
         Route::get('access-audit', [AccessAuditController::class, 'index'])->name('access-audit.index');
+        Route::get('activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
+        Route::get('activity-log/export', [ActivityLogController::class, 'export'])->name('activity-log.export');
         Route::get('document-access', [DocumentAccessController::class, 'index'])->name('document-access.index');
     });
 });

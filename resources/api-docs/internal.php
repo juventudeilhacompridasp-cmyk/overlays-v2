@@ -258,6 +258,8 @@ return [
     'panel.users.update' => $action('Troca o papel ou o perfil do usuário'),
     'panel.users.overrides' => $action('Define as exceções de permissão do usuário (somar ou retirar; negar vence)'),
     'panel.users.destroy' => $action('Remove o acesso do usuário (a conta continua)'),
+    'panel.activity-log.index' => $page('Registro de atividades: tudo o que os usuários fizeram, com filtros por pessoa, área, resultado, tipo, jogo e período', 'Só quem gerencia usuários. Guarda só os nomes dos campos enviados (nunca valores, senhas, IP ou CPF).'),
+    'panel.activity-log.export' => $download('Baixa o registro de atividades em CSV (até 5.000 linhas)', 'CSV (`;`, UTF-8 com BOM) com os mesmos filtros da tela.'),
     'panel.document-access.index' => $page('Quem abriu documentos pessoais (inscrições, atestados e súmulas enviadas): os 300 acessos mais recentes', 'Só quem gerencia usuários. Sem IP; o registro é guardado por 2 anos.'),
     'panel.access-audit.index' => $page('Auditoria de acesso: últimas 200 mudanças'),
 

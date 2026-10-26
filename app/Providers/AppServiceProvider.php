@@ -9,6 +9,7 @@ use App\Modules\Market\Listeners\MarkHiredProfiles;
 use App\Modules\Matches\Events\GameEventRecorded;
 use App\Modules\Matches\Events\GameUpdated;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Portal\Push\GamePushNotifier;
 use App\Modules\Portal\Push\PushSender;
 use App\Modules\Portal\Push\WebPushSender;
@@ -18,6 +19,7 @@ use App\Modules\Teams\Support\GameNotices;
 use App\Modules\Tenancy\Actions\ManageMembers;
 use App\Modules\Tenancy\Enums\Ability;
 use App\Modules\Tenancy\Enums\Permission;
+use App\Modules\Tenancy\Support\ActivityRecorder;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -97,6 +99,10 @@ class AppServiceProvider extends ServiceProvider
         // Transmissão (overlays do OBS): reage ao placar ao vivo e aos lances da súmula.
         Event::listen(GameUpdated::class, SyncOverlays::class);
         Event::listen(GameEventRecorded::class, ShowLowerThird::class);
+
+        // Auditoria: mudanças de jogo e lances feitos por quem está logado (antes/depois) vão ao registro de atividades.
+        Game::updated(ActivityRecorder::gameChanged(...));
+        GameEvent::created(ActivityRecorder::eventRecorded(...));
 
         // Placar ao vivo: qualquer mudança de placar, situação ou horários do jogo é transmitida.
         Game::updated(function (Game $game): void {

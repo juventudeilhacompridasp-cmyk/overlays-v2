@@ -50,6 +50,17 @@ return [
     ],
 
     /*
+    | Registro de atividades (auditoria no banco, `activity_log`). `enabled` liga/desliga a gravação; `retention_days` é por quanto
+    | tempo guardar (mínimo 30); `log_refused` também guarda as tentativas recusadas (sem permissão, validação, erro). Lido por
+    | `App\Modules\Tenancy\Support\ActivitySettings`.
+    */
+    'activity_log' => [
+        'enabled' => (bool) env('ACTIVITY_LOG_ENABLED', true),
+        'retention_days' => (int) env('ACTIVITY_LOG_RETENTION_DAYS', 365),
+        'log_refused' => (bool) env('ACTIVITY_LOG_REFUSED', true),
+    ],
+
+    /*
     | Segurança das respostas. `hsts_seconds` = Strict-Transport-Security (só em HTTPS; 0 desliga). Sem `includeSubDomains`
     | de propósito: subdomínios de organizações e domínios próprios podem ter ciclos de HTTPS diferentes.
     */

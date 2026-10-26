@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 | Painel do atleta do Mercado (ADR 0008). Entra quem está autenticado e tem o papel `athlete`; o e-mail só precisa estar
 | verificado para PUBLICAR o perfil (a ação confere). Cada rota trabalha só no perfil do próprio usuário.
 */
-Route::middleware(['auth', 'athlete.member', 'legal.accepted', 'feature:market'])->prefix('atleta')->name('athlete.')->group(function () {
+Route::middleware(['auth', 'athlete.member', 'legal.accepted', 'feature:market', 'activity.log'])->prefix('atleta')->name('athlete.')->group(function () {
     Route::get('/', [AthleteController::class, 'show'])->name('dashboard');
     Route::put('perfil', [AthleteController::class, 'update'])->name('profile.update');
     Route::post('foto', [AthleteController::class, 'photo'])->name('photo.store');
