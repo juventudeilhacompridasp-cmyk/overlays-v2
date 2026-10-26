@@ -74,6 +74,7 @@ class ScheduleController extends Controller
                 'status_label' => $game->status->label(),
                 'movable' => in_array($game->status, self::MOVABLE, true),
                 'scheduled_at' => $game->scheduled_at?->format('Y-m-d\TH:i'),
+                'youtube_live_url' => $game->youtube_live_url,
                 'venue_id' => $game->venue_id,
                 'venue' => $game->venue?->name,
                 'conflicts' => $conflicts[$game->getKey()] ?? [],

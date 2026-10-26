@@ -175,7 +175,7 @@ function LineupSideView({ side }: { side: LineupSide }) {
     );
 }
 
-export default function GameLive({ snapshot: initial, realtime, push_key, insights, json_ld, share_image }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null; insights?: Insights; json_ld?: Record<string, unknown> | null; share_image?: string | null }) {
+export default function GameLive({ snapshot: initial, realtime, push_key, insights, json_ld, share_image, youtube_embed_url }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null; insights?: Insights; json_ld?: Record<string, unknown> | null; share_image?: string | null; youtube_embed_url?: string | null }) {
     const [snapshot, setSnapshot] = useState(initial);
     const [connection, setConnection] = useState<ConnectionState>('connecting');
     // Diferença entre o relógio do navegador e o do servidor, medida na carga da página (não nos deltas, que podem atrasar na fila).
@@ -362,6 +362,13 @@ export default function GameLive({ snapshot: initial, realtime, push_key, insigh
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div><h3 className="mb-2 text-center font-semibold">{home}</h3><LineupSideView side={insights.lineup.home} /></div>
                             <div><h3 className="mb-2 text-center font-semibold">{away}</h3><LineupSideView side={insights.lineup.away} /></div>
+                        </div>
+                    </Section>
+                )}
+                {youtube_embed_url && (
+                    <Section title="Transmissão ao vivo" testid="game-youtube">
+                        <div className="aspect-video overflow-hidden rounded-lg bg-black">
+                            <iframe src={youtube_embed_url} title={`Transmissão ao vivo: ${home} x ${away}`} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
                         </div>
                     </Section>
                 )}

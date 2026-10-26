@@ -30,6 +30,7 @@ interface Game {
     home_penalties: number | null;
     away_penalties: number | null;
     scheduled_at: string | null;
+    youtube_live_url: string | null;
     venue: { id: string; name: string } | null;
 }
 
@@ -174,6 +175,7 @@ function ScheduleModal({ game, venues, statuses, onClose }: { game: Game; venues
         scheduled_at: game.scheduled_at ?? '',
         venue_id: game.venue?.id ?? '',
         status: game.status,
+        youtube_live_url: game.youtube_live_url ?? '',
     });
 
     const submit = (event: FormEvent) => {
@@ -208,6 +210,9 @@ function ScheduleModal({ game, venues, statuses, onClose }: { game: Game; venues
                             </option>
                         ))}
                     </Select>
+                </Field>
+                <Field label="Transmissão ao vivo no YouTube" htmlFor="youtube_live_url" error={errors.youtube_live_url} hint="Cole o link do vídeo ou da live. O portal incorporará apenas o player do YouTube.">
+                    <Input id="youtube_live_url" type="url" value={data.youtube_live_url} onChange={(e) => setData('youtube_live_url', e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
                 </Field>
                 <div className="flex justify-end gap-2">
                     <Button variant="secondary" onClick={onClose}>
