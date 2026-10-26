@@ -3,8 +3,10 @@
 namespace App\Modules\Matches\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Matches\Actions\GameSignatureActions;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Support\GameReportPdf;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -31,6 +33,25 @@ final class GameReportController extends Controller
         };
 
         return $this->download($game, $label, GameReportPdf::finalReport($game, $type), $request->boolean('visualizar'));
+    }
+
+    public function inviteSignature(Request $request, Game $game, GameSignatureActions $actions): RedirectResponse
+    {
+        $data = $request->validate([
+            'document_type' => ['required', 'in:sheet,lineup,final'],
+            'name' => ['required', 'string', 'max:120'],
+            'role' => ['required', 'string', 'max:40'],
+            'email' => ['required', 'email', 'max:255'],
+        ]);
+        $document = match ($data['document_type']) {
+            'lineup' => GameReportPdf::lineup($game),
+            'final' => GameReportPdf::finalReport($game),
+            default => GameReportPdf::officialSheet($game),
+        };
+
+        $actions->invite($game, $data['document_type'], $document, $data['name'], $data['role'], $data['email']);
+
+        return back()->with('success', 'Convite de assinatura enviado.');
     }
 
     private function download(Game $game, string $kind, string $pdf, bool $inline = false): Response

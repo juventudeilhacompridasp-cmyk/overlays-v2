@@ -171,6 +171,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'two-factor.admins', 'leg
             Route::get('escalacao.pdf', [GameReportController::class, 'lineup'])->name('lineup');
             Route::get('sumula.pdf', [GameReportController::class, 'sheet'])->name('sheet');
             Route::get('final.pdf', [GameReportController::class, 'finalReport'])->name('final');
+            Route::post('assinaturas', [GameReportController::class, 'inviteSignature'])->name('signatures.invite');
         });
         Route::put('games/{game}/lineups/{entry}', [SheetController::class, 'lineup'])->name('games.lineup');
         Route::post('games/{game}/sync', [SheetController::class, 'sync'])->name('games.sync');
