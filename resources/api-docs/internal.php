@@ -162,6 +162,7 @@ return [
     'panel.games.shootout.undo' => $action('Desfaz a última cobrança de pênalti'),
     'panel.games.finish' => $action('Encerra o jogo'),
     'panel.games.reports.lineup' => $download('Escalação do jogo em PDF', 'PDF.', 'Exige o recurso `reports`.'),
+    'panel.games.reports.sheet' => $download('Súmula oficial do jogo em PDF para imprimir', 'PDF.', 'Escalações, arbitragem e mesa, ocorrências (ou linhas em branco), observações e assinaturas. Exige o recurso `reports`.'),
     'panel.games.reports.final' => $download('Súmula final do jogo em PDF', 'PDF.', 'Exige o recurso `reports`.'),
     'panel.games.uploads' => $page('Súmulas enviadas depois do jogo', 'Exige o recurso `sheet_import` (sob demanda).'),
     'panel.games.uploads.store' => $action('Envia a foto, PDF, CSV ou XLSX da súmula (até 15 MB)', 'Guardado no disco privado; só abre por URL assinada de 10 min.'),

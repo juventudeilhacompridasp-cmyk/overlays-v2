@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.8.0',
+        'date' => '2026-10-26',
+        'changes' => ['Nova rota interna panel.games.reports.sheet: súmula oficial do jogo em PDF, pronta para imprimir e assinar.'],
+    ],
+    [
         'version' => '1.7.0',
         'date' => '2026-10-26',
         'changes' => ['Novas rotas internas panel.officials.* (cadastro de árbitros e mesários), panel.stages.officials e panel.games.officials.update (escala dos jogos com aviso de conflito e e-mail).'],

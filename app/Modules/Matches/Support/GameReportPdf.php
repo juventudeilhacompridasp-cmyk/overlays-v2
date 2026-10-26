@@ -3,6 +3,7 @@
 namespace App\Modules\Matches\Support;
 
 use App\Modules\Matches\Enums\GameEventType;
+use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Enums\OfficialRole;
 use App\Modules\Matches\Models\Game;
@@ -41,6 +42,38 @@ final class GameReportPdf
         self::matchCard($pdf, $game, false);
         self::lineupCards($pdf, $game);
         self::signatures($pdf, ['Responsável — '.$game->homeEntry->team->name, 'Responsável — '.$game->awayEntry->team->name, 'Árbitro / mesário']);
+
+        return $pdf->output();
+    }
+
+    /**
+     * Súmula oficial para imprimir ou arquivar: cabeçalho, arbitragem e mesa, escalações, ocorrências (linhas em branco
+     * quando o jogo ainda não tem lançamentos, para preencher à mão), observações e assinaturas.
+     */
+    public static function officialSheet(Game $game): string
+    {
+        self::load($game);
+        $pdf = self::start($game, 'Súmula oficial do jogo');
+        $played = in_array($game->status, [GameStatus::Finished, GameStatus::Walkover, GameStatus::InProgress], true);
+
+        self::matchCard($pdf, $game, $played);
+        self::lineupCards($pdf, $game);
+        self::officialsTable($pdf, $game);
+
+        $events = $game->events()->effective()->with(['entry.team', 'person'])->orderBy('id')->get()
+            ->reject(fn (GameEvent $event): bool => $event->type->isClockMark() || in_array($event->type, [GameEventType::ShotClockReset, GameEventType::PeriodStart, GameEventType::PeriodEnd], true))
+            ->values();
+
+        self::occurrences($pdf, $events);
+        self::notes($pdf);
+
+        $home = $game->homeEntry;
+        $away = $game->awayEntry;
+        self::signatures(
+            $pdf,
+            ['Árbitro', 'Capitão — '.$home->team->name, 'Capitão — '.$away->team->name, 'Mesário'],
+            [self::officialName($game, OfficialRole::Referee), self::captain($game, $home), self::captain($game, $away), self::officialName($game, OfficialRole::Scorer)],
+        );
 
         return $pdf->output();
     }
@@ -270,7 +303,7 @@ final class GameReportPdf
      * @param  list<array{0: string, 1: int|float, 2: string}>  $columns
      * @param  list<list<string|array{text: string, chip: string}>>  $rows
      */
-    private static function table(PdfDocument $pdf, array $columns, array $rows, float $rowHeight = 20): void
+    private static function table(PdfDocument $pdf, array $columns, array $rows, float $rowHeight = 20, bool $ruled = false): void
     {
         $fixed = array_sum(array_map(fn (array $column): float => (float) $column[1], $columns));
         $flexible = count(array_filter($columns, fn (array $column): bool => $column[1] == 0));
@@ -315,6 +348,10 @@ final class GameReportPdf
                 $x += $widths[$i];
             }
 
+            if ($ruled) {
+                $pdf->line(PdfDocument::MARGIN, $y + $rowHeight, PdfDocument::WIDTH - PdfDocument::MARGIN, $y + $rowHeight, '#d1d5db', 0.5);
+            }
+
             $pdf->moveTo($y + $rowHeight);
         }
 
@@ -332,15 +369,15 @@ final class GameReportPdf
 
     private static function lineupCards(PdfDocument $pdf, Game $game): void
     {
-        self::section($pdf, 'Escalações', 'Titulares, banco e comissão técnica');
-
         $gap = 12;
         $cardWidth = ($pdf->contentWidth() - $gap) / 2;
         $entries = [$game->homeEntry, $game->awayEntry];
         $blocks = array_map(fn ($entry): array => self::lineupBlock($game, $entry), $entries);
         $height = max(array_map(fn (array $block): float => self::blockHeight($block), $blocks));
 
-        $pdf->ensure(min($height, 360));
+        // O título só fica numa página onde os cartões também cabem (nada de título sozinho no pé da página).
+        $pdf->ensure(min($height, 380) + 40);
+        self::section($pdf, 'Escalações', 'Titulares, banco e comissão técnica');
         $y = $pdf->y();
 
         foreach ($entries as $i => $entry) {
@@ -427,8 +464,11 @@ final class GameReportPdf
         $pdf->moveTo($y + 96);
     }
 
-    /** @param list<string> $labels */
-    private static function signatures(PdfDocument $pdf, array $labels): void
+    /**
+     * @param  list<string>  $labels
+     * @param  list<string|null>  $names  nome impresso acima do rótulo (quando já se sabe quem é)
+     */
+    private static function signatures(PdfDocument $pdf, array $labels, array $names = []): void
     {
         $pdf->ensure(80);
         $pdf->skip(30);
@@ -440,9 +480,59 @@ final class GameReportPdf
             $x = PdfDocument::MARGIN + $i * ($width + $gap);
             $pdf->line($x, $y, $x + $width, $y, self::INK, 0.8);
             $pdf->text($x + $width / 2, $y + 5, $label, 8.5, false, self::MUTED, 'center', $width);
+
+            if (($names[$i] ?? null) !== null && $names[$i] !== '') {
+                $pdf->text($x + $width / 2, $y + 17, (string) $names[$i], 8.5, true, self::INK, 'center', $width);
+            }
         }
 
-        $pdf->moveTo($y + 24);
+        $pdf->moveTo($y + 36);
+    }
+
+    private static function officialsTable(PdfDocument $pdf, Game $game): void
+    {
+        $pdf->ensure(190); // tabela pequena: fica inteira numa página só
+        self::section($pdf, 'Arbitragem e mesa');
+
+        $rows = array_map(fn (OfficialRole $role): array => [$role->label(), self::officialName($game, $role) ?? ''], OfficialRole::cases());
+
+        self::table($pdf, [['Função', 150, 'left'], ['Nome', 0, 'left']], $rows, 20, true);
+    }
+
+    /** @param Collection<int, GameEvent> $events */
+    private static function occurrences(PdfDocument $pdf, $events): void
+    {
+        self::section($pdf, 'Ocorrências', 'Gols, cartões, substituições e demais lances');
+
+        $rows = [];
+        foreach ($events as $event) {
+            $rows[] = [
+                $event->minute !== null ? $event->minute."'" : '',
+                $event->period.'º',
+                ['text' => $event->type->label(), 'chip' => self::eventColor($event->type)],
+                $event->entry === null ? 'Partida' : $event->entry->team->name,
+                $event->person ? self::person($event->person) : '',
+            ];
+        }
+
+        // Sem lançamentos: linhas em branco para preencher à mão.
+        for ($i = count($rows); $i < 8; $i++) {
+            $rows[] = ['', '', '', '', ''];
+        }
+
+        self::table($pdf, [['Min.', 44, 'left'], ['Per.', 40, 'left'], ['Ocorrência', 130, 'left'], ['Equipe', 150, 'left'], ['Atleta', 0, 'left']], $rows, 21, true);
+    }
+
+    private static function officialName(Game $game, OfficialRole $role): ?string
+    {
+        return $game->officials->firstWhere('role', $role)?->official->name;
+    }
+
+    private static function captain(Game $game, $entry): ?string
+    {
+        $row = $game->lineups->where('entry_id', $entry->getKey())->firstWhere('is_captain', true);
+
+        return $row === null ? null : self::person($row->person);
     }
 
     // --------------------------------------------------------------- helpers

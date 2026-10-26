@@ -16,6 +16,11 @@ final class GameReportController extends Controller
         return $this->download($game, 'escalacao', GameReportPdf::lineup($game), $request->boolean('visualizar'));
     }
 
+    public function sheet(Request $request, Game $game): Response
+    {
+        return $this->download($game, 'sumula-oficial', GameReportPdf::officialSheet($game), $request->boolean('visualizar'));
+    }
+
     public function finalReport(Request $request, Game $game): Response
     {
         $type = (string) $request->query('tipo', 'full');

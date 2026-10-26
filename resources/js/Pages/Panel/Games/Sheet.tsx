@@ -770,6 +770,7 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
                             <ActionMenu
                                 label="Relatórios em PDF"
                                 items={[
+                                    { label: 'Súmula oficial (para imprimir)', href: route('panel.games.reports.sheet', game.id), hint: 'Escalações, arbitragem, ocorrências e assinaturas' },
                                     { label: 'Escalação (baixar PDF)', href: route('panel.games.reports.lineup', game.id), hint: 'Titulares, banco e comissão das duas equipes' },
                                     { label: 'Escalação (ver no navegador)', href: `${route('panel.games.reports.lineup', game.id)}?visualizar=1`, newTab: true },
                                     ...(!game.open

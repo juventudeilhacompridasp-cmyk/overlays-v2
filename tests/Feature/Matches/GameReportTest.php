@@ -1,7 +1,9 @@
 <?php
 
+use App\Modules\Matches\Actions\AssignGameOfficials;
 use App\Modules\Matches\Actions\RecordGameEvent;
 use App\Modules\Matches\Enums\GameEventType;
+use App\Modules\Matches\Models\Official;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Role;
 use App\Modules\Tenancy\Models\Organization;
@@ -70,4 +72,34 @@ it('permite consultar o relatório a um membro do painel', function () {
     $this->actingAs(panelUser(Role::Viewer))
         ->get(route('panel.games.reports.lineup', $game))
         ->assertOk();
+});
+
+it('gera a súmula oficial para imprimir com escalações, arbitragem e assinaturas', function () {
+    ['game' => $game, 'home' => $home, 'hp' => $hp] = sheetGame();
+    $referee = Official::factory()->create(['name' => 'Carlos Arbitro']);
+    app(AssignGameOfficials::class)->handle($game, ['referee' => $referee->id]);
+    app(RecordGameEvent::class)->handle($game, GameEventType::Goal, $home->id, $hp[0], minute: 12);
+
+    $response = $this->actingAs(panelUser(Role::Operator))->get(route('panel.games.reports.sheet', $game));
+
+    $response->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf')
+        ->assertHeader('Content-Disposition', 'attachment; filename="sumula-oficial-'.$game->id.'.pdf"');
+    expect($response->getContent())->toContain("S\xFAmula oficial do jogo")
+        ->and($response->getContent())->toContain('Carlos Arbitro')
+        ->and($response->getContent())->toContain('Arbitragem e mesa')
+        ->and($response->getContent())->toContain('TITULARES \(11\)')
+        ->and($response->getContent())->toContain("12'")
+        ->and($response->getContent())->toContain("Capit\xE3o")
+        ->and($response->getContent())->toContain('Observa');
+});
+
+it('deixa linhas em branco na súmula oficial de um jogo sem lançamentos e libera a leitura ao membro do painel', function () {
+    ['game' => $game] = sheetGame();
+
+    $response = $this->actingAs(panelUser(Role::Viewer))->get(route('panel.games.reports.sheet', $game).'?visualizar=1');
+
+    $response->assertOk()->assertHeader('Content-Disposition', 'inline; filename="sumula-oficial-'.$game->id.'.pdf"');
+    expect($response->getContent())->toContain('Ocorr')
+        ->and($response->getContent())->not->toContain('Carlos');
 });

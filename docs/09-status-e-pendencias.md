@@ -46,7 +46,7 @@ Ideias levantadas e combinadas para deixar a plataforma mais completa. Ordem sug
 - [x] Sorteio e chaves arrastando equipes (grupos e mata-mata, inclusive sorteio externo) e separação de equipes da mesma cidade. Falta: confrontos livres de pontos corridos por arrasto (hoje: importar tabela pronta) e restrições além da cidade (clube, patrocinador).
 - [x] Mata-mata com confrontos definidos à mão só com parte das equipes (ex.: classificados dos grupos): campo "Equipes na chave" no sorteio, `DrawStage::knockout(..., partial: true)`.
 - [x] Escala de árbitros e mesários (cadastro, escala por fase com aviso de conflito e e-mail a quem entra). Falta: aviso por WhatsApp, escala em lote/rodízio automático e visão "meus jogos" para o árbitro.
-- [ ] Súmula em PDF oficial, com campos de assinatura de árbitro e capitães, pronta para imprimir ou arquivar.
+- [x] Súmula em PDF oficial para imprimir ou arquivar (`panel.games.reports.sheet`): escalações, arbitragem e mesa, ocorrências e campos de assinatura de árbitro, capitães e mesário.
 
 **Equipes e atletas**
 - [x] Ficha da equipe (dados, campanha, inscrições, elenco, jogos), com botão de edição.
