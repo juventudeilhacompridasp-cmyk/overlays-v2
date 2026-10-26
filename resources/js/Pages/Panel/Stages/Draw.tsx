@@ -6,6 +6,8 @@ import {
     POOL,
     bestOf,
     bracketClashes,
+    bracketOf,
+    resizeBracket,
     bracketProblems,
     clearBracket,
     clearGroups,
@@ -121,6 +123,7 @@ export default function Draw({ competition, season, division, stage, entries, bl
     const [league, setLeague] = useState(() => emptyLeague(ids));
     const [doubleRound, setDoubleRound] = useState(false);
     const [legs, setLegs] = useState(1);
+    const [teamCount, setTeamCount] = useState(ids.length);
     const [active, setActive] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
     const cities = useMemo(() => new Map(entries.map((team) => [team.id, normalizeCity(team.city)])), [entries]);
@@ -149,7 +152,8 @@ export default function Draw({ competition, season, division, stage, entries, bl
         useSensor(KeyboardSensor),
     );
 
-    const problems = isKnockout ? bracketProblems(bracket) : isLeague ? leagueProblems(league, ids, doubleRound) : groupsProblems(groups);
+    const partial = isKnockout && teamCount < ids.length;
+    const problems = isKnockout ? bracketProblems(bracket, partial) : isLeague ? leagueProblems(league, ids, doubleRound) : groupsProblems(groups);
     const pairs = bracket.slots.length / 2;
 
     const move = (teamId: string, target: string) => {
@@ -175,7 +179,7 @@ export default function Draw({ competition, season, division, stage, entries, bl
         setSaving(true);
         const options = { preserveScroll: true, onFinish: () => setSaving(false) };
 
-        if (isKnockout) router.post(route('panel.stages.draw.store', stage.id), { legs, pairs: pairsPayload(bracket) }, options);
+        if (isKnockout) router.post(route('panel.stages.draw.store', stage.id), { legs, partial, pairs: pairsPayload(bracket) }, options);
         else if (isLeague) router.post(route('panel.stages.draw.store', stage.id), { double_round: doubleRound, pairs: leaguePayload(league) }, options);
         else router.post(route('panel.stages.draw.store', stage.id), { double_round: doubleRound, groups: groupsPayload(groups) }, options);
     };
@@ -262,10 +266,10 @@ export default function Draw({ competition, season, division, stage, entries, bl
             <div className="flex flex-wrap items-center gap-2">
                 {isKnockout ? (
                     <>
-                        <Button variant="secondary" onClick={() => setBracket(draw(() => randomBracket(ids), (candidate) => bracketClashes(candidate, cityOf).length))}>
+                        <Button variant="secondary" onClick={() => setBracket(draw(() => bracketOf(ids, teamCount, randomBracket), (candidate) => bracketClashes(candidate, cityOf).length))}>
                             Sortear
                         </Button>
-                        <Button variant="secondary" onClick={() => setBracket(seededBracket(ids))}>
+                        <Button variant="secondary" onClick={() => setBracket(bracketOf(ids, teamCount, seededBracket))}>
                             Por cabeças de chave
                         </Button>
                         <Button variant="ghost" onClick={() => setBracket(clearBracket(bracket))}>
@@ -320,6 +324,23 @@ export default function Draw({ competition, season, division, stage, entries, bl
                                         <Select id="legs" value={String(legs)} onChange={(event) => setLegs(Number(event.target.value))}>
                                             <option value="1">Jogo único</option>
                                             <option value="2">Ida e volta</option>
+                                        </Select>
+                                    </Field>
+                                    <Field label="Equipes na chave" htmlFor="team-count" hint="Use menos que o total quando só parte das equipes avança (ex.: os classificados dos grupos).">
+                                        <Select
+                                            id="team-count"
+                                            value={String(teamCount)}
+                                            onChange={(event) => {
+                                                const count = Number(event.target.value);
+                                                setTeamCount(count);
+                                                setBracket((board) => resizeBracket(board, count));
+                                            }}
+                                        >
+                                            {Array.from({ length: ids.length - 1 }, (_, index) => ids.length - index).map((count) => (
+                                                <option key={count} value={count}>
+                                                    {count === ids.length ? `Todas (${count})` : `${count} equipes`}
+                                                </option>
+                                            ))}
                                         </Select>
                                     </Field>
                                     <p className="self-end text-sm text-gray-600">

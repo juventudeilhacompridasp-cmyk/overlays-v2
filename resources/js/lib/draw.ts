@@ -300,10 +300,37 @@ export function randomBracket(teamIds: readonly string[], rng: Rng = Math.random
     return { pool: [], slots };
 }
 
-export function bracketProblems(board: KnockoutBoard): string[] {
+/**
+ * Muda o tamanho da chave para `teamCount` equipes (ex.: só os classificados de uma fase anterior). Quem estava num lugar
+ * que deixou de existir volta para fora da chave; os demais ficam onde estavam.
+ */
+export function resizeBracket(board: KnockoutBoard, teamCount: number): KnockoutBoard {
+    const length = firstRoundPairs(Math.max(2, teamCount)) * 2;
+
+    if (length === board.slots.length) return board;
+
+    const kept = board.slots.slice(0, length);
+    const dropped = board.slots.slice(length).filter((id): id is string => id !== null);
+
+    return { pool: [...board.pool, ...dropped], slots: [...kept, ...Array.from({ length: Math.max(0, length - kept.length) }, () => null)] };
+}
+
+/**
+ * Sorteio/cabeças de chave com apenas parte das equipes: usa as `count` primeiras de `orderedIds`, e as demais ficam fora da chave.
+ */
+export function bracketOf(orderedIds: readonly string[], count: number, build: (ids: readonly string[]) => KnockoutBoard): KnockoutBoard {
+    const chosen = orderedIds.slice(0, count);
+    const board = build(chosen);
+
+    return { pool: orderedIds.filter((id) => !chosen.includes(id)), slots: board.slots };
+}
+
+export function bracketProblems(board: KnockoutBoard, partial = false): string[] {
     const problems: string[] = [];
 
-    if (board.pool.length > 0) problems.push(`${board.pool.length} equipe(s) ainda fora da chave.`);
+    if (partial) {
+        if (board.slots.filter((id) => id !== null).length < 2) problems.push('Coloque pelo menos duas equipes na chave.');
+    } else if (board.pool.length > 0) problems.push(`${board.pool.length} equipe(s) ainda fora da chave.`);
 
     for (let pair = 0; pair < board.slots.length / 2; pair++) {
         if (board.slots[pair * 2] === null && board.slots[pair * 2 + 1] === null) {

@@ -128,6 +128,27 @@ describe('DrawStage', function () {
             ->and(collect([$semi[2]->home_entry_id, $semi[2]->away_entry_id])->filter()->all())->toContain($f);
     });
 
+    it('builds a bracket with only some of the confirmed teams when partial', function () {
+        ['stage' => $stage, 'entries' => $entries] = fixtureDivision(6, StageType::Knockout);
+        [$a, $b, $c, $d] = entryIds($entries);
+
+        $created = app(DrawStage::class)->knockout($stage, [[$a, $b], [$c, $d]], 1, true);
+
+        $teams = Game::query()->where('stage_id', $stage->id)->get()->flatMap(fn (Game $game) => [$game->home_entry_id, $game->away_entry_id])->filter()->unique();
+        expect($created)->toBe(3)
+            ->and($teams)->toHaveCount(4);
+    });
+
+    it('refuses a partial bracket with a repeated, unconfirmed or single team', function () {
+        ['stage' => $stage, 'entries' => $entries] = fixtureDivision(4, StageType::Knockout);
+        [$a, $b, $c] = entryIds($entries);
+        $draw = app(DrawStage::class);
+
+        expect(fn () => $draw->knockout($stage, [[$a, $a], [$b, $c]], 1, true))->toThrow(InvalidArgumentException::class, 'mais de uma vez');
+        expect(fn () => $draw->knockout($stage, [[$a, null]], 1, true))->toThrow(InvalidArgumentException::class, 'pelo menos duas');
+        expect(fn () => $draw->knockout($stage, [[$a, '01ARZ3NDEKTSV4RRFFQ69G5FAV']], 1, true))->toThrow(InvalidArgumentException::class, 'não estão confirmadas');
+    });
+
     it('refuses a knockout that leaves a team out, repeats one, or is the wrong type', function () {
         ['stage' => $stage, 'entries' => $entries] = fixtureDivision(4, StageType::Knockout);
         [$a, $b, $c, $d] = entryIds($entries);

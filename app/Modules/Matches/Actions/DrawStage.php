@@ -96,9 +96,11 @@ final class DrawStage
 
     /**
      * @param  list<array{0: ?string, 1: ?string}>  $pairs  confrontos da 1ª rodada, na ordem do chaveamento
+     * @param  bool  $partial  só parte das equipes confirmadas entra na chave (ex.: os classificados da fase anterior);
+     *                         as demais ficam de fora, mas cada equipe colocada ainda precisa ser confirmada e única
      * @return int Quantidade de jogos criados.
      */
-    public function knockout(Stage $stage, array $pairs, int $legs): int
+    public function knockout(Stage $stage, array $pairs, int $legs, bool $partial = false): int
     {
         $this->ensureReady($stage, StageType::Knockout);
 
@@ -111,7 +113,11 @@ final class DrawStage
             }
         }
 
-        $this->ensureEveryTeamOnce($stage, $placed);
+        if ($partial) {
+            $this->ensureSubset($stage, $placed);
+        } else {
+            $this->ensureEveryTeamOnce($stage, $placed);
+        }
 
         return $this->generate->persistKnockout($stage, KnockoutBracket::fromPairs($pairs), $legs);
     }
@@ -124,6 +130,24 @@ final class DrawStage
 
         if ($stage->games()->exists()) {
             throw new InvalidArgumentException('Esta fase já tem jogos. Limpe a tabela antes de sortear de novo.');
+        }
+    }
+
+    /** @param  list<string>  $placed */
+    private function ensureSubset(Stage $stage, array $placed): void
+    {
+        if (count($placed) !== count(array_unique($placed))) {
+            throw new InvalidArgumentException('Uma equipe aparece mais de uma vez no sorteio.');
+        }
+
+        if (count($placed) < 2) {
+            throw new InvalidArgumentException('Coloque pelo menos duas equipes na chave.');
+        }
+
+        $confirmed = Entry::query()->where('division_id', $stage->division_id)->where('status', EntryStatus::Confirmed)->pluck('id')->all();
+
+        if (array_diff($placed, $confirmed) !== []) {
+            throw new InvalidArgumentException('Há equipes que não estão confirmadas nesta divisão.');
         }
     }
 

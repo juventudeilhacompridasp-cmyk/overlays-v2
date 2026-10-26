@@ -214,3 +214,25 @@ test('o sorteio com restrição acha uma distribuição sem conflito quando exis
     const same = d.bestOf(5, () => d.randomGroups(d.emptyGroups(ids(4), 2), ids(4), rng), (b) => d.groupClashes(b, () => 'x').length);
     assert.equal(d.groupClashes(same, () => 'x').length, 2);
 });
+
+test('resizeBracket encolhe a chave e devolve ao pool quem perdeu o lugar', () => {
+    const board = d.seededBracket(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']);
+    const smaller = d.resizeBracket(board, 4);
+
+    assert.equal(smaller.slots.length, 4);
+    assert.equal(sorted([...smaller.pool, ...smaller.slots.filter(Boolean)]).join(''), 'abcdefgh');
+    assert.equal(d.resizeBracket(smaller, 4), smaller);
+});
+
+test('bracketOf usa só as primeiras equipes e deixa as outras fora', () => {
+    const board = d.bracketOf(['a', 'b', 'c', 'd', 'e'], 4, d.seededBracket);
+
+    assert.equal(board.slots.length, 4);
+    assert.deepEqual(board.pool, ['e']);
+    assert.equal(d.bracketProblems(board, true).length, 0);
+    assert.ok(d.bracketProblems(board, false).length > 0);
+});
+
+test('bracketProblems parcial exige ao menos duas equipes', () => {
+    assert.ok(d.bracketProblems({ pool: ['a', 'b'], slots: [null, null] }, true).length > 0);
+});

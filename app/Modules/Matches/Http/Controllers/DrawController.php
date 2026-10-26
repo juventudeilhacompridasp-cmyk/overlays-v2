@@ -55,7 +55,7 @@ class DrawController extends Controller
     {
         try {
             $created = match ($stage->type) {
-                StageType::Knockout => $draw->knockout($stage, $request->pairs(), $request->integer('legs', 1)),
+                StageType::Knockout => $draw->knockout($stage, $request->pairs(), $request->integer('legs', 1), $request->boolean('partial')),
                 StageType::League => $draw->league($stage, $request->pairs(), $request->boolean('double_round')),
                 StageType::Groups => $draw->groups($stage, $request->groupList(), $request->boolean('double_round')),
             };
