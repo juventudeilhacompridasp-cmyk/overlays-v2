@@ -11,13 +11,17 @@ import {
     clearGroups,
     emptyBracket,
     emptyGroups,
+    emptyLeague,
     groupClashes,
     groupsPayload,
     groupsProblems,
+    leaguePayload,
+    leagueProblems,
     locationOf,
     moveToBracketPool,
     moveToGroup,
     moveToSlot,
+    moveLeagueToken,
     normalizeCity,
     pairsPayload,
     potGroups,
@@ -91,13 +95,30 @@ function Zone({ id, children, className = '', label }: { id: string; children: R
     );
 }
 
+function LeagueSlot({ token, team }: { token: string; team: TeamInfo }) {
+    const { setNodeRef, listeners, attributes, isDragging } = useDraggable({ id: token });
+    const { setNodeRef: setDropRef, isOver } = useDroppable({ id: token });
+
+    return (
+        <div ref={setDropRef} className={`rounded-md p-0.5 transition ${isOver ? 'bg-emerald-100' : ''}`}>
+            <div ref={setNodeRef} {...listeners} {...attributes} className={`flex min-h-11 items-center gap-2 rounded-md bg-white px-2 text-sm ring-1 ring-gray-200 ${isDragging ? 'opacity-40' : ''}`}>
+                <span className="cursor-grab text-gray-400" aria-hidden="true">⋮⋮</span>
+                <Logo src={team.logo_url} name={team.name} size={22} color={team.color} />
+                <span className="truncate font-medium text-gray-900">{team.name}</span>
+            </div>
+        </div>
+    );
+}
+
 export default function Draw({ competition, season, division, stage, entries, blocked, supported }: Props) {
     const byId = useMemo(() => new Map(entries.map((team) => [team.id, team])), [entries]);
     const ids = useMemo(() => entries.map((team) => team.id), [entries]);
     const isKnockout = stage.type === 'knockout';
+    const isLeague = stage.type === 'league';
 
     const [groups, setGroups] = useState<GroupsBoard>(() => emptyGroups(ids, Math.min(Math.max(1, Math.floor(ids.length / 2)), ids.length >= 4 ? 2 : 1)));
     const [bracket, setBracket] = useState<KnockoutBoard>(() => emptyBracket(ids));
+    const [league, setLeague] = useState(() => emptyLeague(ids));
     const [doubleRound, setDoubleRound] = useState(false);
     const [legs, setLegs] = useState(1);
     const [active, setActive] = useState<string | null>(null);
@@ -118,7 +139,7 @@ export default function Draw({ competition, season, division, stage, entries, bl
 
     /** Roda o sorteio; com a opção ligada tenta várias vezes e fica com o que tem menos equipes da mesma cidade juntas. */
     const draw = <T,>(make: () => T, conflicts: (candidate: T) => number): T => (separateCities && hasSharedCities ? bestOf(300, make, conflicts) : make());
-    const clashes = isKnockout ? bracketClashes(bracket, cityOf) : groupClashes(groups, cityOf);
+    const clashes = isKnockout ? bracketClashes(bracket, cityOf) : isLeague ? [] : groupClashes(groups, cityOf);
     const nameOf = (id: string) => byId.get(id)?.name ?? id;
 
     const sensors = useSensors(
@@ -128,7 +149,7 @@ export default function Draw({ competition, season, division, stage, entries, bl
         useSensor(KeyboardSensor),
     );
 
-    const problems = isKnockout ? bracketProblems(bracket) : groupsProblems(groups);
+    const problems = isKnockout ? bracketProblems(bracket) : isLeague ? leagueProblems(league, ids, doubleRound) : groupsProblems(groups);
     const pairs = bracket.slots.length / 2;
 
     const move = (teamId: string, target: string) => {
@@ -141,7 +162,10 @@ export default function Draw({ competition, season, division, stage, entries, bl
 
     const onDragEnd = (event: DragEndEvent) => {
         setActive(null);
-        if (event.over) move(String(event.active.id), String(event.over.id));
+        if (event.over) {
+            if (isLeague) setLeague((board) => moveLeagueToken(board, String(event.active.id), String(event.over?.id)));
+            else move(String(event.active.id), String(event.over.id));
+        }
     };
 
     const save = () => {
@@ -152,6 +176,7 @@ export default function Draw({ competition, season, division, stage, entries, bl
         const options = { preserveScroll: true, onFinish: () => setSaving(false) };
 
         if (isKnockout) router.post(route('panel.stages.draw.store', stage.id), { legs, pairs: pairsPayload(bracket) }, options);
+        else if (isLeague) router.post(route('panel.stages.draw.store', stage.id), { double_round: doubleRound, pairs: leaguePayload(league) }, options);
         else router.post(route('panel.stages.draw.store', stage.id), { double_round: doubleRound, groups: groupsPayload(groups) }, options);
     };
 
@@ -182,8 +207,8 @@ export default function Draw({ competition, season, division, stage, entries, bl
                 <Head title="Sorteio e chaves" />
                 {header}
                 <Card>
-                    <Empty title={blocked ?? (!supported ? 'Pontos corridos não precisam de sorteio.' : 'Confirme pelo menos duas equipes na divisão.')}>
-                        {!supported ? 'Todos jogam contra todos: gere a tabela direto na fase. Para confrontos já definidos, use “Importar tabela pronta”.' : 'Volte à fase para continuar.'}
+                    <Empty title={blocked ?? (!supported ? 'Esta fase não aceita sorteio.' : 'Confirme pelo menos duas equipes na divisão.')}>
+                        Volte à fase para continuar.
                     </Empty>
                     <div className="mt-4">
                         <LinkButton href={route('panel.stages.show', stage.id)} variant="secondary">
@@ -247,6 +272,10 @@ export default function Draw({ competition, season, division, stage, entries, bl
                             Limpar
                         </Button>
                     </>
+                ) : isLeague ? (
+                    <Button variant="ghost" onClick={() => setLeague(emptyLeague(ids, doubleRound))}>
+                        Restaurar tabela padrão
+                    </Button>
                 ) : (
                     <>
                         <Button variant="secondary" onClick={() => setGroups(draw(() => randomGroups(groups, ids), (candidate) => groupClashes(candidate, cityOf).length))}>
@@ -281,7 +310,7 @@ export default function Draw({ competition, season, division, stage, entries, bl
                 </p>
 
                 <div className="grid gap-4 xl:grid-cols-[18rem_1fr]">
-                    {poolZone}
+                    {!isLeague && poolZone}
 
                     {isKnockout ? (
                         <div className="space-y-4">
@@ -317,6 +346,43 @@ export default function Draw({ competition, season, division, stage, entries, bl
                                                     </Zone>
                                                 );
                                             })}
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
+                    ) : isLeague ? (
+                        <div className="space-y-4">
+                            <Card title="Como serão os jogos">
+                                <Field label="Turnos" htmlFor="league-double">
+                                    <Select id="league-double" value={doubleRound ? '1' : '0'} onChange={(event) => {
+                                        const next = event.target.value === '1';
+                                        setDoubleRound(next);
+                                        setLeague(emptyLeague(ids, next));
+                                    }}>
+                                        <option value="0">Turno único</option>
+                                        <option value="1">Ida e volta (turno e returno)</option>
+                                    </Select>
+                                </Field>
+                                <p className="mt-2 text-sm text-gray-600">Arraste uma equipe para outra vaga para trocar os confrontos. A ordem das rodadas e o mando ficam exatamente como você montar.</p>
+                            </Card>
+                            <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3" data-testid="draw-league">
+                                {league.rounds.map((round, roundIndex) => (
+                                    <Card key={round.id} title={`Rodada ${roundIndex + 1}`}>
+                                        <div className="space-y-2">
+                                            {round.games.map((game, gameIndex) => (
+                                                <div key={`${round.id}-${gameIndex}`} className="rounded-lg border border-gray-200 bg-gray-50 p-2">
+                                                    <div className="mb-1 text-xs font-medium text-gray-500">Jogo {gameIndex + 1}</div>
+                                                    {[0, 1].map((side) => {
+                                                        const id = game[side as 0 | 1];
+                                                        const token = `round-${roundIndex}-${gameIndex}-${side}`;
+                                                        return (
+                                                            <LeagueSlot key={token} token={token} team={byId.get(id)!} />
+                                                        );
+                                                    })}
+                                                    <div className="mt-1 text-center text-xs text-gray-400">x</div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </Card>
                                 ))}

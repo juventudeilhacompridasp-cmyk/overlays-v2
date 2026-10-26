@@ -46,6 +46,28 @@ describe('KnockoutBracket::fromPairs', function () {
 });
 
 describe('DrawStage', function () {
+    it('creates a league table in the order of the dragged confrontations', function () {
+        ['stage' => $stage, 'entries' => $entries] = fixtureDivision(4, StageType::League);
+        [$a, $b, $c, $d] = entryIds($entries);
+
+        $created = app(DrawStage::class)->league($stage, [[$a, $b], [$c, $d], [$a, $c], [$d, $b], [$d, $a], [$b, $c]], false);
+        $games = Game::query()->where('stage_id', $stage->id)->orderBy('number')->get();
+
+        expect($created)->toBe(6)
+            ->and($games->first()->round)->toBe(1)
+            ->and([$games->first()->home_entry_id, $games->first()->away_entry_id])->toBe([$a, $b]);
+    });
+
+    it('refuses an incomplete or repeated league table and supports a return leg', function () {
+        ['stage' => $stage, 'entries' => $entries] = fixtureDivision(3, StageType::League);
+        [$a, $b, $c] = entryIds($entries);
+        $draw = app(DrawStage::class);
+
+        expect(fn () => $draw->league($stage, [[$a, $b], [$a, $b], [$a, $c]], false))->toThrow(InvalidArgumentException::class, 'Cada par');
+        expect($draw->league($stage, [[$a, $b], [$a, $c], [$b, $c], [$b, $a], [$c, $a], [$c, $b]], true))->toBe(6);
+        expect(Game::query()->where('stage_id', $stage->id)->where('round', 4)->exists())->toBeTrue();
+    });
+
     it('creates the groups exactly as dragged and their round robin games', function () {
         ['stage' => $stage, 'entries' => $entries] = fixtureDivision(5, StageType::Groups);
         [$a, $b, $c, $d, $e] = entryIds($entries);
@@ -136,14 +158,14 @@ describe('draw screen and route', function () {
             ->where('supported', true));
     });
 
-    it('blocks the screen when the stage has games and for league stages', function () {
+    it('blocks the screen when the stage has games and allows league tables', function () {
         ['stage' => $stage] = fixtureDivision(4, StageType::Groups);
         app(DrawStage::class)->groups($stage, [['name' => 'A', 'entries' => Entry::query()->where('division_id', $stage->division_id)->pluck('id')->all()]], false);
 
         $this->get("/painel/stages/{$stage->id}/draw")->assertInertia(fn ($page) => $page->whereNot('blocked', null));
 
         ['stage' => $league] = fixtureDivision(4, StageType::League);
-        $this->get("/painel/stages/{$league->id}/draw")->assertInertia(fn ($page) => $page->where('supported', false));
+        $this->get("/painel/stages/{$league->id}/draw")->assertInertia(fn ($page) => $page->where('supported', true));
     });
 
     it('saves a groups draw and a knockout draw through the route', function () {
@@ -159,6 +181,12 @@ describe('draw screen and route', function () {
 
         $this->post("/painel/stages/{$knockout->id}/draw", ['legs' => 1, 'pairs' => [[$a, $c], [$b, $d]]])->assertSessionHas('success');
         expect(Game::query()->where('stage_id', $knockout->id)->count())->toBe(3);
+
+        ['stage' => $league, 'entries' => $entries] = fixtureDivision(4, StageType::League);
+        [$a, $b, $c, $d] = entryIds($entries);
+        $this->post("/painel/stages/{$league->id}/draw", ['double_round' => false, 'pairs' => [[$a, $b], [$c, $d], [$a, $c], [$d, $b], [$d, $a], [$b, $c]]])
+            ->assertRedirect(route('panel.stages.show', $league))->assertSessionHas('success');
+        expect(Game::query()->where('stage_id', $league->id)->count())->toBe(6);
     });
 
     it('returns an error message and validation errors for a bad draw', function () {

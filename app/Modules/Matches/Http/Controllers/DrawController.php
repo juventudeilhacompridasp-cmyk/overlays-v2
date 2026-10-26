@@ -47,16 +47,18 @@ class DrawController extends Controller
             'stage' => ['id' => $stage->getKey(), 'name' => $stage->name, 'type' => $stage->type->value, 'type_label' => $stage->type->label()],
             'entries' => $entries,
             'blocked' => $stage->games()->exists() ? 'Esta fase já tem jogos. Limpe a tabela da fase para sortear de novo.' : null,
-            'supported' => $stage->type !== StageType::League,
+            'supported' => true,
         ]);
     }
 
     public function store(DrawRequest $request, Stage $stage, DrawStage $draw): RedirectResponse
     {
         try {
-            $created = $stage->type === StageType::Knockout
-                ? $draw->knockout($stage, $request->pairs(), $request->integer('legs', 1))
-                : $draw->groups($stage, $request->groupList(), $request->boolean('double_round'));
+            $created = match ($stage->type) {
+                StageType::Knockout => $draw->knockout($stage, $request->pairs(), $request->integer('legs', 1)),
+                StageType::League => $draw->league($stage, $request->pairs(), $request->boolean('double_round')),
+                StageType::Groups => $draw->groups($stage, $request->groupList(), $request->boolean('double_round')),
+            };
         } catch (InvalidArgumentException $exception) {
             return back()->with('error', $exception->getMessage());
         }
