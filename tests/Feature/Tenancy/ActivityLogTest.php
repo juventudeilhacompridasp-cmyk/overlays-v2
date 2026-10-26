@@ -64,11 +64,18 @@ describe('recording what users do', function () {
         expect(ActivityLog::query()->where('action', 'panel.games.finish')->firstOrFail()->outcome)->toBe('refused');
     });
 
-    it('does not record reads, guests or routes without a logged user', function () {
+    it('does not record reads', function () {
         $game = Game::factory()->create();
 
         $this->actingAs(panelUser(Role::Admin))->get(route('panel.games.sheet', $game));
-        $this->post(route('panel.games.finish', $game));
+
+        expect(ActivityLog::query()->count())->toBe(0);
+    });
+
+    it('does not record requests without a logged user', function () {
+        $game = Game::factory()->create();
+
+        $this->post(route('panel.games.finish', $game))->assertRedirect('/login');
 
         expect(ActivityLog::query()->count())->toBe(0);
     });
@@ -141,6 +148,9 @@ describe('the audit screen', function () {
         $this->actingAs(panelUser(Role::Admin))->get(route('panel.activity-log.index'))->assertOk()->assertInertia(fn ($page) => $page->component('Panel/ActivityLog/Index'));
         $this->actingAs(panelUser(Role::Organizer))->get(route('panel.activity-log.index'))->assertForbidden();
         $this->actingAs(panelUser(Role::Operator))->get(route('panel.activity-log.export'))->assertForbidden();
+    });
+
+    it('is closed to guests', function () {
         $this->get(route('panel.activity-log.index'))->assertRedirect('/login');
     });
 

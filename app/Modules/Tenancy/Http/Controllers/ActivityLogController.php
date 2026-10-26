@@ -32,7 +32,7 @@ class ActivityLogController extends Controller
         $table = TableQuery::fromRequest($request, ['when', 'actor', 'summary', 'outcome'], 'when', ['actor', 'area', 'outcome', 'kind'], 'desc', 25);
         $query = $this->filtered($request, $table, ActivityLog::query());
         $table->sort($query, [
-            'when' => 'created_at',
+            'when' => ['column' => 'created_at', 'then' => [['id', 'desc']]],
             'actor' => ['column' => 'actor_name', 'text' => true],
             'summary' => ['column' => 'summary', 'text' => true],
             'outcome' => 'outcome',
