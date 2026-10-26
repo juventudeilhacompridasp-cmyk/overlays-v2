@@ -47,7 +47,7 @@ final class DrawStage
 
         $this->ensureEveryTeamOnce($stage, $placed);
 
-        return $this->generate->persistGroups($stage, array_map(fn (array $group) => ['name' => trim($group['name']), 'entries' => array_values($group['entries'])], $groups), $doubleRound);
+        return $this->generate->persistGroups($stage, array_map(fn (array $group) => ['name' => trim($group['name']), 'entries' => $group['entries']], $groups), $doubleRound);
     }
 
     /**

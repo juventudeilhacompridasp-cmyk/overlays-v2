@@ -60,7 +60,7 @@ final class KnockoutBracket
         /** @var array<int, array<int, array{a: ?string, b: ?string, bye: bool}>> $slots */
         $slots = [];
 
-        foreach (array_values($pairs) as $position => [$a, $b]) {
+        foreach ($pairs as $position => [$a, $b]) {
             if ($a === null && $b === null) {
                 throw new InvalidArgumentException('Há um confronto sem nenhuma equipe.');
             }
