@@ -43,6 +43,8 @@ class DivisionController extends Controller
                 'seed' => $entry->seed,
                 'status' => $entry->status->value,
                 'status_label' => $entry->status->label(),
+                'club_key' => $entry->club_key,
+                'sponsor_key' => $entry->sponsor_key,
                 'roster_count' => $entry->rosterEntries->where('status', RosterStatus::Active)->count(),
                 'team' => ['id' => $entry->team->id, 'name' => $entry->team->name, 'city' => $entry->team->city],
             ]);

@@ -364,13 +364,33 @@ export function roundNames(pairs: number): string[] {
 
 /** Cidade de cada equipe, já normalizada (minúsculas, sem espaços nas pontas); vazia = sem restrição. */
 export type CityOf = (teamId: string) => string;
+export type AffiliationOf = (teamId: string) => string;
 
 export const normalizeCity = (city: string | null | undefined): string => (city ?? '').trim().toLowerCase();
 
-export type Clash = { where: string; city: string; teams: string[] };
+export type Clash = { where: string; city: string; teams: string[]; criterion?: 'clube' | 'patrocinador' };
+
+function affiliationClashes(ids: readonly string[], where: string, clubOf: AffiliationOf, sponsorOf: AffiliationOf): Clash[] {
+    const clashes: Clash[] = [];
+    const rules: { criterion: 'clube' | 'patrocinador'; value: AffiliationOf }[] = [
+        { criterion: 'clube', value: clubOf },
+        { criterion: 'patrocinador', value: sponsorOf },
+    ];
+
+    for (const rule of rules) {
+        const byValue = new Map<string, string[]>();
+        for (const id of ids) {
+            const value = rule.value(id);
+            if (value !== '') byValue.set(value, [...(byValue.get(value) ?? []), id]);
+        }
+        for (const [value, teams] of byValue) if (teams.length > 1) clashes.push({ where, city: value, teams, criterion: rule.criterion });
+    }
+
+    return clashes;
+}
 
 /** Equipes da mesma cidade no mesmo grupo. */
-export function groupClashes(board: GroupsBoard, cityOf: CityOf): Clash[] {
+export function groupClashes(board: GroupsBoard, cityOf: CityOf, clubOf: AffiliationOf = () => '', sponsorOf: AffiliationOf = () => ''): Clash[] {
     const clashes: Clash[] = [];
 
     for (const group of board.groups) {
@@ -382,19 +402,21 @@ export function groupClashes(board: GroupsBoard, cityOf: CityOf): Clash[] {
         }
 
         for (const [city, teams] of byCity) if (teams.length > 1) clashes.push({ where: group.id, city, teams });
+        clashes.push(...affiliationClashes(group.teams, group.id, clubOf, sponsorOf));
     }
 
     return clashes;
 }
 
 /** Equipes da mesma cidade no mesmo confronto da 1ª rodada. */
-export function bracketClashes(board: KnockoutBoard, cityOf: CityOf): Clash[] {
+export function bracketClashes(board: KnockoutBoard, cityOf: CityOf, clubOf: AffiliationOf = () => '', sponsorOf: AffiliationOf = () => ''): Clash[] {
     const clashes: Clash[] = [];
 
     for (let pair = 0; pair < board.slots.length / 2; pair++) {
         const a = board.slots[pair * 2];
         const b = board.slots[pair * 2 + 1];
         if (a && b && cityOf(a) !== '' && cityOf(a) === cityOf(b)) clashes.push({ where: String(pair), city: cityOf(a), teams: [a, b] });
+        if (a && b) clashes.push(...affiliationClashes([a, b], String(pair), clubOf, sponsorOf));
     }
 
     return clashes;
