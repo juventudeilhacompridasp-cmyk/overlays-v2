@@ -150,6 +150,10 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 ## Qualidade
 Testes Pest para toda regra de negócio (as regras de campeonato têm testes baseados em exemplos reais). PHPStan/Larastan (nível sobe gradualmente até 8). PRs pequenos, descrição em português, sem segredos no repositório.
 
+## Automação da transmissão
+
+- A automação é opt-in por canal: `automation_settings.enabled` controla somente as cartelas de pré-jogo e resumo final; as demais camadas continuam sob controle do operador.
+
 ## Fila offline da súmula
 
 - Resultado rápido e cobranças individuais de pênaltis podem ser enfileirados pelo app do mesário como `quick_result`, `shootout_kick` e `shootout_undo`; o servidor reaplica as ações normais e preserva o horário do aparelho. A projeção do navegador só mostra o placar/estado otimista até a confirmação do servidor.

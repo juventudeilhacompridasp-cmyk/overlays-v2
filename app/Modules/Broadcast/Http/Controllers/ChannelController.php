@@ -12,6 +12,7 @@ use App\Modules\Broadcast\Models\OverlaySponsor;
 use App\Modules\Broadcast\Models\OverlayStyleModel;
 use App\Modules\Broadcast\Support\ChannelPayload;
 use App\Modules\Broadcast\Support\OverlayAppearance;
+use App\Modules\Broadcast\Support\OverlayAutomationSettings;
 use App\Modules\Broadcast\Support\OverlayControlRules;
 use App\Modules\Broadcast\Support\OverlayLineupSettings;
 use App\Modules\Broadcast\Support\OverlayLowerThirdSettings;
@@ -56,6 +57,7 @@ class ChannelController extends Controller
                 'lineup_settings' => array_diff_key(OverlayLineupSettings::normalize([]), ['photo_person_ids' => 0]),
                 'sponsor_settings' => OverlaySponsorSettings::normalize([]),
                 'stats_settings' => OverlayStatsSettings::normalize([]),
+                'automation_settings' => OverlayAutomationSettings::normalize([]),
             ],
             'fonts' => OverlayFont::query()->orderBy('name')->get()->map(fn (OverlayFont $font) => ['id' => $font->id, 'name' => $font->name, 'format' => $font->format])->values(),
             'font_limit' => OverlayFont::LIMIT,
@@ -108,6 +110,7 @@ class ChannelController extends Controller
             'token' => OverlayChannel::newToken(),
             'control_token_hash' => OverlayChannel::controlTokenHash($controlToken),
             'layers' => [],
+            'automation_settings' => OverlayAutomationSettings::normalize([]),
             'appearance' => OverlayAppearance::defaults(),
             'lineup_settings' => OverlayLineupSettings::defaults(),
             'sponsor_settings' => OverlaySponsorSettings::defaults(),

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Modules\Broadcast\Listeners\AutomateOverlayScreens;
 use App\Modules\Broadcast\Listeners\ShowLowerThird;
 use App\Modules\Broadcast\Listeners\SyncOverlays;
 use App\Modules\Market\Listeners\MarkHiredProfiles;
@@ -98,6 +99,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Transmissão (overlays do OBS): reage ao placar ao vivo e aos lances da súmula.
         Event::listen(GameUpdated::class, SyncOverlays::class);
+        Event::listen(GameUpdated::class, AutomateOverlayScreens::class);
         Event::listen(GameEventRecorded::class, ShowLowerThird::class);
 
         // Auditoria: mudanças de jogo e lances feitos por quem está logado (antes/depois) vão ao registro de atividades.
