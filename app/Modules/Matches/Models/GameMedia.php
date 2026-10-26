@@ -2,8 +2,8 @@
 
 namespace App\Modules\Matches\Models;
 
-use App\Modules\Tenancy\Concerns\BelongsToOrganization;
 use App\Modules\Market\Support\VideoLink;
+use App\Modules\Tenancy\Concerns\BelongsToOrganization;
 use App\Support\Images\ImageStore;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;

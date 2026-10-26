@@ -46,7 +46,7 @@ final class GameMediaController extends Controller
 
     public function toggle(GameMedia $media): RedirectResponse
     {
-        $media->update(['published' => ! $media->published]);
+        $media->update(['published' => $media->published === false]);
 
         return back()->with('success', $media->published ? 'Mídia publicada.' : 'Mídia retirada do portal.');
     }

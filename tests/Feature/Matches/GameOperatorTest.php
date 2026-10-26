@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Matches\Actions\GenerateStageFixtures;
 use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameOfficial;
@@ -38,7 +39,7 @@ describe('the mesário-only profile', function () {
 describe('the championship games list', function () {
     it('lists every game, not only the mesário window, and is readable by any member', function () {
         ['stage' => $stage] = fixtureDivision(4);
-        app(\App\Modules\Matches\Actions\GenerateStageFixtures::class)->handle($stage);
+        app(GenerateStageFixtures::class)->handle($stage);
         $games = Game::query()->where('stage_id', $stage->id)->orderBy('id')->get();
         $games[0]->update(['scheduled_at' => now()->addDays(40)]);
         $games[1]->update(['status' => GameStatus::Finished, 'finished_at' => now()->subDays(30), 'home_score' => 2, 'away_score' => 0]);
@@ -56,7 +57,7 @@ describe('the championship games list', function () {
 
     it('filters by status and competition and searches by team', function () {
         ['stage' => $stage] = fixtureDivision(4);
-        app(\App\Modules\Matches\Actions\GenerateStageFixtures::class)->handle($stage);
+        app(GenerateStageFixtures::class)->handle($stage);
         $games = Game::query()->where('stage_id', $stage->id)->with('homeEntry.team')->orderBy('id')->get();
         $games[0]->update(['status' => GameStatus::Finished]);
         $admin = panelUser(Role::Admin);
