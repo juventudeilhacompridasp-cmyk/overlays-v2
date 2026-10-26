@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposto — 26/10/2026
+Em implementação — 26/10/2026
 
 ## Contexto
 
@@ -16,6 +16,10 @@ Súmulas oficiais e relatórios precisam registrar a aprovação de árbitros, c
 - O PDF recebe uma página/rodapé de evidências com hash, assinantes e horários em UTC e São Paulo; dados pessoais exibidos são mínimos.
 - Não há assinatura desenhada, biometria, CPF ou armazenamento de segredo de autenticação.
 - A assinatura exige que a escalação e o resultado estejam confirmados; reabrir o jogo invalida a versão assinada e exige novo ciclo.
+
+## Entregue nesta etapa
+
+- `DocumentSignature::hash()` gera o SHA-256 determinístico do PDF, sem persistir o conteúdo nem expor dados pessoais.
 
 ## Consequências
 

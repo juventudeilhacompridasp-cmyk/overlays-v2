@@ -176,7 +176,7 @@ function LineupSideView({ side }: { side: LineupSide }) {
     );
 }
 
-export default function GameLive({ snapshot: initial, realtime, push_key, insights, json_ld, share_image, youtube_embed_url, media = [] }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null; insights?: Insights; json_ld?: Record<string, unknown> | null; share_image?: string | null; youtube_embed_url?: string | null; media?: { title: string | null; provider: string; embed_url: string | null; url: string; type?: string; image_url?: string | null }[] }) {
+export default function GameLive({ snapshot: initial, realtime, push_key, insights, json_ld, share_image, youtube_embed_url, media = [] }: { snapshot: Snapshot; realtime: Realtime; push_key: string | null; insights?: Insights; json_ld?: Record<string, unknown> | null; share_image?: string | null; youtube_embed_url?: string | null; media?: { type: 'image' | 'video'; title: string | null; provider: string; embed_url: string | null; image_url: string | null; url: string }[] }) {
     const [snapshot, setSnapshot] = useState(initial);
     const [connection, setConnection] = useState<ConnectionState>('connecting');
     // Diferença entre o relógio do navegador e o do servidor, medida na carga da página (não nos deltas, que podem atrasar na fila).
