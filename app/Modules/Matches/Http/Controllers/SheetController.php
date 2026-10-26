@@ -23,6 +23,7 @@ use App\Modules\Matches\Http\Requests\GameEventRequest;
 use App\Modules\Matches\Http\Requests\GameLineupRequest;
 use App\Modules\Matches\Http\Requests\GamePeriodRequest;
 use App\Modules\Matches\Models\Game;
+use App\Modules\Matches\Models\GameDocumentSignature;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Matches\Support\PublicGameSnapshot;
 use App\Modules\Matches\Support\ShootoutView;
@@ -175,6 +176,14 @@ class SheetController extends Controller
             'clock' => $snapshot['clock'] + ['server_time_ms' => (int) (microtime(true) * 1000), 'max_period' => $game->clock()->maxPeriod()],
             'shot_clock' => $snapshot['shot_clock'],
             'public_url' => route('public.games.show', $game->id),
+            'signatures' => GameDocumentSignature::query()->where('game_id', $game->getKey())->orderByDesc('created_at')->get()->map(fn (GameDocumentSignature $signature): array => [
+                'id' => $signature->getKey(),
+                'document_type' => $signature->document_type,
+                'signer_name' => $signature->signer_name,
+                'signer_role' => $signature->signer_role,
+                'status' => $signature->status,
+                'signed_at' => $signature->signed_at,
+            ])->values()->all(),
             // Para a projeção local da fila offline (relógio e regras que o navegador reaplica enquanto não há conexão).
             'clock_offsets' => array_map(fn (int $period) => $game->clock()->offsetSeconds($period), range(1, max(1, $game->clock()->maxPeriod()))),
             'limits' => [

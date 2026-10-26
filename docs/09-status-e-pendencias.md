@@ -20,7 +20,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 **Fora do MVP:** cobrança automática. **Decidido não fazer:** interruptor da fila offline (aumentaria o risco no jogo).
 
 ## Entregue
-- **ADR 0017 — assinatura digital (26/10):** hash, persistência da evidência e convite/confirmação por link único entregues; pendente exibir evidências assinadas no PDF e no painel.
+- **ADR 0017 — assinatura digital (26/10):** hash, persistência da evidência, convite/confirmação por link único e exibição de evidências no PDF/painel entregues.
 - **Registro de atividades (auditoria no banco, 26/10):** `activity_log` com toda ação de escrita de usuários logados (inclusive recusadas), mudanças de jogo com antes/depois e lances lançados; tela e CSV em Painel > Registro de atividades; retenção e liga/desliga por `ACTIVITY_LOG_*`. Próximo: perfil só de mesário e visão do Operador da partida.
 - **ADR 0016 — galeria de mídia das partidas (26/10):** escopo de fotos e vídeos externos definido; implementação seguirá em partes (modelo/upload, moderação e galeria pública).
 - **Galeria de mídia inicial (26/10):** vídeos HTTPS de YouTube, Vimeo e Instagram e fotos WebP sem EXIF podem ser adicionados em revisão, publicados/retirados no painel e aparecem na página pública; ordenação avançada e automações seguem pendentes.
