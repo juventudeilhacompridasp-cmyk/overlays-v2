@@ -62,7 +62,7 @@ Teste de força bruta: 6 logins errados seguidos com o mesmo e-mail devem bloque
 5. Restaure de backup conhecido se houve alteração de dados (`docs/16`, seção 6).
 
 ## 5. O que ainda NÃO existe (próximos passos, por prioridade)
-1. (feito) **Autenticação em dois fatores (TOTP)**, opcional por pessoa e exigível para administradores por `PLATFORM_2FA_REQUIRED_FOR_ADMINS`. Falta: e-mail ao ativar/desativar e reinício por um Super Admin.
+1. (feito) **Autenticação em dois fatores (TOTP)**, opcional por pessoa e exigível para administradores por `PLATFORM_2FA_REQUIRED_FOR_ADMINS`. E-mail ao ativar/desativar/reiniciar e reinício pelo Super Admin (`/plataforma/contas`) também entregues.
 2. **CSP completo** (`Content-Security-Policy` com nonce): hoje só `frame-ancestors`. Exige mapear scripts inline do Inertia/SSR, Reverb (`wss:`), players de vídeo (YouTube/Vimeo/Instagram) e fontes; começar em `Report-Only`.
 3. **Antivírus/análise** dos arquivos enviados (hoje: tipo e tamanho validados; imagens são reencodadas, o que já descarta a maioria dos ataques; PDFs/planilhas de súmula são lidos, não executados).
 4. (feito) **Registro de auditoria de leitura** de documentos pessoais (Painel > Acesso a documentos, retenção de 2 anos).

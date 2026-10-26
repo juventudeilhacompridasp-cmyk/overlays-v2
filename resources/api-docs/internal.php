@@ -316,6 +316,8 @@ return [
     'platform.api-docs.openapi' => $page('Baixa a especificação OpenAPI 3.1 (JSON)'),
     'platform.api-docs.postman' => $page('Baixa a coleção Postman v2.1 (sem segredos)'),
     'platform.metrics.index' => $page('Medição anônima de acessos da landing page'),
+    'platform.accounts.index' => $page('Contas com dois fatores ativos (só nome, e-mail e situação)'),
+    'platform.accounts.reset' => $action('Reinicia os dois fatores de uma conta que perdeu o aparelho', 'Exige a senha de quem reinicia; a pessoa é avisada por e-mail.'),
     'platform.leads.index' => $page('Contatos recebidos pela landing page'),
     'platform.leads.update' => $action('Atualiza a situação de um contato'),
     'platform.leads.destroy' => $action('Apaga um contato'),
