@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.18.0',
+        'date' => '2026-10-26',
+        'changes' => ['Nova rota de site portal.athlete: perfil público do atleta (desligado por padrão). O cadastro de pessoas passa a aceitar o campo public_profile (autorização do perfil público).'],
+    ],
+    [
         'version' => '1.17.0',
         'date' => '2026-10-26',
         'changes' => ['Nova rota interna panel.games.sheet.close: fecha a súmula de um jogo encerrado. panel.games.reopen passa a aceitar o campo reason (motivo da reabertura).'],

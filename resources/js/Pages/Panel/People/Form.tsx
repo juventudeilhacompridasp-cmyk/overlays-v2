@@ -11,6 +11,9 @@ interface Person {
     birth_date: string | null;
     has_document: boolean;
     photo_url: string | null;
+    public_profile: boolean;
+    public_profile_url: string | null;
+    public_profile_enabled: boolean;
 }
 
 interface PersonDocument {
@@ -100,6 +103,7 @@ export default function Form({ person, documents, document_types }: { person: Pe
         nickname: person?.nickname ?? '',
         birth_date: person?.birth_date ?? '',
         document: '',
+        public_profile: person?.public_profile ?? false,
     });
 
     const submit = (event: FormEvent) => {
@@ -150,6 +154,22 @@ export default function Form({ person, documents, document_types }: { person: Pe
                             <Input id="birth_date" type="date" value={data.birth_date} onChange={(e) => setData('birth_date', e.target.value)} />
                         </Field>
                     </div>
+                    {(person?.public_profile_enabled ?? true) && (
+                        <div>
+                            <label className="flex items-start gap-2 text-sm text-gray-700">
+                                <input type="checkbox" className="mt-0.5 rounded border-gray-300 text-emerald-600" checked={data.public_profile} onChange={(e) => setData('public_profile', e.target.checked)} />
+                                <span>
+                                    A pessoa <strong>autorizou o perfil público</strong> (nome público, equipes, edições, camisa, jogos e gols). Só para maiores de 18 anos, com a data de nascimento informada. Desmarcar retira a página do ar na hora.
+                                </span>
+                            </label>
+                            {errors.public_profile && <p className="mt-1 text-xs text-red-600">{errors.public_profile}</p>}
+                            {person?.public_profile_url && (
+                                <a href={person.public_profile_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sm text-emerald-700 underline">
+                                    Ver o perfil público
+                                </a>
+                            )}
+                        </div>
+                    )}
                     <Field
                         label="CPF"
                         htmlFor="document"

@@ -10,7 +10,7 @@ interface Extras {
     form: { result: 'V' | 'E' | 'D'; score: string; opponent: string | null; home: boolean; url: string }[] | null;
     scorers: { player: string; goals: number }[] | null;
     calendar_url: string | null;
-    roster?: { name: string | null; shirt: number | null; role: string }[];
+    roster?: { name: string | null; shirt: number | null; role: string; profile_url?: string | null }[];
 }
 
 const pill = { V: 'bg-emerald-600', E: 'bg-gray-500', D: 'bg-red-600' } as const;
@@ -126,7 +126,7 @@ export default function Team({ theme, seo, team, participations, games, push_key
                                 {extras.roster.map((item, index) => (
                                     <li key={index} className="flex gap-2">
                                         <span className="w-7 text-right tabular-nums text-gray-500">{item.shirt ?? ''}</span>
-                                        <span>{item.name}</span>
+                                        {item.profile_url ? <Link href={item.profile_url} className="underline">{item.name}</Link> : <span>{item.name}</span>}
                                         {item.shirt === null && <span className="text-xs text-gray-500">{item.role}</span>}
                                     </li>
                                 ))}

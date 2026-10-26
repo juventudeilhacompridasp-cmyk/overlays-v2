@@ -187,6 +187,9 @@ final class TeamPage
             return [];
         }
 
+        // O link do perfil só entra na resposta com o interruptor `athlete_profile` ligado (a chave nem existe desligado).
+        $withProfiles = AthleteProfile::enabled();
+
         return RosterEntry::query()
             ->where('entry_id', $latest->getKey())
             ->where('status', RosterStatus::Active)
@@ -197,6 +200,6 @@ final class TeamPage
                 'name' => PublicName::of($row->person),
                 'shirt' => $row->role === RosterRole::Athlete ? $row->shirt_number : null,
                 'role' => $row->role->label(),
-            ])->values()->all();
+            ] + ($withProfiles && $row->role === RosterRole::Athlete ? ['profile_url' => AthleteProfile::url($row->person)] : []))->values()->all();
     }
 }

@@ -20,6 +20,8 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 **Fora do MVP:** cobrança automática. **Decidido não fazer:** interruptor da fila offline (aumentaria o risco no jogo).
 
 ## Entregue
+- **Perfil público do atleta (26/10):** `/atletas/{pessoa}`, desligado por padrão (Painel > Portal público), com autorização no cadastro e só para maiores de 18 anos; sem foto, nascimento, documento ou cartões. Falta incluir no sitemap/busca (decisão deliberada: `noindex`).
+- **Fechamento da súmula (26/10):** Painel do operador > "Fechamento da súmula" (`panel.games.sheet.close`, `operate-games`), assinaturas mínimas e motivo de reabertura parametrizáveis (Painel > Parâmetros). Falta exibir o fechamento no PDF oficial.
 - **Automação da transmissão (26/10):** canais podem ativar cartelas automáticas de pré-jogo e resumo final conforme o status da partida; desligada por padrão e sem alterar outras camadas do operador.
 - **Operação mobile (26/10):** modo operador recebeu cabeçalho responsivo, quebra de controles em telas estreitas, área sem rolagem lateral acidental e respeito à safe area do aparelho.
 - **ADR 0017 — assinatura digital (26/10):** hash, persistência da evidência, convite/confirmação por link único e exibição de evidências no PDF/painel entregues.

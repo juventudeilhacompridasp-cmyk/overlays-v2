@@ -11,6 +11,7 @@ use App\Modules\Matches\Enums\GameStatus;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\Venue;
 use App\Modules\Portal\Push\PushConfig;
+use App\Modules\Portal\Support\AthleteProfile;
 use App\Modules\Portal\Support\CompetitionPage;
 use App\Modules\Portal\Support\GamePresenter;
 use App\Modules\Portal\Support\IcsCalendar;
@@ -21,6 +22,7 @@ use App\Modules\Portal\Support\SeasonExtras;
 use App\Modules\Portal\Support\SeasonPresenter;
 use App\Modules\Portal\Support\SeasonStats;
 use App\Modules\Portal\Support\TeamPage;
+use App\Modules\Teams\Models\Person;
 use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\CurrentOrganization;
 use App\Modules\Tenancy\Enums\Feature;
@@ -166,6 +168,21 @@ class PortalController extends Controller
             ])->values(),
             'games' => $games->map(fn (Game $game) => GamePresenter::game($game) + ['competition' => $game->division->season->competition->name])->values(),
             'extras' => $page->for($team, $entries),
+        ]);
+    }
+
+    /** Perfil público do atleta: só com o interruptor ligado, autorização no cadastro e maioridade (AthleteProfile); senão, "não encontrado". */
+    public function athlete(Person $person, AthleteProfile $profile): Response
+    {
+        $data = $profile->for($person);
+        abort_if($data === null, 404);
+
+        $theme = PublicTheme::current();
+
+        return Inertia::render('Portal/Athlete', [
+            'theme' => $theme,
+            'seo' => $this->seo("{$data['name']} · {$theme['name']}", "Equipes, edições, jogos e gols de {$data['name']}.", route('portal.athlete', $person->getKey()), null, null, true),
+            'athlete' => $data,
         ]);
     }
 

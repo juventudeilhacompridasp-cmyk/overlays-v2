@@ -32,6 +32,7 @@ return [
     'portal.season' => $page('Edição: tabela, jogos, chaveamento, regulamento e artilharia', 'Edição em rascunho é 404.'),
     'portal.stats' => $page('Estatísticas da edição (ataque, defesa, forma, maiores resultados)', 'Nunca traz cartões, disciplina ou atletas. 404 com `season_stats` desligada.'),
     'portal.venue' => $page('Local (estádio): endereço e jogos de edições publicadas'),
+    'portal.athlete' => $page('Perfil público do atleta (só com interruptor ligado, autorização no cadastro e maioridade)', 'Nome público, equipes, edições, camisa, jogos e gols. Nunca foto, nascimento, documento ou cartões. 404 sem o interruptor, sem autorização, para menores e para edição em rascunho; `noindex`.'),
     'portal.team' => $page('Equipe: campanhas, forma, artilheiros e (se habilitado) elenco', 'Nomes de atletas passam por `PublicName` (menores abreviados).'),
     'portal.team.calendar' => $file('Calendário `.ics` dos jogos da equipe (RFC 5545)', 'text/calendar', 'UTC, 120 min por jogo, sem cancelados; 404 sem o interruptor `team_calendar`.'),
     'portal.search' => $page('Busca por competições e equipes (`?q=`, mínimo 2 letras)', 'Nunca acha atletas; `noindex`.'),
