@@ -26,6 +26,7 @@ Use **Anular** no lançamento. Ele cria um evento compensatório: o histórico �
 
 ## Relatórios em PDF
 No topo da súmula, o menu **Relatórios em PDF** gera (para quem tem o recurso Relatórios):
+- **Súmula oficial (para imprimir)**: cabeçalho do jogo, escalações com camisa e capitão, árbitro e mesa, ocorrências (com linhas em branco para preencher à mão se ainda não há lançamentos), observações e campos de assinatura do árbitro, dos dois capitães e do mesário (com o nome já impresso quando conhecido). Serve antes, durante ou depois do jogo.
 - **Escalação**: titulares, banco e comissão das duas equipes, com esquema tático e linhas de assinatura (baixar ou ver no navegador).
 - **Atividades da partida** e **Relatório completo** (depois que o jogo é encerrado): placar, resumo em cartões (gols, cartões, substituições, faltas), placar por período, linha do tempo com cada lance, observações e assinaturas.
 Os PDFs são de uso interno e nunca aparecem no portal público.

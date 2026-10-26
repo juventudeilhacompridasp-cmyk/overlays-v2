@@ -148,6 +148,7 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::get('games/{game}/sheet', [SheetController::class, 'show'])->name('games.sheet');
         Route::middleware('feature:reports')->prefix('games/{game}/reports')->name('games.reports.')->group(function () {
             Route::get('escalacao.pdf', [GameReportController::class, 'lineup'])->name('lineup');
+            Route::get('sumula.pdf', [GameReportController::class, 'sheet'])->name('sheet');
             Route::get('final.pdf', [GameReportController::class, 'finalReport'])->name('final');
         });
         Route::put('games/{game}/lineups/{entry}', [SheetController::class, 'lineup'])->name('games.lineup');
