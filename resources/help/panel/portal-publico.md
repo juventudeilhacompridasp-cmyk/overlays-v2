@@ -30,6 +30,7 @@ Em Portal público, o cartão **O que as páginas públicas mostram** liga ou de
 No mesmo cartão (agora "O que as páginas públicas mostram") há as opções da página da equipe:
 - **Campanha por edição**: jogos, vitórias, empates, derrotas, gols e colocação na tabela.
 - **Forma recente**, **artilheiros da equipe** (nome público, 5 maiores) e **calendário (.ics)**, para a pessoa adicionar os jogos à agenda do celular.
+- **Perfil público do atleta**: página própria (`/atletas/...`) com nome público, equipes, edições, camisa, jogos e gols. **Desligado por padrão** e só existe para quem **autorizou no cadastro** da pessoa (caixa "autorizou o perfil público" em Atletas) e é **maior de 18 anos** com a data de nascimento informada; desmarcar a autorização tira a página do ar na hora. Nunca traz foto, nascimento, documento ou cartões e não aparece nos buscadores. Com o elenco público ligado, o nome do atleta vira link para o perfil.
 - **Elenco público**: atletas (nome público e camisa) e técnico da edição mais recente. **Desligado por padrão**; nunca traz foto, nascimento ou documento.
 
 ## Página pública da edição

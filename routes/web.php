@@ -63,6 +63,7 @@ Route::get('/locais/{venue}', [PortalController::class, 'venue'])->name('portal.
 Route::get('/feed.xml', [PortalController::class, 'feed'])->name('portal.feed')->middleware(PlatformLimits::throttle('public'));
 Route::get('/busca', [PortalController::class, 'search'])->name('portal.search')->middleware(PlatformLimits::throttle('public'));
 Route::get('/equipes/{team}', [PortalController::class, 'team'])->name('portal.team');
+Route::get('/atletas/{person}', [PortalController::class, 'athlete'])->middleware(PrivateNoIndex::class)->name('portal.athlete');
 Route::get('/equipes/{team}/calendario.ics', [PortalController::class, 'teamCalendar'])->name('portal.team.calendar');
 // Avisos push do público (jogo ou equipe); exigem o recurso `push` e as chaves VAPID.
 Route::middleware([PlatformLimits::throttle('push'), 'feature:push'])->prefix('push')->name('push.')->group(function () {

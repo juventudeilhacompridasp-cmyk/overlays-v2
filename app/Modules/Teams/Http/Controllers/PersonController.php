@@ -4,6 +4,7 @@ namespace App\Modules\Teams\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Matches\Models\GameEvent;
+use App\Modules\Portal\Support\AthleteProfile;
 use App\Modules\Teams\Actions\ChangePersonPhoto;
 use App\Modules\Teams\Actions\ManagePersonDocuments;
 use App\Modules\Teams\Enums\PersonDocumentType;
@@ -100,6 +101,9 @@ class PersonController extends Controller
                 'birth_date' => $person->birth_date?->format('Y-m-d'),
                 'has_document' => $person->document_hash !== null,
                 'photo_url' => $person->photoUrl(400),
+                'public_profile' => $person->public_profile_at !== null,
+                'public_profile_url' => AthleteProfile::url($person),
+                'public_profile_enabled' => AthleteProfile::enabled(),
             ],
             'documents' => $person->documents()->orderBy('expires_on')->get()->map(function (PersonDocument $document): array {
                 $status = DocumentValidity::status($document->expires_on, now(), 15);

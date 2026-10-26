@@ -32,6 +32,7 @@ class Person extends Model
     {
         return [
             'birth_date' => 'date',
+            'public_profile_at' => 'datetime',
         ];
     }
 

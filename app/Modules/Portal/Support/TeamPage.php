@@ -195,6 +195,7 @@ final class TeamPage
             ->sortBy(fn (RosterEntry $row) => [$row->role === RosterRole::Athlete ? 0 : 1, $row->shirt_number ?? 999, (string) $row->person->name])
             ->map(fn (RosterEntry $row) => [
                 'name' => PublicName::of($row->person),
+                'profile_url' => $row->role === RosterRole::Athlete ? AthleteProfile::url($row->person) : null,
                 'shirt' => $row->role === RosterRole::Athlete ? $row->shirt_number : null,
                 'role' => $row->role->label(),
             ])->values()->all();
