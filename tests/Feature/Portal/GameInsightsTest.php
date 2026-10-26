@@ -108,7 +108,7 @@ describe('public lineups', function () {
             $lineup = $page->toArray()['props']['insights']['lineup'];
 
             expect($lineup['home']['starter'][0])->toBe(['name' => 'Joãozinho', 'shirt' => 10, 'captain' => true])
-                ->and($lineup['away']['bench'][0]['name'])->toBe('Pedro S.')
+                ->and($lineup['away']['bench'][0]['name'])->toBe('Pedro Santos')
                 ->and(json_encode($lineup))->not->toContain('photo');
         });
     });
