@@ -95,3 +95,26 @@ test('cartões do início repetem o menu, sem o próprio início, e todos têm f
     assert.deepEqual(sections.map((section) => section.area).includes('admin'), true);
     assert.equal(quickSections(buildNav(ctx({ role: 'manager' }))).flatMap((section) => section.items).some((entry) => entry.route === 'manager.dashboard'), false);
 });
+
+test('perfil só de mesário vê um menu enxuto: mesário, jogos do campeonato e transmissão', () => {
+    const menu = buildNav(ctx({ role: 'operator', can: { competitions: false, operate: true, users: false, market: false, registry: false } }));
+
+    assert.deepEqual(menu.top.map((i) => i.label), ['Mesário', 'Jogos do campeonato']);
+    assert.deepEqual(labels(menu, 'broadcast'), ['Controle remoto', 'Transmissão']);
+    assert.equal(menu.groups.length, 1);
+    assert.deepEqual(menu.bottom.map((i) => i.route), ['panel.help.index']);
+});
+
+test('quem opera jogos mas também gerencia cadastros mantém o menu completo', () => {
+    const menu = buildNav(ctx({ role: 'operator', can: { competitions: false, operate: true, users: false, market: false, registry: true } }));
+
+    assert.equal(menu.top[0].label, 'Painel');
+    assert.equal(menu.groups.some((g) => g.id === 'competition'), true);
+});
+
+test('o mesário só vê controle remoto e transmissão se o pacote tem overlays', () => {
+    const menu = buildNav(ctx({ role: 'operator', features: [], can: { competitions: false, operate: true, users: false, market: false, registry: false } }));
+
+    assert.equal(menu.groups.length, 0);
+    assert.deepEqual(menu.top.map((i) => i.label), ['Mesário', 'Jogos do campeonato']);
+});

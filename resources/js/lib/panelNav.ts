@@ -15,7 +15,7 @@ export type NavContext = {
     role: string | null;
     platformAdmin: boolean;
     features: string[];
-    can: { competitions: boolean; operate: boolean; users: boolean; market: boolean };
+    can: { competitions: boolean; operate: boolean; users: boolean; market: boolean; registry?: boolean };
 };
 
 export type NavMenu = { top: NavItem[]; groups: NavGroup[]; bottom: NavItem[] };
@@ -55,6 +55,11 @@ const athleteNav: NavItem[] = [item('Meu perfil', 'athlete.dashboard', 'athlete.
 
 const has = (features: string[], entry: NavItem) => !entry.feature || features.includes(entry.feature);
 
+/** Opera jogos e não gerencia competições, cadastros, usuários nem o Mercado. */
+export function isOperatorOnly(ctx: NavContext): boolean {
+    return ctx.can.operate && !ctx.can.competitions && !ctx.can.users && !ctx.can.market && !ctx.can.registry;
+}
+
 /** Monta o menu da pessoa: itens soltos no topo, grupos recolhíveis e a Ajuda no fim. */
 export function buildNav(ctx: NavContext): NavMenu {
     const helpArea = ctx.role === 'manager' ? 'manager' : ctx.role === 'athlete' ? 'athlete' : ctx.role ? 'panel' : 'platform';
@@ -63,6 +68,15 @@ export function buildNav(ctx: NavContext): NavMenu {
 
     if (ctx.role === 'manager') return { top: managerNav.filter((entry) => has(ctx.features, entry)), groups: [], bottom };
     if (ctx.role === 'athlete') return { top: athleteNav, groups: [], bottom };
+
+    // Perfil "só mesário": opera jogos e não tem nenhuma outra permissão. Menu enxuto, centrado no app do mesário.
+    if (isOperatorOnly(ctx)) {
+        const operatorTop = [item('Mesário', 'panel.mesario', 'panel.mesario', ICONS.phone), item('Jogos do campeonato', 'panel.mesario.games', 'panel.mesario.games', ICONS.trophy)];
+        const operatorBroadcast = [item('Controle remoto', 'panel.broadcast.remote', 'panel.broadcast.remote', ICONS.phone, 'overlays'), item('Transmissão', 'panel.broadcast.index', 'panel.broadcast.index', ICONS.camera, 'overlays')];
+        const operatorGroups: NavGroup[] = [{ id: 'broadcast', label: 'Transmissão', area: 'main', defaultOpen: true, items: operatorBroadcast.filter((entry) => has(ctx.features, entry)) }];
+
+        return { top: operatorTop, groups: operatorGroups.filter((group) => group.items.length > 0), bottom };
+    }
 
     const top = [item('Painel', 'panel.dashboard', 'panel.dashboard', ICONS.home)];
 
@@ -140,6 +154,7 @@ export function activeGroupOf(menu: NavMenu, isActive: (match: string) => boolea
 /** Frase curta de cada destino, para os cartões de acesso rápido do início (o que dá para fazer ali). */
 export const QUICK_HINTS: Record<string, string> = {
     'panel.mesario': 'Jogos de hoje e súmula, no celular',
+    'panel.mesario.games': 'Todos os jogos do campeonato e o painel do operador',
     'panel.competitions.index': 'Campeonatos, edições, divisões e tabelas',
     'panel.registrations.index': 'Pedidos de inscrição das equipes',
     'panel.teams.index': 'Clubes, escudos e elencos',

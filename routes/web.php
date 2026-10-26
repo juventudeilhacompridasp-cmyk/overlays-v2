@@ -118,7 +118,7 @@ Route::middleware(['guest', 'feature:market', PrivateNoIndex::class])->prefix('m
 Route::get('/dashboard', fn () => redirect()->route(match (request()->user()?->role()) {
     Role::TeamManager => 'manager.dashboard',
     Role::Athlete => 'athlete.dashboard',
-    default => 'panel.dashboard',
+    default => request()->user()?->isOperatorOnly() ? 'panel.mesario' : 'panel.dashboard',
 }))
     ->middleware(['auth', 'verified'])
     ->name('dashboard');

@@ -5,7 +5,7 @@ import { FormEvent } from 'react';
 
 type Props = {
     features: { key: string; label: string; off: boolean }[];
-    mesario: { days_ahead: number; finished_hours: number; limit: number };
+    mesario: { days_ahead: number; finished_hours: number; limit: number; history: number };
     portal: { home: number; widgets: number; scorers: number; stats_top: number; stats_form: number };
     public_api: boolean;
     quick_result: boolean;
@@ -55,10 +55,11 @@ export default function Edit({ features, mesario, portal, public_api, quick_resu
 
                 <Card title="App do mesário" className="max-w-3xl">
                     <p className="mb-3 text-sm text-gray-600">Quais jogos aparecem em Painel &gt; Mesário.</p>
-                    <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         {number('days_ahead', 'Dias à frente', 0, 7, 'Jogos agendados até daqui a esses dias (0 = só hoje).')}
                         {number('finished_hours', 'Horas de encerrados', 1, 48, 'Quanto tempo um jogo encerrado continua na tela.')}
                         {number('limit', 'Limite de jogos', 10, 100, 'Máximo de cartões na tela.')}
+                        {number('history', 'Alterações recentes', 0, 50, 'Quantas alterações do jogo o painel do operador mostra (0 esconde).')}
                     </div>
                 </Card>
 

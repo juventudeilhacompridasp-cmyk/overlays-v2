@@ -152,6 +152,8 @@ return [
     'panel.games.result' => $action('Lança o resultado rápido (placar final sem súmula detalhada)', 'Recusado em esportes de sets e quando a organização ou a edição o proíbe. Pênaltis opcionais no mata-mata.'),
     'panel.games.walkover' => $action('Registra W.O. com o vencedor informado'),
     'panel.games.reopen' => $action('Reabre um jogo encerrado para correção'),
+    'panel.mesario.games' => $page('Jogos do campeonato: todos os jogos da organização, com busca e filtros por competição e situação', 'Lista paginada no banco; cada linha abre o painel do operador.'),
+    'panel.games.operator' => $page('Painel do operador da partida: placar, atalhos, escalações, mesa, últimos lances e alterações recentes', 'Consultar vale para qualquer membro; as alterações recentes vêm do registro de atividades (quantidade em Painel > Parâmetros).'),
     'panel.games.sheet' => $page('Súmula digital do jogo', 'Tela com a projeção local usada pela fila offline.'),
     'panel.games.lineup' => $action('Salva a escalação de uma equipe no jogo (titulares, reservas e comissão)'),
     'panel.games.events.store' => $action('Lança um evento de jogo (gol, cartão, substituição, falta, pedido de tempo...)', 'Eventos só se acrescentam; desfazer é um evento compensatório.'),

@@ -20,6 +20,7 @@ CI verde (Pint, Larastan, Pest, Front, "Tempo real e push", Docker), descrição
 **Fora do MVP:** cobrança automática. **Decidido não fazer:** interruptor da fila offline (aumentaria o risco no jogo).
 
 ## Entregue
+- **Painel do operador e perfil de mesário (26/10):** quem só opera jogos entra direto no app do mesário e vê um menu enxuto; o mesário ganhou abas (ao vivo, próximos, encerrados) e busca, a lista **Jogos do campeonato** (`panel.mesario.games`) e o **Painel do operador** por partida (`panel.games.operator`: atalhos, escalações, mesa, últimos lances e alterações recentes do registro de atividades; quantidade em Painel > Parâmetros).
 - **Registro de atividades (auditoria no banco, 26/10):** `activity_log` com toda ação de escrita de usuários logados (inclusive recusadas), mudanças de jogo com antes/depois e lances lançados; tela e CSV em Painel > Registro de atividades; retenção e liga/desliga por `ACTIVITY_LOG_*`. Próximo: perfil só de mesário e visão do Operador da partida.
 - **ADR 0016 — galeria de mídia das partidas (26/10):** escopo de fotos e vídeos externos definido; implementação seguirá em partes (modelo/upload, moderação e galeria pública).
 - **PWA público (26/10):** portal e páginas públicas agora oferecem manifest instalável e convite de instalação no celular, reutilizando o service worker sem armazenar páginas ou dados.
