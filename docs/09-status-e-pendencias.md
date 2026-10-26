@@ -53,7 +53,7 @@ Ideias levantadas e combinadas para deixar a plataforma mais completa. Ordem sug
 - [ ] Perfil do atleta com histórico de campeonatos, gols e cartões em todas as edições (exige consentimento e proteção de menores, LGPD).
 - [ ] Transferências e empréstimos entre equipes, com histórico.
 - [ ] Carteirinha digital no celular do atleta, com QR de verificação e validade.
-- [ ] Documentos com validade (por exemplo, atestado médico): aviso antes de vencer e bloqueio de escalação.
+- [x] Documentos com validade (atestado médico etc.): cadastro na ficha, lista de vencimentos, aviso ao gestor e bloqueio de escalação opcional por edição. Falta: envio do documento pelo próprio gestor/atleta e documentos exigidos por tipo de pessoa.
 
 **Público e comunicação**
 - [ ] Aviso por WhatsApp (lembrete de jogo, mudança de horário e resultado), além do e-mail e do push atuais.

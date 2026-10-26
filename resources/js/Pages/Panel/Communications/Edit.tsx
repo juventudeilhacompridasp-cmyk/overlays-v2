@@ -12,6 +12,7 @@ type Settings = {
     manager_lineup_reminder: boolean;
     manager_game_changed: boolean;
     manager_suspensions: boolean;
+    manager_documents: boolean;
     push_started: boolean;
     push_score: boolean;
     push_finished: boolean;
@@ -47,6 +48,7 @@ const groups: { title: string; hint: string; feature: 'online_registration' | 't
             { key: 'manager_lineup_reminder', label: 'Lembrete de escalação pendente' },
             { key: 'manager_game_changed', label: 'Mudança de data/local, adiamento ou cancelamento do jogo' },
             { key: 'manager_suspensions', label: 'Suspensões depois do jogo' },
+            { key: 'manager_documents', label: 'Documentos de atletas vencidos ou perto de vencer' },
         ],
     },
     {

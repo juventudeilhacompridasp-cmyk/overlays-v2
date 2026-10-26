@@ -28,7 +28,7 @@ test('organizador ganha inscrições, relatórios e widgets; operador ganha o me
     const menu = buildNav(ctx({ can: { competitions: true, operate: true, users: false, market: false } }));
 
     assert.deepEqual(menu.top.map((i) => i.label), ['Painel', 'Mesário']);
-    assert.deepEqual(labels(menu, 'competition'), ['Competições', 'Inscrições', 'Equipes', 'Atletas e comissão', 'Estádios', 'Árbitros e mesários', 'Relatórios']);
+    assert.deepEqual(labels(menu, 'competition'), ['Competições', 'Inscrições', 'Equipes', 'Atletas e comissão', 'Estádios', 'Documentos a vencer', 'Árbitros e mesários', 'Relatórios']);
     assert.deepEqual(labels(menu, 'broadcast'), ['Transmissão', 'Artes', 'Widgets']);
 });
 
@@ -56,7 +56,7 @@ test('Super Admin vê o grupo Plataforma; sem papel só tem plataforma e ajuda d
 test('recursos fora do pacote somem e grupo vazio não aparece', () => {
     const menu = buildNav(ctx({ features: [], can: { competitions: true, operate: false, users: false, market: false } }));
 
-    assert.deepEqual(labels(menu, 'competition'), ['Competições', 'Equipes', 'Atletas e comissão', 'Estádios', 'Árbitros e mesários']);
+    assert.deepEqual(labels(menu, 'competition'), ['Competições', 'Equipes', 'Atletas e comissão', 'Estádios', 'Documentos a vencer', 'Árbitros e mesários']);
     assert.equal(menu.groups.some((g) => g.id === 'broadcast'), false);
 });
 

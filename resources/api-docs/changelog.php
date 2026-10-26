@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.9.0',
+        'date' => '2026-10-26',
+        'changes' => ['Novas rotas internas panel.people.documents.* e panel.documents.index: documentos com validade das pessoas (atestado médico) e lista de vencimentos. Regulamento da edição ganha documents.medical_required e documents.warn_days.'],
+    ],
+    [
         'version' => '1.8.0',
         'date' => '2026-10-26',
         'changes' => ['Nova rota interna panel.games.reports.sheet: súmula oficial do jogo em PDF, pronta para imprimir e assinar.'],

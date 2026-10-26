@@ -5,9 +5,13 @@ namespace App\Modules\Teams\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Matches\Models\GameEvent;
 use App\Modules\Teams\Actions\ChangePersonPhoto;
+use App\Modules\Teams\Actions\ManagePersonDocuments;
+use App\Modules\Teams\Enums\PersonDocumentType;
 use App\Modules\Teams\Http\Requests\PersonRequest;
 use App\Modules\Teams\Models\Person;
+use App\Modules\Teams\Models\PersonDocument;
 use App\Modules\Teams\Support\Cpf;
+use App\Modules\Teams\Support\DocumentValidity;
 use App\Support\Tables\TableQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -76,7 +80,7 @@ class PersonController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Panel/People/Form', ['person' => null]);
+        return Inertia::render('Panel/People/Form', ['person' => null, 'documents' => [], 'document_types' => []]);
     }
 
     public function store(PersonRequest $request): RedirectResponse
@@ -97,6 +101,20 @@ class PersonController extends Controller
                 'has_document' => $person->document_hash !== null,
                 'photo_url' => $person->photoUrl(400),
             ],
+            'documents' => $person->documents()->orderBy('expires_on')->get()->map(function (PersonDocument $document): array {
+                $status = DocumentValidity::status($document->expires_on, now(), 15);
+
+                return [
+                    'id' => $document->getKey(),
+                    'type_label' => $document->type->label(),
+                    'original_name' => $document->original_name,
+                    'expires_on' => $document->expires_on->format('Y-m-d'),
+                    'days_left' => DocumentValidity::daysLeft($document->expires_on, now()),
+                    'status' => $status,
+                    'status_label' => DocumentValidity::label($status),
+                ];
+            })->values(),
+            'document_types' => array_map(fn (PersonDocumentType $type) => ['value' => $type->value, 'label' => $type->label()], PersonDocumentType::cases()),
         ]);
     }
 
@@ -118,6 +136,7 @@ class PersonController extends Controller
         }
 
         app(ChangePersonPhoto::class)->handle($person, null);
+        app(ManagePersonDocuments::class)->purge($person);
         $person->delete();
 
         return to_route('panel.people.index')->with('success', 'Pessoa excluída.');

@@ -8,8 +8,11 @@ use App\Modules\Matches\Enums\LineupSlot;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameLineup;
 use App\Modules\Matches\Models\GameTactic;
+use App\Modules\Teams\Enums\PersonDocumentType;
 use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Enums\RosterStatus;
+use App\Modules\Teams\Models\Person;
+use App\Modules\Teams\Models\PersonDocument;
 use App\Modules\Teams\Models\RosterEntry;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -97,6 +100,10 @@ final class SaveGameLineup
             }
         }
 
+        if ($rules->requireMedicalCertificate) {
+            $this->ensureMedicalCertificates($game, [...$starters, ...$bench]);
+        }
+
         if ($captain !== null && ! in_array($captain, [...$starters, ...$bench], true)) {
             throw new InvalidArgumentException('O capitão precisa estar entre os titulares ou reservas.');
         }
@@ -138,5 +145,38 @@ final class SaveGameLineup
                 GameTactic::query()->where('game_id', $game->getKey())->where('entry_id', $entry->getKey())->update(['confirmed_at' => null, 'confirmed_by' => null]);
             }
         });
+    }
+
+    /**
+     * Regulamento que exige atestado médico: todo atleta (titular ou reserva) precisa de um atestado cadastrado e válido na
+     * data do jogo. A comissão técnica não é conferida.
+     *
+     * @param  list<string>  $athletes
+     */
+    private function ensureMedicalCertificates(Game $game, array $athletes): void
+    {
+        if ($athletes === []) {
+            return;
+        }
+
+        $date = $game->scheduled_at ?? now();
+
+        $valid = PersonDocument::query()
+            ->whereIn('person_id', $athletes)
+            ->where('type', PersonDocumentType::MedicalCertificate)
+            ->whereDate('expires_on', '>=', $date->toDateString())
+            ->pluck('person_id')
+            ->all();
+
+        $missing = array_values(array_diff($athletes, $valid));
+
+        if ($missing === []) {
+            return;
+        }
+
+        $names = Person::query()->whereIn('id', $missing)->orderBy('name')->limit(3)->pluck('name')->all();
+        $more = count($missing) - count($names);
+
+        throw new InvalidArgumentException('Sem atestado médico válido na data do jogo: '.implode(', ', $names).($more > 0 ? " e mais {$more}" : '').'.');
     }
 }

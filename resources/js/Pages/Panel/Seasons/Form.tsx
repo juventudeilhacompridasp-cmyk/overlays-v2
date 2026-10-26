@@ -273,6 +273,13 @@ export default function Form({ competition, season, rules, sport_rules, options,
                     <p className="mt-2 text-xs text-gray-500">Depois do prazo o gestor só consulta; o mesário e o organizador ainda podem ajustar a escalação pela súmula até o primeiro lançamento.</p>
                 </Card>
 
+                <Card title="Regulamento: documentos com validade">
+                    {checkbox('Exigir atestado médico válido para escalar atletas (titulares e reservas). A comissão técnica não é afetada.', 'rules.documents.medical_required', data.rules.documents.medical_required, (d, v) => (d.documents.medical_required = v))}
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                        {numberField('Avisar o gestor quantos dias antes de vencer', 'rules.documents.warn_days', data.rules.documents.warn_days, (d, v) => (d.documents.warn_days = v), 'De 1 a 90 dias. Os documentos são cadastrados na ficha de cada pessoa.')}
+                    </div>
+                </Card>
+
                 <Card title="Agenda: avisos de conflito">
                     <p className="mb-3 text-sm text-gray-600">Os avisos não bloqueiam o agendamento. Eles consideram jogos de todas as fases e divisões da organização.</p>
                     <div className="grid gap-4 sm:grid-cols-2">
