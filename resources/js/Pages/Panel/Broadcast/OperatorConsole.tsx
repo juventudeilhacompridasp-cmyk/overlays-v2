@@ -360,10 +360,10 @@ export default function OperatorConsole({ channels, games, scenes, canOperate, o
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex flex-col gap-2 bg-gray-100 p-2 text-gray-900" data-testid="operator-console" role="region" aria-label="Modo operador">
-            <div className="flex shrink-0 items-center gap-2">
+        <div className="fixed inset-0 z-50 flex flex-col gap-2 overflow-hidden bg-gray-100 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-gray-900" data-testid="operator-console" role="region" aria-label="Modo operador">
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
                 <button type="button" onClick={onExit} className="h-8 rounded-md border border-gray-300 bg-white px-3 text-xs font-bold text-gray-700 hover:bg-gray-50">← Quadro{editing ? '' : ' (Esc)'}</button>
-                <h2 className="text-sm font-black uppercase tracking-wide text-gray-800">Modo operador</h2>
+                <h2 className="hidden text-sm font-black uppercase tracking-wide text-gray-800 sm:block">Modo operador</h2>
                 {channels.length > 1 && (
                     <div className="flex flex-wrap gap-1" role="tablist" aria-label="Canal">
                         {channels.map((item) => <Chip key={item.id} active={item.id === channel?.id} role="tab" onClick={() => pick(item.id)}>{item.name}</Chip>)}
@@ -371,7 +371,7 @@ export default function OperatorConsole({ channels, games, scenes, canOperate, o
                 )}
                 {channel && channels.length === 1 && <span className="text-xs font-semibold text-gray-500">{channel.name}</span>}
                 {channel && (
-                    <div className="ml-3 flex flex-wrap items-center gap-1">
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1 sm:ml-3">
                         <Chip active={editing} onClick={() => { setEditing(!editing); setNotice(null); }}>{editing ? '✓ Concluir layout' : '✥ Editar layout'}</Chip>
                         {editing && (
                             <>

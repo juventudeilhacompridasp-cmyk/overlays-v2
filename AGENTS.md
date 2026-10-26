@@ -153,6 +153,7 @@ Testes Pest para toda regra de negócio (as regras de campeonato têm testes bas
 ## Automação da transmissão
 
 - A automação é opt-in por canal: `automation_settings.enabled` controla somente as cartelas de pré-jogo e resumo final; as demais camadas continuam sob controle do operador.
+- O modo operador precisa permanecer utilizável em telas estreitas: cabeçalho deve quebrar sem rolagem horizontal, área de trabalho deve respeitar safe area e controles principais devem manter alvos de toque de pelo menos 44 px.
 
 ## Fila offline da súmula
 
