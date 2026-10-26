@@ -52,6 +52,8 @@ class ScheduleController extends Controller
                     'label' => ($game->homeEntry?->team->name ?? 'A definir').' x '.($game->awayEntry?->team->name ?? 'A definir').' ('.$game->scheduled_at->format('d/m H:i').')',
                 ])->all(),
                 $games->pluck('id')->all(),
+                GameConflicts::VENUE_MINUTES,
+                GameConflicts::TEAM_REST_MINUTES,
             );
         }
 
