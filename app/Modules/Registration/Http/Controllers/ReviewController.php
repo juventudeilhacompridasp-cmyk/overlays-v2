@@ -16,6 +16,7 @@ use App\Modules\Teams\Enums\RosterRole;
 use App\Modules\Teams\Models\Team;
 use App\Modules\Tenancy\Models\LegalDocument;
 use App\Modules\Tenancy\Support\CommunicationSettings;
+use App\Modules\Tenancy\Support\DocumentAccessLog;
 use App\Support\Tables\TableQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -241,6 +242,8 @@ class ReviewController extends Controller
         $url = $documents->signedUrl($document);
 
         abort_if($url === null, 404);
+
+        DocumentAccessLog::record('registration_document', $document->type->label().' — '.$document->person->name);
 
         return redirect()->away($url);
     }

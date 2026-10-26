@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.11.0',
+        'date' => '2026-10-26',
+        'changes' => ['Nova rota interna panel.document-access.index: registro de quem abriu documentos pessoais. As rotas que abrem documentos (panel.registrations.documents.show, panel.people.documents.show, panel.games.uploads.show) passam a gravar o acesso.'],
+    ],
+    [
         'version' => '1.10.0',
         'date' => '2026-10-26',
         'changes' => ['Novas rotas de autenticação em dois fatores (TOTP): two-factor.challenge e two-factor.verify no login e profile.two-factor.* em Meu perfil. O login (POST /login) passa a redirecionar ao código quando a conta tem dois fatores.'],

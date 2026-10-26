@@ -37,7 +37,7 @@ test('a administração é um grupo separado só de quem gerencia usuários', ()
     const admin = menu.groups.find((g) => g.id === 'admin');
 
     assert.equal(admin.area, 'admin');
-    assert.deepEqual(admin.items.map((i) => i.label), ['Usuários', 'Perfis de acesso', 'Auditoria de acesso', 'Portal público', 'Comunicações', 'Notas da ajuda', 'Parâmetros', 'Termos e privacidade']);
+    assert.deepEqual(admin.items.map((i) => i.label), ['Usuários', 'Perfis de acesso', 'Auditoria de acesso', 'Acesso a documentos', 'Portal público', 'Comunicações', 'Notas da ajuda', 'Parâmetros', 'Termos e privacidade']);
     assert.ok(labels(menu, 'competition').includes('Mercado de jogadores'));
     assert.deepEqual(menu.groups.map((g) => g.id), ['competition', 'broadcast', 'admin']);
 });

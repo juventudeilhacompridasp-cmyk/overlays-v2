@@ -10,6 +10,7 @@ use App\Modules\Teams\Http\Requests\PersonDocumentRequest;
 use App\Modules\Teams\Models\Person;
 use App\Modules\Teams\Models\PersonDocument;
 use App\Modules\Teams\Support\DocumentValidity;
+use App\Modules\Tenancy\Support\DocumentAccessLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
@@ -66,7 +67,13 @@ class PersonDocumentController extends Controller
     {
         $url = $documents->signedUrl($document);
 
-        return $url === null ? back()->with('error', 'Não foi possível abrir o documento agora.') : redirect()->away($url);
+        if ($url === null) {
+            return back()->with('error', 'Não foi possível abrir o documento agora.');
+        }
+
+        DocumentAccessLog::record('person_document', $document->type->label().' — '.$document->person->name);
+
+        return redirect()->away($url);
     }
 
     public function destroy(PersonDocument $document, ManagePersonDocuments $documents): RedirectResponse

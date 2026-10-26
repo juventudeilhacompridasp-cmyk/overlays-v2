@@ -10,6 +10,7 @@ use App\Modules\Matches\Models\GameSheetUpload;
 use App\Modules\Matches\Reading\SheetImportSettings;
 use App\Modules\Matches\Reading\StructuredSheetReader;
 use App\Modules\Tenancy\CurrentOrganization;
+use App\Modules\Tenancy\Support\DocumentAccessLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -141,6 +142,9 @@ class SheetUploadController extends Controller
     {
         $url = $store->signedUrl($upload);
         abort_if($url === null, 404);
+
+        $game = $upload->game()->with(['homeEntry.team', 'awayEntry.team'])->first();
+        DocumentAccessLog::record('sheet_upload', 'Súmula enviada — '.($game?->homeEntry?->team->name ?? 'A definir').' x '.($game?->awayEntry?->team->name ?? 'A definir'));
 
         return redirect()->away($url);
     }

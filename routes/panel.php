@@ -46,6 +46,7 @@ use App\Modules\Teams\Http\Controllers\TeamManagerController;
 use App\Modules\Tenancy\Http\Controllers\AccessAuditController;
 use App\Modules\Tenancy\Http\Controllers\AccessProfileController;
 use App\Modules\Tenancy\Http\Controllers\CommunicationsController;
+use App\Modules\Tenancy\Http\Controllers\DocumentAccessController;
 use App\Modules\Tenancy\Http\Controllers\LegalController;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Http\Controllers\OrganizationController;
@@ -280,5 +281,6 @@ Route::middleware(['auth', 'verified', 'panel.member', 'two-factor.admins', 'leg
         Route::put('users/{membership}/overrides', [MemberController::class, 'overrides'])->name('users.overrides');
         Route::delete('users/{membership}', [MemberController::class, 'destroy'])->name('users.destroy');
         Route::get('access-audit', [AccessAuditController::class, 'index'])->name('access-audit.index');
+        Route::get('document-access', [DocumentAccessController::class, 'index'])->name('document-access.index');
     });
 });
