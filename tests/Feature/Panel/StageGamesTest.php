@@ -222,7 +222,8 @@ it('uses the schedule conflict windows configured in the edition', function () {
     $this->get("/painel/stages/{$stage->id}/schedule")->assertInertia(fn ($page) => $page
         ->where('rules.venue_minutes', 45)
         ->where('rules.team_rest_minutes', 90)
-        ->has('games.0.conflicts', 1));
+        ->where('games.0.conflicts.0.kind', 'venue')
+        ->where('games.0.conflicts.0.with', (string) $games[1]->id));
 });
 
 it('locks finished games in the schedule and reschedules through the game update route', function () {
