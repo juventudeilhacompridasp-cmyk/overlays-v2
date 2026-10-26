@@ -257,6 +257,7 @@ return [
     'panel.users.update' => $action('Troca o papel ou o perfil do usuário'),
     'panel.users.overrides' => $action('Define as exceções de permissão do usuário (somar ou retirar; negar vence)'),
     'panel.users.destroy' => $action('Remove o acesso do usuário (a conta continua)'),
+    'panel.document-access.index' => $page('Quem abriu documentos pessoais (inscrições, atestados e súmulas enviadas): os 300 acessos mais recentes', 'Só quem gerencia usuários. Sem IP; o registro é guardado por 2 anos.'),
     'panel.access-audit.index' => $page('Auditoria de acesso: últimas 200 mudanças'),
 
     // ───────────── Gestor de equipe ─────────────
