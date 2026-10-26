@@ -392,6 +392,11 @@ export default function Show({ competition, season, division, stage, tables, gam
                                 Agenda dos jogos
                             </LinkButton>
                         )}
+                        {games.length > 0 && (
+                            <LinkButton href={route('panel.stages.officials', stage.id)} variant="secondary">
+                                Escala de árbitros
+                            </LinkButton>
+                        )}
                         {generation.can_clear && (
                             <Button
                                 variant="danger"

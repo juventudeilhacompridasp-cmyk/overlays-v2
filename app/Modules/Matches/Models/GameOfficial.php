@@ -3,7 +3,6 @@
 namespace App\Modules\Matches\Models;
 
 use App\Modules\Matches\Enums\OfficialRole;
-use App\Modules\Teams\Models\Person;
 use App\Modules\Tenancy\Concerns\BelongsToOrganization;
 use Database\Factories\GameOfficialFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
@@ -12,9 +11,13 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property OfficialRole $role
+ * @property string $game_id
+ * @property string $official_id
+ * @property Carbon|null $notified_at
  */
 #[Unguarded]
 #[UseFactory(GameOfficialFactory::class)]
@@ -32,6 +35,7 @@ class GameOfficial extends Model
     {
         return [
             'role' => OfficialRole::class,
+            'notified_at' => 'datetime',
         ];
     }
 
@@ -44,10 +48,10 @@ class GameOfficial extends Model
     }
 
     /**
-     * @return BelongsTo<Person, $this>
+     * @return BelongsTo<Official, $this>
      */
-    public function person(): BelongsTo
+    public function official(): BelongsTo
     {
-        return $this->belongsTo(Person::class);
+        return $this->belongsTo(Official::class);
     }
 }

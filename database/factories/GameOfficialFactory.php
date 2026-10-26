@@ -5,7 +5,7 @@ namespace Database\Factories;
 use App\Modules\Matches\Enums\OfficialRole;
 use App\Modules\Matches\Models\Game;
 use App\Modules\Matches\Models\GameOfficial;
-use App\Modules\Teams\Models\Person;
+use App\Modules\Matches\Models\Official;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -23,7 +23,7 @@ class GameOfficialFactory extends Factory
         return [
             'game_id' => Game::factory(),
             'organization_id' => fn (array $attributes) => Game::withoutGlobalScopes()->findOrFail($attributes['game_id'])->organization_id,
-            'person_id' => fn (array $attributes) => Person::factory()->create(['organization_id' => $attributes['organization_id']])->id,
+            'official_id' => fn (array $attributes) => Official::factory()->create(['organization_id' => $attributes['organization_id']])->id,
             'role' => OfficialRole::Referee,
         ];
     }

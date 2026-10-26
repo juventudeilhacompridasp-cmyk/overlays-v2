@@ -25,6 +25,8 @@ use App\Modules\Matches\Http\Controllers\FixtureController;
 use App\Modules\Matches\Http\Controllers\GameController;
 use App\Modules\Matches\Http\Controllers\GameReportController;
 use App\Modules\Matches\Http\Controllers\MesarioController;
+use App\Modules\Matches\Http\Controllers\OfficialAssignmentController;
+use App\Modules\Matches\Http\Controllers\OfficialController;
 use App\Modules\Matches\Http\Controllers\ScheduleController;
 use App\Modules\Matches\Http\Controllers\SheetController;
 use App\Modules\Matches\Http\Controllers\SheetReviewController;
@@ -96,6 +98,13 @@ Route::middleware(['auth', 'verified', 'panel.member', 'legal.accepted'])->prefi
         Route::post('games/{game}/result', [GameController::class, 'result'])->name('games.result');
         Route::post('games/{game}/walkover', [GameController::class, 'walkover'])->name('games.walkover');
         Route::post('games/{game}/reopen', [GameController::class, 'reopen'])->name('games.reopen');
+    });
+
+    // Árbitros e mesários (cadastro com e-mail/telefone) e escala dos jogos: só quem gerencia competições, até para consultar.
+    Route::middleware('can:manage-competitions')->group(function () {
+        Route::resource('officials', OfficialController::class)->except('show');
+        Route::get('stages/{stage}/officials', [OfficialAssignmentController::class, 'show'])->name('stages.officials');
+        Route::put('games/{game}/officials', [OfficialAssignmentController::class, 'update'])->name('games.officials.update');
     });
 
     // Inscrições online: análise dos pedidos. Tem dados pessoais e documentos (de menores, inclusive): só quem gerencia

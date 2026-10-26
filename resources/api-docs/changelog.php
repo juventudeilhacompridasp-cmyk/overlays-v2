@@ -8,6 +8,11 @@
 
 return [
     [
+        'version' => '1.7.0',
+        'date' => '2026-10-26',
+        'changes' => ['Novas rotas internas panel.officials.* (cadastro de árbitros e mesários), panel.stages.officials e panel.games.officials.update (escala dos jogos com aviso de conflito e e-mail).'],
+    ],
+    [
         'version' => '1.6.1',
         'date' => '2026-10-26',
         'changes' => ['panel.stages.draw.store aceita partial no mata-mata: só parte das equipes confirmadas entra na chave (ex.: classificados da fase anterior).'],

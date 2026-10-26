@@ -1,7 +1,6 @@
 import { Button, Card, Field, Input, PageHeader } from '@/Components/Panel/ui';
-import { useFeature } from '@/lib/can';
 import PanelLayout from '@/Layouts/PanelLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
 type Settings = {
@@ -20,13 +19,14 @@ type Settings = {
     market_contact_answered: boolean;
     market_profile_expiring: boolean;
     sheet_read_finished: boolean;
+    official_assignment: boolean;
     reminder_first_minutes: number;
     reminder_second_minutes: number;
 };
 
 type SwitchKey = Exclude<keyof Settings, 'reminder_first_minutes' | 'reminder_second_minutes'>;
 
-const groups: { title: string; hint: string; feature: 'online_registration' | 'team_portal' | 'push' | 'market' | 'sheet_import'; items: { key: SwitchKey; label: string }[] }[] = [
+const groups: { title: string; hint: string; feature: 'online_registration' | 'team_portal' | 'push' | 'market' | 'sheet_import' | null; items: { key: SwitchKey; label: string }[] }[] = [
     {
         title: 'Inscrição online (e-mails para a equipe que se inscreve)',
         hint: 'Desligado, o pedido segue normalmente, mas a equipe não recebe o e-mail (o link pessoal continua aparecendo na tela depois de criar o pedido).',
@@ -75,6 +75,12 @@ const groups: { title: string; hint: string; feature: 'online_registration' | 't
         feature: 'sheet_import',
         items: [{ key: 'sheet_read_finished', label: 'Leitura da súmula terminou (aviso a quem pediu)' }],
     },
+    {
+        title: 'Escala de árbitros e mesários',
+        hint: 'Árbitros e mesários não têm login: o e-mail com função, jogo, data e local é a única via. Sem e-mail no cadastro, nada é enviado.',
+        feature: null,
+        items: [{ key: 'official_assignment', label: 'Pessoa escalada para um jogo recebe o aviso' }],
+    },
 ];
 
 function minutesLabel(minutes: number): string {
@@ -84,7 +90,8 @@ function minutesLabel(minutes: number): string {
 }
 
 function Group({ group, data, setData }: { group: (typeof groups)[number]; data: Settings; setData: <K extends keyof Settings>(key: K, value: Settings[K]) => void }) {
-    const available = useFeature(group.feature);
+    const features = usePage().props.features;
+    const available = group.feature === null || features.includes(group.feature);
 
     return (
         <Card title={group.title} className="max-w-3xl">
