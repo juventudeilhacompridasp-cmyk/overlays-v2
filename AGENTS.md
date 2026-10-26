@@ -1,6 +1,7 @@
 # AGENTS.md — guia para quem desenvolve neste repositório (humanos e IAs)
 
 Regra adicional: a tabela de pontos corridos pode ser montada na tela de sorteio por arrasto (turno único ou ida e volta); o servidor valida todos os pares antes de criar os jogos.
+Regra adicional: os avisos de conflito da agenda usam `RuleSet::venueConflictMinutes` e `RuleSet::teamRestMinutes`, configurados no regulamento da edição; os avisos nunca bloqueiam o agendamento.
 
 ## Contexto
 **Status e pendências atuais: `docs/09-status-e-pendencias.md` (leia primeiro e atualize a cada PR).**

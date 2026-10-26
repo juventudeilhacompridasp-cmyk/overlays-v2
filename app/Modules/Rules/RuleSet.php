@@ -52,6 +52,10 @@ final readonly class RuleSet
         public int $maxDisqualifyingFouls = 2,
         /** Minutos antes do horário do jogo em que a escalação do gestor da equipe trava (0 = no horário do jogo). */
         public int $managerLineupDeadlineMinutes = 30,
+        /** Duração considerada para conflitos de estádio na agenda. */
+        public int $venueConflictMinutes = 120,
+        /** Descanso mínimo entre jogos da mesma equipe. */
+        public int $teamRestMinutes = 180,
         /** @var list<int>|null duração de cada período em minutos (tempos + prorrogações); nulo = a do perfil do esporte. */
         public ?array $periodMinutes = null,
         /** Faltas de equipe por grupo de períodos que dão tiro livre; nulo = a do perfil do esporte. */
@@ -78,7 +82,9 @@ final readonly class RuleSet
             'maxStarters' => $maxStarters, 'maxBench' => $maxBench, 'maxStaff' => $maxStaff,
             'pointsNarrowWin' => $pointsNarrowWin ?? 0, 'pointsNarrowLoss' => $pointsNarrowLoss ?? 0,
             'pointsWalkoverLoss' => $pointsWalkoverLoss ?? 0, 'maxPlayerFouls' => $maxPlayerFouls ?? 0,
-            'managerLineupDeadlineMinutes' => $managerLineupDeadlineMinutes] as $name => $value) {
+            'managerLineupDeadlineMinutes' => $managerLineupDeadlineMinutes,
+            'venueConflictMinutes' => $venueConflictMinutes,
+            'teamRestMinutes' => $teamRestMinutes] as $name => $value) {
             if ($value < 0) {
                 throw new InvalidArgumentException("O valor de {$name} não pode ser negativo.");
             }
@@ -167,6 +173,8 @@ final readonly class RuleSet
             maxPlayerFouls: isset($merged['fouls']['max_player']) ? (int) $merged['fouls']['max_player'] : null,
             maxDisqualifyingFouls: (int) ($merged['fouls']['max_disqualifying'] ?? 2),
             managerLineupDeadlineMinutes: (int) $merged['lineup']['manager_deadline_minutes'],
+            venueConflictMinutes: (int) ($merged['schedule']['venue_minutes'] ?? 120),
+            teamRestMinutes: (int) ($merged['schedule']['team_rest_minutes'] ?? 180),
             periodMinutes: isset($merged['periods']['minutes']) && is_array($merged['periods']['minutes']) ? array_values(array_map('intval', $merged['periods']['minutes'])) : null,
             teamFoulLimit: isset($merged['fouls']['team_limit']) ? (int) $merged['fouls']['team_limit'] : null,
             allowQuickResult: (bool) ($merged['results']['quick_allowed'] ?? true),
@@ -196,6 +204,7 @@ final readonly class RuleSet
             'walkover' => ['winner_goals' => $this->walkoverWinnerGoals, 'loser_goals' => $this->walkoverLoserGoals],
             'substitutions' => ['max' => $this->maxSubstitutions, 'max_per_period' => $this->maxSubstitutionsPerPeriod, 'max_windows' => $this->maxSubstitutionWindows, 'allow_reentry' => $this->allowSubstitutionReentry, 'allow_libero_replacements' => $this->allowLiberoReplacements],
             'lineup' => ['max_starters' => $this->maxStarters, 'max_bench' => $this->maxBench, 'max_staff' => $this->maxStaff, 'manager_deadline_minutes' => $this->managerLineupDeadlineMinutes],
+            'schedule' => ['venue_minutes' => $this->venueConflictMinutes, 'team_rest_minutes' => $this->teamRestMinutes],
             'scoring' => [
                 'model' => $this->scoreModel,
                 'sets_to_win' => $this->setsToWin,

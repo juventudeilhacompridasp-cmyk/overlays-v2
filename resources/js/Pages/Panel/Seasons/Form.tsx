@@ -273,6 +273,14 @@ export default function Form({ competition, season, rules, sport_rules, options,
                     <p className="mt-2 text-xs text-gray-500">Depois do prazo o gestor só consulta; o mesário e o organizador ainda podem ajustar a escalação pela súmula até o primeiro lançamento.</p>
                 </Card>
 
+                <Card title="Agenda: avisos de conflito">
+                    <p className="mb-3 text-sm text-gray-600">Os avisos não bloqueiam o agendamento. Eles consideram jogos de todas as fases e divisões da organização.</p>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {numberField('Duração considerada no estádio (minutos)', 'rules.schedule.venue_minutes', data.rules.schedule.venue_minutes, (d, v) => (d.schedule.venue_minutes = v), '0 = não avisar conflito de estádio')}
+                        {numberField('Descanso mínimo da equipe (minutos)', 'rules.schedule.team_rest_minutes', data.rules.schedule.team_rest_minutes, (d, v) => (d.schedule.team_rest_minutes = v), '0 = não avisar conflito de equipe')}
+                    </div>
+                </Card>
+
                 {data.rules.scoring.model === 'points' && (
                     <Card title="Regulamento: basquete">
                         <div className="grid gap-4 sm:grid-cols-2">
