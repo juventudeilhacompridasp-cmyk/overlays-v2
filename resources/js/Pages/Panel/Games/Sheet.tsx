@@ -85,6 +85,7 @@ interface Props {
     clock_offsets: number[];
     event_types: Option[];
     sport: string;
+    sport_profile: { label: string; score_model: string; has_clock: boolean; tracks_team_fouls: boolean; tracks_timeouts: boolean };
     score_model: string;
     quarters: { period: number; home: number; away: number }[] | null;
     sets: SetScore[] | null;
@@ -717,7 +718,7 @@ const teamFields = (team: Team) => ({
     timeouts: team.timeouts,
 });
 
-export default function Sheet({ game: serverGame, home: serverHome, away: serverAway, events: serverEvents, limits, clock_offsets, event_types, sport, score_model, quarters, sets, fouls, clock: serverClock, public_url, volleyball_rotation, signatures }: Props) {
+export default function Sheet({ game: serverGame, home: serverHome, away: serverAway, events: serverEvents, limits, clock_offsets, event_types, sport, score_model, quarters, sets, fouls, clock: serverClock, public_url, volleyball_rotation, signatures, sport_profile }: Props) {
     // Quem não opera jogos só consulta a súmula: o servidor também recusa as ações, aqui só se escondem os controles.
     const canOperate = useCan('operate-games');
     const canImport = useFeature('sheet_import');
@@ -756,7 +757,7 @@ export default function Sheet({ game: serverGame, home: serverHome, away: server
             <Head title="Súmula" />
             <PageHeader
                 title={`${home?.name ?? 'A definir'} x ${away?.name ?? 'A definir'}`}
-                subtitle={`${game.stage} · ${game.division}`}
+                subtitle={`${game.stage} · ${game.division} · ${sport_profile.label}`}
                 breadcrumbs={[
                     { label: 'Competições', href: route('panel.competitions.index') },
                     { label: game.competition, href: route('panel.competitions.show', game.competition_id) },

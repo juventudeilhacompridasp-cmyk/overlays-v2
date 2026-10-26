@@ -27,6 +27,7 @@ interface Props {
         stage: string;
         knockout: boolean;
         quick_result: boolean;
+        sport: { label: string; score_model: string; has_clock: boolean; tracks_team_fouls: boolean; tracks_timeouts: boolean };
     };
     closure: { closed: boolean; can_close: boolean; by: string | null; at: string | null; signatures: number; required: number; notes: string | null };
     officials: { role: string; name: string }[];
@@ -113,7 +114,10 @@ export default function Operator({ game, closure, officials, events, history, li
                         {game.scheduled_at ? new Date(game.scheduled_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'Sem horário'}
                         {game.venue ? ` · ${game.venue}` : ''}
                     </span>
-                    <Badge tone={game.live ? 'red' : game.open ? 'amber' : 'green'}>{game.live ? 'Ao vivo' : game.status_label}</Badge>
+                    <div className="flex items-center gap-2">
+                        <Badge tone="blue">{game.sport.label}</Badge>
+                        <Badge tone={game.live ? 'red' : game.open ? 'amber' : 'green'}>{game.live ? 'Ao vivo' : game.status_label}</Badge>
+                    </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3 text-base font-semibold sm:text-lg">
                     <span className="flex-1 text-right">{game.home.name}</span>

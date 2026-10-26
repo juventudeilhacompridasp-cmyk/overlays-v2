@@ -197,6 +197,7 @@ class SheetController extends Controller
                 'windows' => $rules->maxSubstitutionWindows,
             ],
             'sport' => $game->sport()->value,
+            'sport_profile' => $game->sport()->profile()->summary(),
             'score_model' => $game->sport()->profile()->scoreModel,
             'sets' => $game->sport()->profile()->scoreModel === 'sets' ? ($game->sets ?? []) : null,
             'volleyball_rotation' => VolleyballRotationView::for($game),

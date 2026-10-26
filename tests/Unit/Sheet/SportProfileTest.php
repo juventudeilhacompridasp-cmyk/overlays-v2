@@ -14,6 +14,23 @@ it('keeps football with the reference defaults', function () {
         ->and($profile->clock()->offsetSeconds(2))->toBe(45 * 60);
 });
 
+it('exposes one modality contract for the sheet, operator and overlays', function () {
+    $summary = Sport::Basketball->profile()->summary();
+
+    expect($summary)
+        ->toMatchArray([
+            'key' => 'basketball',
+            'label' => 'Basquete',
+            'score_model' => 'points',
+            'has_clock' => true,
+            'clock_direction' => 'down',
+            'pausable_clock' => true,
+            'tracks_team_fouls' => true,
+            'tracks_timeouts' => true,
+        ])
+        ->and($summary['positions'])->toHaveKey('point_guard', 'Armador');
+});
+
 it('defines futsal with 5 on court, unlimited rolling substitutions and 20-minute halves', function () {
     $profile = Sport::Futsal->profile();
     $rules = $profile->defaultRules();

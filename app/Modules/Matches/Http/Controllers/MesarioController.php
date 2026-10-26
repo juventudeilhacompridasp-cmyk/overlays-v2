@@ -50,6 +50,7 @@ class MesarioController extends Controller
                 'scheduled_at' => $game->scheduled_at?->format('d/m H:i'),
                 'venue' => $game->venue?->name,
                 'competition' => "{$game->division->season->competition->name} · {$game->division->name}",
+                'sport' => $game->sport()->profile()->summary(),
                 'stage' => $game->stage->name,
                 // Placar final direto (sem súmula) só faz sentido onde o placar é gols/pontos, não sets.
                 'quick_result' => $quickResult && $game->division->ruleSet()->allowQuickResult && $game->sport()->profile()->scoreModel !== 'sets',
@@ -92,6 +93,7 @@ class MesarioController extends Controller
             'scheduled_at' => $game->scheduled_at?->toIso8601String(),
             'venue' => $game->venue?->name,
             'competition' => "{$game->division->season->competition->name} · {$game->division->name}",
+            'sport' => $game->sport()->profile()->summary(),
             'stage' => $game->stage->name,
         ]);
 

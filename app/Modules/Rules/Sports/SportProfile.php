@@ -60,6 +60,27 @@ final readonly class SportProfile
         return $this->timeoutGroups !== [];
     }
 
+    /**
+     * Contrato compacto consumido pelo painel, súmula e overlays para que a modalidade
+     * não precise ser inferida no navegador a partir do placar.
+     *
+     * @return array{key: string, label: string, score_model: string, has_clock: bool, clock_direction: string, pausable_clock: bool, tracks_team_fouls: bool, tracks_timeouts: bool, positions: array<string, string>}
+     */
+    public function summary(): array
+    {
+        return [
+            'key' => $this->key,
+            'label' => $this->label,
+            'score_model' => $this->scoreModel,
+            'has_clock' => $this->hasClock(),
+            'clock_direction' => $this->clockDirection,
+            'pausable_clock' => $this->pausableClock,
+            'tracks_team_fouls' => $this->tracksTeamFouls(),
+            'tracks_timeouts' => $this->tracksTimeouts(),
+            'positions' => $this->positions,
+        ];
+    }
+
     /** Grupo de pedidos de tempo de um período (períodos além da lista ficam no último grupo). */
     public function timeoutGroup(int $period): int
     {

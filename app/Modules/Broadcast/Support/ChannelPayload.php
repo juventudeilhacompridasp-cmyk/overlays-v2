@@ -74,6 +74,7 @@ final class ChannelPayload
             'name' => $channel->name,
             'game_id' => $channel->game_id,
             'game_label' => $game ? $label($game) : null,
+            'game_sport' => $game?->sport()->profile()->summary(),
             'layers' => $channel->layerStates(),
             'championship_live' => $channel->championshipLive(),
             'stoppage' => $screenSettings['stoppage'],

@@ -65,6 +65,7 @@ class GameOperatorController extends Controller
                 'scheduled_at' => $game->scheduled_at?->toIso8601String(),
                 'venue' => $game->venue?->name,
                 'competition' => "{$game->division->season->competition->name} · {$game->division->name}",
+                'sport' => $game->sport()->profile()->summary(),
                 'stage' => $game->stage->name,
                 'knockout' => $game->stage->type === StageType::Knockout,
                 'quick_result' => OperationSettings::quickResultAllowed() && $game->division->ruleSet()->allowQuickResult && $game->sport()->profile()->scoreModel !== 'sets' && $game->stage->type !== StageType::Knockout,

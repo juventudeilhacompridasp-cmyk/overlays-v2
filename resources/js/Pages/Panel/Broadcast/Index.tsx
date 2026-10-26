@@ -149,6 +149,7 @@ export interface Channel {
     name: string;
     game_id: string | null;
     game_label: string | null;
+    game_sport: { label: string; score_model: string; has_clock: boolean; tracks_team_fouls: boolean; tracks_timeouts: boolean } | null;
     layers: { lineup: boolean; standings: boolean; scoreboard: boolean; lower_third: boolean };
     championship_live: Record<string, boolean>;
     stoppage: number;
@@ -340,6 +341,7 @@ function ChannelCard({ channel, defaults, games, fonts, scenes, sceneLimit, seas
                                 </option>
                             ))}
                         </Select>
+                        {channel.game_sport && <p className="mt-1 text-xs font-medium text-emerald-700">Modalidade: {channel.game_sport.label} · {channel.game_sport.score_model === 'sets' ? 'placar por sets' : channel.game_sport.score_model === 'points' ? 'placar por pontos' : 'placar por gols'}</p>}
                     </Field>
                 </div>
 

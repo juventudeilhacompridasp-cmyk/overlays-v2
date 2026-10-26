@@ -51,6 +51,18 @@ export interface OverlayFontFace {
     format: 'woff2' | 'woff' | 'ttf' | 'otf';
 }
 
+export interface SportProfileSummary {
+    key: string;
+    label: string;
+    score_model: string;
+    has_clock: boolean;
+    clock_direction: 'up' | 'down';
+    pausable_clock: boolean;
+    tracks_team_fouls: boolean;
+    tracks_timeouts: boolean;
+    positions: Record<string, string>;
+}
+
 export interface OverlayGame {
     id: string;
     status: string;
@@ -166,6 +178,7 @@ export interface OverlayState {
         head_to_head: { home_wins: number; draws: number; away_wins: number } | null;
     } | null;
     game: OverlayGame | null;
+    sport: SportProfileSummary | null;
     lineup: { home: LineupSide; away: LineupSide } | null;
     standings: {
         title: string;

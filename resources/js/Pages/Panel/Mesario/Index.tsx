@@ -22,6 +22,7 @@ interface MesarioGame {
     stage: string;
     quick_result: boolean;
     knockout: boolean;
+    sport: { label: string };
 }
 
 function QuickResult({ game, userId }: { game: MesarioGame; userId: number | string }) {
@@ -126,7 +127,10 @@ export default function Index({ games, user_id }: { games: MesarioGame[]; user_i
                                 <span className="truncate">
                                     {game.competition} · {game.stage}
                                 </span>
-                                <Badge tone={game.live ? 'red' : game.open ? 'amber' : 'green'}>{game.live ? 'Ao vivo' : game.status_label}</Badge>
+                                <div className="flex items-center gap-2">
+                                    <Badge tone="blue">{game.sport.label}</Badge>
+                                    <Badge tone={game.live ? 'red' : game.open ? 'amber' : 'green'}>{game.live ? 'Ao vivo' : game.status_label}</Badge>
+                                </div>
                             </div>
                             <div className="mt-2 flex items-center justify-between gap-3 text-base font-semibold">
                                 <span className="flex-1 text-right">{game.home}</span>

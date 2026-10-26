@@ -35,6 +35,7 @@ final class OverlayState
         $screens = $channel->screensLive();
         $customLive = $channel->customLive();
         $gameSnapshot = $game ? PublicGameSnapshot::for($game) : null;
+        $sport = $game?->sport()->profile()->summary();
 
         return [
             'channel' => $channel->name,
@@ -56,6 +57,7 @@ final class OverlayState
             'bracket' => $game && $screens['bracket'] ? OverlayBracket::for($game) : null,
             'stats' => $game && $screens['stats'] ? OverlayStats::for($game, $channel->stats_settings, $lineupSettings['photo_person_ids']) : null,
             'game' => $gameSnapshot,
+            'sport' => $sport,
             'lineup' => $game && $channel->layerOn('lineup') ? self::lineup($game, $lineupSettings['photo_person_ids']) : null,
             'standings' => $game && $channel->layerOn('standings') ? self::standings($game) : null,
             'custom_table' => $game && $channel->customLive() !== [] ? self::customTable($game) : null,

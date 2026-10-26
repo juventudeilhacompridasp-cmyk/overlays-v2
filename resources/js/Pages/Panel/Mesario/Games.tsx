@@ -18,6 +18,7 @@ interface Game {
     venue: string | null;
     competition: string;
     stage: string;
+    sport: { label: string };
 }
 
 interface Option {
@@ -79,6 +80,7 @@ export default function Games({ games, filters, statuses, competitions }: { game
                         cell: (game) => (
                             <span className="text-gray-700">
                                 {game.competition} · {game.stage}
+                                <span className="ml-2 text-emerald-700">· {game.sport.label}</span>
                             </span>
                         ),
                     },

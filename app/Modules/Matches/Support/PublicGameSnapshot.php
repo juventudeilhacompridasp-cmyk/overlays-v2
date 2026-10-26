@@ -55,6 +55,7 @@ final class PublicGameSnapshot
             'division' => $game->division->name,
             'stage' => $game->stage->name,
             'sport' => $game->sport()->value,
+            'sport_profile' => $game->sport()->profile()->summary(),
             'score_model' => $game->sport()->profile()->scoreModel,
             'sets' => $game->sport()->profile()->scoreModel === 'sets' ? ($game->sets ?? []) : null,
             'rotation' => VolleyballRotationView::for($game),

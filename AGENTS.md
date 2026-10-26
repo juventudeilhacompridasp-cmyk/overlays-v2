@@ -106,6 +106,7 @@ Laravel 13 / PHP 8.4 · Inertia + React + TypeScript (SSR no portal público) ·
 ## Regra adicional de overlays
 
 - Os presets `aurora` e `studio` devem manter o contrato de aparência existente e ser validados pela lista central `OverlayAppearance::PRESETS`; a renderização precisa permanecer sem dependências externas para uso no OBS.
+- A modalidade é escolhida na competição e é a fonte única para súmula, configurações da partida, operador e overlays. Esses módulos devem consumir o contrato de `SportProfile::summary()`; não duplique listas de esportes ou capacidades no front.
 
 ## Regra adicional do vôlei
 
