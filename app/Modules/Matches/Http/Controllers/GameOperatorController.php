@@ -17,6 +17,7 @@ use App\Modules\Tenancy\Models\ActivityLog;
 use App\Modules\Tenancy\Support\MesarioSettings;
 use App\Modules\Tenancy\Support\OperationSettings;
 use App\Modules\Tenancy\Support\SheetClosingSettings;
+use Carbon\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -99,7 +100,7 @@ class GameOperatorController extends Controller
             'closed' => $closure !== null,
             'can_close' => $closure === null && $game->status->isDecided(),
             'by' => $closure?->closed_by_name,
-            'at' => $closure?->closed_at?->toIso8601String(),
+            'at' => $closure !== null ? Carbon::parse($closure->closed_at)->toIso8601String() : null,
             'signatures' => $closure !== null ? $closure->signatures_count : CloseGameSheet::signedCount($game),
             'required' => SheetClosingSettings::all()['min_signatures'],
             'notes' => $closure?->notes,

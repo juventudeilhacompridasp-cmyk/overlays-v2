@@ -41,7 +41,7 @@ final class CloseGameSheet
             'organization_id' => $game->organization_id,
             'game_id' => $game->getKey(),
             'closed_by' => $by?->getKey(),
-            'closed_by_name' => $by?->name ?? 'Sistema',
+            'closed_by_name' => $by !== null ? $by->name : 'Sistema',
             'closed_at' => now(),
             'signatures_count' => $signed,
             'notes' => $notes === '' ? null : mb_substr((string) $notes, 0, 500),
