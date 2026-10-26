@@ -215,6 +215,18 @@ test('o sorteio com restrição acha uma distribuição sem conflito quando exis
     assert.equal(d.groupClashes(same, () => 'x').length, 2);
 });
 
+test('aponta conflitos de clube e patrocinador sem alterar o contrato da cidade', () => {
+    const board = { pool: [], groups: [{ id: 'g0', name: 'Grupo A', teams: ['t1', 't2', 't3'] }] };
+    const club = (id) => ({ t1: 'clube-a', t2: 'clube-a' })[id] ?? '';
+    const sponsor = (id) => ({ t2: 'marca-x', t3: 'marca-x' })[id] ?? '';
+    const clashes = d.groupClashes(board, () => '', club, sponsor);
+
+    assert.deepEqual(clashes.map((item) => [item.criterion, item.city, item.teams]), [
+        ['clube', 'clube-a', ['t1', 't2']],
+        ['patrocinador', 'marca-x', ['t2', 't3']],
+    ]);
+});
+
 test('resizeBracket encolhe a chave e devolve ao pool quem perdeu o lugar', () => {
     const board = d.seededBracket(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']);
     const smaller = d.resizeBracket(board, 4);

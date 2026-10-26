@@ -29,6 +29,8 @@ class EntryRequest extends FormRequest
         $rules = [
             'seed' => ['nullable', 'integer', 'between:1,999'],
             'status' => ['required', Rule::enum(EntryStatus::class)],
+            'club_key' => ['nullable', 'string', 'max:120'],
+            'sponsor_key' => ['nullable', 'string', 'max:120'],
         ];
 
         if ($entry === null) {

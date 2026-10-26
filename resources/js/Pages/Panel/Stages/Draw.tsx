@@ -48,6 +48,8 @@ interface TeamInfo {
     color: string | null;
     seed: number | null;
     city: string | null;
+    club_key: string | null;
+    sponsor_key: string | null;
 }
 
 interface Props {
@@ -127,7 +129,11 @@ export default function Draw({ competition, season, division, stage, entries, bl
     const [active, setActive] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
     const cities = useMemo(() => new Map(entries.map((team) => [team.id, normalizeCity(team.city)])), [entries]);
+    const clubs = useMemo(() => new Map(entries.map((team) => [team.id, normalizeCity(team.club_key)])), [entries]);
+    const sponsors = useMemo(() => new Map(entries.map((team) => [team.id, normalizeCity(team.sponsor_key)])), [entries]);
     const cityOf = (id: string) => cities.get(id) ?? '';
+    const clubOf = (id: string) => clubs.get(id) ?? '';
+    const sponsorOf = (id: string) => sponsors.get(id) ?? '';
     const hasSharedCities = useMemo(() => {
         const seen = new Set<string>();
         return entries.some((team) => {
@@ -141,8 +147,10 @@ export default function Draw({ competition, season, division, stage, entries, bl
     const [separateCities, setSeparateCities] = useState(true);
 
     /** Roda o sorteio; com a opção ligada tenta várias vezes e fica com o que tem menos equipes da mesma cidade juntas. */
-    const draw = <T,>(make: () => T, conflicts: (candidate: T) => number): T => (separateCities && hasSharedCities ? bestOf(300, make, conflicts) : make());
-    const clashes = isKnockout ? bracketClashes(bracket, cityOf) : isLeague ? [] : groupClashes(groups, cityOf);
+    const hasSharedAffiliations = useMemo(() => entries.some((team, index) => entries.slice(index + 1).some((other) => (team.club_key && team.club_key.trim().toLowerCase() === other.club_key?.trim().toLowerCase()) || (team.sponsor_key && team.sponsor_key.trim().toLowerCase() === other.sponsor_key?.trim().toLowerCase()))), [entries]);
+    const [separateAffiliations, setSeparateAffiliations] = useState(true);
+    const draw = <T,>(make: () => T, conflicts: (candidate: T) => number): T => (separateCities && hasSharedCities || separateAffiliations && hasSharedAffiliations ? bestOf(300, make, conflicts) : make());
+    const clashes = isKnockout ? bracketClashes(bracket, cityOf, separateAffiliations ? clubOf : undefined, separateAffiliations ? sponsorOf : undefined) : isLeague ? [] : groupClashes(groups, cityOf, separateAffiliations ? clubOf : undefined, separateAffiliations ? sponsorOf : undefined);
     const nameOf = (id: string) => byId.get(id)?.name ?? id;
 
     const sensors = useSensors(
@@ -251,8 +259,8 @@ export default function Draw({ competition, season, division, stage, entries, bl
             {clashes.length > 0 && (
                 <ul className="mb-2 list-disc space-y-0.5 pl-5 text-xs text-amber-700" data-testid="draw-clashes">
                     {clashes.map((clash) => (
-                        <li key={`${clash.where}-${clash.city}`}>
-                            Mesma cidade ({clash.city}) juntas {isKnockout ? `no confronto ${Number(clash.where) + 1}` : `no ${groups.groups.find((group) => group.id === clash.where)?.name ?? 'grupo'}`}: {clash.teams.map(nameOf).join(' e ')}. Pode salvar assim, é só um aviso.
+                        <li key={`${clash.where}-${clash.city}-${clash.criterion ?? 'cidade'}`}>
+                            {clash.criterion === 'clube' ? 'Mesmo clube' : clash.criterion === 'patrocinador' ? 'Mesmo patrocinador' : 'Mesma cidade'} ({clash.city}) juntos {isKnockout ? `no confronto ${Number(clash.where) + 1}` : `no ${groups.groups.find((group) => group.id === clash.where)?.name ?? 'grupo'}`}: {clash.teams.map(nameOf).join(' e ')}. Pode salvar assim, é só um aviso.
                         </li>
                     ))}
                 </ul>
@@ -263,10 +271,16 @@ export default function Draw({ competition, season, division, stage, entries, bl
                     Evitar equipes da mesma cidade juntas nos sorteios
                 </label>
             )}
+            {hasSharedAffiliations && (
+                <label className="mb-2 flex min-h-11 items-center gap-2 text-sm text-gray-700 sm:min-h-0">
+                    <input type="checkbox" checked={separateAffiliations} onChange={(event) => setSeparateAffiliations(event.target.checked)} />
+                    Evitar equipes do mesmo clube ou patrocinador juntas nos sorteios
+                </label>
+            )}
             <div className="flex flex-wrap items-center gap-2">
                 {isKnockout ? (
                     <>
-                        <Button variant="secondary" onClick={() => setBracket(draw(() => bracketOf(ids, teamCount, randomBracket), (candidate) => bracketClashes(candidate, cityOf).length))}>
+                        <Button variant="secondary" onClick={() => setBracket(draw(() => bracketOf(ids, teamCount, randomBracket), (candidate) => bracketClashes(candidate, cityOf, separateAffiliations ? clubOf : undefined, separateAffiliations ? sponsorOf : undefined).length))}>
                             Sortear
                         </Button>
                         <Button variant="secondary" onClick={() => setBracket(bracketOf(ids, teamCount, seededBracket))}>
@@ -282,10 +296,10 @@ export default function Draw({ competition, season, division, stage, entries, bl
                     </Button>
                 ) : (
                     <>
-                        <Button variant="secondary" onClick={() => setGroups(draw(() => randomGroups(groups, ids), (candidate) => groupClashes(candidate, cityOf).length))}>
+                        <Button variant="secondary" onClick={() => setGroups(draw(() => randomGroups(groups, ids), (candidate) => groupClashes(candidate, cityOf, separateAffiliations ? clubOf : undefined, separateAffiliations ? sponsorOf : undefined).length))}>
                             Sortear
                         </Button>
-                        <Button variant="secondary" onClick={() => setGroups(draw(() => potGroups(groups, ids), (candidate) => groupClashes(candidate, cityOf).length))}>
+                        <Button variant="secondary" onClick={() => setGroups(draw(() => potGroups(groups, ids), (candidate) => groupClashes(candidate, cityOf, separateAffiliations ? clubOf : undefined, separateAffiliations ? sponsorOf : undefined).length))}>
                             Sorteio por potes
                         </Button>
                         <Button variant="secondary" onClick={() => setGroups(snakeGroups(groups, ids))}>

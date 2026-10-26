@@ -37,6 +37,8 @@ class DrawController extends Controller
                 'logo_url' => $entry->team->logoUrl(128),
                 'color' => $entry->team->primary_color,
                 'city' => $entry->team->city,
+                'club_key' => $entry->club_key,
+                'sponsor_key' => $entry->sponsor_key,
                 'seed' => $entry->seed,
             ])->values();
 

@@ -19,6 +19,8 @@ interface Entry {
     seed: number | null;
     status: string;
     status_label: string;
+    club_key: string | null;
+    sponsor_key: string | null;
     roster_count: number;
     team: { id: string; name: string; city: string | null };
 }
@@ -105,6 +107,8 @@ function EntryModal({ divisionId, entry, teams, statuses, show, onClose }: {
         team_id: '',
         seed: entry?.seed ? String(entry.seed) : '',
         status: entry?.status ?? 'confirmed',
+        club_key: entry?.club_key ?? '',
+        sponsor_key: entry?.sponsor_key ?? '',
     });
 
     const done = { onSuccess: () => { reset(); onClose(); } };
@@ -152,6 +156,14 @@ function EntryModal({ divisionId, entry, teams, statuses, show, onClose }: {
                                 </option>
                             ))}
                         </Select>
+                    </Field>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Clube (opcional)" htmlFor="entry-club" error={errors.club_key} hint="Use o mesmo identificador para equipes do mesmo clube.">
+                        <Input id="entry-club" value={data.club_key} onChange={(e) => setData('club_key', e.target.value)} maxLength={120} />
+                    </Field>
+                    <Field label="Patrocinador (opcional)" htmlFor="entry-sponsor" error={errors.sponsor_key} hint="Use o mesmo identificador para evitar proximidade no sorteio.">
+                        <Input id="entry-sponsor" value={data.sponsor_key} onChange={(e) => setData('sponsor_key', e.target.value)} maxLength={120} />
                     </Field>
                 </div>
                 <div className="flex justify-end gap-2">

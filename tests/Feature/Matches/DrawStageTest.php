@@ -175,6 +175,8 @@ describe('draw screen and route', function () {
             ->where('stage.type', 'groups')
             ->has('entries', 4)
             ->where('entries.0.id', $entries[0]->id)
+            ->where('entries.0.club_key', null)
+            ->where('entries.0.sponsor_key', null)
             ->where('blocked', null)
             ->where('supported', true));
     });

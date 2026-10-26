@@ -68,7 +68,7 @@ class EntryController extends Controller
 
     public function update(EntryRequest $request, Entry $entry): RedirectResponse
     {
-        $entry->update($request->safe()->only(['seed', 'status']));
+        $entry->update($request->safe()->only(['seed', 'status', 'club_key', 'sponsor_key']));
 
         return back()->with('success', 'Inscrição atualizada.');
     }

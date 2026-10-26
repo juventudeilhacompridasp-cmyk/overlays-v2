@@ -2,6 +2,7 @@
 
 Regra adicional: a tabela de pontos corridos pode ser montada na tela de sorteio por arrasto (turno único ou ida e volta); o servidor valida todos os pares antes de criar os jogos.
 Regra adicional: os avisos de conflito da agenda usam `RuleSet::venueConflictMinutes` e `RuleSet::teamRestMinutes`, configurados no regulamento da edição; os avisos nunca bloqueiam o agendamento.
+Regra adicional: restrições de sorteio por cidade, clube e patrocinador são avisos heurísticos; os vínculos de clube/patrocinador pertencem à inscrição na edição e nunca vão para o estado público.
 
 ## Contexto
 **Status e pendências atuais: `docs/09-status-e-pendencias.md` (leia primeiro e atualize a cada PR).**
